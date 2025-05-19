@@ -1,0 +1,3 @@
+// Local.xcconfig
+PRODUCT_BUNDLE_IDENTIFIER = com.intelliceed.patientapp.local
+API_URL = https://local.api.example.com 

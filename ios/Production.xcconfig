@@ -1,0 +1,3 @@
+// Production.xcconfig
+PRODUCT_BUNDLE_IDENTIFIER = com.intelliceed.patientapp
+API_URL = https://api.example.com 

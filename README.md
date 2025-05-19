@@ -66,7 +66,7 @@ This is one way to run your app — you can also build it directly from Android 
 
 Now that you have successfully run the app, let's make changes!
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
 
 When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
 
@@ -95,3 +95,94 @@ To learn more about React Native, take a look at the following resources:
 - [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+
+# Intelliceed PatientApp Mobile v2
+
+## Project Build & Run Documentation (English)
+
+### 1. Install dependencies
+
+```
+npm install
+```
+or, if you use yarn:
+```
+yarn install
+```
+
+---
+
+### 2. Start Metro Bundler
+
+```
+npm start
+```
+or
+```
+yarn start
+```
+
+---
+
+### 3. Build and run Android app
+
+#### Local environment
+```
+npm run android-local
+```
+
+#### Development environment
+```
+npm run android-development
+```
+
+#### Production environment
+```
+npm run android-production
+```
+
+> **Note:**
+> Before running, make sure an emulator or physical device is connected and visible via `adb devices`.
+> To build APK or AAB files for release, use:
+> ```
+> npm run android-local:apk
+> npm run android-local:aab
+> npm run android-development:apk
+> npm run android-development:aab
+> npm run android-production:apk
+> npm run android-production:aab
+> ```
+
+---
+
+### 4. Build and run iOS app
+
+#### Local environment
+```
+npm run ios-local
+```
+
+#### Development environment
+```
+npm run ios-development
+```
+
+#### Production environment
+```
+npm run ios-production
+```
+
+> **Note:**
+> Xcode and a configured simulator or physical device are required for iOS.
+
+---
+
+### 5. Clean cache and dependencies (if you have build errors)
+
+```
+watchman watch-del-all || true
+rm -rf node_modules
+npm cache clean --force
+cd android && ./gradlew clean && cd ..
+npm install
+```

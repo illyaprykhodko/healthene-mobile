@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "227939660306",
+    "project_id": "healthene-cloud-messagin-b0832",
+    "storage_bucket": "healthene-cloud-messagin-b0832.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:227939660306:android:ee52cca44341e114db5ecb",
+        "android_client_info": {
+          "package_name": "com.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "227939660306-nbhf7v8pjnjqdv49hv923b4q64eiibhr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHwXd9XLk2Iu3OI7KSaCySIRbhpJcQx0w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "227939660306-nbhf7v8pjnjqdv49hv923b4q64eiibhr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "227939660306-of2h6n3vmotgesed931fnelq60fc4osa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "development.healthene.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:227939660306:android:469585ca97cf881edb5ecb",
+        "android_client_info": {
+          "package_name": "com.healthene"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "227939660306-nbhf7v8pjnjqdv49hv923b4q64eiibhr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHwXd9XLk2Iu3OI7KSaCySIRbhpJcQx0w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "227939660306-nbhf7v8pjnjqdv49hv923b4q64eiibhr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "227939660306-of2h6n3vmotgesed931fnelq60fc4osa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "development.healthene.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
