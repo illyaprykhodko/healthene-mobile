@@ -176,14 +176,15 @@ export interface UserRole {
 export interface UserSession {
   id: number;
   user: User;
-  token: string;
   device: string;
+  isActive: boolean;
   ipAddress: string;
   userAgent: string;
-  lastActivity: string;
-  isActive: boolean;
   createdDate: string;
+  accessToken: string;
   updatedDate: string;
+  lastActivity: string;
+  refreshToken: string;
 }
 
 export interface Patient extends User {
@@ -230,23 +231,23 @@ export interface PatientProfile extends Patient {
     familyHistory: PatientMedicalProblem[];
   };
   lifestyle: {
+    diet: string;
     smoking: boolean;
     alcohol: boolean;
     exercise: boolean;
-    diet: string;
   };
   goals: {
+    sleep: number;
     weight: number;
     activity: number;
-    sleep: number;
   };
   preferences: {
     notifications: {
-      email: boolean;
-      push: boolean;
       sms: boolean;
+      push: boolean;
+      email: boolean;
     };
-    reminders: boolean;
     language: string;
+    reminders: boolean;
   };
 }

@@ -37,29 +37,29 @@ export function getErrorMessage (error: unknown): string {
     return 'An unknown error occurred';
 }
 
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-}
+// export interface User {
+//   id: string;
+//   email: string;
+//   firstName: string;
+//   lastName: string;
+//   phone?: string;
+// }
 
-export interface Session {
-  accessToken: string;
-  refreshToken: string;
-  user: User;
-}
+// export interface Session {
+//   accessToken: string;
+//   refreshToken: string;
+//   user: User;
+// }
 
 export interface LoginData {
   username: string;
   password: string;
 }
 
-export interface SignUpData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-}
+// export interface SignUpData {
+//   email: string;
+//   password: string;
+//   firstName: string;
+//   lastName: string;
+//   phone?: string;
+// }

@@ -8,13 +8,13 @@ import {
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // local dependencies
-import { Session } from './types';
+import { UserSession } from 'types';
 import { config } from '../../constants';
 import { addInterceptor, applyInterceptors } from './interceptors';
 
-//   // Добавление перехватчика запросов
+//   // add request interceptor
 // addInterceptor.request(async (args, api) => {
-//     // Добавляем заголовки
+//     // add headers
 //     args.headers = {
 //       ...args.headers,
 //       'Cache-Control': 'no-cache',
@@ -24,24 +24,33 @@ import { addInterceptor, applyInterceptors } from './interceptors';
 //     return args;
 //   });
   
-// Добавление перехватчика ответов
+// add response interceptor
 addInterceptor.response(async (response, args, api) => {
-    // Логирование в режиме отладки
+    // log response in debug mode
     if (config.DEBUG) {
         console.info('%c RESPONSE ', 'background: green; color: #fff;', response);
     }
     return response;
 });
   
-// Добавление перехватчика ошибок
+// add error interceptor
 addInterceptor.error(async (error, args, api) => {
-    // Обработка ошибок
+    console.log('error', error);
+    console.log('args', args);
+    console.log('api', api);
+    const refreshError: RefreshError = {
+        data: error.data,
+        originalArgs: args,
+        status: error.status as number,
+    };
     if (error.status === 401) {
-        // Логика обновления токена
+        return handleRefreshToken(refreshError, api);
     }
     return error;
 });
+// type ErrorStatus = FetchBaseQueryError['status'];
   type RefreshError = FetchBaseQueryError & {
+      // status: FetchBaseQueryError['status'];
     status: number;
     data?: unknown;
     originalArgs: FetchArgs & {
@@ -70,7 +79,7 @@ let stuckRequests: Array<StuckRequest> = [];
 const BASE_API = `${config.serviceUrl}/${config.apiPath}`;
 
 export const sessionManager = {
-    async update (session: Session | null) {
+    async update (session: UserSession | null) {
         if (session) {
             await AsyncStorage.setItem(TOKEN_KEYS.STORE, JSON.stringify({
                 [TOKEN_KEYS.ACCESS]: session[TOKEN_KEYS.ACCESS],
@@ -117,7 +126,7 @@ const handleRefreshToken = async (
             if (refreshResult.data
             && typeof refreshResult.data === 'object'
              && (TOKEN_KEYS.ACCESS in refreshResult.data)) {
-                await sessionManager.update(refreshResult.data as Session);
+                await sessionManager.update(refreshResult.data as UserSession);
                 await Promise.all(
                     stuckRequests.map(({ resolve, reject, args }) =>
                         Promise.resolve(baseQueryRaw(args, api, {}))

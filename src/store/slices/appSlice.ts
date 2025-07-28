@@ -1,15 +1,18 @@
+// outsource dependencies
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+// local dependencies
 import { AppState } from '../types';
-import { User, Session } from 'store/api/types';
+import { UserSession, User } from 'types';
+// import { User, Session } from 'store/api/types';
 
 const initialState: AppState = {
-    initialized: false,
-    health: false,
-    auth: false,
     user: null,
-    accessToken: null,
+    auth: false,
     wakeup: false,
+    health: false,
     keyboard: false,
+    accessToken: null,
+    initialized: false,
 };
 
 export const appSlice = createSlice({
@@ -28,7 +31,7 @@ export const appSlice = createSlice({
         setUser: (state, action: PayloadAction<User | null>) => {
             state.user = action.payload;
         },
-        setSession: (state, action: PayloadAction<Session>) => {
+        setSession: (state, action: PayloadAction<UserSession>) => {
             state.accessToken = action.payload.accessToken;
             state.auth = true;
             // state.user = action.payload.user;

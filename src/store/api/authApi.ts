@@ -1,15 +1,17 @@
 // outsource dependencies
 import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
+import { LoginData } from './types';
+import { UserSession, User } from 'types';
 import { baseQuery, sessionManager } from './baseApi';
-import { Session, LoginData, SignUpData, User } from './types';
+// import { Session, LoginData, SignUpData, User } from './types';
 
 export const authApi = createApi({
     reducerPath: 'authApi',
     baseQuery,
     tagTypes: ['Auth'],
     endpoints: builder => ({
-        refreshSession: builder.mutation<Session, void>({
+        refreshSession: builder.mutation<UserSession, void>({
             query: () => ({
                 url: '/auth/token/refresh',
                 method: 'POST',
@@ -23,7 +25,7 @@ export const authApi = createApi({
                 }
             },
         }),
-        restoreSession: builder.query<Session, void>({
+        restoreSession: builder.query<UserSession, void>({
             query: () => '/auth/session',
             async onQueryStarted (_, { queryFulfilled }) {
                 try {
@@ -54,7 +56,7 @@ export const authApi = createApi({
             },
             providesTags: ['Auth'],
         }),
-        login: builder.mutation<Session, LoginData>({
+        login: builder.mutation<UserSession, LoginData>({
             query: credentials => ({
                 url: '/auth/token',
                 method: 'POST',
@@ -96,14 +98,14 @@ export const authApi = createApi({
         //   },
         //   invalidatesTags: ['Auth'],
         // }),
-        signUp: builder.mutation<Session, SignUpData>({
-            query: data => ({
-                url: '/auth/signup',
-                method: 'POST',
-                body: data,
-            }),
-            invalidatesTags: ['Auth'],
-        }),
+        // signUp: builder.mutation<Session, SignUpData>({
+        //     query: data => ({
+        //         url: '/auth/signup',
+        //         method: 'POST',
+        //         body: data,
+        //     }),
+        //     invalidatesTags: ['Auth'],
+        // }),
         logout: builder.mutation<void, void>({
             query: () => ({
                 url: '/auth/logout',
@@ -111,7 +113,7 @@ export const authApi = createApi({
             }),
             invalidatesTags: ['Auth'],
         }),
-        getSession: builder.query<Session | null, void>({
+        getSession: builder.query<UserSession | null, void>({
             query: () => '/auth/session',
             providesTags: ['Auth'],
         }),
@@ -136,7 +138,7 @@ export const authApi = createApi({
 
 export const {
     useLoginMutation,
-    useSignUpMutation,
+    // useSignUpMutation,
     useLogoutMutation,
     useGetSessionQuery,
     useGetSelfQuery,

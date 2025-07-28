@@ -1,15 +1,17 @@
+// outsource dependencies
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { call, put, takeEvery, Effect } from 'redux-saga/effects';
-import { MessageService } from '@services/messages';
-import { ROUTES } from '@constants/routes';
-import { navigate } from '@services/navigation';
-import { preloadDataSaga } from '../../sagas/preload';
-import { LoginData, Session, getErrorMessage } from '@store/api/types';
-import { authApi } from '@store/api/authApi';
-import { createSagaAction } from '@store/utils/sagaUtils';
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
-// Types
+// local dependencies
+import { UserSession } from 'types';
+import { ROUTES } from '@constants/routes';
+import { authApi } from '@store/api/authApi';
+import { navigate } from '@services/navigation';
+import { MessageService } from '@services/messages';
+import { preloadDataSaga } from '../../sagas/preload';
+import { createSagaAction } from '@store/utils/sagaUtils';
+import { LoginData, getErrorMessage } from '@store/api/types';
+
 export interface SignInState {
   disabled: boolean;
   initialized: boolean;
@@ -23,10 +25,10 @@ export interface SignInState {
   error: string | null;
 }
 
-export interface LoginCredentials {
-  username: string;
-  password: string;
-}
+// export interface LoginCredentials {
+//   username: string;
+//   password: string;
+// }
 
 // export interface User {
 //   id: string;
@@ -129,7 +131,7 @@ function * submitSaga ({ payload }: PayloadAction<LoginData>): Generator<Effect,
             const error = result.error as { status: string; error: string };
             throw new Error(error.error);
         }
-        const session = result.data as Session;
+        const session = result.data as UserSession;
 
         // Update state after successful login
         yield put(signInActions.updateData({
