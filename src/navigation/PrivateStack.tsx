@@ -3,20 +3,18 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 // local dependencies
 import { ROUTES } from '../constants/routes';
-import { SignIn } from '../screens/SignIn';
-import { ForgotPasswordScreen } from 'screens/ForgotPassword';
+import HomeScreen from 'screens/privateScreens/Home';
 
 const Stack = createStackNavigator();
 
-export const PublicStack = () => {
+export const PrivateStack = () => {
     return (
         <Stack.Navigator
             screenOptions={{
                 headerShown: false,
             }}
         >
-            <Stack.Screen name={ROUTES.SIGN_IN} component={SignIn} />
-            <Stack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPasswordScreen} />
+            <Stack.Screen name={ROUTES.HOME} component={HomeScreen} />
         </Stack.Navigator>
     );
 };

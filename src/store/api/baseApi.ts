@@ -8,6 +8,7 @@ import {
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // local dependencies
+import { RootState } from 'store';
 import { UserSession } from 'types';
 import { config } from '../../constants';
 import { addInterceptor, applyInterceptors } from './interceptors';
@@ -35,9 +36,6 @@ addInterceptor.response(async (response, args, api) => {
   
 // add error interceptor
 addInterceptor.error(async (error, args, api) => {
-    console.log('error', error);
-    console.log('args', args);
-    console.log('api', api);
     const refreshError: RefreshError = {
         data: error.data,
         originalArgs: args,
@@ -69,7 +67,7 @@ export const TOKEN_KEYS = {
     STORE: 'sAuth',
     BEARER: 'Bearer ',
     ACCESS: 'accessToken',
-    HEADER: 'authorization',
+    HEADER: 'Authorization',
     REFRESH: 'refreshToken',
 } as const;
 
@@ -97,6 +95,11 @@ export const sessionManager = {
         } catch {
             return null;
         }
+    },
+
+    async isLoggedIn (): Promise<boolean> {
+        const session = await this.get();
+        return !!(session?.accessToken && session?.refreshToken);
     }
 };
   
@@ -169,15 +172,21 @@ const handleRefreshToken = async (
 
 const baseQueryRaw = fetchBaseQuery({
     baseUrl: BASE_API,
-    prepareHeaders: async headers => {
+    prepareHeaders: async (headers, { getState }) => {
         const session = await sessionManager.get();
-        if (session?.[TOKEN_KEYS.ACCESS]) {
-            headers.set(TOKEN_KEYS.HEADER, `${TOKEN_KEYS.BEARER}${session[TOKEN_KEYS.ACCESS]}`);
+        const token = (getState() as RootState).app.accessToken;
+        const actualToken = session?.[TOKEN_KEYS.ACCESS] || token;
+        if (actualToken) {
+            // headers.set('Authorization', `Bearer ${actualToken}`);
+            headers.set(TOKEN_KEYS.HEADER, `${TOKEN_KEYS.BEARER}${actualToken}`);
+        } else {
+            console.log('No access token found in session');
         }
+        
         headers.set('Content-Type', 'application/json');
         headers.set('user-platform', Platform.OS === 'ios' ? 'IOS' : 'ANDROID');
         return headers;
-    },
+    }
 });
 
 export const baseQuery = async (
@@ -188,46 +197,3 @@ export const baseQuery = async (
     const fetchArgs = typeof args === 'string' ? { url: args } : args;
     return applyInterceptors(fetchArgs, api, baseQueryRaw);
 };
-
-//   export const baseQuery = async (
-//     args: string | FetchArgs,
-//     api: any,
-//     extraOptions: any
-//   ): Promise<
-//     | { data: unknown }
-//     | { error: FetchBaseQueryError }
-//   > => {
-//     const result = await baseQueryRaw(args, api, extraOptions);
-  
-//     if (result.error?.status === 401) {
-//       let refreshError: RefreshError;
-  
-//       if (typeof args === 'string') {
-//         const minimalFetchArgs: FetchArgs & { wasTryingToRestore?: boolean; headers?: Record<string, string> } = {
-//           url: args,
-//           headers: {},
-//         //   method: 'GET',
-//           wasTryingToRestore: false,
-//         };
-  
-//         refreshError = {
-//             data: result.error.data,
-//             status: result.error.status,
-//           originalArgs: minimalFetchArgs
-//         };
-//       } else {
-//         refreshError = {
-//           status: result.error.status,
-//           data: result.error.data,
-//           originalArgs: {
-//             ...args,
-//             wasTryingToRestore: false,
-//             headers: args.headers ?? {}
-//           }
-//         };
-//       }
-//       return handleRefreshToken(refreshError, api);
-//     }
-//     return result;
-//   };
-

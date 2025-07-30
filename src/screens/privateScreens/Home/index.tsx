@@ -1,12 +1,13 @@
+// outsource dependencies
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useDispatch } from 'react-redux';
-import { ROUTES } from '../../constants/routes';
-import { navigate } from '../../services/navigation';
+// local dependencies
+import { useAuth } from 'hooks/useAuth';
+import { ROUTES } from '../../../constants/routes';
+import { navigate } from '../../../services/navigation';
 
 export default function HomeScreen () {
-    const dispatch = useDispatch();
-
+    const { signOut } = useAuth();
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Welcome to Home Screen</Text>
@@ -18,6 +19,13 @@ export default function HomeScreen () {
                 <Text style={styles.buttonText}>Go to Profile</Text>
             </TouchableOpacity>
       
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => signOut()}
+            >
+                <Text style={styles.buttonText}>Logout</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
                 style={styles.button}
                 onPress={() => navigate(ROUTES.SETTINGS)}

@@ -1,3 +1,5 @@
+//
+
 // outsource dependencies
 import { useDispatch } from 'react-redux';
 import { Text } from '@react-native-material/core';
@@ -5,17 +7,19 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, TouchableWithoutFeedback } from 'react-native';
 // local dependencies
+import { LoginData } from 'types';
 import Screen from 'components/Screen';
 import { useAuth } from 'hooks/useAuth';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { Button } from 'components/Button';
-import { LoginData } from 'store/api/types';
+// import { LoginData } from 'store/api/types';
 import TextInput from 'components/TextInput';
 import { navigate } from 'services/navigation';
 import { TextLogo } from 'components/TextLogo';
 import { IconButton } from 'components/IconButton';
 import { MessageService } from 'services/messages';
+import { SplashScreen } from 'components/SplashScreen';
 import BackgroundImage from 'components/BackgroundImage';
 import { AnimatedWelcome } from 'components/AnimatedWelcome';
 
@@ -26,9 +30,9 @@ const validateEmail = (email: string): boolean => {
 };
 
 export const SignIn: React.FC = (): React.ReactElement => {
-    const dispatch = useDispatch();
     const { signIn, isLoading } = useAuth();
     const theme = useTheme();
+    
     const [formData, setFormData] = useState<LoginData>({
         username: '',
         password: '',
@@ -92,6 +96,10 @@ export const SignIn: React.FC = (): React.ReactElement => {
         }
     };
 
+    if (isLoading) {
+        return <SplashScreen onFinish={() => {}} />;
+    }
+
     return (
         <AnimatedWelcome>
             <Screen initialized={true} style={styles.container}>
@@ -152,10 +160,10 @@ export const SignIn: React.FC = (): React.ReactElement => {
                     />
           
                     <Button
-                        title={isLoading ? 'Signing in...' : 'Sign In'}
+                        title="Sign In"
                         onPress={handleSubmit}
-                        disabled={isLoading}
-                        loading={isLoading}
+                        // disabled={isLoading}
+                        // loading={isLoading}
                         style={styles.button}
 
                         // fullWidth

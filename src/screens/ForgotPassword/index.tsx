@@ -1,29 +1,26 @@
-import React, { useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { useForgotPasswordMutation } from '../../store/api/authApi';
-import { RootState } from '../../store';
-import { setEmail, setError, setSuccess, reset, setSubmitting } from '../../store/slices/forgotPasswordSlice';
-import { Button } from 'components/Button';
-// import { Text } from '../../components/Text';
-// import { TextInput } from 'components/TextInput';
-// import { Screen } from 'components/Screen';
-// import { BackgroundImage } from 'components/BackgroundImage';
-import { ROUTES } from '../../constants/routes';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../services/navigation/types';
+// outsource dependencies
 import * as yup from 'yup';
 import { Formik } from 'formik';
+import React, { useCallback } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { useTheme } from '../../hooks/useTheme';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// local dependencies
 import Text from 'components/Text';
-import BackgroundImage from 'components/BackgroundImage';
-import TextInput from 'components/TextInput';
 import Screen from 'components/Screen';
+import { Button } from 'components/Button';
+import TextInput from 'components/TextInput';
+import { ROUTES } from '../../constants/routes';
 import { IconButton } from 'components/IconButton';
-// import { IconButton } from '@react-native-material/core';
-// import  IconButton  from '@vector-icons/react-native-vector-icons';
+import BackgroundImage from 'components/BackgroundImage';
+
+import { useTheme } from '../../hooks/useTheme';
+import { useForgotPassword } from 'hooks/useForgotPassword';
+import { useForgotPasswordMutation } from '../../store/api/authApi';
+import { RootStackParamList } from '../../services/navigation/types';
+import { RootState, useAppDispatch, useAppSelector } from '../../store';
+import { setEmail, setError, setSuccess, reset, setSubmitting } from '../../store/slices/forgotPasswordSlice';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -32,10 +29,11 @@ const validationSchema = yup.object().shape({
 });
 
 export const ForgotPasswordScreen: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const navigation = useNavigation<NavigationProp>();
     const theme = useTheme();
-    const { email, isSubmitting, error, success } = useSelector((state: RootState) => state.forgotPassword);
+    const { success, isLoading } = useForgotPassword();
+    const { email } = useAppSelector((state: RootState) => state.forgotPassword);
     const [forgotPassword] = useForgotPasswordMutation();
 
     const goToSignIn = useCallback(() => {
@@ -83,23 +81,23 @@ export const ForgotPasswordScreen: React.FC = () => {
                             name="email"
                             label="Email"
                             value={values.email}
+                            disabled={isLoading}
+                            color={theme.colors.primary}
                             onChangeText={handleChange('email')}
                             error={touched.email && errors.email ? { [errors.email]: errors.email } : undefined}
-                            disabled={isSubmitting}
-                            color={theme.colors.primary}
                         />
                         <Button
-                            title="RECOVERY PASSWORD"
-                            onPress={handleSubmit}
-                            loading={isSubmitting}
+                            loading={isLoading}
                             style={styles.button}
+                            onPress={handleSubmit}
+                            title="RECOVERY PASSWORD"
                             color={theme.colors.primary}
                         />
                     </View>
                 )}
             </Formik>
         </View>
-    ), [dispatch, forgotPassword, isSubmitting, theme.colors.primary]);
+    ), [dispatch, forgotPassword, isLoading, theme.colors.primary]);
 
     const renderSuccess = useCallback(() => (
         <View style={styles.formContainer}>
@@ -129,14 +127,6 @@ export const ForgotPasswordScreen: React.FC = () => {
     return (
         <Screen initialized={true} style={{ ...styles.container, backgroundColor: theme.colors.background }}>
             <BackgroundImage style={styles.backgroundImage}>
-                {/* <Button
-          title="BACK TO LOGIN"
-          icon="arrow-left"
-          onPress={goToSignIn}
-          style={styles.backIcon}
-          variant="text"
-          color={theme.colors.white}
-        /> */}
                 <IconButton
                     size={20}
                     icon="arrow-left"
@@ -198,3 +188,4 @@ const styles = StyleSheet.create({
         marginTop: 30,
     },
 });
+

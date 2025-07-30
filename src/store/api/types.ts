@@ -51,10 +51,10 @@ export function getErrorMessage (error: unknown): string {
 //   user: User;
 // }
 
-export interface LoginData {
-  username: string;
-  password: string;
-}
+// export interface LoginData {
+//   username: string;
+//   password: string;
+// }
 
 // export interface SignUpData {
 //   email: string;

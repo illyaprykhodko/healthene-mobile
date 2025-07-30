@@ -29,7 +29,7 @@ interface PropsWithIcon extends BaseProps {
 }
 
 interface PropsWithCustomIcon extends BaseProps {
-  CustomIcon: React.ReactNode;
+  CustomIcon?: React.ReactNode;
   icon?: undefined;
 }
 

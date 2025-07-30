@@ -1,16 +1,18 @@
 import { SignInState } from './slices/signInSlice';
 import { MessagesState } from '../services/messages/types';
-import { User } from './api/types';
+import { User } from 'types';
+// import { User } from './api/types';
 
 // Types
 export interface AppState {
-  initialized: boolean;
-  health: boolean;
   auth: boolean;
-  user: User | null;
-  accessToken: string | null;
+  health: boolean;
   wakeup: boolean;
+  user: User | null;
   keyboard: boolean;
+  initialized: boolean;
+  accessToken: string | null;
+  refreshToken: string | null;
   // session: {
   //   token: string;
   //   refreshToken: string;
@@ -36,16 +38,16 @@ export interface AppState {
 //   password: string;
 // }
 
-export interface SignUpData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-}
+// export interface SignUpData {
+//   email: string;
+//   password: string;
+//   firstName: string;
+//   lastName: string;
+//   phone?: string;
+// }
 
-export interface RootState {
-  app: AppState;
-  signIn: SignInState;
-  messages: MessagesState;
-}
+// export interface RootState {
+//   app: AppState;
+//   signIn: SignInState;
+//   messages: MessagesState;
+// }

@@ -1,10 +1,13 @@
-import { call, put, takeEvery, select, Effect, SelectEffect, ForkEffect } from 'redux-saga/effects';
+// outsource dependencies
+import Config from 'react-native-config';
 import Toast from 'react-native-toast-message';
+import { PayloadAction } from '@reduxjs/toolkit';
+import { call, put, takeEvery, select, Effect, SelectEffect, ForkEffect } from 'redux-saga/effects';
+// local dependencies
+import { RootState } from 'store';
 import { add, remove, updateMeta } from './slice';
 import { Message, MessagesState } from './types';
-import Config from 'react-native-config';
-import { RootState } from '../../store/types';
-import { PayloadAction } from '@reduxjs/toolkit';
+// import { RootState } from '../../store/types';
 
 function * removeMessageSaga ({ payload }: PayloadAction<{ uid: string }>): Generator<Effect | SelectEffect, void, unknown> {
     const messages = (yield select((state: RootState) => state.messages)) as MessagesState;

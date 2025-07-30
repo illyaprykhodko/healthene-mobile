@@ -1,10 +1,10 @@
 // outsource dependencies
 import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
-import { LoginData } from './types';
-import { UserSession, User } from 'types';
+// import { LoginData, SignUpData, User, Session } from '../../types/user';
+import { LoginData, User, UserSession } from 'types';
 import { baseQuery, sessionManager } from './baseApi';
-// import { Session, LoginData, SignUpData, User } from './types';
+import { clearSession, setSession } from 'store/slices/appSlice';
 
 export const authApi = createApi({
     reducerPath: 'authApi',
@@ -25,28 +25,31 @@ export const authApi = createApi({
                 }
             },
         }),
-        restoreSession: builder.query<UserSession, void>({
-            query: () => '/auth/session',
+        restoreSession: builder.query<User, void>({
+            query: () => '/patient-service/patients/me',
+            async onQueryStarted (_, { queryFulfilled }) {
+                // try {
+                // } catch (error) {
+                // }
+            },
+            providesTags: ['Auth'],
+        }),
+        getSelf: builder.query<User, void>({
+            query: () => {
+                return {
+                    method: 'GET',
+                    url: '/patient-service/patients/me',
+                };
+            },
             async onQueryStarted (_, { queryFulfilled }) {
                 try {
-                    const { data: session } = await queryFulfilled;
-                    await sessionManager.update(session);
+                    const { data: user } = await queryFulfilled;
                 } catch {
-                    await sessionManager.update(null);
+                    // await sessionManager.update(null);
                 }
             },
-        }),
-        // login: builder.mutation<Session, LoginData>({
-        //   query: (credentials) => ({
-        //     url: '/auth/token',
-        //     method: 'POST',
-        //     body: credentials,
-        //   }),
-        //   invalidatesTags: ['Auth'],
-        // }),
-        getSelf: builder.query<User, void>({
-            query: () => '/patient-service/patients/me',
             transformResponse: (response: User) => {
+                console.log('getSelf transformResponse', response);
                 return {
                     ...response,
                     // cellPhone: formatPhoneNumber(response.cellPhone),
@@ -55,23 +58,28 @@ export const authApi = createApi({
                 };
             },
             providesTags: ['Auth'],
+            transformErrorResponse: (response: Error) => {
+                return response;
+            },
         }),
         login: builder.mutation<UserSession, LoginData>({
             query: credentials => ({
-                url: '/auth/token',
                 method: 'POST',
                 body: credentials,
+                url: '/auth/token',
             }),
             async onQueryStarted (_, { dispatch, queryFulfilled }) {
                 try {
                     const { data: session } = await queryFulfilled;
+                    dispatch(setSession(session));
+                    // update session
                     await sessionManager.update(session);
-          
-                    const userResult: User = await dispatch(
+                    
+                    // wait for AsyncStorage to update
+                    await new Promise(resolve => setTimeout(resolve as () => void, 100));
+                    await dispatch(
                         authApi.endpoints.getSelf.initiate()
                     ).unwrap();
-                    console.log('userResult', userResult);
-                    // return userResult;
                 } catch (error) {
                     await sessionManager.update(null);
                     throw error;
@@ -79,69 +87,50 @@ export const authApi = createApi({
             },
             invalidatesTags: ['Auth'],
         }),
-        // login: builder.mutation<Session, LoginData>({
-        //   query: (credentials) => ({
-        //     url: '/auth/token',
-        //     method: 'POST',
-        //     body: credentials,
-        //   }),
-        //   async onQueryStarted(_, { queryFulfilled }) {
-        //     try {
-        //       const { data: session } = await queryFulfilled;
-        //       await sessionManager.update(session);
-        //       const user = await getSelf().unwrap();
-        //       return user;
-        //     } catch (error) {
-        //       await sessionManager.update(null);
-        //       throw error;
-        //     }
-        //   },
-        //   invalidatesTags: ['Auth'],
-        // }),
-        // signUp: builder.mutation<Session, SignUpData>({
+        // signUp: builder.mutation<User, SignUpData>({
         //     query: data => ({
-        //         url: '/auth/signup',
+        //         url: '/patient-service/public/patients/sign-up',
         //         method: 'POST',
         //         body: data,
         //     }),
-        //     invalidatesTags: ['Auth'],
         // }),
         logout: builder.mutation<void, void>({
             query: () => ({
                 url: '/auth/logout',
                 method: 'POST',
             }),
+            async onQueryStarted (_, { queryFulfilled, dispatch }) {
+                try {
+                    await queryFulfilled;
+                    await sessionManager.update(null);
+                    dispatch(clearSession());
+                } catch {
+                    // Even if logout fails, clear local session
+                    await sessionManager.update(null);
+                }
+            },
             invalidatesTags: ['Auth'],
         }),
-        getSession: builder.query<UserSession | null, void>({
-            query: () => '/auth/session',
-            providesTags: ['Auth'],
-        }),
-        // getSelf: builder.query<User, void>({
-        //   query: () => '/auth/me',
-        //   providesTags: ['Auth'],
-        // }),
         forgotPassword: builder.mutation<void, { email: string }>({
             query: data => ({
-                url: '/auth/forgot-password',
+                url: '/auth/send-reset-password-token',
                 method: 'POST',
                 body: data,
             }),
         }),
-        checkHealth: builder.query<boolean, void>({
+        checkHealth: builder.query<{ status: string }, void>({
             query: () => '/actuator/health',
-            transformResponse: () => true,
-            transformErrorResponse: () => false,
         }),
     }),
 });
 
 export const {
-    useLoginMutation,
-    // useSignUpMutation,
-    useLogoutMutation,
-    useGetSessionQuery,
     useGetSelfQuery,
-    useForgotPasswordMutation,
+    useLoginMutation,
+    useLogoutMutation,
     useCheckHealthQuery,
+    // useSignUpMutation,
+    useRestoreSessionQuery,
+    useRefreshSessionMutation,
+    useForgotPasswordMutation,
 } = authApi;

@@ -1,10 +1,10 @@
 // outsource dependencies
 import React, { PureComponent } from 'react';
-import { SkypeIndicator } from 'react-native-indicators';
 import { View, StyleSheet, ViewStyle } from 'react-native';
+import { SkypeIndicator, MaterialIndicator } from 'react-native-indicators';
 // local dependencies
-import { useTheme } from '../hooks/useTheme';
 import Text from './Text';
+import { useTheme } from '../hooks/useTheme';
 
 export const TYPE = {
     MAINTENANCE: 'MAINTENANCE',
@@ -15,8 +15,8 @@ export const TYPE = {
 type PreloaderType = typeof TYPE[keyof typeof TYPE];
 
 interface PreloaderProps {
-  type?: PreloaderType;
   active?: boolean;
+  type?: PreloaderType;
   children?: React.ReactNode;
   containerStyle?: ViewStyle;
 }
@@ -51,6 +51,7 @@ const MStyles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: '#fff',
     },
     spinnerRow: {
         display: 'flex',
@@ -72,13 +73,13 @@ const MStyles = StyleSheet.create({
 
 const Maintenance: React.FC = () => {
     const theme = useTheme();
-  
+    // BallIndicator, BarIndicator, DotIndicator, MaterialIndicator, PacmanIndicator, PulseIndicator, UIActivityIndicator, WaveIndicator
     return (
         <View style={MStyles.container}>
             <View style={MStyles.spinnerRow}>
-                <SkypeIndicator color={theme.colors.primary} size={70} style={MStyles.sp1} />
-                <SkypeIndicator color={theme.colors.secondary} size={150} style={MStyles.sp2} />
-                <SkypeIndicator color={theme.colors.success} size={70} style={MStyles.sp3} />
+                <MaterialIndicator color={theme.colors.primary} size={70} style={MStyles.sp1} />
+                <MaterialIndicator color={theme.colors.secondary} size={150} style={MStyles.sp2} />
+                <MaterialIndicator color={theme.colors.success} size={70} style={MStyles.sp3} />
             </View>
             <Text variant="bold" style={{ textAlign: 'center' }}>
           APP IS UNDER MAINTENANCE
@@ -95,6 +96,7 @@ const BPStyles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: '#fff',
     },
 });
 
@@ -116,6 +118,9 @@ const BoxPreloader: React.FC<BoxPreloaderProps> = ({ containerStyle }) => {
 // shortcut
 export const BoxHolder = (props: Omit<PreloaderProps, 'type'>) => (
     <Preloader type={TYPE.BOX} {...props} />
+);
+export const MaintenanceHolder = (props: Omit<PreloaderProps, 'type'>) => (
+    <Preloader type={TYPE.MAINTENANCE} {...props} />
 );
 export const Spinner = (props: Omit<PreloaderProps, 'type'>) => (
     <Preloader type={TYPE.SPINNER} {...props} />

@@ -12,6 +12,7 @@ const initialState: AppState = {
     health: false,
     keyboard: false,
     accessToken: null,
+    refreshToken: null,
     initialized: false,
 };
 
@@ -33,11 +34,13 @@ export const appSlice = createSlice({
         },
         setSession: (state, action: PayloadAction<UserSession>) => {
             state.accessToken = action.payload.accessToken;
+            state.refreshToken = action.payload.refreshToken;
             state.auth = true;
             // state.user = action.payload.user;
         },
         clearSession: state => {
             state.accessToken = null;
+            state.refreshToken = null;
             state.auth = false;
             state.user = null;
         },

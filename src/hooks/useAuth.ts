@@ -2,21 +2,22 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 // local dependencies
-import { LoginData } from 'store/api/types';
-import { PRIVATE } from '../constants/routes';
-import { navigate } from '../services/navigation';
+import { LoginData } from 'types';
 import { MessageService } from '../services/messages';
-import { useLoginMutation } from '../store/api/authApi';
+import { setSession, clearSession, setUser, setAuth } from '../store/slices/appSlice';
+import { useGetSelfQuery, useLoginMutation, useLogoutMutation } from '../store/api/authApi';
 
 export const useAuth = () => {
     const dispatch = useDispatch();
     const [login, { isLoading }] = useLoginMutation();
-
+    const [logout, { isLoading: isLogoutLoading }] = useLogoutMutation();
+    const { data: user, isLoading: isUserLoading } = useGetSelfQuery();
     const signIn = useCallback(async (credentials: LoginData) => {
         try {
-            const result = await login(credentials).unwrap();
-            navigate(PRIVATE);
-            return result;
+            const session = await login(credentials).unwrap();
+            dispatch(setSession(session));
+            dispatch(setUser(user || null));
+            return session;
         } catch (error) {
             MessageService.error({
                 uid: 'SignIn',
@@ -27,8 +28,19 @@ export const useAuth = () => {
         }
     }, [login]);
 
+    const signOut = useCallback(async () => {
+        await logout().unwrap();
+        dispatch(clearSession());
+        dispatch(setUser(null));
+        dispatch(setAuth(false));
+    }, [logout, dispatch]);
+
     return {
         signIn,
+        signOut,
         isLoading,
+        isUserLoading,
+        isLogoutLoading,
     };
 };
+

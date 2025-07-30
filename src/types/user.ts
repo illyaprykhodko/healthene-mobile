@@ -59,6 +59,34 @@ export interface PlanReference {
 }
 
 /**
+ * Authentication data for login
+ */
+export interface LoginData {
+  username: string;
+  password: string;
+}
+
+/**
+ * Authentication data for sign up
+ */
+// export interface SignUpData {
+//   email: string;
+//   password: string;
+//   firstName: string;
+//   lastName: string;
+//   phone?: string;
+// }
+
+/**
+ * User session with authentication tokens
+ */
+// export interface Session {
+//   accessToken: string;
+//   refreshToken: string;
+//   user: User;
+// }
+
+/**
  * Represents a user in the system
  * @interface User
  * @property {number} id - Unique identifier of the user
@@ -173,20 +201,36 @@ export interface UserRole {
  * @property {string} createdDate - ISO date string when the session was created
  * @property {string} updatedDate - ISO date string when the session was last updated
  */
+// export interface UserSession {
+//   id?: number;
+//   user?: User;
+//   // token: string;
+//   device?: string;
+//   ipAddress?: string;
+//   userAgent?: string;
+//   isActive?: boolean;
+//   createdDate?: string;
+//   accessToken: string;
+//   updatedDate?: string;
+//   lastActivity?: string;
+//   refreshToken: string;
+// }
 export interface UserSession {
-  id: number;
-  user: User;
-  device: string;
-  isActive: boolean;
-  ipAddress: string;
-  userAgent: string;
-  createdDate: string;
   accessToken: string;
-  updatedDate: string;
-  lastActivity: string;
   refreshToken: string;
+  accessTokenValiditySeconds: number;
+  refreshTokenValiditySeconds: number;
+  authorities: string[];
+  resources: typeof resources;
+  scope: string[];
 }
-
+const resources = [
+    'storage_service',
+    'patient_web',
+    'auth_service',
+    'messenger',
+    'healthene',
+];
 export interface Patient extends User {
   activeVisit?: ActiveVisit;
   preferredGender?: {
@@ -231,23 +275,23 @@ export interface PatientProfile extends Patient {
     familyHistory: PatientMedicalProblem[];
   };
   lifestyle: {
-    diet: string;
     smoking: boolean;
     alcohol: boolean;
     exercise: boolean;
+    diet: string;
   };
   goals: {
-    sleep: number;
     weight: number;
     activity: number;
+    sleep: number;
   };
   preferences: {
     notifications: {
-      sms: boolean;
-      push: boolean;
       email: boolean;
+      push: boolean;
+      sms: boolean;
     };
-    language: string;
     reminders: boolean;
+    language: string;
   };
 }
