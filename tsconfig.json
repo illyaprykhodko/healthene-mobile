@@ -13,6 +13,6 @@
       "@navigation/*": ["src/navigation/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "App.tsx"],
   "exclude": ["node_modules", "babel.config.js", "metro.config.js"]
 }

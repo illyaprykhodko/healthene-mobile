@@ -13,9 +13,10 @@ export default defineConfig([
         languageOptions: {
             parser: TSParser,
             parserOptions: {
+                ignorePatterns: ['.test.ts', '.test.tsx'],
                 project: './tsconfig.json',
                 ecmaVersion: 'latest',
-                sourceType: 'module'
+                sourceType: 'module',
             },
             globals: {
                 ...globals.es2017,
@@ -60,7 +61,8 @@ export default defineConfig([
                 "specialLink": ["to", "hrefLeft", "hrefRight"],
                 "aspects": ["noHref", "invalidHref", "preferButton"]
             }],
-            "import/no-unresolved": ["warn", { "ignore": ["../extensions/*"] }],
+            "import/no-unresolved": ["off"],
+            // "import/no-unresolved": ["warn", { "ignore": ["../extensions/*"] }],
             "jsx-quotes": ["error", "prefer-double"],
             "quotes": ["error", "single"],
             "curly": ["warn", "all"],

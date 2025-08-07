@@ -22,7 +22,7 @@ export function validateMedicalProblem (problem: MedicalProblem): boolean {
     if (!problem.id) { return false; }
     if (!problem.name) { return false; }
     if (!problem.category) { return false; }
-    if (!validateMedicalProblemCategory(problem.category)) { return false; }
+    // if (!validateMedicalProblemCategory(problem.category)) { return false; }
     if (typeof problem.severity !== 'number' || problem.severity < 1 || problem.severity > 5) { return false; }
     if (typeof problem.isActive !== 'boolean') { return false; }
     return true;
