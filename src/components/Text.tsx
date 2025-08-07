@@ -10,17 +10,17 @@ export type TextVariant =
   | 'h5'
   | 'h6'
   | 'body'
-  | 'caption'
+  | 'bold'
   | 'small'
   | 'common'
-  | 'bold';
+  | 'caption';
 
 interface TextProps {
-  children?: React.ReactNode;
-  textAlign?: 'auto' | 'left' | 'right' | 'center' | 'justify';
-  style?: TextStyle | TextStyle[];
-  color?: string;
-  variant?: TextVariant;
+    color?: string;
+    variant?: TextVariant;
+    children?: React.ReactNode;
+    style?: TextStyle | TextStyle[];
+    textAlign?: 'auto' | 'left' | 'right' | 'center' | 'justify';
 }
 
 const textStyles: Record<TextVariant, TextStyle> = {
@@ -90,9 +90,9 @@ const textStyles: Record<TextVariant, TextStyle> = {
 const allowedAlign = ['auto', 'left', 'right', 'center', 'justify'];
 
 const Text: React.FC<TextProps> = ({
+    style,
     children,
     textAlign,
-    style,
     color = '#222',
     variant = 'common',
     ...attr

@@ -1,3 +1,4 @@
+// outsource dependencies
 import React from 'react';
 import {
     ViewStyle,
@@ -7,8 +8,9 @@ import {
     ActivityIndicator,
     TouchableOpacityProps,
 } from 'react-native';
-import { useTheme } from '../hooks/useTheme';
+// local dependencies
 import Text from './Text';
+import { useTheme } from '../hooks/useTheme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -25,13 +27,13 @@ interface ButtonProps extends TouchableOpacityProps {
 }
 
 export const Button: React.FC<ButtonProps> = ({
-    variant = 'primary',
-    loading = false,
-    size = 'md',
-    title,
     style,
-    textStyle,
+    title,
     disabled,
+    textStyle,
+    size = 'md',
+    loading = false,
+    variant = 'primary',
     ...props
 }) => {
     const theme = useTheme();
@@ -91,10 +93,10 @@ export const Button: React.FC<ButtonProps> = ({
             style={[
                 styles.button,
                 {
-                    backgroundColor: getBackgroundColor(),
-                    borderColor: getBorderColor(),
                     padding: getPadding(),
+                    borderColor: getBorderColor(),
                     borderRadius: theme.borderRadius.sm,
+                    backgroundColor: getBackgroundColor(),
                 },
                 variant === 'outline' && styles.outline,
                 style,
@@ -107,8 +109,8 @@ export const Button: React.FC<ButtonProps> = ({
             ) : (
                 <Text
                     variant="bold"
-                    color={getTextColor()}
                     style={textStyle}
+                    color={getTextColor()}
                 >
                     {title}
                 </Text>

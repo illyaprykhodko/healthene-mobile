@@ -164,6 +164,7 @@ export interface User {
   isActive: boolean;
   createdDate: string;
   updatedDate: string;
+  preferenceTemplatesExist: boolean;
 }
 
 /**

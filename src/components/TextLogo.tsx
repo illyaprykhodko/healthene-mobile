@@ -1,10 +1,12 @@
+// outsource dependencies
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, ImageBackground, Platform, StyleProp, TextStyle, ViewStyle } from 'react-native';
+// local dependencies
 import { COLORS } from '../constants/colors';
 
 interface TextLogoProps {
-  style?: StyleProp<TextStyle>;
-  color?: string;
+    color?: string;
+    style?: StyleProp<TextStyle>;
 }
 
 export const TextLogo: React.FC<TextLogoProps> = ({ style, color = COLORS.THEME_INVERSE }) => (
@@ -21,9 +23,9 @@ export const TextLogo: React.FC<TextLogoProps> = ({ style, color = COLORS.THEME_
 );
 
 interface IconLogoProps {
-  onPress?: () => void;
-  disabled?: boolean;
-  style?: StyleProp<ViewStyle>;
+    disabled?: boolean;
+    onPress?: () => void;
+    style?: StyleProp<ViewStyle>;
 }
 
 export const IconLogo: React.FC<IconLogoProps> = ({ onPress, disabled = false, style }) => {

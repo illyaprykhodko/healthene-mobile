@@ -25,21 +25,21 @@ export const AnimatedWelcome: React.FC<AnimatedWelcomeProps> = ({ children, onFi
             Animated.parallel([
                 Animated.timing(scale, {
                     toValue: 1,
+                    useNativeDriver: true,
                     duration: ANIMATION_DURATION,
                     easing: Easing.out(Easing.exp),
-                    useNativeDriver: true,
                 }),
                 Animated.timing(translateY, {
                     toValue: -120,
+                    useNativeDriver: true,
                     duration: ANIMATION_DURATION,
                     easing: Easing.out(Easing.exp),
-                    useNativeDriver: true,
                 }),
                 Animated.timing(opacity, {
                     toValue: 0,
                     duration: 400,
-                    delay: ANIMATION_DURATION - 300,
                     useNativeDriver: true,
+                    delay: ANIMATION_DURATION - 300,
                 }),
             ]).start(() => {
                 setShowWelcome(false);

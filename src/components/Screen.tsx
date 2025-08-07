@@ -34,9 +34,9 @@ const Screen: React.FC<ScreenProps> = ({
     style,
     initialized,
     statusBarHidden = false,
+    statusBarBg = '#1A2236',
     statusBarAnimated = false,
     statusBarVariant = 'default',
-    statusBarBg = '#1A2236',
     init,
     clear,
 }) => {

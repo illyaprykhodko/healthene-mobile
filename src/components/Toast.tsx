@@ -1,5 +1,7 @@
+// outsource dependencies
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+// local dependencies
 import { useTheme } from '../hooks/useTheme';
 
 const styles = StyleSheet.create({
@@ -23,9 +25,9 @@ const styles = StyleSheet.create({
 });
 
 const ToastContent: React.FC<{
-  type: 'success' | 'error' | 'warning' | 'info';
-  text1?: string;
-  text2?: string;
+    text1?: string;
+    text2?: string;
+    type: 'success' | 'error' | 'warning' | 'info';
 }> = ({ type, text1, text2 }) => {
     const theme = useTheme();
   

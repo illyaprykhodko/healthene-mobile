@@ -13,13 +13,13 @@ interface TextInputProps {
   inputStyle?: TextStyle;
   secureTextEntry?: boolean;
   trailing?: React.ReactNode;
+  accessibilityHint?: string;
+  accessibilityLabel?: string;
   error?: Record<string, string>;
   touched?: Record<string, boolean>;
   onChangeText?: (text: string) => void;
-  variant?: 'filled' | 'outlined' | 'standard';
-  accessibilityLabel?: string;
-  accessibilityHint?: string;
   leading?: (props: any) => React.ReactNode;
+  variant?: 'filled' | 'outlined' | 'standard';
 }
 
 const styles = StyleSheet.create({
@@ -55,9 +55,9 @@ const TextInput: React.FC<TextInputProps> = ({
                 selectionColor={'#64b5f6'}
                 onChangeText={onChangeText}
                 secureTextEntry={secureTextEntry}
-                style={{ backgroundColor: 'transparent' }}
                 onBlur={() => value && setIsBlur(true)}
                 color={isShowError ? '#d32f2f' : color}
+                style={{ backgroundColor: 'transparent' }}
                 inputStyle={isShowError ? { ...inputStyle, color: '#d32f2f' } : inputStyle}
                 {...input}
             />
