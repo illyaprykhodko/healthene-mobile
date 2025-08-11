@@ -7,6 +7,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 // local dependencies
 import { ROUTES } from '../constants/routes';
 import { useTheme } from '../hooks/useTheme';
+import DayOverview from '../screens/privateScreens/DayOverview';
 import { MainScreen } from '../screens/privateScreens/MainScreen';
 import { CustomDrawerContent } from '../components/CustomDrawerContent';
 import { PlaceholderScreen } from '../screens/privateScreens/PlaceholderScreen';
@@ -26,6 +27,7 @@ export const PrivateDrawer: React.FC = () => {
                 drawerPosition: 'right',
                 gestureDirection: 'horizontal-inverted',
                 headerShown: true,
+                // headerShown: false,
                 headerStyle: {
                     backgroundColor: theme.colors.background,
                 },
@@ -54,8 +56,8 @@ export const PrivateDrawer: React.FC = () => {
             />
             
             <Drawer.Screen
+                component={DayOverview}
                 name={ROUTES.DAILY_PLAN}
-                component={() => <PlaceholderScreen title="My Daily Plan" />}
                 options={{
                     title: 'My Daily Plan',
                     drawerIcon: ({ color }) => (

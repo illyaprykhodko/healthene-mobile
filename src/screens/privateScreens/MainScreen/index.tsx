@@ -1,18 +1,17 @@
 // outsource dependencies
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { View, StyleSheet, Image, Dimensions } from 'react-native';
 
 // local dependencies
-import { RootState } from '../../../store';
 import Text from '../../../components/Text';
 import Screen from '../../../components/Screen';
 import { useTheme } from '../../../hooks/useTheme';
 import { ROUTES } from '../../../constants/routes';
 import { Button } from '../../../components/Button';
 import { Hamburger } from '../../../components/Hamburger';
+import { RootState, useAppSelector } from '../../../store';
 
 const { width } = Dimensions.get('window');
 
@@ -33,8 +32,7 @@ type DrawerParamList = {
 export const MainScreen: React.FC = () => {
     const theme = useTheme();
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
-    const user = useSelector((state: RootState) => state.app.user);
-    
+    const user = useAppSelector((state: RootState) => state.app.user);
     const timeGreeting = () => {
         const hour = new Date().getHours();
         const name = user?.firstName || '';

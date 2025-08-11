@@ -1,14 +1,14 @@
 // outsource dependencies
 import { useCallback } from 'react';
-import { useDispatch } from 'react-redux';
 // local dependencies
 import { LoginData } from 'types';
+import { useAppDispatch } from '../store';
 import { MessageService } from '../services/messages';
 import { setSession, clearSession, setUser, setAuth } from '../store/slices/appSlice';
 import { useGetSelfQuery, useLoginMutation, useLogoutMutation } from '../store/api/authApi';
 
 export const useAuth = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const [login, { isLoading }] = useLoginMutation();
     const [logout, { isLoading: isLogoutLoading }] = useLogoutMutation();
     const { data: user, isLoading: isUserLoading } = useGetSelfQuery();
@@ -26,7 +26,7 @@ export const useAuth = () => {
             });
             throw error;
         }
-    }, [login]);
+    }, [login, dispatch, user]);
 
     const signOut = useCallback(async () => {
         await logout().unwrap();

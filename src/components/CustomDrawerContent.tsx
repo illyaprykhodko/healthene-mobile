@@ -130,7 +130,6 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
-                {/* Profile Section */}
                 <View style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
                     <Text variant="h4" color={theme.colors.text}>
                         {user?.firstName} {user?.lastName}
@@ -151,7 +150,6 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                         />
                     );
                 })}
-                {/* conditional menu items */}
                 {user?.preferenceTemplatesExist && <DrawerItem
                     icon="utensils"
                     title="Meal Preferences"
