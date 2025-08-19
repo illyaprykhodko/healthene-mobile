@@ -7,9 +7,9 @@ import { baseQuery, sessionManager } from './baseApi';
 import { clearSession, setSession } from 'store/slices/appSlice';
 
 export const authApi = createApi({
-    reducerPath: 'authApi',
     baseQuery,
     tagTypes: ['Auth'],
+    reducerPath: 'authApi',
     endpoints: builder => ({
         refreshSession: builder.mutation<UserSession, void>({
             query: () => ({
@@ -49,7 +49,6 @@ export const authApi = createApi({
                 }
             },
             transformResponse: (response: User) => {
-                console.log('getSelf transformResponse', response);
                 return {
                     ...response,
                     // cellPhone: formatPhoneNumber(response.cellPhone),

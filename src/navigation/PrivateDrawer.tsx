@@ -26,8 +26,8 @@ export const PrivateDrawer: React.FC = () => {
             screenOptions={({ navigation }) => ({
                 drawerPosition: 'right',
                 gestureDirection: 'horizontal-inverted',
-                headerShown: true,
-                // headerShown: false,
+                // headerShown: true,
+                headerShown: false,
                 headerStyle: {
                     backgroundColor: theme.colors.background,
                 },

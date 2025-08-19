@@ -1,8 +1,9 @@
 // outsource dependencies
 import moment from 'moment';
 import React, { useMemo } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 // local dependencies
 import Text from '../../../components/Text';
 import { useAppSelector } from '../../../store';
@@ -136,9 +137,11 @@ const getIconColorByType = (type: PhaseType) => {
 
 export const Overview: React.FC = () => {
     const theme = useTheme();
+    const navigation = useNavigation();
     const { date } = useAppSelector(selectDayOverview);
     const currentDate = date || moment().format('YYYY-MM-DD');
 
+    // Skip query if no date available
     const { data, isLoading, error } = useGetDayOverviewQuery(currentDate, {
         skip: !currentDate,
         refetchOnMountOrArgChange: true
@@ -156,12 +159,10 @@ export const Overview: React.FC = () => {
 
     const verticalSegments = useMemo(() => {
         if (phases.length <= 1) { return []; }
-    
         const segments = [];
         for (let i = 0; i < phases.length - 1; i++) {
             const top = (i + 1) * ROW_HEIGHT - GAP_SIZE;
             const height = GAP_SIZE * 2;
-      
             segments.push(
                 <View
                     key={`segment-${i}`}
@@ -178,12 +179,19 @@ export const Overview: React.FC = () => {
         return segments;
     }, [phases.length]);
 
+    const handlePhasePress = (phase: PhaseItem) => {
+        (navigation as any).navigate('Edit', {
+            phaseId: phase.id,
+            date: currentDate
+        });
+    };
+
     if (isLoading) {
         return (
             <Screen initialized={true} style={styles.container}>
                 <View style={styles.content}>
                     <Text variant="h3" style={{ marginTop: 12, marginBottom: 8, color: theme.colors.text }}>
-            Loading...
+                        Loading...
                     </Text>
                 </View>
             </Screen>
@@ -194,12 +202,11 @@ export const Overview: React.FC = () => {
         <Screen initialized={true} style={styles.container}>
             <View style={styles.content}>
                 <Text style={styles.title}>
-          My Daily Plan
+                    My Daily Plan
                 </Text>
 
                 <View style={{ position: 'relative' }}>
                     {verticalSegments}
-          
                     <FlatList
                         data={phases}
                         scrollEnabled={false}
@@ -208,7 +215,11 @@ export const Overview: React.FC = () => {
                             const { bg, fg, name } = getIconColorByType(item.type);
 
                             return (
-                                <View key={String(item.id)} style={styles.row}>
+                                <TouchableOpacity
+                                    key={String(item.id)}
+                                    style={styles.row}
+                                    onPress={() => handlePhasePress(item)}
+                                >
                                     <View style={styles.leftColumn}>
                                         <View style={styles.phaseDot} />
                                         <View style={styles.horizontalConnector}>
@@ -222,8 +233,11 @@ export const Overview: React.FC = () => {
                                         <Text variant="h4" style={{ color: theme.colors.text }}>
                                             {item.title}
                                         </Text>
+                                        <Text style={{ color: theme.colors.text, fontSize: 12, marginTop: 4 }}>
+                                            Status: {item.status || 'Unknown'}
+                                        </Text>
                                     </View>
-                                </View>
+                                </TouchableOpacity>
                             );
                         }}
                     />

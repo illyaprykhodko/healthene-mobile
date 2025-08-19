@@ -217,13 +217,13 @@ export interface UserRole {
 //   refreshToken: string;
 // }
 export interface UserSession {
+  scope: string[];
   accessToken: string;
   refreshToken: string;
-  accessTokenValiditySeconds: number;
-  refreshTokenValiditySeconds: number;
   authorities: string[];
   resources: typeof resources;
-  scope: string[];
+  accessTokenValiditySeconds: number;
+  refreshTokenValiditySeconds: number;
 }
 const resources = [
     'storage_service',

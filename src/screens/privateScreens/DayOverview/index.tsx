@@ -6,7 +6,10 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // local dependencies
+import Item from './Item';
+import Edit from './Edit';
 import { Overview } from './Overview';
+import AddReplaceItem from './AddReplaceItem';
 
 const Stack = createNativeStackNavigator();
 
@@ -46,6 +49,28 @@ const DayOverviewStack: React.FC = () => {
                         </TouchableOpacity>
                     ),
                 })}
+            />
+            <Stack.Screen
+                name="Item"
+                component={Item}
+                options={{ title: 'Item Details' }}
+            />
+            <Stack.Screen
+                name="Edit"
+                component={Edit}
+                options={({ route, navigation }) => ({
+                    title: 'Edit',
+                    headerLeft: () => (
+                        <TouchableOpacity onPress={() => navigation.navigate('Overview')}>
+                            <Icon name="arrow-left" size={20} color="#FFFFFF" />
+                        </TouchableOpacity>
+                    ),
+                })}
+            />
+            <Stack.Screen
+                name="AddReplaceItem"
+                component={AddReplaceItem}
+                options={{ title: 'Select Item' }}
             />
         </Stack.Navigator>
     );

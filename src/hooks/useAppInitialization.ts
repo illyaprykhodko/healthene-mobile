@@ -1,19 +1,17 @@
 // outsource dependencies
 import { useEffect, useState } from 'react';
 // local dependencies
-import { useCheckHealthQuery } from '../store/api/authApi';
 import { RootState, useAppDispatch, useAppSelector } from '../store';
-import { setInitialized, setHealth, setAuth } from '../store/slices/appSlice';
+import { useCheckHealthQuery, useRestoreSessionQuery } from '../store/api/authApi';
+import { setInitialized, setHealth, setAuth, setUser } from '../store/slices/appSlice';
 
 export const useAppInitialization = () => {
     const dispatch = useAppDispatch();
     const [isInitializing, setIsInitializing] = useState(true);
     
     const { data: health, error: healthError } = useCheckHealthQuery();
-    
-    // const { data: user, error: sessionError, isLoading: sessionLoading } = useRestoreSessionQuery();
+    const { data: user, error: sessionError, isLoading: sessionLoading } = useRestoreSessionQuery();
     const { accessToken: session } = useAppSelector((state: RootState) => state.app);
-
     useEffect(() => {
         const initializeApp = async () => {
             try {
@@ -21,6 +19,10 @@ export const useAppInitialization = () => {
                 dispatch(setHealth(!!health && health.status === 'UP'));
                 
                 // if user - session restored successfully
+                if (user) {
+                    dispatch(setUser(user));
+                    dispatch(setAuth(true));
+                }
                 if (session) {
                     // dispatch(setUser(user));
                     dispatch(setAuth(true));
@@ -41,7 +43,7 @@ export const useAppInitialization = () => {
         if (!session && (health !== undefined || healthError)) {
             initializeApp();
         }
-    }, [health, healthError, dispatch, session]);
+    }, [health, healthError, dispatch, session, user]);
 
     return {
         health,
