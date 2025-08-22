@@ -481,11 +481,11 @@ export const Overview: React.FC = () => {
                 </Text>
 
                 <View style={styles.timelineContainer}>
-                    <TimelineSVG phases={phases} />
                     <FlatList
                         data={phases}
-                        scrollEnabled={false}
+                        // scrollEnabled={false}
                         keyExtractor={item => String(item.id)}
+                        ListHeaderComponent={<TimelineSVG phases={phases} />}
                         renderItem={({ item, index }) => {
                             const { bg, fg, name } = getIconColorByType(item.type);
                             const isMeal = isMealPhase(item.type);
