@@ -24,18 +24,18 @@ interface PhaseItem {
     status?: 'DONE' | 'PENDING' | 'INCOMPLETE';
 }
 
-const TIMELINE_WIDTH = 50;
-const ICON_SIZE = 40;
 const DOT_SIZE = 8;
-const CONNECTOR_WIDTH = 1;
-const ROW_HEIGHT = 75;
 const GAP_SIZE = 15;
+const ICON_SIZE = 40;
+const ROW_HEIGHT = 75;
 const ICON_MARGIN = 20;
+const TIMELINE_WIDTH = 50;
+const CONNECTOR_WIDTH = 1;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
     const mainLineX = TIMELINE_WIDTH / 2;
-    const mealIconX = TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE / 2; // center of meal icon
+    const mealIconX = TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE / 2;
     const offsetLineX = mealIconX;
     const svgHeight = phases.length * ROW_HEIGHT;
     
@@ -57,40 +57,112 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                 }
             }
             
-            // create vertical line segments with gaps around dots
+            // create vertical line segments
             for (let i = firstMealIndex; i < lastMealIndex; i++) {
                 const currentY = i * ROW_HEIGHT + ROW_HEIGHT / 2;
                 const nextY = (i + 1) * ROW_HEIGHT + ROW_HEIGHT / 2;
+                const nextPhase = phases[i + 1];
                 
+                const isNextPhaseHasMeal = isMealPhase(nextPhase.type);
+                const checkLineX = isNextPhaseHasMeal ? mainLineX : offsetLineX;
+                const checkLineY1 = isNextPhaseHasMeal ? currentY + GAP_SIZE : currentY + 30;
                 // upper segment (from previous gap to current dot)
                 elements.push(
                     <Line
-                        key={`main-line-upper-${i}`}
-                        x1={mainLineX}
                         y1={currentY}
                         y2={currentY}
+                        x1={mainLineX}
                         // y1={currentY - GAP_SIZE}
                         x2={mainLineX}
                         // y2={currentY - DOT_SIZE / 2}
                         stroke={COLORS.GREY}
+                        key={`main-line-upper-${i}`}
                         strokeWidth={CONNECTOR_WIDTH}
                     />
                 );
                 
                 // lower segment (from current dot to next gap)
-                elements.push(
-                    <Line
-                        key={`main-line-lower-${i}`}
-                        x1={mainLineX}
-                        y1={currentY + GAP_SIZE}
-                        y2={nextY - GAP_SIZE}
-                        // y1={currentY + DOT_SIZE / 2}
-                        x2={mainLineX}
-                        // y2={nextY - GAP_SIZE}
-                        stroke={COLORS.GREY}
-                        strokeWidth={CONNECTOR_WIDTH}
-                    />
-                );
+                if (!isNextPhaseHasMeal) {
+                    elements.push(
+                        <Line
+                            key={`main-line-lower-${i}`}
+                            // x1={mainLineX}
+                            x1={checkLineX}
+                            y1={checkLineY1}
+                            y2={nextY - GAP_SIZE}
+                            // y1={currentY + DOT_SIZE / 2}
+                            x2={checkLineX}
+                            // x2={mainLineX}
+                            // y2={nextY - GAP_SIZE}
+                            stroke={COLORS.GREY}
+                            strokeWidth={CONNECTOR_WIDTH}
+                        />
+                    );
+                    elements.push(
+                        <Line
+                            key={`main-line-lower-${i}`}
+                            // x1={offsetLineX}
+                            x1={offsetLineX}
+                            // y1={currentY + 137}
+                            y1={nextY + ROW_HEIGHT + ICON_SIZE - DOT_SIZE}
+                            y2={nextY + ROW_HEIGHT * 2 - GAP_SIZE}
+                            // y2={nextY + 30}
+                            x2={offsetLineX}
+                            stroke={COLORS.GREY}
+                            strokeWidth={CONNECTOR_WIDTH}
+                        />
+                    );
+                } else {
+                    const isPrevPhaseHasMeal = isMealPhase(phases[i].type);
+                    // elements.push(
+                    //     <Line
+                    //         key={`main-line-lower-${i}`}
+                    //         x1={offsetLineX}
+                    //         y1={currentY + 137}
+                    //         y2={nextY + 30}
+                    //         x2={offsetLineX}
+                    //         stroke={COLORS.GREY}
+                    //         strokeWidth={CONNECTOR_WIDTH}
+                    //     />
+                    // );
+                    // !isNextPhaseHasMeal && elements.push(
+                    //     <Line
+                    //         key={`main-line-lower-${i}`}
+                    //         x1={offsetLineX}
+                    //         y1={currentY + 137}
+                    //         y2={nextY + 30}
+                    //         x2={offsetLineX}
+                    //         stroke={COLORS.GREY}
+                    //         strokeWidth={CONNECTOR_WIDTH}
+                    //     />
+                    // );
+                    // elements.push(
+                    //     <Line
+                    //         key={`main-line-lower-${i}`}
+                    //         x1={offsetLineX}
+                    //         y1={currentY + 137}
+                    //         y2={nextY + 30}
+                    //         x2={offsetLineX}
+                    //         stroke={COLORS.GREY}
+                    //         strokeWidth={CONNECTOR_WIDTH}
+                    //     />
+                    // );
+                    // }
+                    //(i + 1 !== lastMealIndex) &&
+                    isPrevPhaseHasMeal && elements.push(
+                        <Line
+                            key={`main-line-lower-${i}`}
+                            x1={mainLineX}
+                            y1={currentY + GAP_SIZE}
+                            y2={nextY - GAP_SIZE}
+                            // y1={currentY + DOT_SIZE / 2}
+                            x2={mainLineX}
+                            // y2={nextY - GAP_SIZE}
+                            stroke={COLORS.GREY}
+                            strokeWidth={CONNECTOR_WIDTH}
+                        />
+                    );
+                }
             }
         }
         
@@ -109,7 +181,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                 }
                 nonMealDots.push(y);
             } else {
-                // end non-meal segment (no diagonal transition)
+                // end non-meal segment
                 if (currentNonMealStart !== null && nonMealDots.length > 0) {
                     // create isolated vertical line for non-meal phases with gaps around dots
                     const startY = currentNonMealStart;
@@ -192,11 +264,10 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
         if (currentNonMealStart !== null && nonMealDots.length > 0) {
             const endY = (phases.length - 1) * ROW_HEIGHT + ROW_HEIGHT / 2;
             const startY = currentNonMealStart;
-            
-            // create segments between dots with gaps
+            // create segments
             for (let i = 0; i < nonMealDots.length; i++) {
                 const dotY = nonMealDots[i];
-                
+                const isNextPhaseHasMeal = isMealPhase(phases[i + 1].type);
                 // upper segment (from previous gap to current dot)
                 if (i === 0) {
                     // first dot - from start to dot
@@ -214,15 +285,15 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                 } else {
                     // From previous dot gap to current dot
                     const prevDotY = nonMealDots[i - 1];
-                    elements.push(
+                    !isNextPhaseHasMeal && elements.push(
                         <Line
-                            key={`non-meal-line-end-upper-${i}`}
                             x1={offsetLineX}
-                            y1={prevDotY + DOT_SIZE / 2}
                             x2={offsetLineX}
-                            y2={dotY - DOT_SIZE / 2}
+                            y2={dotY - GAP_SIZE}
                             stroke={COLORS.GREY}
+                            y1={prevDotY + GAP_SIZE}
                             strokeWidth={CONNECTOR_WIDTH}
+                            key={`non-meal-line-end-upper-${i}`}
                         />
                     );
                 }
@@ -248,9 +319,12 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                         <Line
                             key={`non-meal-line-end-lower-${i}`}
                             x1={offsetLineX}
-                            y1={dotY + DOT_SIZE / 2}
+                            // y1={dotY + 55}
+                            y1={dotY + GAP_SIZE}
+                            // y1={checkLineY1}
                             x2={offsetLineX}
-                            y2={nextDotY - DOT_SIZE / 2}
+                            y2={nextDotY - GAP_SIZE}
+                            // y2={nextDotY - DOT_SIZE / 2}
                             stroke={COLORS.GREY}
                             strokeWidth={CONNECTOR_WIDTH}
                         />

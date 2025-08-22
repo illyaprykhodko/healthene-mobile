@@ -25,21 +25,38 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
     const [selectedItems, setSelectedItems] = useState<AvailableItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(0);
+    const [allItems, setAllItems] = useState<AvailableItem[]>([]);
   
     const entityType = route.params?.entityType || 'FOOD';
     const excludeIds = route.params?.excludeIds || [];
     const onApply = route.params?.onApply;
 
     const { data: availableItems, isLoading, error, refetch } = useGetAvailableItemsQuery({
-        page,
-        size: 20,
         excludeIds,
         entityType,
-        sort: 'name,ASC',
         name: searchQuery || undefined,
+        page,
+        size: 20,
+        sort: 'name,ASC',
     });
 
-    const filteredItems = availableItems || [];
+    useEffect(() => {
+        if (availableItems) {
+            if (page === 0) {
+                setAllItems(availableItems);
+            } else {
+                // setAllItems(prev => [...prev, ...availableItems]);
+                setAllItems(prev => {
+                    const newItems = availableItems.filter(
+                        newItem => !prev.some(existingItem => existingItem.id === newItem.id)
+                    );
+                    return [...prev, ...newItems];
+                });
+            }
+        }
+    }, [availableItems, page]);
+
+    const filteredItems = allItems;
 
     useEffect(() => {
         navigation.setOptions({
@@ -50,6 +67,7 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             setPage(0);
+            setAllItems([]);
             refetch();
         }, 500);
 
@@ -66,13 +84,13 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
 
     const handleApply = () => {
         if (onApply && selectedItems.length > 0) {
-            onApply(selectedItems[0]); // For now, just take the first selected item
+            onApply(selectedItems[0]);
             navigation.goBack();
         }
     };
 
     const handleLoadMore = () => {
-        if (!isLoading) {
+        if (!isLoading && availableItems && availableItems.length > 0) {
             setPage(prev => prev + 1);
         }
     };
