@@ -15,13 +15,15 @@ import { selectDayOverview } from '../../../store/slices/dayOverviewSlice';
 import { useGetDayOverviewQuery, Phase } from '../../../store/api/dayOverviewApi';
 
 // Temporary types
-export type PhaseType = 'MEAL' | 'MEASUREMENT' | 'SUPPLEMENT' | 'MEDICATION' | 'ADDED_BY_PATIENT' | 'PHYSICAL_ACTIVITY';
+export type PhaseType = 'MEAL' | 'MEASUREMENT' | 'SUPPLEMENT' | 'MEDICATION' | 'ADDED_BY_PATIENT' | 'PHYSICAL_ACTIVITY' | 'QUESTION' | 'ANYTIME';
 
 interface PhaseItem {
     title: string;
     type: PhaseType;
     id: string | number;
     status?: 'DONE' | 'PENDING' | 'INCOMPLETE';
+    phaseId?: string | number;
+    sortKey?: number;
 }
 
 const DOT_SIZE = 8;
@@ -425,6 +427,10 @@ const getIconColorByType = (type: PhaseType) => {
             return { bg: COLORS.LIGHT_GREY, fg: COLORS.BLACK, name: 'capsules' as const };
         case 'PHYSICAL_ACTIVITY':
             return { bg: '#F9C1C3', fg: COLORS.BLACK, name: 'running' as const };
+        case 'QUESTION':
+            return { bg: '#E3F2FD', fg: '#1976D2', name: 'question' as const };
+        case 'ANYTIME':
+            return { bg: '#FFF3E0', fg: '#E65100', name: 'clock' as const };
         default:
             return { bg: COLORS.LIGHTER_GREY, fg: COLORS.DARK_GREY, name: 'dot-circle' as const };
     }
@@ -444,21 +450,89 @@ export const Overview: React.FC = () => {
 
     const phases: PhaseItem[] = useMemo(() => {
         if (!data?.phases) { return []; }
-        return data.phases.map((p: Phase) => ({
-            id: p.id,
-            type: p.type as PhaseType,
-            title: p.meal?.name || p.measurement?.measurement?.name || p.name || 'Item',
-            status: p.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
-        }));
+        
+        const rows: PhaseItem[] = [];
+
+        data.phases.forEach((p: Phase) => {
+            if (p.type === 'MEASUREMENT') {
+                // expand measurement phases into individual items
+                const items = [...(p.items || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                items.forEach(item => {
+                    rows.push({
+                        id: item.id,
+                        type: 'MEASUREMENT',
+                        title: item.measurement?.name || 'Measurement',
+                        status: item.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
+                        phaseId: p.id,
+                        sortKey: (p.order ?? 0) + (item.order ?? 0) / 100,
+                    });
+                });
+            }
+            // else if (p.type === 'QUESTION') {
+            //     rows.push({
+            //         id: p.id,
+            //         type: 'QUESTION',
+            //         title: 'Health Question',
+            //         status: p.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
+            //         sortKey: p.order ?? 0,
+            //     });
+            // }
+            // else if (p.type === 'ANYTIME') {
+            //     // Handle anytime phase - expand items like measurements
+            //     const safeItems = [...(p.items || [])];
+            //     const items = safeItems.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+            //     items.forEach(item => {
+            //         let title = 'Item';
+            //         if (item.food?.name) {
+            //             title = item.food.name;
+            //         } else if (item.recipe?.name) {
+            //             title = item.recipe.name;
+            //         } else if (item.exercise?.title) {
+            //             title = item.exercise.title;
+            //         } else if (item.type) {
+            //             title = item.type.replace(/_/g, ' ').toLowerCase();
+            //         }
+                    
+            //         rows.push({
+            //             id: item.id,
+            //             type: 'ANYTIME',
+            //             title,
+            //             status: item.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
+            //             phaseId: p.id,
+            //             sortKey: (p.order ?? 0) + (item.order ?? 0) / 100,
+            //         });
+            //     });
+            // }
+            else if (['MEAL', 'MEDICATION', 'SUPPLEMENT', 'PHYSICAL_ACTIVITY', 'ADDED_BY_PATIENT'].includes(p.type)) {
+                // handle other phase types
+                rows.push({
+                    id: p.id,
+                    type: p.type as PhaseType,
+                    title: p.meal?.name || p.name || (p.type === 'PHYSICAL_ACTIVITY' ? 'Exercise' : p.type.toLowerCase()),
+                    status: p.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
+                    sortKey: p.order ?? 0,
+                });
+            }
+        });
+
+        return rows.sort((a, b) => (a.sortKey ?? 0) - (b.sortKey ?? 0));
     }, [data]);
 
     const isMealPhase = (type: PhaseType) => type === 'MEAL';
 
     const handlePhasePress = (phase: PhaseItem) => {
-        (navigation as any).navigate('Edit', {
-            phaseId: phase.id,
-            date: currentDate
-        });
+        if ((phase.type === 'MEASUREMENT' || phase.type === 'ANYTIME') && phase.phaseId) {
+            // TODO: check nav point after create component
+            (navigation as any).navigate('Edit', {
+                phaseId: phase.phaseId,
+                date: currentDate
+            });
+        } else {
+            (navigation as any).navigate('Edit', {
+                phaseId: phase.id,
+                date: currentDate
+            });
+        }
     };
 
     if (isLoading) {

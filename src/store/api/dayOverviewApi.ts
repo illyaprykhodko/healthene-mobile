@@ -65,7 +65,14 @@ export const dayOverviewApi = createApi({
                 ...success,
                 phases: (success?.phases || [])
                     .filter((item: Phase) => [
-                        'MEAL', 'MEDICATION', 'SUPPLEMENT', 'MEASUREMENT', 'ADDED_BY_PATIENT', 'PHYSICAL_ACTIVITY',
+                        'MEAL',
+                        'ANYTIME',
+                        'QUESTION',
+                        'MEDICATION',
+                        'SUPPLEMENT',
+                        'MEASUREMENT',
+                        'ADDED_BY_PATIENT',
+                        'PHYSICAL_ACTIVITY',
                     ].includes(item.type))
                     .sort((a: Phase, b: Phase) => (a.order ?? 0) - (b.order ?? 0)),
                 anytime: (success?.phases || []).find((i: Phase) => i.type === 'ANYTIME'),

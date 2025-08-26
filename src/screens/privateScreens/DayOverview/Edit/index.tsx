@@ -6,6 +6,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 // local dependencies
 import ListItem from './ListItem';
+import { OVERVIEW_TYPE } from '../types';
 import Text from '../../../../components/Text';
 import { useAppSelector } from '../../../../store';
 import Screen from '../../../../components/Screen';
@@ -38,14 +39,16 @@ interface EditProps {
 }
 
 // Temporary constants until full migration
-const OVERVIEW_TYPE = {
-    MEAL: 'MEAL',
-    SUPPLEMENT: 'SUPPLEMENT',
-    MEDICATION: 'MEDICATION',
-    MEASUREMENT: 'MEASUREMENT',
-    ADDED_BY_PATIENT: 'ADDED_BY_PATIENT',
-    PHYSICAL_ACTIVITY: 'PHYSICAL_ACTIVITY',
-};
+// const OVERVIEW_TYPE = {
+//     MEAL: 'MEAL',
+//     SUPPLEMENT: 'SUPPLEMENT',
+//     MEDICATION: 'MEDICATION',
+//     MEASUREMENT: 'MEASUREMENT',
+//     ADDED_BY_PATIENT: 'ADDED_BY_PATIENT',
+//     PHYSICAL_ACTIVITY: 'PHYSICAL_ACTIVITY',
+//     QUESTION: 'QUESTION',
+//     ANYTIME: 'ANYTIME',
+// };
 
 const PHASE_ITEM_STATUS = {
     DONE: 'DONE',
@@ -233,7 +236,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     }
 
     const groupedBySection = _.groupBy(items, 'section');
-    const title = currentPhase?.meal?.name || convertTypeToTitle(currentPhase?.type || '', true);
+    const title = currentPhase?.meal?.name
+                  || (currentPhase?.type === 'QUESTION' ? 'Health Question'
+                      : currentPhase?.type === 'ANYTIME' ? 'Anytime'
+                          : convertTypeToTitle(currentPhase?.type || '', true));
     const isPastDate = moment(targetDate).isBefore(moment(), 'day');
     const isFutureDate = moment(targetDate).isAfter(moment(), 'day');
 
@@ -309,46 +315,48 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     )}
                 </ScrollView>
 
-                {(currentPhase?.type === OVERVIEW_TYPE.MEAL || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? (
-                    <View style={styles.buttonContainer}>
+                {(currentPhase?.type === OVERVIEW_TYPE.MEAL
+                  || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT
+                  || currentPhase?.type === OVERVIEW_TYPE.ANYTIME) ? (
+                        <View style={styles.buttonContainer}>
+                            <Button
+                                icon="plus"
+                                title="Add"
+                                variant="primary"
+                                onPress={handleAddItem}
+                                textStyle={styles.textAddButton}
+                                style={{
+                                    ...styles.button,
+                                    ...styles.addButtonActive,
+                                    width: isFutureDate ? '100%' : '45%',
+                                }}
+                            />
+                            {!isFutureDate && (
+                                <Button
+                                    title="Meal Done"
+                                    variant="secondary"
+                                    onPress={handlePhaseDone}
+                                    textStyle={styles.textMealDoneButton}
+                                    style={{
+                                        ...styles.button,
+                                        ...styles.mealDoneButton,
+                                    }}
+                                />
+                            )}
+                        </View>
+                    ) : (
                         <Button
                             icon="plus"
                             title="Add"
                             variant="primary"
                             onPress={handleAddItem}
-                            textStyle={styles.textAddButton}
+                            textStyle={{ color: '#7BAAC2' }}
                             style={{
                                 ...styles.button,
-                                ...styles.addButtonActive,
-                                width: isFutureDate ? '100%' : '45%',
+                                ...styles.addButton,
                             }}
                         />
-                        {!isFutureDate && (
-                            <Button
-                                title="Meal Done"
-                                variant="secondary"
-                                onPress={handlePhaseDone}
-                                textStyle={styles.textMealDoneButton}
-                                style={{
-                                    ...styles.button,
-                                    ...styles.mealDoneButton,
-                                }}
-                            />
-                        )}
-                    </View>
-                ) : (
-                    <Button
-                        icon="plus"
-                        title="Add"
-                        variant="primary"
-                        onPress={handleAddItem}
-                        textStyle={{ color: '#7BAAC2' }}
-                        style={{
-                            ...styles.button,
-                            ...styles.addButton,
-                        }}
-                    />
-                )}
+                    )}
             </View>
         </Screen>
     );

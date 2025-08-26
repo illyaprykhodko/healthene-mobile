@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 // local dependencies
+import { OVERVIEW_TYPE } from '../types';
 import Text from '../../../../components/Text';
 import Screen from '../../../../components/Screen';
 import { useTheme } from '../../../../hooks/useTheme';
@@ -28,14 +29,16 @@ interface ItemProps {
 }
 
 // Temporary constants until full migration
-const OVERVIEW_TYPE = {
-    MEAL: 'MEAL',
-    SUPPLEMENT: 'SUPPLEMENT',
-    MEDICATION: 'MEDICATION',
-    MEASUREMENT: 'MEASUREMENT',
-    ADDED_BY_PATIENT: 'ADDED_BY_PATIENT',
-    PHYSICAL_ACTIVITY: 'PHYSICAL_ACTIVITY',
-};
+// const OVERVIEW_TYPE = {
+//     MEAL: 'MEAL',
+//     SUPPLEMENT: 'SUPPLEMENT',
+//     MEDICATION: 'MEDICATION',
+//     MEASUREMENT: 'MEASUREMENT',
+//     ADDED_BY_PATIENT: 'ADDED_BY_PATIENT',
+//     PHYSICAL_ACTIVITY: 'PHYSICAL_ACTIVITY',
+//     QUESTION: 'QUESTION',
+//     ANYTIME: 'ANYTIME',
+// };
 
 const ENTITY_TYPE = {
     FOOD: 'FOOD',
@@ -81,6 +84,7 @@ export const Item: React.FC<ItemProps> = ({ item, phase, measurement }) => {
                 case OVERVIEW_TYPE.SUPPLEMENT:
                 case OVERVIEW_TYPE.MEDICATION:
                 case OVERVIEW_TYPE.PHYSICAL_ACTIVITY:
+                case OVERVIEW_TYPE.ANYTIME:
                     navigation.setOptions({
                         title: _.get(phase, 'type') || '',
                         headerTitleStyle: {
@@ -91,6 +95,9 @@ export const Item: React.FC<ItemProps> = ({ item, phase, measurement }) => {
                     break;
                 case OVERVIEW_TYPE.MEASUREMENT:
                     navigation.setOptions({ title: 'Measurement' });
+                    break;
+                case OVERVIEW_TYPE.QUESTION:
+                    navigation.setOptions({ title: 'Health Question' });
                     break;
             }
         }
