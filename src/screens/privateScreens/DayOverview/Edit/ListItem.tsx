@@ -42,7 +42,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     const isDone = item.status === PHASE_ITEM_STATUS.DONE;
 
     const handleCheckboxPress = () => {
-        if (handleCheckboxStatus) {
+        if (handleCheckboxStatus && !disabled) {
             handleCheckboxStatus(item);
         }
     };
@@ -53,8 +53,10 @@ export const ListItem: React.FC<ListItemProps> = ({
             style={[
                 styles.checkbox,
                 item.status === PHASE_ITEM_STATUS.DONE && styles.checkboxChecked,
+                disabled && styles.checkboxDisabled,
             ]}
             disabled={disabled}
+            // activeOpacity={0.7}
         >
             {item.status === PHASE_ITEM_STATUS.DONE && (
                 <Text style={styles.checkboxText}>✓</Text>
@@ -145,28 +147,19 @@ export const ListItem: React.FC<ListItemProps> = ({
         }
 
         if (isRecipe) {
-            const recipe = item.recipe;
-            const imageUrl = recipe?.surrogateRecipe
-                ? recipe?.ingredients?.[0]?.entity?.coverImage?.url
-                : recipe?.coverImage?.url;
-
             return (
                 <View style={styles.recipeContainer}>
                     <View style={styles.main}>
-                        <Text style={[styles.title, { fontWeight: '600' }, isOpacity || {}]}>
-                            {recipe?.name || 'Recipe'}
+                        <Text style={[styles.title, isOpacity || {}]}>
+                            {item.recipe?.name || 'Recipe'}
                         </Text>
                         {amount && (
                             <Text style={[styles.subtitle, isOpacity || {}]}>
-                                {prepareIngredientNameWithUnit(item, { withoutName: true })}
+                                {prepareIngredientNameWithUnit(item)}
+                                {/* {prepareIngredientNameWithUnit(item, { withoutName: true })} */}
                             </Text>
                         )}
                         {item.modified && (
-                            <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
-                                added by me
-                            </Text>
-                        )}
-                        {recipe?.modified && (
                             <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
                                 edited by me
                             </Text>
@@ -181,11 +174,16 @@ export const ListItem: React.FC<ListItemProps> = ({
                 <View style={styles.foodContainer}>
                     <View style={styles.main}>
                         <Text style={[styles.title, isOpacity || {}]}>
-                            {item.food?.name || 'Food Item'}
+                            {item.food?.name || 'Food'}
                         </Text>
                         {amount && (
                             <Text style={[styles.subtitle, isOpacity || {}]}>
-                                {amount} {item.weight?.unit?.name || ''}
+                                {`${amount} ${item.weight?.unit?.name || ''}`}
+                            </Text>
+                        )}
+                        {item.modified && (
+                            <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
+                                edited by me
                             </Text>
                         )}
                     </View>
@@ -193,28 +191,32 @@ export const ListItem: React.FC<ListItemProps> = ({
             );
         }
 
-        // default case for other item types (medication, supplement, measurement, etc.)
+        // Default case
         return (
-            <View style={styles.main}>
-                <Text style={[styles.title, isOpacity || {}]}>
-                    {item.title || item.name || 'Item'}
-                </Text>
-                <Text style={[styles.subtitle, isOpacity || {}]}>
-                    Status: {item.status || 'Unknown'}
-                </Text>
-                {amount && (
-                    <Text style={[styles.subtitle, isOpacity || {}]}>
-                        Amount: {amount}
+            <View style={styles.defaultContainer}>
+                <View style={styles.main}>
+                    <Text style={[styles.title, isOpacity || {}]}>
+                        {item.title || 'Item'}
                     </Text>
-                )}
+                    {amount && (
+                        <Text style={[styles.subtitle, isOpacity || {}]}>
+                            {`${amount} ${item.weight?.unit?.name || ''}`}
+                        </Text>
+                    )}
+                    {item.modified && (
+                        <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
+                            edited by me
+                        </Text>
+                    )}
+                </View>
             </View>
         );
     };
 
     return (
-        <View style={[styles.wrapper, nextSection && styles.divider]}>
-            <View style={styles.listItemLink}>
-                {renderCheckbox()}
+        <View style={styles.container}>
+            {renderCheckbox()}
+            <View style={styles.content}>
                 {renderItemContent()}
                 {renderStatusText()}
             </View>
@@ -222,66 +224,52 @@ export const ListItem: React.FC<ListItemProps> = ({
     );
 };
 
-export default ListItem;
-
 const styles = StyleSheet.create({
-    wrapper: {
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         backgroundColor: COLORS.WHITE,
-        paddingLeft: 4,
-    },
-    divider: {
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.BLACK,
+        borderBottomColor: COLORS.LIGHT_GREY,
     },
-    listItemLink: {
-        maxWidth: '90%',
-        flexDirection: 'row',
+    checkbox: {
+        width: 24,
+        height: 24,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: COLORS.GREY,
+        justifyContent: 'center',
         alignItems: 'center',
+        marginRight: 12,
+    },
+    checkboxChecked: {
+        backgroundColor: COLORS.BLUE,
+        borderColor: COLORS.BLUE,
+    },
+    checkboxDisabled: {
+        opacity: 0.5,
+    },
+    checkboxText: {
+        color: COLORS.WHITE,
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    content: {
         flex: 1,
-        marginRight: 16,
-        marginBottom: 20,
-    },
-    image: {
-        width: 40,
-        height: 40,
-    },
-    offset: {
-        paddingLeft: 16,
-        paddingRight: 16,
-    },
-    checkboxContainer: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        marginRight: 5,
-    },
-    notEatText: {
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 15,
-    },
-    foodContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    buttonContainer: {
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        marginBottom: 5,
-    },
-    videoBtn: {
-        marginTop: 20,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderColor: COLORS.YELLOW,
-        backgroundColor: `${COLORS.YELLOW }80`, // 50% opacity
     },
     recipeContainer: {
-        alignItems: 'center',
-        flexDirection: 'row',
+        flex: 1,
+    },
+    foodContainer: {
+        flex: 1,
+    },
+    defaultContainer: {
+        flex: 1,
     },
     main: {
         flex: 1,
@@ -289,28 +277,17 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 16,
         fontWeight: '500',
-        color: COLORS.BLACK,
+        color: COLORS.DARK_GREY,
+        marginBottom: 4,
     },
     subtitle: {
         fontSize: 14,
         color: COLORS.GREY,
-        marginTop: 4,
+        marginBottom: 2,
     },
-    checkbox: {
-        width: 20,
-        height: 20,
-        borderWidth: 2,
-        borderColor: COLORS.GREY,
-        borderRadius: 4,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    checkboxChecked: {
-        backgroundColor: COLORS.BLUE,
-    },
-    checkboxText: {
-        color: COLORS.WHITE,
-        fontSize: 12,
+    notEatText: {
+        alignItems: 'flex-end',
     },
 });
+
+export default ListItem;

@@ -87,6 +87,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
   
     const [scrollEnabled, setScrollEnabled] = useState(true);
     const [initialized, setInitialized] = useState(false);
+
+    const [localItems, setLocalItems] = useState<PhaseItem[]>([]);
   
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
@@ -159,6 +161,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     
         return flatItems.sort((a, b) => (a.order || 0) - (b.order || 0));
     }, [phaseItems]);
+
+    useEffect(() => {
+        setLocalItems(items);
+    }, [items]);
 
     const computeExcludeIds = (): string[] => {
         switch (currentPhase?.type) {
@@ -250,7 +256,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 default:
                     newStatus = PHASE_ITEM_STATUS.DID_NOT_EAT;
             }
-      
             // await updatePhaseItem({
             //     id: item.id,
             //     data: {
@@ -259,6 +264,15 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             //         amount: item.amount || item.initialAmount
             //     }
             // });
+
+            setLocalItems(prevItems =>
+                prevItems.map(prevItem =>
+                    (prevItem.id === item.id
+                        ? { ...prevItem, status: newStatus }
+                        : prevItem)
+                )
+            );
+      
             await updatePhaseItem({
                 id: item.id,
                 phaseId: targetPhaseId,
@@ -270,15 +284,18 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             });
         } catch (error) {
             console.error('Error updating item status:', error);
+            setLocalItems(items);
         }
     };
 
     const handleDeleteItem = async (item: PhaseItem) => {
         try {
+            setLocalItems(prevItems => prevItems.filter(prevItem => prevItem.id !== item.id));
             await deletePhaseItem({ id: item.id, phaseId: targetPhaseId });
             // await deletePhaseItem(item.id);
         } catch (error) {
             console.error('Error deleting item:', error);
+            setLocalItems(items);
         }
     };
 
@@ -340,7 +357,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         );
     }
 
-    const groupedBySection = _.groupBy(items, 'section');
+    const groupedBySection = _.groupBy(localItems, 'section');
     const title = currentPhase?.meal?.name
                   || (currentPhase?.type === 'QUESTION' ? 'Health Question'
                       : currentPhase?.type === 'ANYTIME' ? 'Anytime'
@@ -369,7 +386,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
             <View style={styles.list}>
                 <ScrollView style={isFutureDate && styles.opacity} scrollEnabled={scrollEnabled}>
-                    {!_.isEmpty(items) ? (
+                    {!_.isEmpty(localItems) ? (
                         Object.entries(groupedBySection).map(([section, sectionItems]) => (
                             <SwipeList
                                 key={section}
