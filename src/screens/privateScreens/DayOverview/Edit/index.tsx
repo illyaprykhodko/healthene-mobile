@@ -29,6 +29,9 @@ interface PhaseItem {
     status?: string;
     section?: string;
     measurement?: any;
+    medication?: any;
+    supplement?: any;
+    physicalActivity?: any;
     id: string | number;
     initialAmount?: number;
     modified?: boolean;
@@ -60,6 +63,10 @@ const ENTITY_TYPE = {
     RECIPE: 'RECIPE',
     CUSTOM_RECIPE: 'CUSTOM_RECIPE',
     INGREDIENTS: 'INGREDIENTS',
+    MEASUREMENT: 'MEASUREMENT',
+    MEDICATION: 'MEDICATION',
+    SUPPLEMENT: 'SUPPLEMENT',
+    PHYSICAL_ACTIVITY: 'PHYSICAL_ACTIVITY',
 };
 
 const SECTION = {
@@ -92,10 +99,12 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     // get phase items
     const { data: phaseItems, isLoading: isPhaseItemsLoading } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+        // refetchOnMountOrArgChange: true,
     });
-
     // mutations
-    const [updatePhaseItem] = useUpdatePhaseItemMutation();
+    const [updatePhaseItem, { data }] = useUpdatePhaseItemMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
     const [addPhaseItem] = useAddPhaseItemMutation();
     const [updatePhase] = useUpdatePhaseMutation();
@@ -122,7 +131,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     
         const flatItems: PhaseItem[] = [];
         Object.entries(phaseItems).forEach(([type, typeItems]) => {
-            typeItems.forEach((item: any) => {
+            (typeItems as any[]).forEach((item: any) => {
                 flatItems.push({
                     id: item.id,
                     type: item.type,
@@ -137,10 +146,13 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     modified: item.modified,
                     useServing: item.useServing,
                     measurement: item.measurement,
+                    medication: item.medication,
+                    supplement: item.supplement,
+                    physicalActivity: item.physicalActivity,
                     initialAmount: item.initialAmount,
                     patientFoodCategoryQuestion: item.patientFoodCategoryQuestion,
                     patientFoodCategoryAttachment: item.patientFoodCategoryAttachment,
-                    title: item.food?.name || item.recipe?.name || item.measurement?.name || 'Item',
+                    title: item.food?.name || item.recipe?.name || item.measurement?.name || item.medication?.name || item.supplement?.name || item.physicalActivity?.name || 'Item',
                 });
             });
         });
@@ -148,22 +160,56 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         return flatItems.sort((a, b) => (a.order || 0) - (b.order || 0));
     }, [phaseItems]);
 
+    const computeExcludeIds = (): string[] => {
+        switch (currentPhase?.type) {
+            default:
+            case OVERVIEW_TYPE.MEAL:
+            case OVERVIEW_TYPE.ADDED_BY_PATIENT:
+                return items.map(i => String(i.food?.id)).filter(Boolean);
+            case OVERVIEW_TYPE.MEASUREMENT:
+                return items.map(i => String(i.measurement?.id)).filter(Boolean);
+            case OVERVIEW_TYPE.MEDICATION:
+                return items.map(i => String(i.medication?.id)).filter(Boolean);
+            case OVERVIEW_TYPE.SUPPLEMENT:
+                return items.map(i => String(i.supplement?.id)).filter(Boolean);
+            case OVERVIEW_TYPE.PHYSICAL_ACTIVITY:
+                return items.map(i => String(i.physicalActivity?.id)).filter(Boolean);
+        }
+    };
+
+    const mapPhaseTypeToEntityType = (): string => {
+        switch (currentPhase?.type) {
+            default:
+            case OVERVIEW_TYPE.MEAL:
+            case OVERVIEW_TYPE.ADDED_BY_PATIENT:
+                return ENTITY_TYPE.FOOD;
+            case OVERVIEW_TYPE.MEASUREMENT:
+                return ENTITY_TYPE.MEASUREMENT;
+            case OVERVIEW_TYPE.MEDICATION:
+                return ENTITY_TYPE.MEDICATION;
+            case OVERVIEW_TYPE.SUPPLEMENT:
+                return ENTITY_TYPE.SUPPLEMENT;
+            case OVERVIEW_TYPE.PHYSICAL_ACTIVITY:
+                return ENTITY_TYPE.PHYSICAL_ACTIVITY;
+        }
+    };
+
     const handleAddItem = () => {
         if (!targetPhaseId || !currentPhase) { return; }
 
-        const excludeIds = items.map(item => String(item.id));
+        const excludeIds = computeExcludeIds();
+        const entityType = mapPhaseTypeToEntityType();
     
         (navigation as any).navigate('AddReplaceItem', {
             excludeIds,
-            entityType: currentPhase.type,
+            entityType,
             onApply: async (selectedItem: any) => {
                 try {
-                    // Add the selected item to the phase
                     await addPhaseItem({
                         phaseId: targetPhaseId,
                         data: {
                             order: items.length,
-                            type: selectedItem.type,
+                            type: entityType,
                             name: selectedItem.name,
                             status: PHASE_ITEM_STATUS.PENDING,
                         }
@@ -205,8 +251,17 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     newStatus = PHASE_ITEM_STATUS.DID_NOT_EAT;
             }
       
+            // await updatePhaseItem({
+            //     id: item.id,
+            //     data: {
+            //         ...item,
+            //         status: newStatus,
+            //         amount: item.amount || item.initialAmount
+            //     }
+            // });
             await updatePhaseItem({
                 id: item.id,
+                phaseId: targetPhaseId,
                 data: {
                     ...item,
                     status: newStatus,
@@ -220,7 +275,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     const handleDeleteItem = async (item: PhaseItem) => {
         try {
-            await deletePhaseItem(item.id);
+            await deletePhaseItem({ id: item.id, phaseId: targetPhaseId });
+            // await deletePhaseItem(item.id);
         } catch (error) {
             console.error('Error deleting item:', error);
         }
@@ -235,13 +291,22 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     
         (navigation as any).navigate('AddReplaceItem', {
             excludeIds,
-            entityType: 'RECIPE',
+            entityType: ENTITY_TYPE.RECIPE,
             replaceMode: true,
             itemToReplace: item,
             onApply: async (selectedItem: any) => {
                 try {
+                    // await replacePhaseItem({
+                    //     itemId: item.id,
+                    //     replacementItem: {
+                    //         id: selectedItem.id,
+                    //         type: selectedItem.type,
+                    //         name: selectedItem.name,
+                    //     }
+                    // });
                     await replacePhaseItem({
                         itemId: item.id,
+                        phaseId: targetPhaseId,
                         replacementItem: {
                             id: selectedItem.id,
                             type: selectedItem.type,
@@ -356,8 +421,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 </ScrollView>
 
                 {(currentPhase?.type === OVERVIEW_TYPE.MEAL
-                  || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT
-                  || currentPhase?.type === OVERVIEW_TYPE.ANYTIME) ? (
+                  || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? (
                         <View style={styles.buttonContainer}>
                             <Button
                                 icon="plus"

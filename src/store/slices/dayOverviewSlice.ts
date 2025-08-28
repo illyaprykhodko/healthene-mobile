@@ -1,5 +1,7 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+// outsource dependencies
 import moment from 'moment';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+// local dependencies
 import { RootState } from '..';
 
 // export type DayOverviewPhase = any; // TODO: type properly

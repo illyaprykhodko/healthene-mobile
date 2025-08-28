@@ -64,6 +64,7 @@ export interface AvailableItem {
 
 export interface ReplaceItemRequest {
     itemId: number | string;
+    phaseId: number | string;
     replacementItem: {
         id: number | string;
         type: string;
@@ -124,36 +125,45 @@ export interface FoodFilter {
 export const dayOverviewApi = createApi({
     reducerPath: 'dayOverviewApi',
     baseQuery,
-    tagTypes: ['DayOverview', 'Questions', 'Anytime', 'PhaseItems', 'AvailableItems'],
+    tagTypes: ['DayOverview', 'Questions', 'Anytime', 'PhaseItems', 'PhaseItem', 'AvailableItems'],
     endpoints: builder => ({
         getQuestions: builder.query<Question, string>({
             query: date => `/patient-service/patient/me/disease-questions/${date}`,
             providesTags: ['Questions'],
         }),
+  
         getDayOverview: builder.query<DayOverviewResponse, string>({
             query: date => `/patient-service/patients/me/day-overview/${date}`,
             providesTags: (result, error, date) => [{ type: 'DayOverview', id: date }],
             transformResponse: (success: any): DayOverviewResponse => ({
                 ...success,
                 phases: (success?.phases || [])
-                    .filter((item: Phase) => [
-                        'MEAL',
-                        'ANYTIME',
-                        'QUESTION',
-                        'MEDICATION',
-                        'SUPPLEMENT',
-                        'MEASUREMENT',
-                        'ADDED_BY_PATIENT',
-                        'PHYSICAL_ACTIVITY',
-                    ].includes(item.type))
+                    .filter((item: Phase) =>
+                        [
+                            'MEAL',
+                            'ANYTIME',
+                            'QUESTION',
+                            'MEDICATION',
+                            'SUPPLEMENT',
+                            'MEASUREMENT',
+                            'ADDED_BY_PATIENT',
+                            'PHYSICAL_ACTIVITY',
+                        ].includes(item.type)
+                    )
                     .sort((a: Phase, b: Phase) => (a.order ?? 0) - (b.order ?? 0)),
                 anytime: (success?.phases || []).find((i: Phase) => i.type === 'ANYTIME'),
                 patient: (success?.phases || []).find((i: Phase) => i.type === 'ADDED_BY_PATIENT'),
             }),
         }),
+  
         getPhaseItems: builder.query<Record<string, any[]>, number | string>({
             query: id => `/patient-service/patients/day-overview/phase/${id}/items`,
-            providesTags: (result, error, id) => [{ type: 'PhaseItems', id }],
+            providesTags: (result, error, phaseId) => [
+                { type: 'PhaseItems', id: phaseId },
+                ...(result
+                    ? Object.values(result).flat().map((i: any) => ({ type: 'PhaseItem' as const, id: i.id }))
+                    : []),
+            ],
             transformResponse: (success: any[]) => {
                 const grouped: Record<string, any[]> = {};
                 (success || []).forEach(item => {
@@ -164,32 +174,18 @@ export const dayOverviewApi = createApi({
                 return grouped;
             },
         }),
-        // Category tree nodes filter (for Food/Drink navigation)
-        getCategoryTreeNodes: builder.query<any, {
-            filter: CategoryNodeFilter;
-            page?: number;
-            size?: number;
-            sort?: string;
-        }>({
+  
+        getCategoryTreeNodes: builder.query<any, { filter: CategoryNodeFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
                 url: '/patient-service/category-tree/nodes/filter',
                 method: 'POST',
                 body: filter,
-                params: {
-                    page,
-                    size,
-                    //   sort
-                },
+                params: { page, size /* sort */ },
             }),
             providesTags: ['AvailableItems'],
         }),
-        // Catalog prototype tree nodes filter (for Recipes/Restaurants navigation)
-        getCatalogPrototypeTreeNodes: builder.query<any, {
-            filter: RecipePrototypeCatalogFilter;
-            page?: number;
-            size?: number;
-            sort?: string;
-        }>({
+  
+        getCatalogPrototypeTreeNodes: builder.query<any, { filter: RecipePrototypeCatalogFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
                 url: '/patient-service/catalog-prototype-tree/nodes/filter',
                 method: 'POST',
@@ -198,15 +194,9 @@ export const dayOverviewApi = createApi({
             }),
             providesTags: ['AvailableItems'],
         }),
-        // Recipe prototypes filter
-        getRecipePrototypes: builder.query<any, {
-            filter: RecipePrototypeFilter;
-            page?: number;
-            size?: number;
-            sort?: string;
-        }>({
+  
+        getRecipePrototypes: builder.query<any, { filter: RecipePrototypeFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
-                // url: '/patient-service/catalog-prototype-tree/nodes/filter',
                 url: '/patient-service/recipe-prototypes/filter',
                 method: 'POST',
                 body: filter,
@@ -214,13 +204,8 @@ export const dayOverviewApi = createApi({
             }),
             providesTags: ['AvailableItems'],
         }),
-        // Foods filter
-        getFoods: builder.query<any, {
-            filter: FoodFilter;
-            page?: number;
-            size?: number;
-            sort?: string;
-        }>({
+  
+        getFoods: builder.query<any, { filter: FoodFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
                 url: '/patient-service/foods/filter',
                 method: 'POST',
@@ -229,153 +214,74 @@ export const dayOverviewApi = createApi({
             }),
             providesTags: ['AvailableItems'],
         }),
-        // getAvailableItems: builder.query<AvailableItem[], {
-        //     excludeIds?: string[];
-        //     entityType: string;
-        //     name?: string;
-        //     page?: number;
-        //     size?: number;
-        //     sort?: string;
-        //     categoryNodeId?: number;
-        //     catalogNodeId?: number;
-        //     restaurantCatalog?: boolean;
-        //     systemTag?: string;
-        //     treeTypeViewLabel?: string;
-        // }>({
-        //     query: ({
-        //         entityType,
-        //         excludeIds = [],
-        //         name,
-        //         page = 0,
-        //         size = 20,
-        //         sort = 'name,ASC',
-        //         categoryNodeId,
-        //         catalogNodeId,
-        //         restaurantCatalog,
-        //         systemTag,
-        //         treeTypeViewLabel
-        //     }) => {
-        //         const baseParams = { page, size, sort };
-            
-        //         switch (entityType) {
-        //             case 'MEDICATION':
-        //                 return {
-        //                     url: '/patient-service/medications/filter',
-        //                     body: { name, excludeIds },
-        //                     params: baseParams,
-        //                     method: 'POST',
-        //                 };
-        //             case 'MEASUREMENT':
-        //                 return {
-        //                     url: '/patient-service/measurements/filter',
-        //                     body: { name, excludeIds },
-        //                     params: baseParams,
-        //                     method: 'POST',
-        //                 };
-        //             case 'SUPPLEMENT':
-        //                 return {
-        //                     url: '/patient-service/supplements/filter',
-        //                     body: { name, excludeIds },
-        //                     params: baseParams,
-        //                     method: 'POST',
-        //                 };
-        //             case 'PHYSICAL_ACTIVITY':
-        //                 return {
-        //                     url: '/patient-service/physical-activities/filter',
-        //                     body: { name, excludeIds },
-        //                     params: baseParams,
-        //                     method: 'POST',
-        //                 };
-        //             case 'INGREDIENT':
-        //                 return {
-        //                     url: '/patient-service/patient/day-overview/rescue/ingredient/list',
-        //                     body: { excludeIds, name, rescueIngredientId: null },
-        //                     method: 'POST',
-        //                 };
-        //             case 'FOOD':
-        //             case 'MEAL':
-        //                 return {
-        //                     url: '/patient-service/foods/filter',
-        //                     body: {
-        //                         name,
-        //                         nameFragment: name,
-        //                         excludeIds,
-        //                         categoryNodeId,
-        //                         isEnabled: true,
-        //                         treeTypeViewLabel: treeTypeViewLabel || 'PATIENT_NAVIGATION'
-        //                     },
-        //                     params: baseParams,
-        //                     method: 'POST',
-        //                 };
-        //             case 'RECIPE':
-        //                 return {
-        //                     url: '/patient-service/recipe-prototypes/filter',
-        //                     body: {
-        //                         name,
-        //                         excludeIds,
-        //                         catalogNodeId
-        //                     },
-        //                     params: baseParams,
-        //                     method: 'POST',
-        //                 };
-        //             case 'RESTAURANT':
-        //                 return {
-        //                     url: '/patient-service/recipe-prototypes/filter',
-        //                     body: {
-        //                         name,
-        //                         excludeIds,
-        //                         catalogNodeId,
-        //                         restaurantCatalog: true
-        //                     },
-        //                     params: baseParams,
-        //                     method: 'POST',
-        //                 };
-        //             default:
-        //                 return {
-        //                     url: '/patient-service/items/filter',
-        //                     body: { name, excludeIds },
-        //                     params: baseParams,
-        //                     method: 'POST',
-        //                 };
-        //         }
-        //     },
-        //     providesTags: ['AvailableItems'],
-        //     transformResponse: (success: any): AvailableItem[] => {
-        //         const items = success?.content || success || [];
-        //         return items.map((item: any) => ({
-        //             id: item.id,
-        //             name: item.name || item.nameWithUnit || 'Unknown',
-        //             type: item.type || item.entityType || 'UNKNOWN',
-        //             image: item.image || item.coverImage?.url || item.entity?.coverImage?.url,
-        //             description: item.description,
-        //             coverImage: item.coverImage || item.entity?.coverImage,
-        //         }));
-        //     },
-        // }),
+  
         getPhaseItem: builder.query<PhaseItem, number | string>({
             query: id => `/patient-service/patients/day-overview/phase/item/${id}`,
-            providesTags: (result, error, id) => [{ type: 'PhaseItems', id }],
+            providesTags: (result, error, id) => [{ type: 'PhaseItem', id }],
         }),
-        updatePhaseItem: builder.mutation<PhaseItem, { id: number | string; data: any }>({
-            query: ({ id, data }) => ({
-                url: `/patient-service/patients/day-overview/phase/item/${id}`,
-                method: 'PUT',
-                body: data,
-            }),
-            invalidatesTags: (result, error, { id }) => [
-                { type: 'PhaseItems', id },
-                'DayOverview',
-            ],
-        }),
-        deletePhaseItem: builder.mutation<void, number | string>({
-            query: id => ({
+  
+        updatePhaseItem: builder.mutation<
+        PhaseItem,
+        { id: number | string; phaseId: number | string; data: Partial<PhaseItem> }
+      >({
+          query: ({ id, data }) => ({
+              url: `/patient-service/patients/day-overview/phase/item/${id}`,
+              method: 'PUT',
+              body: data,
+          }),
+          invalidatesTags: (result, error, { id, phaseId }) => [
+              { type: 'PhaseItem', id },
+              { type: 'PhaseItems', id: phaseId },
+          ],
+          async onQueryStarted ({ id, phaseId, data }, { dispatch, queryFulfilled }) {
+              const patch = dispatch(
+                  dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
+                      for (const arr of Object.values(draft) as any[][]) {
+                          const found = arr.find(x => x.id === id);
+                          if (found) {
+                              Object.assign(found, data);
+                              arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                              break;
+                          }
+                      }
+                  })
+              );
+              try {
+                  await queryFulfilled;
+              } catch {
+                  patch.undo();
+              }
+          },
+      }),
+
+        deletePhaseItem: builder.mutation<void, { id: number | string; phaseId: number | string }>({
+            query: ({ id }) => ({
                 url: `/patient-service/patients/day-overview/phase/item/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: (result, error, id) => [
-                { type: 'PhaseItems', id },
-                'DayOverview',
+            invalidatesTags: (result, error, { id, phaseId }) => [
+                { type: 'PhaseItem', id },
+                { type: 'PhaseItems', id: phaseId },
             ],
+            async onQueryStarted ({ id, phaseId }, { dispatch, queryFulfilled }) {
+                const patch = dispatch(
+                    dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
+                        for (const key of Object.keys(draft)) {
+                            const arr = draft[key];
+                            const idx = arr.findIndex(x => x.id === id);
+                            if (idx >= 0) {
+                                arr.splice(idx, 1);
+                                break;
+                            }
+                        }
+                    })
+                );
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patch.undo();
+                }
+            },
         }),
         addPhaseItem: builder.mutation<PhaseItem, { phaseId: number | string; data: any }>({
             query: ({ phaseId, data }) => ({
@@ -383,10 +289,22 @@ export const dayOverviewApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: (result, error, { phaseId }) => [
-                { type: 'PhaseItems', id: phaseId },
-                'DayOverview',
-            ],
+            invalidatesTags: (result, error, { phaseId }) => [{ type: 'PhaseItems', id: phaseId }],
+            async onQueryStarted ({ phaseId }, { dispatch, queryFulfilled }) {
+                try {
+                    const { data: created } = await queryFulfilled;
+                    dispatch(
+                        dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
+                            const key = created?.type || 'UNKNOWN';
+                            if (!draft[key]) { draft[key] = []; }
+                            draft[key].push(created);
+                            draft[key].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                        })
+                    );
+                } catch (error) {
+                    console.error('error', error);
+                }
+            },
         }),
         replacePhaseItem: builder.mutation<PhaseItem, ReplaceItemRequest>({
             query: ({ itemId, replacementItem }) => ({
@@ -394,11 +312,37 @@ export const dayOverviewApi = createApi({
                 method: 'PUT',
                 body: replacementItem,
             }),
-            invalidatesTags: (result, error, { itemId }) => [
-                { type: 'PhaseItems', id: itemId },
-                'DayOverview',
+            invalidatesTags: (result, error, { itemId, phaseId }) => [
+                { type: 'PhaseItem', id: itemId },
+                { type: 'PhaseItems', id: phaseId },
             ],
+            async onQueryStarted ({ itemId, phaseId }, { dispatch, queryFulfilled }) {
+                try {
+                    const { data: replaced } = await queryFulfilled;
+                    dispatch(
+                        dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
+                            let oldTypeKey: string | undefined;
+                            for (const key of Object.keys(draft)) {
+                                const arr = draft[key];
+                                const idx = arr.findIndex(x => x.id === itemId);
+                                if (idx >= 0) {
+                                    arr.splice(idx, 1);
+                                    oldTypeKey = key;
+                                    break;
+                                }
+                            }
+                            const newKey = replaced?.type || oldTypeKey || 'UNKNOWN';
+                            if (!draft[newKey]) { draft[newKey] = []; }
+                            draft[newKey].push(replaced);
+                            draft[newKey].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                        })
+                    );
+                } catch {
+                    /* ignore */
+                }
+            },
         }),
+  
         updatePhase: builder.mutation<Phase, { id: number | string; data: any }>({
             query: ({ id, data }) => ({
                 url: `/patient-service/patients/day-overview/phase/${id}`,
@@ -412,6 +356,302 @@ export const dayOverviewApi = createApi({
         }),
     }),
 });
+
+// export const dayOverviewApi = createApi({
+//     reducerPath: 'dayOverviewApi',
+//     baseQuery,
+//     tagTypes: ['DayOverview', 'Questions', 'Anytime', 'PhaseItems', 'AvailableItems'],
+//     endpoints: builder => ({
+//         getQuestions: builder.query<Question, string>({
+//             query: date => `/patient-service/patient/me/disease-questions/${date}`,
+//             providesTags: ['Questions'],
+//         }),
+//         getDayOverview: builder.query<DayOverviewResponse, string>({
+//             query: date => `/patient-service/patients/me/day-overview/${date}`,
+//             providesTags: (result, error, date) => [{ type: 'DayOverview', id: date }],
+//             transformResponse: (success: any): DayOverviewResponse => ({
+//                 ...success,
+//                 phases: (success?.phases || [])
+//                     .filter((item: Phase) => [
+//                         'MEAL',
+//                         'ANYTIME',
+//                         'QUESTION',
+//                         'MEDICATION',
+//                         'SUPPLEMENT',
+//                         'MEASUREMENT',
+//                         'ADDED_BY_PATIENT',
+//                         'PHYSICAL_ACTIVITY',
+//                     ].includes(item.type))
+//                     .sort((a: Phase, b: Phase) => (a.order ?? 0) - (b.order ?? 0)),
+//                 anytime: (success?.phases || []).find((i: Phase) => i.type === 'ANYTIME'),
+//                 patient: (success?.phases || []).find((i: Phase) => i.type === 'ADDED_BY_PATIENT'),
+//             }),
+//         }),
+//         getPhaseItems: builder.query<Record<string, any[]>, number | string>({
+//             query: id => `/patient-service/patients/day-overview/phase/${id}/items`,
+//             providesTags: (result, error, id) => [{ type: 'PhaseItems', id }],
+//             transformResponse: (success: any[]) => {
+//                 const grouped: Record<string, any[]> = {};
+//                 (success || []).forEach(item => {
+//                     const key = item.type || 'UNKNOWN';
+//                     if (!grouped[key]) { grouped[key] = []; }
+//                     grouped[key].push(item);
+//                 });
+//                 return grouped;
+//             },
+//         }),
+//         // Category tree nodes filter (for Food/Drink navigation)
+//         getCategoryTreeNodes: builder.query<any, {
+//             filter: CategoryNodeFilter;
+//             page?: number;
+//             size?: number;
+//             sort?: string;
+//         }>({
+//             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+//                 url: '/patient-service/category-tree/nodes/filter',
+//                 method: 'POST',
+//                 body: filter,
+//                 params: {
+//                     page,
+//                     size,
+//                     //   sort
+//                 },
+//             }),
+//             providesTags: ['PhaseItems'],
+//             // providesTags: ['AvailableItems'],
+//         }),
+//         // Catalog prototype tree nodes filter (for Recipes/Restaurants navigation)
+//         getCatalogPrototypeTreeNodes: builder.query<any, {
+//             filter: RecipePrototypeCatalogFilter;
+//             page?: number;
+//             size?: number;
+//             sort?: string;
+//         }>({
+//             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+//                 url: '/patient-service/catalog-prototype-tree/nodes/filter',
+//                 method: 'POST',
+//                 body: filter,
+//                 params: { page, size, sort },
+//             }),
+//             providesTags: ['PhaseItems'],
+//             // providesTags: ['AvailableItems'],
+//         }),
+//         // Recipe prototypes filter
+//         getRecipePrototypes: builder.query<any, {
+//             filter: RecipePrototypeFilter;
+//             page?: number;
+//             size?: number;
+//             sort?: string;
+//         }>({
+//             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+//                 // url: '/patient-service/catalog-prototype-tree/nodes/filter',
+//                 url: '/patient-service/recipe-prototypes/filter',
+//                 method: 'POST',
+//                 body: filter,
+//                 params: { page, size, sort },
+//             }),
+//             providesTags: ['PhaseItems'],
+//             // providesTags: ['AvailableItems'],
+//         }),
+//         // Foods filter
+//         getFoods: builder.query<any, {
+//             filter: FoodFilter;
+//             page?: number;
+//             size?: number;
+//             sort?: string;
+//         }>({
+//             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+//                 url: '/patient-service/foods/filter',
+//                 method: 'POST',
+//                 body: filter,
+//                 params: { page, size, sort },
+//             }),
+//             providesTags: ['PhaseItems'],
+//             // providesTags: ['AvailableItems'],
+//         }),
+//         // getAvailableItems: builder.query<AvailableItem[], {
+//         //     excludeIds?: string[];
+//         //     entityType: string;
+//         //     name?: string;
+//         //     page?: number;
+//         //     size?: number;
+//         //     sort?: string;
+//         //     categoryNodeId?: number;
+//         //     catalogNodeId?: number;
+//         //     restaurantCatalog?: boolean;
+//         //     systemTag?: string;
+//         //     treeTypeViewLabel?: string;
+//         // }>({
+//         //     query: ({
+//         //         entityType,
+//         //         excludeIds = [],
+//         //         name,
+//         //         page = 0,
+//         //         size = 20,
+//         //         sort = 'name,ASC',
+//         //         categoryNodeId,
+//         //         catalogNodeId,
+//         //         restaurantCatalog,
+//         //         systemTag,
+//         //         treeTypeViewLabel
+//         //     }) => {
+//         //         const baseParams = { page, size, sort };
+            
+//         //         switch (entityType) {
+//         //             case 'MEDICATION':
+//         //                 return {
+//         //                     url: '/patient-service/medications/filter',
+//         //                     body: { name, excludeIds },
+//         //                     params: baseParams,
+//         //                     method: 'POST',
+//         //                 };
+//         //             case 'MEASUREMENT':
+//         //                 return {
+//         //                     url: '/patient-service/measurements/filter',
+//         //                     body: { name, excludeIds },
+//         //                     params: baseParams,
+//         //                     method: 'POST',
+//         //                 };
+//         //             case 'SUPPLEMENT':
+//         //                 return {
+//         //                     url: '/patient-service/supplements/filter',
+//         //                     body: { name, excludeIds },
+//         //                     params: baseParams,
+//         //                     method: 'POST',
+//         //                 };
+//         //             case 'PHYSICAL_ACTIVITY':
+//         //                 return {
+//         //                     url: '/patient-service/physical-activities/filter',
+//         //                     body: { name, excludeIds },
+//         //                     params: baseParams,
+//         //                     method: 'POST',
+//         //                 };
+//         //             case 'INGREDIENT':
+//         //                 return {
+//         //                     url: '/patient-service/patient/day-overview/rescue/ingredient/list',
+//         //                     body: { excludeIds, name, rescueIngredientId: null },
+//         //                     method: 'POST',
+//         //                 };
+//         //             case 'FOOD':
+//         //             case 'MEAL':
+//         //                 return {
+//         //                     url: '/patient-service/foods/filter',
+//         //                     body: {
+//         //                         name,
+//         //                         nameFragment: name,
+//         //                         excludeIds,
+//         //                         categoryNodeId,
+//         //                         isEnabled: true,
+//         //                         treeTypeViewLabel: treeTypeViewLabel || 'PATIENT_NAVIGATION'
+//         //                     },
+//         //                     params: baseParams,
+//         //                     method: 'POST',
+//         //                 };
+//         //             case 'RECIPE':
+//         //                 return {
+//         //                     url: '/patient-service/recipe-prototypes/filter',
+//         //                     body: {
+//         //                         name,
+//         //                         excludeIds,
+//         //                         catalogNodeId
+//         //                     },
+//         //                     params: baseParams,
+//         //                     method: 'POST',
+//         //                 };
+//         //             case 'RESTAURANT':
+//         //                 return {
+//         //                     url: '/patient-service/recipe-prototypes/filter',
+//         //                     body: {
+//         //                         name,
+//         //                         excludeIds,
+//         //                         catalogNodeId,
+//         //                         restaurantCatalog: true
+//         //                     },
+//         //                     params: baseParams,
+//         //                     method: 'POST',
+//         //                 };
+//         //             default:
+//         //                 return {
+//         //                     url: '/patient-service/items/filter',
+//         //                     body: { name, excludeIds },
+//         //                     params: baseParams,
+//         //                     method: 'POST',
+//         //                 };
+//         //         }
+//         //     },
+//         //     providesTags: ['AvailableItems'],
+//         //     transformResponse: (success: any): AvailableItem[] => {
+//         //         const items = success?.content || success || [];
+//         //         return items.map((item: any) => ({
+//         //             id: item.id,
+//         //             name: item.name || item.nameWithUnit || 'Unknown',
+//         //             type: item.type || item.entityType || 'UNKNOWN',
+//         //             image: item.image || item.coverImage?.url || item.entity?.coverImage?.url,
+//         //             description: item.description,
+//         //             coverImage: item.coverImage || item.entity?.coverImage,
+//         //         }));
+//         //     },
+//         // }),
+//         getPhaseItem: builder.query<PhaseItem, number | string>({
+//             query: id => `/patient-service/patients/day-overview/phase/item/${id}`,
+//             providesTags: (result, error, id) => [{ type: 'PhaseItems', id }],
+//         }),
+//         updatePhaseItem: builder.mutation<PhaseItem, { id: number | string; data: any }>({
+//             query: ({ id, data }) => ({
+//                 url: `/patient-service/patients/day-overview/phase/item/${id}`,
+//                 method: 'PUT',
+//                 body: data,
+//             }),
+//             invalidatesTags: (result, error, { id }) => [
+//                 { type: 'PhaseItems', id },
+//                 'DayOverview',
+//             ],
+//         }),
+//         deletePhaseItem: builder.mutation<void, number | string>({
+//             query: id => ({
+//                 url: `/patient-service/patients/day-overview/phase/item/${id}`,
+//                 method: 'DELETE',
+//             }),
+//             invalidatesTags: (result, error, id) => [
+//                 { type: 'PhaseItems', id },
+//                 'DayOverview',
+//             ],
+//         }),
+//         addPhaseItem: builder.mutation<PhaseItem, { phaseId: number | string; data: any }>({
+//             query: ({ phaseId, data }) => ({
+//                 url: `/patient-service/patients/day-overview/phase/${phaseId}/items`,
+//                 method: 'POST',
+//                 body: data,
+//             }),
+//             invalidatesTags: (result, error, { phaseId }) => [
+//                 { type: 'PhaseItems', id: phaseId },
+//                 'DayOverview',
+//             ],
+//         }),
+//         replacePhaseItem: builder.mutation<PhaseItem, ReplaceItemRequest>({
+//             query: ({ itemId, replacementItem }) => ({
+//                 url: `/patient-service/patients/day-overview/phase/item/${itemId}/replace`,
+//                 method: 'PUT',
+//                 body: replacementItem,
+//             }),
+//             invalidatesTags: (result, error, { itemId }) => [
+//                 { type: 'PhaseItems', id: itemId },
+//                 'DayOverview',
+//             ],
+//         }),
+//         updatePhase: builder.mutation<Phase, { id: number | string; data: any }>({
+//             query: ({ id, data }) => ({
+//                 url: `/patient-service/patients/day-overview/phase/${id}`,
+//                 method: 'PUT',
+//                 body: data,
+//             }),
+//             invalidatesTags: (result, error, { id }) => [
+//                 { type: 'PhaseItems', id },
+//                 'DayOverview',
+//             ],
+//         }),
+//     }),
+// });
 
 export const {
     useGetPhaseItemQuery,
