@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // local dependencies
 import Item from './Item';
 import Edit from './Edit';
+import UPCScan from './UPCScan';
 import { Overview } from './Overview';
 import AddReplaceItem from './AddReplaceItem';
 
@@ -71,6 +72,11 @@ const DayOverviewStack: React.FC = () => {
                 name="AddReplaceItem"
                 component={AddReplaceItem}
                 options={{ title: 'Select Item' }}
+            />
+            <Stack.Screen
+                name="UPCScan"
+                component={UPCScan}
+                options={{ title: 'Scan UPC Code' }}
             />
         </Stack.Navigator>
     );

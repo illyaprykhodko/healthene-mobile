@@ -16,7 +16,7 @@ import { Button } from '../../../../components/Button';
 import SwipeList from '../../../../components/SwipeList';
 import { selectDayOverview } from '../../../../store/slices/dayOverviewSlice';
 import { useGetDayOverviewQuery, useGetPhaseItemsQuery, useUpdatePhaseItemMutation,
-    useDeletePhaseItemMutation, useAddPhaseItemMutation, useUpdatePhaseMutation } from '../../../../store/api/dayOverviewApi';
+    useDeletePhaseItemMutation, useAddPhaseItemMutation, useUpdatePhaseMutation, useReplacePhaseItemMutation } from '../../../../store/api/dayOverviewApi';
 
 // Temporary types until full migration
 interface PhaseItem {
@@ -31,6 +31,16 @@ interface PhaseItem {
     measurement?: any;
     id: string | number;
     initialAmount?: number;
+    modified?: boolean;
+    weight?: {
+        unit: {
+            name: string;
+        };
+    };
+    serving?: any;
+    useServing?: boolean;
+    patientFoodCategoryAttachment?: any;
+    patientFoodCategoryQuestion?: any;
 }
 
 interface EditProps {
@@ -39,21 +49,22 @@ interface EditProps {
 }
 
 // Temporary constants until full migration
-// const OVERVIEW_TYPE = {
-//     MEAL: 'MEAL',
-//     SUPPLEMENT: 'SUPPLEMENT',
-//     MEDICATION: 'MEDICATION',
-//     MEASUREMENT: 'MEASUREMENT',
-//     ADDED_BY_PATIENT: 'ADDED_BY_PATIENT',
-//     PHYSICAL_ACTIVITY: 'PHYSICAL_ACTIVITY',
-//     QUESTION: 'QUESTION',
-//     ANYTIME: 'ANYTIME',
-// };
-
 const PHASE_ITEM_STATUS = {
     DONE: 'DONE',
     PENDING: 'PENDING',
     DID_NOT_EAT: 'DID_NOT_EAT',
+};
+
+const ENTITY_TYPE = {
+    FOOD: 'FOOD',
+    RECIPE: 'RECIPE',
+    CUSTOM_RECIPE: 'CUSTOM_RECIPE',
+    INGREDIENTS: 'INGREDIENTS',
+};
+
+const SECTION = {
+    ADDED_BY_HEALTHENE: 'Added by HealtheNe',
+    ADDED_BY_PATIENT: 'Added by Patient',
 };
 
 const convertTypeToTitle = (type: string, capitalize = false) => {
@@ -73,21 +84,22 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
   
-    // Get day overview data
+    // get day overview data
     const { data: dayOverviewData, isLoading: isDayOverviewLoading } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
     });
   
-    // Get phase items
+    // get phase items
     const { data: phaseItems, isLoading: isPhaseItemsLoading } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
     });
 
-    // Mutations
+    // mutations
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
     const [addPhaseItem] = useAddPhaseItemMutation();
     const [updatePhase] = useUpdatePhaseMutation();
+    const [replacePhaseItem] = useReplacePhaseItemMutation();
 
     useEffect(() => {
         if (targetDate) {
@@ -103,10 +115,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         setInitialized(true);
     }, [targetDate, navigation]);
 
-    // Find current phase data
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
   
-    // Transform phase items to flat array
     const items: PhaseItem[] = React.useMemo(() => {
         if (!phaseItems) { return []; }
     
@@ -121,9 +131,15 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     recipe: item.recipe,
                     status: item.status,
                     amount: item.amount,
+                    weight: item.weight,
+                    serving: item.serving,
                     section: item.section,
+                    modified: item.modified,
+                    useServing: item.useServing,
                     measurement: item.measurement,
                     initialAmount: item.initialAmount,
+                    patientFoodCategoryQuestion: item.patientFoodCategoryQuestion,
+                    patientFoodCategoryAttachment: item.patientFoodCategoryAttachment,
                     title: item.food?.name || item.recipe?.name || item.measurement?.name || 'Item',
                 });
             });
@@ -210,14 +226,38 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         }
     };
 
-    const handleReplaceItem = (item: PhaseItem) => {
-    // TODO: Implement replace item functionality
-        console.log('Replace item:', item.id);
+    const handleReplaceItem = async (item: PhaseItem) => {
+        if (!item.recipe || item.recipe?.surrogateRecipe) {
+            return; // cannot replace surrogate recipes or items without recipes
+        }
+
+        const excludeIds = items.map(item => String(item.id));
+    
+        (navigation as any).navigate('AddReplaceItem', {
+            excludeIds,
+            entityType: 'RECIPE',
+            replaceMode: true,
+            itemToReplace: item,
+            onApply: async (selectedItem: any) => {
+                try {
+                    await replacePhaseItem({
+                        itemId: item.id,
+                        replacementItem: {
+                            id: selectedItem.id,
+                            type: selectedItem.type,
+                            name: selectedItem.name,
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error replacing item:', error);
+                }
+            }
+        });
     };
 
     const handleNoReplaceItem = (item: PhaseItem) => {
-    // Return true if item should not be replaced
-        return !item.recipe || item.recipe?.surrogateRecipe;
+        // return true if item should not be replaced
+        return !item.recipe || item.recipe?.surrogateRecipe || item.section !== SECTION.ADDED_BY_HEALTHENE;
     };
 
     const handleScrollEnabled = () => setScrollEnabled(true);

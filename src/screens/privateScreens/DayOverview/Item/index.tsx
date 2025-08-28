@@ -1,7 +1,7 @@
 // outsource dependencies
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 // local dependencies
 import { OVERVIEW_TYPE } from '../types';
@@ -20,6 +20,16 @@ interface PhaseItem {
     status?: string;
     measurement?: any;
     id: string | number;
+    amount?: number;
+    initialAmount?: number;
+    weight?: {
+        unit: {
+            name: string;
+        };
+    };
+    serving?: any;
+    useServing?: boolean;
+    modified?: boolean;
 }
 
 interface ItemProps {
@@ -27,18 +37,6 @@ interface ItemProps {
     item?: PhaseItem;
     measurement?: any;
 }
-
-// Temporary constants until full migration
-// const OVERVIEW_TYPE = {
-//     MEAL: 'MEAL',
-//     SUPPLEMENT: 'SUPPLEMENT',
-//     MEDICATION: 'MEDICATION',
-//     MEASUREMENT: 'MEASUREMENT',
-//     ADDED_BY_PATIENT: 'ADDED_BY_PATIENT',
-//     PHYSICAL_ACTIVITY: 'PHYSICAL_ACTIVITY',
-//     QUESTION: 'QUESTION',
-//     ANYTIME: 'ANYTIME',
-// };
 
 const ENTITY_TYPE = {
     FOOD: 'FOOD',
@@ -116,6 +114,212 @@ export const Item: React.FC<ItemProps> = ({ item, phase, measurement }) => {
         return [];
     };
 
+    const prepareIngredientNameWithUnit = (item: any, options: { withoutName?: boolean } = {}) => {
+        const amount = item.amount || item.initialAmount;
+        const serving = item.serving;
+        const useServing = item.useServing;
+        const ingredient = item.recipe?.ingredients?.[0];
+
+        if (!amount) { return ''; }
+
+        let result = '';
+        
+        if (useServing && serving) {
+            result += `${serving} serving`;
+        } else {
+            result += amount;
+            if (item.weight?.unit?.name) {
+                result += ` ${item.weight.unit.name}`;
+            }
+        }
+
+        if (!options.withoutName && ingredient?.entity?.name) {
+            result += ` ${ingredient.entity.name}`;
+        }
+
+        return result;
+    };
+
+    const renderOverview = () => {
+        const amount = item?.amount || item?.initialAmount;
+        
+        return (
+            <ScrollView style={{ flex: 1 }}>
+                <View style={{ padding: 16 }}>
+                    <Text variant="h4" style={{ color: theme.colors.text, marginBottom: 16 }}>
+                        {item?.title || 'Item Overview'}
+                    </Text>
+                    
+                    <View style={styles.infoSection}>
+                        <Text style={styles.infoLabel}>Status:</Text>
+                        <Text style={styles.infoValue}>{item?.status || 'Unknown'}</Text>
+                    </View>
+
+                    {amount && (
+                        <View style={styles.infoSection}>
+                            <Text style={styles.infoLabel}>Amount:</Text>
+                            <Text style={styles.infoValue}>
+                                {amount} {item?.weight?.unit?.name || ''}
+                            </Text>
+                        </View>
+                    )}
+
+                    {item?.modified && (
+                        <View style={styles.infoSection}>
+                            <Text style={styles.infoLabel}>Modified:</Text>
+                            <Text style={[styles.infoValue, { color: '#2978A0', fontWeight: '600' }]}>
+                                Yes (edited by me)
+                            </Text>
+                        </View>
+                    )}
+
+                    {item?.recipe?.modified && (
+                        <View style={styles.infoSection}>
+                            <Text style={styles.infoLabel}>Recipe Modified:</Text>
+                            <Text style={[styles.infoValue, { color: '#2978A0', fontWeight: '600' }]}>
+                                Yes (edited by me)
+                            </Text>
+                        </View>
+                    )}
+
+                    {item?.recipe?.surrogateRecipe && (
+                        <View style={styles.infoSection}>
+                            <Text style={styles.infoLabel}>Recipe Type:</Text>
+                            <Text style={[styles.infoValue, { color: '#FF6B35', fontWeight: '600' }]}>
+                                Surrogate Recipe
+                            </Text>
+                        </View>
+                    )}
+                </View>
+            </ScrollView>
+        );
+    };
+
+    const renderRecipe = () => {
+        const recipe = item?.recipe;
+        if (!recipe) {
+            return (
+                <View style={{ padding: 16 }}>
+                    <Text style={{ textAlign: 'center', color: COLORS.GREY }}>
+                        No recipe information available
+                    </Text>
+                </View>
+            );
+        }
+
+        return (
+            <ScrollView style={{ flex: 1 }}>
+                <View style={{ padding: 16 }}>
+                    <Text variant="h4" style={{ color: theme.colors.text, marginBottom: 16 }}>
+                        Recipe Details
+                    </Text>
+
+                    <View style={styles.infoSection}>
+                        <Text style={styles.infoLabel}>Name:</Text>
+                        <Text style={styles.infoValue}>{recipe.name || 'N/A'}</Text>
+                    </View>
+
+                    {recipe.description && (
+                        <View style={styles.infoSection}>
+                            <Text style={styles.infoLabel}>Description:</Text>
+                            <Text style={styles.infoValue}>{recipe.description}</Text>
+                        </View>
+                    )}
+
+                    {item?.amount && (
+                        <View style={styles.infoSection}>
+                            <Text style={styles.infoLabel}>Serving Size:</Text>
+                            <Text style={styles.infoValue}>
+                                {prepareIngredientNameWithUnit(item, { withoutName: true })}
+                            </Text>
+                        </View>
+                    )}
+
+                    {recipe.surrogateRecipe && (
+                        <View style={styles.infoSection}>
+                            <Text style={styles.infoLabel}>Type:</Text>
+                            <Text style={[styles.infoValue, { color: '#FF6B35', fontWeight: '600' }]}>
+                                Surrogate Recipe (Simplified)
+                            </Text>
+                        </View>
+                    )}
+                </View>
+            </ScrollView>
+        );
+    };
+
+    const renderIngredients = () => {
+        const recipe = item?.recipe;
+        if (!recipe || !recipe.ingredients) {
+            return (
+                <View style={{ padding: 16 }}>
+                    <Text style={{ textAlign: 'center', color: COLORS.GREY }}>
+                        No ingredients information available
+                    </Text>
+                </View>
+            );
+        }
+
+        return (
+            <ScrollView style={{ flex: 1 }}>
+                <View style={{ padding: 16 }}>
+                    <Text variant="h4" style={{ color: theme.colors.text, marginBottom: 16 }}>
+                        Ingredients
+                    </Text>
+
+                    {recipe.ingredients.map((ingredient: any, index: number) => (
+                        <View key={index} style={styles.ingredientItem}>
+                            <Text style={styles.ingredientName}>
+                                {ingredient.entity?.name || 'Unknown Ingredient'}
+                            </Text>
+                            {ingredient.amount && (
+                                <Text style={styles.ingredientAmount}>
+                                    {ingredient.amount} {ingredient.weight?.unit?.name || ''}
+                                </Text>
+                            )}
+                        </View>
+                    ))}
+                </View>
+            </ScrollView>
+        );
+    };
+
+    const renderMoreInfo = () => {
+        return (
+            <ScrollView style={{ flex: 1 }}>
+                <View style={{ padding: 16 }}>
+                    <Text variant="h4" style={{ color: theme.colors.text, marginBottom: 16 }}>
+                        More Information
+                    </Text>
+
+                    <View style={styles.infoSection}>
+                        <Text style={styles.infoLabel}>Item Type:</Text>
+                        <Text style={styles.infoValue}>{item?.type || 'Unknown'}</Text>
+                    </View>
+
+                    <View style={styles.infoSection}>
+                        <Text style={styles.infoLabel}>Item ID:</Text>
+                        <Text style={styles.infoValue}>{item?.id || 'N/A'}</Text>
+                    </View>
+
+                    {item?.recipe?.id && (
+                        <View style={styles.infoSection}>
+                            <Text style={styles.infoLabel}>Recipe ID:</Text>
+                            <Text style={styles.infoValue}>{item.recipe.id}</Text>
+                        </View>
+                    )}
+
+                    {item?.food?.id && (
+                        <View style={styles.infoSection}>
+                            <Text style={styles.infoLabel}>Food ID:</Text>
+                            <Text style={styles.infoValue}>{item.food.id}</Text>
+                        </View>
+                    )}
+                </View>
+            </ScrollView>
+        );
+    };
+
     const renderBody = () => {
         const tabs = tabsList();
     
@@ -123,53 +327,17 @@ export const Item: React.FC<ItemProps> = ({ item, phase, measurement }) => {
             default:
                 return (
                     <Text style={{ textAlign: 'center', color: COLORS.BLACK }}>
-            Nothing found
+                        Nothing found
                     </Text>
                 );
             case ITEM_TABS.OVERVIEW:
-                return (
-                    <View style={{ padding: 16 }}>
-                        <Text variant="h4" style={{ color: theme.colors.text }}>
-                            {item?.title || 'Item Overview'}
-                        </Text>
-                        <Text style={{ marginTop: 8, color: theme.colors.text }}>
-              Status: {item?.status || 'Unknown'}
-                        </Text>
-                    </View>
-                );
+                return renderOverview();
             case ITEM_TABS.RECIPE:
-                return (
-                    <View style={{ padding: 16 }}>
-                        <Text variant="h4" style={{ color: theme.colors.text }}>
-              Recipe Details
-                        </Text>
-                        <Text style={{ marginTop: 8, color: theme.colors.text }}>
-              Recipe information will be displayed here
-                        </Text>
-                    </View>
-                );
+                return renderRecipe();
             case ITEM_TABS.INGREDIENTS:
-                return (
-                    <View style={{ padding: 16 }}>
-                        <Text variant="h4" style={{ color: theme.colors.text }}>
-              Ingredients
-                        </Text>
-                        <Text style={{ marginTop: 8, color: theme.colors.text }}>
-              Ingredients list will be displayed here
-                        </Text>
-                    </View>
-                );
+                return renderIngredients();
             case ITEM_TABS.MORE_INFO:
-                return (
-                    <View style={{ padding: 16 }}>
-                        <Text variant="h4" style={{ color: theme.colors.text }}>
-              More Information
-                        </Text>
-                        <Text style={{ marginTop: 8, color: theme.colors.text }}>
-              Additional information will be displayed here
-                        </Text>
-                    </View>
-                );
+                return renderMoreInfo();
         }
     };
 
@@ -262,5 +430,40 @@ const styles = StyleSheet.create({
     activeTabText: {
         color: COLORS.WHITE,
         fontWeight: '600',
+    },
+    infoSection: {
+        flexDirection: 'row',
+        marginBottom: 12,
+        alignItems: 'flex-start',
+    },
+    infoLabel: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: COLORS.DARK_GREY,
+        width: 100,
+        marginRight: 8,
+    },
+    infoValue: {
+        fontSize: 16,
+        color: COLORS.BLACK,
+        flex: 1,
+    },
+    ingredientItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.LIGHT_GREY,
+    },
+    ingredientName: {
+        fontSize: 16,
+        color: COLORS.BLACK,
+        flex: 1,
+    },
+    ingredientAmount: {
+        fontSize: 14,
+        color: COLORS.GREY,
+        marginLeft: 8,
     },
 });

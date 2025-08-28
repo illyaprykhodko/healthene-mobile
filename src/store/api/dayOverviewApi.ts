@@ -39,6 +39,16 @@ export interface PhaseItem {
     measurement?: any;
     id: string | number;
     initialAmount?: number;
+    modified?: boolean;
+    weight?: {
+        unit: {
+            name: string;
+        };
+    };
+    serving?: any;
+    useServing?: boolean;
+    patientFoodCategoryAttachment?: any;
+    patientFoodCategoryQuestion?: any;
 }
 
 export interface AvailableItem {
@@ -47,6 +57,68 @@ export interface AvailableItem {
     image?: string;
     id: string | number;
     description?: string;
+    coverImage?: {
+        url?: string;
+    };
+}
+
+export interface ReplaceItemRequest {
+    itemId: number | string;
+    replacementItem: {
+        id: number | string;
+        type: string;
+        name: string;
+    };
+}
+
+// Filter interfaces based on swagger.json
+export interface CategoryNodeFilter {
+    name?: string;
+    parentId?: number | null;
+    systemTag?: 'PATIENT_DRINK' | 'PATIENT_FOOD';
+    treeTypeViewLabel?: 'PATIENT_NAVIGATION';
+    parentDoesNotHaveSystemTag?: 'PATIENT_DRINK' | 'PATIENT_FOOD';
+    excludeIds?: number[];
+    includeIds?: number[];
+    hasParent?: boolean;
+    defaultForImportCategory?: boolean;
+    prefixName?: string;
+    treeTypeId?: number;
+}
+
+export interface RecipePrototypeCatalogFilter {
+    name?: string;
+    parentId?: number;
+    restaurantCatalog?: boolean;
+    hasParent?: boolean;
+    excludeIds?: number[];
+    includeIds?: number[];
+    prefixName?: string;
+}
+
+export interface RecipePrototypeFilter {
+    name?: string;
+    catalogNodeId?: number;
+    excludeIds?: number[];
+    includeIds?: number[];
+    prefixName?: string;
+}
+
+export interface FoodFilter {
+    name?: string;
+    nameFragment?: string;
+    categoryNodeId?: number;
+    isEnabled?: boolean;
+    excludeIds?: number[];
+    includeIds?: number[];
+    prefixName?: string;
+    tagIds?: number[];
+    treeTypeId?: number;
+    treeTypeViewLabel?: 'PATIENT_NAVIGATION';
+    upc?: string;
+    onlyNodeId?: number;
+    foodPatientPlanFilter?: any;
+    foodPlanFilter?: any;
 }
 
 export const dayOverviewApi = createApi({
@@ -92,84 +164,194 @@ export const dayOverviewApi = createApi({
                 return grouped;
             },
         }),
-        getAvailableItems: builder.query<AvailableItem[], {
-            excludeIds?: string[];
-            entityType: string;
-            name?: string;
+        // Category tree nodes filter (for Food/Drink navigation)
+        getCategoryTreeNodes: builder.query<any, {
+            filter: CategoryNodeFilter;
             page?: number;
             size?: number;
             sort?: string;
         }>({
-            query: ({ entityType, excludeIds = [], name, page = 0, size = 20, sort = 'name,ASC' }) => {
-                const baseParams = { page, size, sort };
-            
-                switch (entityType) {
-                    case 'MEDICATION':
-                        return {
-                            url: '/patient-service/medications/filter',
-                            body: { name, excludeIds },
-                            params: baseParams,
-                            method: 'POST',
-                        };
-                    case 'MEASUREMENT':
-                        return {
-                            url: '/patient-service/measurements/filter',
-                            body: { name, excludeIds },
-                            params: baseParams,
-                            method: 'POST',
-                        };
-                    case 'SUPPLEMENT':
-                        return {
-                            url: '/patient-service/supplements/filter',
-                            body: { name, excludeIds },
-                            params: baseParams,
-                            method: 'POST',
-                        };
-                    case 'PHYSICAL_ACTIVITY':
-                        return {
-                            url: '/patient-service/physical-activities/filter',
-                            body: { name, excludeIds },
-                            params: baseParams,
-                            method: 'POST',
-                        };
-                    case 'INGREDIENT':
-                        return {
-                            url: '/patient-service/patient/day-overview/rescue/ingredient/list',
-                            body: { excludeIds, name, rescueIngredientId: null },
-                            method: 'POST',
-                        };
-                    case 'FOOD':
-                    case 'MEAL':
-                    case 'RECIPE':
-                        // For food items, we'll use a generic endpoint or implement specific logic
-                        return {
-                            url: '/patient-service/foods/filter',
-                            body: { name, excludeIds },
-                            params: baseParams,
-                            method: 'POST',
-                        };
-                    default:
-                        return {
-                            url: '/patient-service/items/filter',
-                            body: { name, excludeIds },
-                            params: baseParams,
-                            method: 'POST',
-                        };
-                }
-            },
+            query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+                url: '/patient-service/category-tree/nodes/filter',
+                method: 'POST',
+                body: filter,
+                params: {
+                    page,
+                    size,
+                    //   sort
+                },
+            }),
             providesTags: ['AvailableItems'],
-            transformResponse: (success: any): AvailableItem[] => {
-            // Handle different response formats
-                const items = success?.content || success || [];
-                return items.map((item: any) => ({
-                    id: item.id,
-                    name: item.name || item.nameWithUnit || 'Unknown',
-                    type: item.type || item.entityType || 'UNKNOWN',
-                    image: item.image || item.coverImage || item.entity?.coverImage,
-                    description: item.description,
-                }));
-            },
         }),
+        // Catalog prototype tree nodes filter (for Recipes/Restaurants navigation)
+        getCatalogPrototypeTreeNodes: builder.query<any, {
+            filter: RecipePrototypeCatalogFilter;
+            page?: number;
+            size?: number;
+            sort?: string;
+        }>({
+            query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+                url: '/patient-service/catalog-prototype-tree/nodes/filter',
+                method: 'POST',
+                body: filter,
+                params: { page, size, sort },
+            }),
+            providesTags: ['AvailableItems'],
+        }),
+        // Recipe prototypes filter
+        getRecipePrototypes: builder.query<any, {
+            filter: RecipePrototypeFilter;
+            page?: number;
+            size?: number;
+            sort?: string;
+        }>({
+            query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+                // url: '/patient-service/catalog-prototype-tree/nodes/filter',
+                url: '/patient-service/recipe-prototypes/filter',
+                method: 'POST',
+                body: filter,
+                params: { page, size, sort },
+            }),
+            providesTags: ['AvailableItems'],
+        }),
+        // Foods filter
+        getFoods: builder.query<any, {
+            filter: FoodFilter;
+            page?: number;
+            size?: number;
+            sort?: string;
+        }>({
+            query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+                url: '/patient-service/foods/filter',
+                method: 'POST',
+                body: filter,
+                params: { page, size, sort },
+            }),
+            providesTags: ['AvailableItems'],
+        }),
+        // getAvailableItems: builder.query<AvailableItem[], {
+        //     excludeIds?: string[];
+        //     entityType: string;
+        //     name?: string;
+        //     page?: number;
+        //     size?: number;
+        //     sort?: string;
+        //     categoryNodeId?: number;
+        //     catalogNodeId?: number;
+        //     restaurantCatalog?: boolean;
+        //     systemTag?: string;
+        //     treeTypeViewLabel?: string;
+        // }>({
+        //     query: ({
+        //         entityType,
+        //         excludeIds = [],
+        //         name,
+        //         page = 0,
+        //         size = 20,
+        //         sort = 'name,ASC',
+        //         categoryNodeId,
+        //         catalogNodeId,
+        //         restaurantCatalog,
+        //         systemTag,
+        //         treeTypeViewLabel
+        //     }) => {
+        //         const baseParams = { page, size, sort };
+            
+        //         switch (entityType) {
+        //             case 'MEDICATION':
+        //                 return {
+        //                     url: '/patient-service/medications/filter',
+        //                     body: { name, excludeIds },
+        //                     params: baseParams,
+        //                     method: 'POST',
+        //                 };
+        //             case 'MEASUREMENT':
+        //                 return {
+        //                     url: '/patient-service/measurements/filter',
+        //                     body: { name, excludeIds },
+        //                     params: baseParams,
+        //                     method: 'POST',
+        //                 };
+        //             case 'SUPPLEMENT':
+        //                 return {
+        //                     url: '/patient-service/supplements/filter',
+        //                     body: { name, excludeIds },
+        //                     params: baseParams,
+        //                     method: 'POST',
+        //                 };
+        //             case 'PHYSICAL_ACTIVITY':
+        //                 return {
+        //                     url: '/patient-service/physical-activities/filter',
+        //                     body: { name, excludeIds },
+        //                     params: baseParams,
+        //                     method: 'POST',
+        //                 };
+        //             case 'INGREDIENT':
+        //                 return {
+        //                     url: '/patient-service/patient/day-overview/rescue/ingredient/list',
+        //                     body: { excludeIds, name, rescueIngredientId: null },
+        //                     method: 'POST',
+        //                 };
+        //             case 'FOOD':
+        //             case 'MEAL':
+        //                 return {
+        //                     url: '/patient-service/foods/filter',
+        //                     body: {
+        //                         name,
+        //                         nameFragment: name,
+        //                         excludeIds,
+        //                         categoryNodeId,
+        //                         isEnabled: true,
+        //                         treeTypeViewLabel: treeTypeViewLabel || 'PATIENT_NAVIGATION'
+        //                     },
+        //                     params: baseParams,
+        //                     method: 'POST',
+        //                 };
+        //             case 'RECIPE':
+        //                 return {
+        //                     url: '/patient-service/recipe-prototypes/filter',
+        //                     body: {
+        //                         name,
+        //                         excludeIds,
+        //                         catalogNodeId
+        //                     },
+        //                     params: baseParams,
+        //                     method: 'POST',
+        //                 };
+        //             case 'RESTAURANT':
+        //                 return {
+        //                     url: '/patient-service/recipe-prototypes/filter',
+        //                     body: {
+        //                         name,
+        //                         excludeIds,
+        //                         catalogNodeId,
+        //                         restaurantCatalog: true
+        //                     },
+        //                     params: baseParams,
+        //                     method: 'POST',
+        //                 };
+        //             default:
+        //                 return {
+        //                     url: '/patient-service/items/filter',
+        //                     body: { name, excludeIds },
+        //                     params: baseParams,
+        //                     method: 'POST',
+        //                 };
+        //         }
+        //     },
+        //     providesTags: ['AvailableItems'],
+        //     transformResponse: (success: any): AvailableItem[] => {
+        //         const items = success?.content || success || [];
+        //         return items.map((item: any) => ({
+        //             id: item.id,
+        //             name: item.name || item.nameWithUnit || 'Unknown',
+        //             type: item.type || item.entityType || 'UNKNOWN',
+        //             image: item.image || item.coverImage?.url || item.entity?.coverImage?.url,
+        //             description: item.description,
+        //             coverImage: item.coverImage || item.entity?.coverImage,
+        //         }));
+        //     },
+        // }),
         getPhaseItem: builder.query<PhaseItem, number | string>({
             query: id => `/patient-service/patients/day-overview/phase/item/${id}`,
             providesTags: (result, error, id) => [{ type: 'PhaseItems', id }],
@@ -206,6 +388,17 @@ export const dayOverviewApi = createApi({
                 'DayOverview',
             ],
         }),
+        replacePhaseItem: builder.mutation<PhaseItem, ReplaceItemRequest>({
+            query: ({ itemId, replacementItem }) => ({
+                url: `/patient-service/patients/day-overview/phase/item/${itemId}/replace`,
+                method: 'PUT',
+                body: replacementItem,
+            }),
+            invalidatesTags: (result, error, { itemId }) => [
+                { type: 'PhaseItems', id: itemId },
+                'DayOverview',
+            ],
+        }),
         updatePhase: builder.mutation<Phase, { id: number | string; data: any }>({
             query: ({ id, data }) => ({
                 url: `/patient-service/patients/day-overview/phase/${id}`,
@@ -227,7 +420,12 @@ export const {
     useGetDayOverviewQuery,
     useUpdatePhaseMutation,
     useAddPhaseItemMutation,
-    useGetAvailableItemsQuery,
+    // useGetAvailableItemsQuery,
     useUpdatePhaseItemMutation,
     useDeletePhaseItemMutation,
+    useReplacePhaseItemMutation,
+    useGetCategoryTreeNodesQuery,
+    useGetCatalogPrototypeTreeNodesQuery,
+    useGetRecipePrototypesQuery,
+    useGetFoodsQuery,
 } = dayOverviewApi;

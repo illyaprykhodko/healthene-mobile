@@ -16,6 +16,7 @@ const ENTITY_TYPE = {
     FOOD: 'FOOD',
     RECIPE: 'RECIPE',
     CUSTOM_RECIPE: 'CUSTOM_RECIPE',
+    INGREDIENTS: 'INGREDIENTS',
 };
 
 interface ListItemProps {
@@ -36,7 +37,9 @@ export const ListItem: React.FC<ListItemProps> = ({
     const isRecipe = item.type === ENTITY_TYPE.RECIPE;
     const isFood = item.type === ENTITY_TYPE.FOOD;
     const isCustomRecipe = item.type === ENTITY_TYPE.CUSTOM_RECIPE;
+    const isIngredients = item.type === ENTITY_TYPE.INGREDIENTS;
     const isDidNotEat = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
+    const isDone = item.status === PHASE_ITEM_STATUS.DONE;
 
     const handleCheckboxPress = () => {
         if (handleCheckboxStatus) {
@@ -59,20 +62,113 @@ export const ListItem: React.FC<ListItemProps> = ({
         </TouchableOpacity>
     );
 
+    const renderStatusText = () => {
+        switch (item.status) {
+            default: return null;
+            case PHASE_ITEM_STATUS.DID_NOT_EAT:
+                return (
+                    <View style={styles.notEatText}>
+                        <Text style={{ fontWeight: 'bold' }} color={COLORS.BLUE}>Did</Text>
+                        <Text style={{ fontWeight: 'bold' }} color={COLORS.BLUE}>Not Eat</Text>
+                    </View>
+                );
+        }
+    };
+
+    const prepareIngredientNameWithUnit = (item: any, options: { withoutName?: boolean } = {}) => {
+        const amount = item.amount || item.initialAmount;
+        const serving = item.serving;
+        const useServing = item.useServing;
+        const ingredient = item.recipe?.ingredients?.[0];
+
+        if (!amount) { return ''; }
+
+        let result = '';
+        
+        if (useServing && serving) {
+            result += `${serving} serving`;
+        } else {
+            result += amount;
+            if (item.weight?.unit?.name) {
+                result += ` ${item.weight.unit.name}`;
+            }
+        }
+
+        if (!options.withoutName && ingredient?.entity?.name) {
+            result += ` ${ingredient.entity.name}`;
+        }
+
+        return result;
+    };
+
     const renderItemContent = () => {
-        if (isRecipe || isCustomRecipe) {
+        const amount = item.amount || item.initialAmount;
+        const isOpacity = (isDidNotEat || isDone) ? { opacity: 0.2 } : undefined;
+
+        if (isCustomRecipe) {
+            const { entity } = item;
             return (
                 <View style={styles.recipeContainer}>
                     <View style={styles.main}>
-                        <Text style={styles.title}>
-                            {item.recipe?.name || 'Recipe'}
+                        <Text style={[styles.title, isOpacity || {}]}>
+                            {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Recipe'}`}
                         </Text>
-                        <Text style={styles.subtitle}>
-              Status: {item.status || 'Unknown'}
+                        <Text style={[styles.subtitle, isOpacity || {}]}>
+                            Status: {item.status || 'Unknown'}
                         </Text>
-                        {item.recipe?.description && (
-                            <Text style={styles.subtitle}>
-                                {item.recipe.description}
+                        {item.modified && (
+                            <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
+                                edited by me
+                            </Text>
+                        )}
+                    </View>
+                </View>
+            );
+        }
+
+        if (isIngredients) {
+            const { entity } = item;
+            return (
+                <View style={styles.recipeContainer}>
+                    <View style={styles.main}>
+                        <Text style={[styles.title, { fontSize: 18 }, isOpacity || {}]}>
+                            {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Ingredient'}`}
+                        </Text>
+                        {item.modified && (
+                            <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
+                                edited by me
+                            </Text>
+                        )}
+                    </View>
+                </View>
+            );
+        }
+
+        if (isRecipe) {
+            const recipe = item.recipe;
+            const imageUrl = recipe?.surrogateRecipe
+                ? recipe?.ingredients?.[0]?.entity?.coverImage?.url
+                : recipe?.coverImage?.url;
+
+            return (
+                <View style={styles.recipeContainer}>
+                    <View style={styles.main}>
+                        <Text style={[styles.title, { fontWeight: '600' }, isOpacity || {}]}>
+                            {recipe?.name || 'Recipe'}
+                        </Text>
+                        {amount && (
+                            <Text style={[styles.subtitle, isOpacity || {}]}>
+                                {prepareIngredientNameWithUnit(item, { withoutName: true })}
+                            </Text>
+                        )}
+                        {item.modified && (
+                            <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
+                                added by me
+                            </Text>
+                        )}
+                        {recipe?.modified && (
+                            <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
+                                edited by me
                             </Text>
                         )}
                     </View>
@@ -84,15 +180,12 @@ export const ListItem: React.FC<ListItemProps> = ({
             return (
                 <View style={styles.foodContainer}>
                     <View style={styles.main}>
-                        <Text style={styles.title}>
+                        <Text style={[styles.title, isOpacity || {}]}>
                             {item.food?.name || 'Food Item'}
                         </Text>
-                        <Text style={styles.subtitle}>
-              Status: {item.status || 'Unknown'}
-                        </Text>
-                        {item.amount && (
-                            <Text style={styles.subtitle}>
-                Amount: {item.amount}
+                        {amount && (
+                            <Text style={[styles.subtitle, isOpacity || {}]}>
+                                {amount} {item.weight?.unit?.name || ''}
                             </Text>
                         )}
                     </View>
@@ -100,15 +193,20 @@ export const ListItem: React.FC<ListItemProps> = ({
             );
         }
 
-        // Default case for other item types
+        // default case for other item types (medication, supplement, measurement, etc.)
         return (
             <View style={styles.main}>
-                <Text style={styles.title}>
+                <Text style={[styles.title, isOpacity || {}]}>
                     {item.title || item.name || 'Item'}
                 </Text>
-                <Text style={styles.subtitle}>
-          Status: {item.status || 'Unknown'}
+                <Text style={[styles.subtitle, isOpacity || {}]}>
+                    Status: {item.status || 'Unknown'}
                 </Text>
+                {amount && (
+                    <Text style={[styles.subtitle, isOpacity || {}]}>
+                        Amount: {amount}
+                    </Text>
+                )}
             </View>
         );
     };
@@ -118,6 +216,7 @@ export const ListItem: React.FC<ListItemProps> = ({
             <View style={styles.listItemLink}>
                 {renderCheckbox()}
                 {renderItemContent()}
+                {renderStatusText()}
             </View>
         </View>
     );
@@ -181,7 +280,6 @@ const styles = StyleSheet.create({
         backgroundColor: `${COLORS.YELLOW }80`, // 50% opacity
     },
     recipeContainer: {
-    // paddingVertical: 20,
         alignItems: 'center',
         flexDirection: 'row',
     },
