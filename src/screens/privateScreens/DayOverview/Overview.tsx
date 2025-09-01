@@ -20,10 +20,10 @@ export type PhaseType = 'MEAL' | 'MEASUREMENT' | 'SUPPLEMENT' | 'MEDICATION' | '
 interface PhaseItem {
     title: string;
     type: PhaseType;
-    id: string | number;
-    status?: 'DONE' | 'PENDING' | 'INCOMPLETE';
-    phaseId?: string | number;
     sortKey?: number;
+    id: string | number;
+    phaseId?: string | number;
+    status?: 'DONE' | 'PENDING' | 'INCOMPLETE';
 }
 
 const DOT_SIZE = 8;
@@ -102,7 +102,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                     );
                     elements.push(
                         <Line
-                            key={`main-line-lower-${i}`}
+                            key={`main-line-lower-${Math.random()}`}
                             // x1={offsetLineX}
                             x1={offsetLineX}
                             // y1={currentY + 137}
@@ -153,7 +153,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                     //(i + 1 !== lastMealIndex) &&
                     isPrevPhaseHasMeal && elements.push(
                         <Line
-                            key={`main-line-lower-${i}`}
+                            key={`main-line-lower-${Math.random()}`}
                             x1={mainLineX}
                             y1={currentY + GAP_SIZE}
                             y2={nextY - GAP_SIZE}
@@ -204,7 +204,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                                     stroke={COLORS.GREY}
                                     y2={dotY - DOT_SIZE / 2}
                                     strokeWidth={CONNECTOR_WIDTH}
-                                    key={`non-meal-line-upper-${index}-${i}`}
+                                    key={`non-meal-line-upper-${index}-${Math.random()}`}
                                 />
                             );
                         } else {
@@ -218,7 +218,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                                     stroke={COLORS.GREY}
                                     y1={prevDotY + GAP_SIZE}
                                     strokeWidth={CONNECTOR_WIDTH}
-                                    key={`non-meal-line-upper-${index}-${i}`}
+                                    key={`non-meal-line-upper-${index}-${Math.random()}`}
                                 />
                             );
                         }
@@ -236,23 +236,23 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                                     y2={endY + DOT_SIZE}
                                     stroke={COLORS.GREY}
                                     strokeWidth={CONNECTOR_WIDTH}
-                                    key={`non-meal-line-lower-${index}-${i}`}
+                                    key={`non-meal-line-lower-${index}-${Math.random()}`}
                                 />
                             );
                         } else {
                             // from current dot to next dot gap
                             const nextDotY = nonMealDots[i + 1];
-                            elements.push(
-                                // <Line
-                                //     key={`non-meal-line-lower-${index}-${i}`}
-                                //     x1={offsetLineX}
-                                //     y1={dotY + DOT_SIZE / 2}
-                                //     x2={offsetLineX}
-                                //     y2={nextDotY - DOT_SIZE / 2}
-                                //     stroke={COLORS.GREY}
-                                //     strokeWidth={CONNECTOR_WIDTH}
-                                // />
-                            );
+                            // elements.push(
+                            //     // <Line
+                            //     //     key={`non-meal-line-lower-${index}-${i}`}
+                            //     //     x1={offsetLineX}
+                            //     //     y1={dotY + DOT_SIZE / 2}
+                            //     //     x2={offsetLineX}
+                            //     //     y2={nextDotY - DOT_SIZE / 2}
+                            //     //     stroke={COLORS.GREY}
+                            //     //     strokeWidth={CONNECTOR_WIDTH}
+                            //     // />
+                            // );
                         }
                     }
                     // console.log('elements', elements);
@@ -275,7 +275,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                     // first dot - from start to dot
                     elements.push(
                         <Line
-                            key={`non-meal-line-end-upper-${i}`}
+                            key={`non-meal-line-end-upper-${Math.random()}`}
                             x1={offsetLineX}
                             y1={startY}
                             x2={offsetLineX}
@@ -295,7 +295,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                             stroke={COLORS.GREY}
                             y1={prevDotY + GAP_SIZE}
                             strokeWidth={CONNECTOR_WIDTH}
-                            key={`non-meal-line-end-upper-${i}`}
+                            key={`non-meal-line-end-upper-${Math.random()}`}
                         />
                     );
                 }
@@ -305,7 +305,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                     // Last dot - from dot to end
                     elements.push(
                         <Line
-                            key={`non-meal-line-end-lower-${i}`}
+                            key={`non-meal-line-end-lower-${Math.random()}`}
                             x1={offsetLineX}
                             y1={dotY + DOT_SIZE / 2}
                             x2={offsetLineX}
@@ -319,7 +319,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                     const nextDotY = nonMealDots[i + 1];
                     elements.push(
                         <Line
-                            key={`non-meal-line-end-lower-${i}`}
+                            key={`non-meal-line-end-lower-${Math.random()}`}
                             x1={offsetLineX}
                             // y1={dotY + 55}
                             y1={dotY + GAP_SIZE}
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     container: { flex: 1 },
     content: {
         flex: 1,
-        paddingHorizontal: 16,
+        // paddingHorizontal: 16,
         paddingBottom: 20,
     },
     row: {
@@ -407,6 +407,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: COLORS.DARK_GREY,
         marginVertical: 16,
+        paddingHorizontal: 16,
     },
     timelineContainer: {
         position: 'relative',

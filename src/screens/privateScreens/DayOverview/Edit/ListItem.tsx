@@ -1,6 +1,7 @@
 // outsource dependencies
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Image } from 'react-native';
+import Checkbox from '../../../../components/Checkbox';
 // local dependencies
 import Text from '../../../../components/Text';
 import { COLORS } from '../../../../constants/colors';
@@ -34,34 +35,30 @@ export const ListItem: React.FC<ListItemProps> = ({
     disabled = false,
     handleCheckboxStatus,
 }) => {
-    const isRecipe = item.type === ENTITY_TYPE.RECIPE;
     const isFood = item.type === ENTITY_TYPE.FOOD;
-    const isCustomRecipe = item.type === ENTITY_TYPE.CUSTOM_RECIPE;
-    const isIngredients = item.type === ENTITY_TYPE.INGREDIENTS;
-    const isDidNotEat = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
+    const isRecipe = item.type === ENTITY_TYPE.RECIPE;
     const isDone = item.status === PHASE_ITEM_STATUS.DONE;
+    const isIngredients = item.type === ENTITY_TYPE.INGREDIENTS;
+    const isCustomRecipe = item.type === ENTITY_TYPE.CUSTOM_RECIPE;
+    const isDidNotEat = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
 
-    const handleCheckboxPress = () => {
+    const handleCheckboxPress = (next: boolean) => {
         if (handleCheckboxStatus && !disabled) {
-            handleCheckboxStatus(item);
+            handleCheckboxStatus({ ...item, status: isDone ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
+            // handleCheckboxStatus(item);
         }
     };
 
     const renderCheckbox = () => (
-        <TouchableOpacity
-            onPress={handleCheckboxPress}
-            style={[
-                styles.checkbox,
-                item.status === PHASE_ITEM_STATUS.DONE && styles.checkboxChecked,
-                disabled && styles.checkboxDisabled,
-            ]}
-            disabled={disabled}
-            // activeOpacity={0.7}
-        >
-            {item.status === PHASE_ITEM_STATUS.DONE && (
-                <Text style={styles.checkboxText}>✓</Text>
-            )}
-        </TouchableOpacity>
+        <Checkbox
+            size={22}
+            isDayOverview
+            status={item.status}
+            editable={!disabled}
+            onChange={handleCheckboxPress}
+            style={styles.checkboxContainer}
+            value={item.status === PHASE_ITEM_STATUS.DONE}
+        />
     );
 
     const renderStatusText = () => {
@@ -103,14 +100,36 @@ export const ListItem: React.FC<ListItemProps> = ({
         return result;
     };
 
+    const getImageUrl = () => {
+        if (isRecipe) {
+            const recipe = item.recipe;
+            return recipe?.surrogateRecipe
+                ? recipe?.ingredients?.[0]?.entity?.coverImage?.url
+                : recipe?.coverImage?.url;
+        }
+        if (isFood) {
+            return item.food?.coverImage?.url;
+        }
+        if (isCustomRecipe) {
+            return item.entity?.coverImage?.url;
+        }
+        if (isIngredients) {
+            return item.entity?.coverImage?.url;
+        }
+        return null;
+    };
+
     const renderItemContent = () => {
         const amount = item.amount || item.initialAmount;
         const isOpacity = (isDidNotEat || isDone) ? { opacity: 0.2 } : undefined;
-
+        const imageUrl = getImageUrl();
         if (isCustomRecipe) {
             const { entity } = item;
             return (
                 <View style={styles.recipeContainer}>
+                    {imageUrl && (
+                        <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
+                    )}
                     <View style={styles.main}>
                         <Text style={[styles.title, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Recipe'}`}
@@ -132,6 +151,9 @@ export const ListItem: React.FC<ListItemProps> = ({
             const { entity } = item;
             return (
                 <View style={styles.recipeContainer}>
+                    {imageUrl && (
+                        <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
+                    )}
                     <View style={styles.main}>
                         <Text style={[styles.title, { fontSize: 18 }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Ingredient'}`}
@@ -149,6 +171,9 @@ export const ListItem: React.FC<ListItemProps> = ({
         if (isRecipe) {
             return (
                 <View style={styles.recipeContainer}>
+                    {imageUrl && (
+                        <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
+                    )}
                     <View style={styles.main}>
                         <Text style={[styles.title, isOpacity || {}]}>
                             {item.recipe?.name || 'Recipe'}
@@ -172,6 +197,9 @@ export const ListItem: React.FC<ListItemProps> = ({
         if (isFood) {
             return (
                 <View style={styles.foodContainer}>
+                    {imageUrl && (
+                        <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
+                    )}
                     <View style={styles.main}>
                         <Text style={[styles.title, isOpacity || {}]}>
                             {item.food?.name || 'Food'}
@@ -214,35 +242,73 @@ export const ListItem: React.FC<ListItemProps> = ({
     };
 
     return (
-        <View style={styles.container}>
-            {renderCheckbox()}
-            <View style={styles.content}>
-                {renderItemContent()}
-                {renderStatusText()}
+        <View style={[styles.wrapper, nextSection && styles.divider]}>
+            <View style={styles.listItem}>
+                <View style={styles.listItemLink}>
+                    {renderItemContent()}
+                    {renderStatusText()}
+                </View>
+                {renderCheckbox()}
             </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
+    wrapper: {
+        backgroundColor: COLORS.WHITE,
+        paddingLeft: 4, // OFFSET.POINT
+    },
+    divider: {
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.BLACK,
+    },
+    listItem: {
+        width: '100%',
+        display: 'flex',
+        borderBottomWidth: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: COLORS.WHITE,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.LIGHT_GREY,
+        marginRight: 0,
+        justifyContent: 'space-between',
+        paddingVertical: 20, // OFFSET.VERTICAL
+        paddingLeft: 20,
+        paddingRight: 5,
+        borderBottomColor: '#E9E9E9',
+        borderRightColor: '#8EF9F3',
+        borderRightWidth: 7,
+    },
+    listItemLink: {
+        maxWidth: '90%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        marginRight: 16, // OFFSET.HORIZONTAL
+        marginBottom: 20, // OFFSET.VERTICAL
+    },
+    checkboxContainer: {
+        borderWidth: 2,
+        borderRadius: 5,
+        borderColor: '#8A95A3',
+        paddingHorizontal: 3,
+        paddingVertical: 1,
+        marginRight: 5,
+    },
+    image: {
+        width: 40,
+        height: 40,
+        marginRight: 16, // OFFSET.HORIZONTAL
+        borderRadius: 4,
     },
     checkbox: {
-        width: 24,
-        height: 24,
+        width: 25, // checkboxSize
+        height: 25,
         borderRadius: 4,
         borderWidth: 2,
         borderColor: COLORS.GREY,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 12,
+        marginRight: 5,
     },
     checkboxChecked: {
         backgroundColor: COLORS.BLUE,
@@ -256,17 +322,13 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: 'bold',
     },
-    content: {
-        flex: 1,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
     recipeContainer: {
-        flex: 1,
+        alignItems: 'center',
+        flexDirection: 'row',
     },
     foodContainer: {
-        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     defaultContainer: {
         flex: 1,
@@ -275,10 +337,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     title: {
+        paddingTop: 20, // OFFSET.VERTICAL
+        marginBottom: 20, // OFFSET.VERTICAL
         fontSize: 16,
         fontWeight: '500',
         color: COLORS.DARK_GREY,
-        marginBottom: 4,
     },
     subtitle: {
         fontSize: 14,
@@ -286,7 +349,10 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     notEatText: {
-        alignItems: 'flex-end',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 15,
     },
 });
 

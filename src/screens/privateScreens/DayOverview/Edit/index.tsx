@@ -244,18 +244,35 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const handleCheckboxStatus = async (item: PhaseItem) => {
         try {
             let newStatus: string;
-      
-            switch (item.status) {
-                case PHASE_ITEM_STATUS.DONE:
-                case PHASE_ITEM_STATUS.DID_NOT_EAT:
-                    newStatus = PHASE_ITEM_STATUS.PENDING;
-                    break;
-                case PHASE_ITEM_STATUS.PENDING:
-                    newStatus = PHASE_ITEM_STATUS.DONE;
-                    break;
-                default:
-                    newStatus = PHASE_ITEM_STATUS.DID_NOT_EAT;
-            }
+            // const status = isDidNotEatItem
+            // ? PHASE_ITEM_STATUS.DID_NOT_EAT
+            // : isItemChecked
+            //     ? PHASE_ITEM_STATUS.DONE
+            //     : PHASE_ITEM_STATUS.PENDING;
+            // switch (item.status) {
+            //     case PHASE_ITEM_STATUS.DID_NOT_EAT:
+            //         newStatus = PHASE_ITEM_STATUS.DID_NOT_EAT;
+            //         break;
+            //     case PHASE_ITEM_STATUS.DONE:
+            //         newStatus = PHASE_ITEM_STATUS.DONE;
+            //         break;
+            //     case PHASE_ITEM_STATUS.PENDING:
+            //         newStatus = PHASE_ITEM_STATUS.DONE;
+            //         break;
+            //     default:
+            //         newStatus = PHASE_ITEM_STATUS.DID_NOT_EAT;
+            // }
+            // switch (item.status) {
+            //     case PHASE_ITEM_STATUS.DONE:
+            //     case PHASE_ITEM_STATUS.DID_NOT_EAT:
+            //         newStatus = PHASE_ITEM_STATUS.PENDING;
+            //         break;
+            //     case PHASE_ITEM_STATUS.PENDING:
+            //         newStatus = PHASE_ITEM_STATUS.DONE;
+            //         break;
+            //     default:
+            //         newStatus = PHASE_ITEM_STATUS.DID_NOT_EAT;
+            // }
             // await updatePhaseItem({
             //     id: item.id,
             //     data: {
@@ -268,17 +285,17 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             setLocalItems(prevItems =>
                 prevItems.map(prevItem =>
                     (prevItem.id === item.id
-                        ? { ...prevItem, status: newStatus }
+                        ? { ...item }
+                        // ? { ...prevItem, status: newStatus }
                         : prevItem)
                 )
             );
-      
             await updatePhaseItem({
                 id: item.id,
                 phaseId: targetPhaseId,
                 data: {
                     ...item,
-                    status: newStatus,
+                    // status: newStatus,
                     amount: item.amount || item.initialAmount
                 }
             });
@@ -523,7 +540,7 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginHorizontal: 24,
+        marginHorizontal: 24, // OFFSET.HORIZONTAL * 1.5
         marginBottom: 20,
     },
     mealDoneButton: {
@@ -545,7 +562,7 @@ const styles = StyleSheet.create({
         paddingBottom: 15,
     },
     emptyScreen: {
-        marginTop: 40,
+        marginTop: 40, // OFFSET.VERTICAL * 2
     },
     opacity: {
         opacity: 0.4,

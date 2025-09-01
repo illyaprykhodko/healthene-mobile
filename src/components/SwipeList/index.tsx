@@ -152,7 +152,7 @@ export const SwipeList: React.FC<SwipeListProps> = ({
             ListHeaderComponent={ListHeaderComponent}
             disableLeftSwipe={isFutureDate || (noDelete && noReplace)}
             renderHiddenItem={({ item }) => {
-                const isDidNotEatStatus = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
+                // const isDidNotEatStatus = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
                 return (
                     <View style={StyleSheet.flatten([styles.listItemHidden, styleHiddenItem])}>
                         <View style={[styles.listItemContent, { width }]}>
@@ -174,11 +174,18 @@ export const SwipeList: React.FC<SwipeListProps> = ({
                             {(_.get(item, 'type') === 'RECIPE' || _.get(item, 'type') === 'FOOD') && !isAnytime ? (
                                 !isFutureDate && (
                                     <TouchableOpacity
-                                        onPress={() => handleCheckboxStatus?.(
-                                            isDidNotEatStatus
-                                                ? { item: { ...item }, status: PHASE_ITEM_STATUS.DID_NOT_EAT }
-                                                : { item }
-                                        )}
+                                        onPress={() => {
+                                            handleCheckboxStatus?.({
+                                                ...item,
+                                                status: PHASE_ITEM_STATUS.DID_NOT_EAT
+                                            }
+                                            );
+                                            // handleCheckboxStatus?.(
+                                            //     isDidNotEatStatus
+                                            //         ? { ...item, status: PHASE_ITEM_STATUS.DID_NOT_EAT }
+                                            //         : { ...item }
+                                            // );
+                                        }}
                                         style={[styles.button, styles.listItemBtnNotEat]}
                                     >
                                         <Icon name="times" color={COLORS.BLACK} size={30} />
