@@ -2,14 +2,15 @@
 import React from 'react';
 import moment from 'moment';
 import { TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { useNavigation, useTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // local dependencies
 import Item from './Item';
 import Edit from './Edit';
 import UPCScan from './UPCScan';
 import { Overview } from './Overview';
+import { useTheme } from 'hooks/useTheme';
 import AddReplaceItem from './AddReplaceItem';
 
 const Stack = createNativeStackNavigator();

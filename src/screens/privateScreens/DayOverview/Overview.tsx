@@ -1,18 +1,19 @@
 // outsource dependencies
 import moment from 'moment';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import Svg, { Line, Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 // local dependencies
 import Text from '../../../components/Text';
-import { useAppSelector } from '../../../store';
 import Screen from '../../../components/Screen';
 import { useTheme } from '../../../hooks/useTheme';
 import { COLORS } from '../../../constants/colors';
-import { selectDayOverview } from '../../../store/slices/dayOverviewSlice';
+import TimeSwitcher from '../../../components/TimeSwitcher';
+import { useAppDispatch, useAppSelector } from '../../../store';
 import { useGetDayOverviewQuery, Phase } from '../../../store/api/dayOverviewApi';
+import { selectDayOverview, meta, setDateEntry } from '../../../store/slices/dayOverviewSlice';
 
 // Temporary types
 export type PhaseType = 'MEAL' | 'MEASUREMENT' | 'SUPPLEMENT' | 'MEDICATION' | 'ADDED_BY_PATIENT' | 'PHYSICAL_ACTIVITY' | 'QUESTION' | 'ANYTIME';
@@ -241,7 +242,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                             );
                         } else {
                             // from current dot to next dot gap
-                            const nextDotY = nonMealDots[i + 1];
+                            // const nextDotY = nonMealDots[i + 1];
                             // elements.push(
                             //     // <Line
                             //     //     key={`non-meal-line-lower-${index}-${i}`}
@@ -378,6 +379,11 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
+    header: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: '#156F93',
+    },
     content: {
         flex: 1,
         // paddingHorizontal: 16,
@@ -440,14 +446,70 @@ const getIconColorByType = (type: PhaseType) => {
 export const Overview: React.FC = () => {
     const theme = useTheme();
     const navigation = useNavigation();
-    const { date } = useAppSelector(selectDayOverview);
+    const dispatch = useAppDispatch();
+    const { date, expectAnswer } = useAppSelector(selectDayOverview);
     const currentDate = date || moment().format('YYYY-MM-DD');
 
+    useEffect(() => {
+        console.log('date', date);
+        navigation.setOptions({
+            headerTitle: () => (
+                <TimeSwitcher
+                    date={currentDate}
+                    disabled={Boolean(expectAnswer)}
+                    isHideLeftBtn={false}
+                    isHideRightBtn={false}
+                    init={({ date: nextDate }) => {
+                        const isCurrent = moment(nextDate).isSame(moment(), 'day');
+                        const isFuture = moment(nextDate).isAfter(moment(), 'day');
+                        const isPast = moment(nextDate).isBefore(moment(), 'day');
+                        dispatch(meta({
+                            date: nextDate,
+                            isPastDate: isPast,
+                            isFutureDate: isFuture,
+                            isCurrentDate: isCurrent,
+                            calendarDays: { [nextDate]: { selected: true } },
+                        }));
+                    // RTK Query hook depends on date arg; changing date triggers automatic refetch
+                    }}
+                />
+                // <Text style={{ color: COLORS.WHITE, fontSize: 18, fontWeight: '600' }}>
+                //     {moment(date).format('ddd, MMM Do')}
+                // </Text>
+            )
+        });
+    }, [date, dispatch, navigation, currentDate, expectAnswer]);
+
     // Skip query if no date available
-    const { data, isLoading, error } = useGetDayOverviewQuery(currentDate, {
+    const { data, isLoading, isFetching } = useGetDayOverviewQuery(currentDate, {
         skip: !currentDate,
         refetchOnMountOrArgChange: true
     });
+
+    useEffect(() => {
+        moment.updateLocale('en', { week: { dow: 1 } });
+    }, []);
+
+    useEffect(() => {
+        dispatch(meta({ expectAnswer: Boolean(isFetching) }));
+    }, [isFetching, dispatch]);
+
+    useEffect(() => {
+        if (!data) { return; }
+        const calendarDays: Record<string, any> = { [currentDate]: { selected: true } };
+        (data.currentWeekIncompleteDays || []).forEach(d => {
+            if (d?.date) {
+                calendarDays[d.date] = { selected: true, selectedColor: '#dc73de' };
+            }
+        });
+        dispatch(meta({ calendarDays }));
+
+        const countPhases = (data.phases || []).reduce((sum, p) => {
+            if (p.type === 'MEASUREMENT') { return sum + (p.items?.length || 0); }
+            return sum + 1;
+        }, 0);
+        dispatch(setDateEntry({ date: currentDate, entry: { overview: data as any, countPhases } }));
+    }, [data, currentDate, dispatch]);
 
     const phases: PhaseItem[] = useMemo(() => {
         if (!data?.phases) { return []; }
@@ -461,57 +523,21 @@ export const Overview: React.FC = () => {
                 items.forEach(item => {
                     rows.push({
                         id: item.id,
+                        phaseId: p.id,
                         type: 'MEASUREMENT',
                         title: item.measurement?.name || 'Measurement',
-                        status: item.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
-                        phaseId: p.id,
                         sortKey: (p.order ?? 0) + (item.order ?? 0) / 100,
+                        status: item.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
                     });
                 });
-            }
-            // else if (p.type === 'QUESTION') {
-            //     rows.push({
-            //         id: p.id,
-            //         type: 'QUESTION',
-            //         title: 'Health Question',
-            //         status: p.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
-            //         sortKey: p.order ?? 0,
-            //     });
-            // }
-            // else if (p.type === 'ANYTIME') {
-            //     // Handle anytime phase - expand items like measurements
-            //     const safeItems = [...(p.items || [])];
-            //     const items = safeItems.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-            //     items.forEach(item => {
-            //         let title = 'Item';
-            //         if (item.food?.name) {
-            //             title = item.food.name;
-            //         } else if (item.recipe?.name) {
-            //             title = item.recipe.name;
-            //         } else if (item.exercise?.title) {
-            //             title = item.exercise.title;
-            //         } else if (item.type) {
-            //             title = item.type.replace(/_/g, ' ').toLowerCase();
-            //         }
-                    
-            //         rows.push({
-            //             id: item.id,
-            //             type: 'ANYTIME',
-            //             title,
-            //             status: item.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
-            //             phaseId: p.id,
-            //             sortKey: (p.order ?? 0) + (item.order ?? 0) / 100,
-            //         });
-            //     });
-            // }
-            else if (['MEAL', 'MEDICATION', 'SUPPLEMENT', 'PHYSICAL_ACTIVITY', 'ADDED_BY_PATIENT'].includes(p.type)) {
+            } else if (['MEAL', 'MEDICATION', 'SUPPLEMENT', 'PHYSICAL_ACTIVITY', 'ADDED_BY_PATIENT'].includes(p.type)) {
                 // handle other phase types
                 rows.push({
                     id: p.id,
-                    type: p.type as PhaseType,
-                    title: p.meal?.name || p.name || (p.type === 'PHYSICAL_ACTIVITY' ? 'Exercise' : p.type.toLowerCase()),
-                    status: p.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
                     sortKey: p.order ?? 0,
+                    type: p.type as PhaseType,
+                    status: p.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
+                    title: p.meal?.name || p.name || (p.type === 'PHYSICAL_ACTIVITY' ? 'Exercise' : p.type.toLowerCase()),
                 });
             }
         });

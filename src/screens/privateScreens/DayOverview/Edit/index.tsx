@@ -61,11 +61,11 @@ const PHASE_ITEM_STATUS = {
 const ENTITY_TYPE = {
     FOOD: 'FOOD',
     RECIPE: 'RECIPE',
-    CUSTOM_RECIPE: 'CUSTOM_RECIPE',
-    INGREDIENTS: 'INGREDIENTS',
-    MEASUREMENT: 'MEASUREMENT',
-    MEDICATION: 'MEDICATION',
     SUPPLEMENT: 'SUPPLEMENT',
+    MEDICATION: 'MEDICATION',
+    MEASUREMENT: 'MEASUREMENT',
+    INGREDIENTS: 'INGREDIENTS',
+    CUSTOM_RECIPE: 'CUSTOM_RECIPE',
     PHYSICAL_ACTIVITY: 'PHYSICAL_ACTIVITY',
 };
 
@@ -123,7 +123,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 )
             });
         }
-        setInitialized(true);
+        // setInitialized(true);
     }, [targetDate, navigation]);
 
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
@@ -147,11 +147,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     section: item.section,
                     modified: item.modified,
                     useServing: item.useServing,
-                    measurement: item.measurement,
                     medication: item.medication,
                     supplement: item.supplement,
-                    physicalActivity: item.physicalActivity,
+                    measurement: item.measurement,
                     initialAmount: item.initialAmount,
+                    physicalActivity: item.physicalActivity,
                     patientFoodCategoryQuestion: item.patientFoodCategoryQuestion,
                     patientFoodCategoryAttachment: item.patientFoodCategoryAttachment,
                     title: item.food?.name || item.recipe?.name || item.measurement?.name || item.medication?.name || item.supplement?.name || item.physicalActivity?.name || 'Item',
@@ -214,8 +214,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     await addPhaseItem({
                         phaseId: targetPhaseId,
                         data: {
-                            order: items.length,
                             type: entityType,
+                            order: items.length,
                             name: selectedItem.name,
                             status: PHASE_ITEM_STATUS.PENDING,
                         }
@@ -364,15 +364,15 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     const isLoading = isDayOverviewLoading || isPhaseItemsLoading;
   
-    if (isLoading) {
-        return (
-            <Screen initialized={false} style={styles.container}>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text>Loading...</Text>
-                </View>
-            </Screen>
-        );
-    }
+    // if (isLoading) {
+    //     return (
+    //         <Screen initialized={false} style={styles.container}>
+    //             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    //                 <Text>Loading...</Text>
+    //             </View>
+    //         </Screen>
+    //     );
+    // }
 
     const groupedBySection = _.groupBy(localItems, 'section');
     const title = currentPhase?.meal?.name
@@ -383,7 +383,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const isFutureDate = moment(targetDate).isAfter(moment(), 'day');
 
     return (
-        <Screen initialized={initialized} style={styles.container}>
+        <Screen initialized={!isLoading} style={styles.container}>
             <View style={[styles.title, isFutureDate && styles.opacity]}>
                 <View>
                     <Text style={styles.titleText}>
@@ -467,6 +467,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                     ...styles.button,
                                     ...styles.addButtonActive,
                                     width: isFutureDate ? '100%' : '45%',
+                                    backgroundColor: theme.colors.transparent,
                                 }}
                             />
                             {!isFutureDate && (

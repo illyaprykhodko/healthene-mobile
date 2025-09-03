@@ -18,10 +18,10 @@ import {
 // Temporary types until full migration
 interface AddReplaceItemProps {
   entityType?: string;
-  excludeIds?: string[];
-  onApply?: (item: any) => void;
-  replaceMode?: boolean;
   itemToReplace?: any;
+  excludeIds?: string[];
+  replaceMode?: boolean;
+  onApply?: (item: any) => void;
 }
 
 // Temporary constants until full migration
@@ -80,9 +80,9 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
     // restaurants only tree search
     const { data: catalogTreeData, isLoading: isCatalogTreeLoading } = useGetCatalogPrototypeTreeNodesQuery({
         filter: {
-            name: debouncedSearchQuery || undefined,
-            parentId: currentNodeId || undefined,
             restaurantCatalog: true,
+            parentId: currentNodeId || undefined,
+            name: debouncedSearchQuery || undefined,
             // excludeIds: excludeIds.map((id: string) => parseInt(id)),
         },
         page,
@@ -99,7 +99,7 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         filter: {
             name: debouncedSearchQuery || undefined,
             catalogNodeId: currentNodeId || undefined,
-            excludeIds: excludeIds.map((id: string) => parseInt(id)),
+            // excludeIds: excludeIds.map((id: string) => parseInt(id)),
         },
         page,
         size: 10,
@@ -112,11 +112,11 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
     const { data: foodsData, isLoading: isFoodsLoading } = useGetFoodsQuery({
         filter: {
             // name: debouncedSearchQuery || undefined,
-            nameFragment: debouncedSearchQuery || undefined,
-            categoryNodeId: currentNodeId || undefined,
             isEnabled: true,
+            categoryNodeId: currentNodeId || undefined,
+            nameFragment: debouncedSearchQuery || undefined,
             treeTypeViewLabel: 'PATIENT_NAVIGATION' as const,
-            excludeIds: excludeIds.map((id: string) => parseInt(id)),
+            // excludeIds: excludeIds.map((id: string) => parseInt(id)),
         },
         page,
         size: 10,

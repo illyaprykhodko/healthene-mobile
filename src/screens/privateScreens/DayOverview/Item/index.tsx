@@ -1,8 +1,8 @@
 // outsource dependencies
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 // local dependencies
 import { OVERVIEW_TYPE } from '../types';
 import Text from '../../../../components/Text';
@@ -17,19 +17,19 @@ interface PhaseItem {
     type: string;
     recipe?: any;
     title: string;
+    serving?: any;
     status?: string;
-    measurement?: any;
-    id: string | number;
     amount?: number;
-    initialAmount?: number;
     weight?: {
         unit: {
             name: string;
         };
     };
-    serving?: any;
-    useServing?: boolean;
+    measurement?: any;
     modified?: boolean;
+    id: string | number;
+    useServing?: boolean;
+    initialAmount?: number;
 }
 
 interface ItemProps {

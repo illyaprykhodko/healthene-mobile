@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     drawerContent: {
-        paddingTop: 10,
+        paddingTop: 25,
     },
     profileSection: {
         padding: 20,
