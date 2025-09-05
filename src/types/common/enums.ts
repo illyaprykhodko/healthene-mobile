@@ -69,6 +69,31 @@ export enum AlgorithmRunState {
   PENDING = 'PENDING'
 }
 
+// Exercise
+export enum ExerciseType {
+  AEROBIC = 'EXERCISE_AEROBIC',
+  RESISTANCE = 'EXERCISE_RESISTANCE',
+  STRETCHING = 'EXERCISE_STRETCHING',
+}
+
+export enum ExerciseFieldType {
+  REPS = 'reps',
+  SETS = 'sets',
+  HOURS = 'hours',
+  MILES = 'miles',
+  STEPS = 'steps',
+  WEIGHT = 'weight',
+  SECONDS = 'seconds',
+  MINUTES = 'minutes',
+  DISTANCE = 'distance',
+  CALORIES = 'calories',
+  VELOCITY = 'velocity',
+  INTENSITY = 'intensity',
+  ELEVATION = 'elevation',
+  HEART_RATE = 'heart_rate',
+  RESISTANCE = 'resistance',
+}
+
 /**
  * Represents the gender of a patient
  * @enum {string}

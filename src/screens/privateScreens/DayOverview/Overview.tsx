@@ -554,6 +554,13 @@ export const Overview: React.FC = () => {
                 phaseId: phase.phaseId,
                 date: currentDate
             });
+        } else if (phase.type === 'PHYSICAL_ACTIVITY') {
+            (navigation as any).navigate('ExerciseCategories', {
+                date: currentDate,
+                parentNavigation: navigation,
+                list: [],
+                deepCounter: 0,
+            });
         } else {
             (navigation as any).navigate('Edit', {
                 phaseId: phase.id,

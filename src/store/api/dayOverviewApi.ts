@@ -51,6 +51,21 @@ export interface PhaseItem {
     patientFoodCategoryQuestion?: any;
 }
 
+// Exercise
+export type ExerciseStepsUpdate = ExerciseDataResponse[];
+// export interface ExerciseStepsUpdate {
+//     steps: any[];
+// }
+
+export interface ExerciseDataResponse {
+    id: number | string;
+    type: string; // ExerciseType
+    image?: { url?: string };
+    video?: any;
+    instruction?: string;
+    steps: any[];
+}
+
 export interface AvailableItem {
     name: string;
     type: string;
@@ -353,6 +368,31 @@ export const dayOverviewApi = createApi({
                 { type: 'PhaseItems', id },
                 'DayOverview',
             ],
+        }),
+
+        // Physical Activity detail for a phase item
+        getPhysicalActivityItem: builder.query<any, number | string>({
+            query: id => `/patient-service/patients/day-overview/phase/item/${id}`,
+        }),
+
+        // Exercise data by type
+        getStretchingExercise: builder.query<ExerciseDataResponse, number | string>({
+            query: id => `/patient-service/day-overview-stretching-exercises/${id}`,
+        }),
+        updateStretchingSteps: builder.mutation<any, ExerciseStepsUpdate>({
+            query: body => ({ url: '/patient-service/day-overview-stretching-exercises/steps', method: 'PUT', body }),
+        }),
+        getAerobicExercise: builder.query<ExerciseDataResponse, number | string>({
+            query: id => `/patient-service/day-overview-aerobic-exercises/${id}`,
+        }),
+        updateAerobicSteps: builder.mutation<any, ExerciseStepsUpdate>({
+            query: body => ({ url: '/patient-service/day-overview-aerobic-exercises/steps', method: 'PUT', body }),
+        }),
+        getResistanceExercise: builder.query<ExerciseDataResponse, number | string>({
+            query: id => `/patient-service/day-overview-resistance-exercises/${id}`,
+        }),
+        updateResistanceSteps: builder.mutation<any, ExerciseStepsUpdate>({
+            query: body => ({ url: '/patient-service/day-overview-resistance-exercises/steps', method: 'PUT', body }),
         }),
     }),
 });
@@ -668,4 +708,11 @@ export const {
     useGetCatalogPrototypeTreeNodesQuery,
     useGetRecipePrototypesQuery,
     useGetFoodsQuery,
+    useGetPhysicalActivityItemQuery,
+    useGetStretchingExerciseQuery,
+    useUpdateStretchingStepsMutation,
+    useGetAerobicExerciseQuery,
+    useUpdateAerobicStepsMutation,
+    useGetResistanceExerciseQuery,
+    useUpdateResistanceStepsMutation,
 } = dayOverviewApi;

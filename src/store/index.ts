@@ -5,6 +5,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { authApi } from './api/authApi';
 import appReducer from './slices/appSlice';
 import signInReducer from './slices/signInSlice';
+import exerciseReducer from './slices/exerciseSlice';
 import { dayOverviewApi } from './api/dayOverviewApi';
 import { dayOverviewReducer } from './slices/dayOverviewSlice';
 import forgotPasswordReducer from './slices/forgotPasswordSlice';
@@ -13,6 +14,7 @@ export const store = configureStore({
     reducer: {
         app: appReducer,
         signIn: signInReducer,
+        exercise: exerciseReducer,
         dayOverview: dayOverviewReducer,
         forgotPassword: forgotPasswordReducer,
         [authApi.reducerPath]: authApi.reducer,

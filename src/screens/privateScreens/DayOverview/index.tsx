@@ -12,6 +12,7 @@ import UPCScan from './UPCScan';
 import { Overview } from './Overview';
 import { useTheme } from 'hooks/useTheme';
 import AddReplaceItem from './AddReplaceItem';
+import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
 
 const Stack = createNativeStackNavigator();
 
@@ -79,6 +80,9 @@ const DayOverviewStack: React.FC = () => {
                 component={UPCScan}
                 options={{ title: 'Scan UPC Code' }}
             />
+            <Stack.Screen name="ExerciseCategories" component={ExerciseCategories} options={{ title: 'Exercise' }} />
+            <Stack.Screen name="ExerciseDetails" component={ExerciseDetails} options={{ title: 'Exercise Details' }} />
+            <Stack.Screen name="EditExercise" component={ExerciseEdit} options={{ title: 'Edit Exercise' }} />
         </Stack.Navigator>
     );
 };
