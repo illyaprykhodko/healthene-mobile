@@ -1,19 +1,20 @@
+// local dependencies
 import { ExerciseFieldType, ExerciseType } from 'types';
 import { formatDecimalValue } from './decimal-utils';
 
 export interface ExerciseStep {
-    id: number | string;
     order?: number;
-    completed?: boolean;
     modified?: boolean;
+    id: number | string;
+    completed?: boolean;
+    instruction?: string | null;
     image?: { url?: string } | null;
     video?: { id?: number | string; title?: string; description?: string; embedUrl?: string; mimeType?: string } | null;
-    instruction?: string | null;
     // optional fields used per exercise type
+    [k: string]: any;
+    elevation?: number; resistance?: number;
     reps?: number; seconds?: number; minutes?: number; hours?: number;
     miles?: number; steps?: number; weight?: number; velocity?: number;
-    elevation?: number; resistance?: number;
-    [k: string]: any;
 }
 
 export interface ExerciseConfig {
@@ -131,13 +132,88 @@ export const EXERCISE_CONFIGS: Record<string, any> = {
     },
 };
 
+// Factory for creating API functions
 export const createExerciseAPI = (exerciseType: ExerciseType) => {
     const config = EXERCISE_CONFIGS[exerciseType];
-    if (!config) { throw new Error(`Unsupported exercise type: ${exerciseType}`); }
+    if (!config) {
+        throw new Error(`Unsupported exercise type: ${exerciseType}`);
+    }
+
     return {
-        getData: (id: number | string) => ({ method: 'GET', url: `${config.apiEndpoint}/${id}` }),
-        updateSteps: (data: any) => ({ method: 'PUT', url: `${config.apiEndpoint}/steps`, data }),
-        config,
+        getData: (id: number | string) => ({
+            method: 'GET',
+            url: `${config.apiEndpoint}/${id}`
+        }),
+        updateSteps: (data: any) => ({
+            method: 'PUT',
+            url: `${config.apiEndpoint}/steps`,
+            data
+        }),
+        config
     };
 };
+
+// Factory for rendering exercise fields
+export const createExerciseRenderer = (exerciseType: ExerciseType) => {
+    const config = EXERCISE_CONFIGS[exerciseType];
+    if (!config) {
+        throw new Error(`Unsupported exercise type: ${exerciseType}`);
+    }
+
+    return {
+        renderFields: config.renderFields,
+        getFieldTypes: () => config.fields,
+        getDefaultFields: () => config.defaultFields,
+    };
+};
+
+// Validation for specific exercise type fields
+export const validateExerciseFields = (exerciseType: ExerciseType, fields: Record<string, any>) => {
+    const config = EXERCISE_CONFIGS[exerciseType];
+    if (!config) {
+        return { isValid: false, errors: [`Unsupported exercise type: ${exerciseType}`] };
+    }
+
+    const errors: string[] = [];
+    const requiredFields = config.fields;
+
+    requiredFields.forEach((field: string) => {
+        if (!fields[field] || fields[field] === '') {
+            errors.push(`${field} is required for ${exerciseType}`);
+        }
+    });
+
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
+};
+
+// Get configuration for specific exercise type, subtype, and goalType
+export function getExerciseConfig ({ type, subtype, goalType }: {
+    type: ExerciseType;
+    subtype?: string;
+    goalType?: string;
+}) {
+    const base = EXERCISE_CONFIGS[type];
+    if (!base) { return null; }
+    if (!subtype) { return base; }
+    const sub = base[subtype];
+    if (!sub) { return null; }
+    if (!goalType) { return sub; }
+    return sub[goalType] || null;
+}
+
+// Get API endpoint for specific exercise configuration
+function getApiEndpoint ({ type, subtype, goalType }: {
+    type: ExerciseType;
+    subtype?: string;
+    goalType?: string;
+}) {
+    const config = getExerciseConfig({ type, subtype, goalType });
+    return config?.apiEndpoint || EXERCISE_CONFIGS[type]?.apiEndpoint;
+}
+
+// Get all supported exercise types
+export const getSupportedExerciseTypes = () => Object.keys(EXERCISE_CONFIGS);
 
