@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     backgroundSecond: { backgroundColor: 'rgba(238, 241, 227, 0.5)' },
 });
 
-export default function MultiWheelPicker({ step, fields, onApply }: Props) {
+export default function MultiWheelPicker ({ step, fields, onApply }: Props) {
     const [values, setValues] = useState(fields.map(f => f.value ?? 0));
 
     const regularFields = fields.filter(f => !isDecimalField(f.key));
@@ -93,5 +93,3 @@ export default function MultiWheelPicker({ step, fields, onApply }: Props) {
         </View>
     );
 }
-
-

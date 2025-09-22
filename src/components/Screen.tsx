@@ -1,20 +1,20 @@
 // outsource dependencies
 import React, { ReactNode, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, StyleSheet, StatusBar, ViewStyle, StatusBarStyle } from 'react-native';
+import { View, StyleSheet, StatusBar, ViewStyle, StatusBarStyle, StyleProp } from 'react-native';
 // local dependencies
 import { BoxHolder } from './preloader';
 
 interface ScreenProps {
-  style?: ViewStyle;
-  children?: ReactNode;
-  initialized: boolean;
-  statusBarBg?: string;
-  statusBarHidden?: boolean;
-  statusBarAnimated?: boolean;
-  statusBarVariant?: StatusBarStyle;
-  init?: () => void;
-  clear?: () => void;
+    init?: () => void;
+    clear?: () => void;
+    children?: ReactNode;
+    initialized: boolean;
+    statusBarBg?: string;
+    statusBarHidden?: boolean;
+    statusBarAnimated?: boolean;
+    style?: StyleProp<ViewStyle>;
+    statusBarVariant?: StatusBarStyle;
 }
 
 const styles = StyleSheet.create({
@@ -30,15 +30,15 @@ const styles = StyleSheet.create({
 });
 
 const Screen: React.FC<ScreenProps> = ({
-    children,
+    init,
+    clear,
     style,
+    children,
     initialized,
     statusBarHidden = false,
     statusBarBg = '#1A2236',
     statusBarAnimated = false,
     statusBarVariant = 'default',
-    init,
-    clear,
 }) => {
     useFocusEffect(
         useCallback(() => {

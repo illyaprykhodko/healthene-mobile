@@ -12,7 +12,7 @@ interface Props {
     onApply: (update: Record<string, number>) => void;
 }
 
-export default function DecimalWheelPicker({ field, onApply }: Props) {
+export default function DecimalWheelPicker ({ field, onApply }: Props) {
     const [value, setValue] = React.useState(String(field.value ?? 0));
     return (
         <View style={styles.container}>
@@ -46,5 +46,4 @@ const styles = StyleSheet.create({
         width: '94%'
     }
 });
-
 
