@@ -5,13 +5,15 @@ import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { View, StyleSheet, Image, Dimensions } from 'react-native';
 
 // local dependencies
-import Text from '../../../components/Text';
-import Screen from '../../../components/Screen';
-import { useTheme } from '../../../hooks/useTheme';
-import { ROUTES } from '../../../constants/routes';
-import { Button } from '../../../components/Button';
-import { Hamburger } from '../../../components/Hamburger';
-import { RootState, useAppSelector } from '../../../store';
+import Text from 'components/Text';
+import Screen from 'components/Screen';
+import { useTheme } from 'hooks/useTheme';
+import { ROUTES } from 'constants/routes';
+import { OFFSET } from 'constants/offset';
+import { Button } from 'components/Button';
+import { TextLogo } from 'components/TextLogo';
+import { Hamburger } from 'components/Hamburger';
+import { RootState, useAppSelector } from 'store';
 
 const { width } = Dimensions.get('window');
 
@@ -52,7 +54,10 @@ export const MainScreen: React.FC = () => {
 
     return (
         <Screen style={styles.container} initialized={true}>
-            <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+            <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
+                <View style={styles.textLogoWrapper}>
+                    <TextLogo color={theme.colors.background} />
+                </View>
                 <Hamburger onPress={handleOpenDrawer} style={styles.hamburger} />
             </View>
 
@@ -72,7 +77,7 @@ export const MainScreen: React.FC = () => {
                 </View>
                 
                 <Button
-                    title="Get Started"
+                    title="GET STARTED"
                     style={styles.button}
                     onPress={handleGetStarted}
                 />
@@ -85,26 +90,34 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    textLogo: {
+        alignSelf: 'center',
+    },
     header: {
         flexDirection: 'row',
+        alignItems: 'flex-end',
         justifyContent: 'flex-end',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingTop: 50,
-        paddingBottom: 10,
+        paddingTop: OFFSET.VERTICAL * 2.5,
+        paddingBottom: OFFSET.POINT * 2.5,
+        paddingHorizontal: OFFSET.HORIZONTAL,
+    },
+    textLogoWrapper: {
+        width: '90%',
+
     },
     hamburger: {
         marginRight: 8,
+        alignItems: 'flex-end',
     },
     content: {
         flex: 1,
-        paddingHorizontal: 20,
-        paddingBottom: 20,
+        paddingHorizontal: OFFSET.HORIZONTAL,
+        paddingBottom: OFFSET.VERTICAL,
     },
     descriptionWrapper: {
         flexDirection: 'row',
-        marginBottom: 20,
-        marginTop: 40,
+        marginBottom: OFFSET.VERTICAL,
+        marginTop: OFFSET.VERTICAL * 2,
     },
     title: {
         flex: 1,
@@ -115,7 +128,7 @@ const styles = StyleSheet.create({
     imageWrapper: {
         flex: 1,
         alignItems: 'center',
-        paddingTop: 40,
+        paddingTop: OFFSET.VERTICAL * 2,
     },
     image: {
         height: '100%',
@@ -123,6 +136,10 @@ const styles = StyleSheet.create({
         maxWidth: width * 0.8,
     },
     button: {
-        marginBottom: 24,
+        paddingVertical: OFFSET.VERTICAL,
+        marginBottom: OFFSET.VERTICAL,
+        borderRadius: 50,
+        width: '90%',
+        alignSelf: 'center',
     },
 });

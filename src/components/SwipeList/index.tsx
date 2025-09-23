@@ -5,23 +5,9 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 // local dependencies
-import { COLORS } from '../../constants/colors';
-
-// Temporary constants until full migration
-const OVERVIEW_TYPE = {
-    MEAL: 'MEAL',
-    SUPPLEMENT: 'SUPPLEMENT',
-    MEDICATION: 'MEDICATION',
-    MEASUREMENT: 'MEASUREMENT',
-    ADDED_BY_PATIENT: 'ADDED_BY_PATIENT',
-    PHYSICAL_ACTIVITY: 'PHYSICAL_ACTIVITY',
-};
-
-const PHASE_ITEM_STATUS = {
-    DONE: 'DONE',
-    PENDING: 'PENDING',
-    DID_NOT_EAT: 'DID_NOT_EAT',
-};
+// import { useTheme } from 'hooks/useTheme';
+import { COLORS } from 'constants/colors';
+import { OVERVIEW_TYPE, PHASE_ITEM_STATUS } from 'constants/spec';
 
 interface SwipeListProps {
     data: any[];
@@ -45,64 +31,6 @@ interface SwipeListProps {
     renderItem: (info: { item: any }) => React.ReactElement;
 }
 
-const styles = StyleSheet.create({
-    list: {
-    // paddingRight: OFFSET.HORIZONTAL
-    // paddingRight: OFFSET.HORIZONTAL / 2
-    },
-    listItemHidden: {
-        height: '100%',
-        width: '100%',
-        marginRight: 16,
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-    },
-    listItemContent: {
-        display: 'flex',
-        flexDirection: 'row',
-    },
-    backTextWhite: {
-        color: '#FFF',
-    },
-    button: {
-        flexGrow: 1,
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    buttonText: {
-        color: COLORS.WHITE,
-    },
-    replaceBtn: {
-        color: COLORS.BLACK,
-        marginLeft: 4,
-        marginTop: 20,
-    },
-    listItemBtnReplace: {
-        backgroundColor: '#8EF9F3',
-        flex: 1,
-        flexDirection: 'column',
-    // marginLeft: 5
-    },
-    notEatBtn: {
-        color: COLORS.BLACK,
-    },
-    offsetTop: {
-        marginTop: 20,
-    },
-    listItemBtnNotEat: {
-        backgroundColor: '#E0F6F5',
-        flexDirection: 'column',
-        flex: 1,
-    // borderWidth: 1,
-    // borderColor: COLOR.BLACK.hex()
-    },
-    listItemBtnDelete: {
-        backgroundColor: COLORS.RED,
-        flex: 1,
-    },
-});
 
 export const SwipeList: React.FC<SwipeListProps> = ({
     data,
@@ -132,7 +60,7 @@ export const SwipeList: React.FC<SwipeListProps> = ({
     };
 
     const isAddedByPatient = type === OVERVIEW_TYPE.ADDED_BY_PATIENT;
-    const isInclude = [OVERVIEW_TYPE.MEAL, OVERVIEW_TYPE.ADDED_BY_PATIENT].includes(type);
+    const isInclude = type === OVERVIEW_TYPE.MEAL || type === OVERVIEW_TYPE.ADDED_BY_PATIENT;
     const width = (noReplace || noDelete || (isFutureDate && isInclude)) ? 100 : 200;
 
     return (
@@ -218,3 +146,62 @@ export const SwipeList: React.FC<SwipeListProps> = ({
 };
 
 export default SwipeList;
+
+const styles = StyleSheet.create({
+    list: {
+    // paddingRight: OFFSET.HORIZONTAL
+    // paddingRight: OFFSET.HORIZONTAL / 2
+    },
+    listItemHidden: {
+        height: '100%',
+        width: '100%',
+        marginRight: 16,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+    },
+    listItemContent: {
+        display: 'flex',
+        flexDirection: 'row',
+    },
+    backTextWhite: {
+        color: COLORS.WHITE,
+    },
+    button: {
+        flexGrow: 1,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: COLORS.WHITE,
+    },
+    replaceBtn: {
+        color: COLORS.BLACK,
+        marginLeft: 4,
+        marginTop: 20,
+    },
+    listItemBtnReplace: {
+        backgroundColor: '#8EF9F3',
+        flex: 1,
+        flexDirection: 'column',
+    // marginLeft: 5
+    },
+    notEatBtn: {
+        color: COLORS.BLACK,
+    },
+    offsetTop: {
+        marginTop: 20,
+    },
+    listItemBtnNotEat: {
+        backgroundColor: '#E0F6F5',
+        flexDirection: 'column',
+        flex: 1,
+    // borderWidth: 1,
+    // borderColor: COLOR.BLACK.hex()
+    },
+    listItemBtnDelete: {
+        backgroundColor: '#F55454',
+        flex: 1,
+    },
+});

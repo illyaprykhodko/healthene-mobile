@@ -5,11 +5,11 @@ import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import React, { useCallback, useLayoutEffect, useMemo, useState, useEffect } from 'react';
 // local dependencies
 import Text from 'components/Text';
-import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
 import Checkbox from 'components/Checkbox';
 import { Button } from 'components/Button';
-import { PHASE_ITEM_STATUS } from '../types';
+import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { Badge, ActivityIcon } from 'components/AnytimeMenu';
 import { useGetDayOverviewQuery, useUpdatePhaseMutation } from 'store/api/dayOverviewApi';
 
@@ -222,7 +222,7 @@ export default function ExerciseCategories () {
         parentNavigation?.setOptions({
             headerLeft: () => (
                 <TouchableOpacity onPress={handleBack}>
-                    <Text style={{ color: COLORS.WHITE }}>Back</Text>
+                    <Text style={{ color: theme.colors.white }}>Back</Text>
                 </TouchableOpacity>
             )
         });
@@ -247,7 +247,11 @@ export default function ExerciseCategories () {
                 </View>
                 <View style={styles.content}>
                     {displayList?.map((item: any) => (
-                        <TouchableOpacity key={String(item.id)} style={styles.categoryItem} onPress={() => handleItemPress(item)}>
+                        <TouchableOpacity
+                            key={String(item.id)}
+                            style={[styles.categoryItem, { borderBottomColor: theme.colors.border }]}
+                            onPress={() => handleItemPress(item)}
+                        >
                             <View style={styles.categoryContent}>
                                 <Text style={[styles.categoryName, { color: theme.colors.text }]}>{item.title}</Text>
                             </View>
@@ -260,7 +264,7 @@ export default function ExerciseCategories () {
                                 />
                             )}
                             {item?.status === PHASE_ITEM_STATUS.INCOMPLETE && (
-                                <View style={styles.finishTextContainer}>
+                                <View style={[styles.finishTextContainer, { backgroundColor: theme.colors.warning }]}>
                                     <Text style={styles.finishText}>Finish</Text>
                                 </View>
                             )}
@@ -271,7 +275,7 @@ export default function ExerciseCategories () {
                     ))}
                 </View>
             </ScrollView>
-            {listIsDone && (<Text textAlign="center" style={styles.goodWorkText}>Keep It Up!</Text>)}
+            {listIsDone && (<Text textAlign="center" style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>Keep It Up!</Text>)}
             {listIsDone && (
                 <Button
                     variant="primary"
@@ -286,13 +290,13 @@ export default function ExerciseCategories () {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.WHITE },
+    container: { flex: 1 },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 16,
+        paddingHorizontal: OFFSET.HORIZONTAL,
+        paddingVertical: OFFSET.VERTICAL,
         backgroundColor: '#E0EBF7'
     },
     row: {
@@ -305,8 +309,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 24,
-        paddingHorizontal: 16,
+        paddingVertical: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL,
         borderBottomWidth: 1,
         borderBottomColor: '#E1E1E1'
     },
@@ -316,13 +320,11 @@ const styles = StyleSheet.create({
     finishTextContainer: {
         paddingHorizontal: 12,
         paddingVertical: 5,
-        backgroundColor: '#FFE17A',
         borderRadius: 5
     },
     goodWorkText: {
         fontSize: 32,
         fontWeight: '500',
-        color: COLORS.BLACK,
         backgroundColor: 'white',
         borderRadius: 12,
         padding: 16
@@ -331,9 +333,7 @@ const styles = StyleSheet.create({
         width: '90%',
         borderRadius: 30,
         alignSelf: 'center',
-        backgroundColor: '#96E072',
-        borderColor: 'transparent',
-        marginBottom: 16,
+        marginBottom: OFFSET.VERTICAL,
     },
     submitBtnText: {
         fontSize: 20,

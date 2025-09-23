@@ -5,6 +5,7 @@ import React, { useMemo, useCallback } from 'react';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import { isDecimalField } from './decimal-utils';
 import { IconButton } from 'components/IconButton';
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
         width: '90%',
         alignSelf: 'center',
         // backgroundColor: '#96E072',
-        marginBottom: 16,
+        marginBottom: OFFSET.VERTICAL,
         borderColor: 'transparent',
         borderRadius: 30,
         paddingVertical: 12,
@@ -149,8 +150,8 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontWeight: 'bold',
         fontSize: 18,
-        marginTop: 20,
-        marginBottom: 10,
+        marginTop: OFFSET.VERTICAL,
+        marginBottom: OFFSET.POINT * 2.5,
     },
     row: {
         flexDirection: 'row',
@@ -160,19 +161,19 @@ const styles = StyleSheet.create({
         width: '100%',
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginVertical: 16,
-        paddingHorizontal: 24,
+        marginVertical: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL + 8,
         backgroundColor: '#E0EBF7',
-        paddingVertical: 16
+        paddingVertical: OFFSET.VERTICAL
     },
     name: {
-        marginLeft: 16,
+        marginLeft: OFFSET.HORIZONTAL,
         fontWeight: '500',
         marginBottom: 0,
         fontSize: 20,
     },
     space: {
-        marginVertical: 48,
+        marginVertical: OFFSET.VERTICAL * 2.4,
     },
 });
 

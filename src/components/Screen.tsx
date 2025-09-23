@@ -3,7 +3,8 @@ import React, { ReactNode, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, StyleSheet, StatusBar, ViewStyle, StatusBarStyle, StyleProp } from 'react-native';
 // local dependencies
-import { BoxHolder } from './preloader';
+import { useTheme } from 'hooks/useTheme';
+import { BoxHolder } from 'components/preloader';
 
 interface ScreenProps {
     init?: () => void;
@@ -47,6 +48,7 @@ const Screen: React.FC<ScreenProps> = ({
         }, [init, clear])
     );
 
+    const theme = useTheme();
     return (
         <View style={styles.container}>
             <StatusBar
@@ -56,7 +58,7 @@ const Screen: React.FC<ScreenProps> = ({
                 backgroundColor={statusBarBg}
             />
             <BoxHolder active={!initialized}>
-                <View style={StyleSheet.flatten([styles.screen, style])}>{children}</View>
+                <View style={StyleSheet.flatten([styles.screen, { backgroundColor: theme.colors.background }, style])}>{children}</View>
             </BoxHolder>
         </View>
     );

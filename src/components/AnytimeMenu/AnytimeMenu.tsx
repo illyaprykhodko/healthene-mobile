@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 // local dependencies
-import { useTheme } from '../../hooks/useTheme';
-import { useAnytimeData } from '../../hooks/useAnytimeData';
 import { Badge } from './Badge';
+import { useTheme } from 'hooks/useTheme';
+import { useAnytimeData } from 'hooks/useAnytimeData';
 import {
     FoodIcon,
     DrinkIcon,
@@ -13,7 +13,6 @@ import {
     MeasurementIcon,
 } from './AnytimeIcons';
 import { AnytimeModal } from './AnytimeModal';
-import { COLORS } from '../../constants/colors';
 import type { AnytimeItemType } from '../../types/anytime';
 
 interface AnytimeMenuProps {
@@ -25,13 +24,11 @@ interface AnytimeMenuProps {
 
 const styles = StyleSheet.create({
     container: {
-        borderTopColor: '#2978A0',
         borderTopWidth: 2,
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
         paddingVertical: 16,
-        backgroundColor: COLORS.WHITE,
         marginBottom: Platform.OS === 'ios' ? 16 : 0,
     },
     iconButton: {
@@ -47,7 +44,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
     disabled = false,
     modalFullScreen = true,
 }) => {
-    // const theme = useTheme();
+    const theme = useTheme();
     const { data, counts, isLoading, hasAnytimePhase } = useAnytimeData(date);
     const [activeModal, setActiveModal] = useState<AnytimeItemType | null>(null);
 
@@ -108,7 +105,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
     return (
         <>
-            <View style={styles.container}>
+            <View style={[styles.container, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.blue }]}>
                 <TouchableOpacity
                     style={styles.iconButton}
                     disabled={disabled || isLoading}

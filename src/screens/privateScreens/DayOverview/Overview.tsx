@@ -9,8 +9,7 @@ import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions } from 'react-
 import Text from '../../../components/Text';
 import Screen from '../../../components/Screen';
 import { useTheme } from '../../../hooks/useTheme';
-import { COLORS } from '../../../constants/colors';
-import TimeSwitcher from '../../../components/TimeSwitcher';
+import { OFFSET } from '../../../constants/offset';
 import { AnytimeMenu } from '../../../components/AnytimeMenu';
 import { useAppDispatch, useAppSelector } from '../../../store';
 import { useGetDayOverviewQuery, Phase } from '../../../store/api/dayOverviewApi';
@@ -46,6 +45,7 @@ const CONNECTOR_WIDTH = 1;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
+    const theme = useTheme();
     const mainLineX = TIMELINE_WIDTH / 2;
     const mealIconX = TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE / 2;
     const offsetLineX = mealIconX;
@@ -84,7 +84,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                         y2={currentY}
                         x1={mainLineX}
                         x2={mainLineX}
-                        stroke={COLORS.GREY}
+                        stroke={theme.colors.grey}
                         key={`main-line-upper-${i}`}
                         strokeWidth={CONNECTOR_WIDTH}
                     />
@@ -96,8 +96,8 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                             x2={checkLineX}
                             x1={checkLineX}
                             y1={checkLineY1}
-                            stroke={COLORS.GREY}
                             y2={nextY - GAP_SIZE}
+                            stroke={theme.colors.grey}
                             key={`main-line-lower-${i}`}
                             strokeWidth={CONNECTOR_WIDTH}
                         />
@@ -106,7 +106,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                         <Line
                             x1={offsetLineX}
                             x2={offsetLineX}
-                            stroke={COLORS.GREY}
+                            stroke={theme.colors.grey}
                             strokeWidth={CONNECTOR_WIDTH}
                             y2={nextY + ROW_HEIGHT * 2 - GAP_SIZE}
                             key={`main-line-lower-${Math.random()}`}
@@ -120,9 +120,9 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                 <Line
                     x1={mainLineX}
                     x2={mainLineX}
-                    stroke={COLORS.GREY}
                     y2={nextY - GAP_SIZE}
                     y1={currentY + GAP_SIZE}
+                    stroke={theme.colors.grey}
                     strokeWidth={CONNECTOR_WIDTH}
                     key={`main-line-lower-${Math.random()}`}
                 />
@@ -156,8 +156,8 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                                     y1={startY}
                                     x1={offsetLineX}
                                     x2={offsetLineX}
-                                    stroke={COLORS.GREY}
                                     y2={dotY - DOT_SIZE / 2}
+                                    stroke={theme.colors.grey}
                                     strokeWidth={CONNECTOR_WIDTH}
                                     key={`non-meal-line-upper-${index}-${Math.random()}`}
                                 />
@@ -169,8 +169,8 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                                     x1={offsetLineX}
                                     x2={offsetLineX}
                                     y2={dotY - GAP_SIZE}
-                                    stroke={COLORS.GREY}
                                     y1={prevDotY + GAP_SIZE}
+                                    stroke={theme.colors.grey}
                                     strokeWidth={CONNECTOR_WIDTH}
                                     key={`non-meal-line-upper-${index}-${Math.random()}`}
                                 />
@@ -184,7 +184,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                                     x1={offsetLineX}
                                     y1={dotY + GAP_SIZE}
                                     y2={endY + DOT_SIZE}
-                                    stroke={COLORS.GREY}
+                                    stroke={theme.colors.grey}
                                     strokeWidth={CONNECTOR_WIDTH}
                                     key={`non-meal-line-lower-${index}-${Math.random()}`}
                                 />
@@ -210,8 +210,8 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                             y1={startY}
                             x1={offsetLineX}
                             x2={offsetLineX}
-                            stroke={COLORS.GREY}
                             y2={dotY - DOT_SIZE / 2}
+                            stroke={theme.colors.grey}
                             strokeWidth={CONNECTOR_WIDTH}
                             key={`non-meal-line-end-upper-${Math.random()}`}
                         />
@@ -224,8 +224,8 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                     x1={offsetLineX}
                     x2={offsetLineX}
                     y2={dotY - GAP_SIZE}
-                    stroke={COLORS.GREY}
                     y1={prevDotY + GAP_SIZE}
+                    stroke={theme.colors.grey}
                     strokeWidth={CONNECTOR_WIDTH}
                     key={`non-meal-line-end-upper-${Math.random()}`}
                 />
@@ -238,8 +238,8 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                             y2={endY}
                             x1={offsetLineX}
                             x2={offsetLineX}
-                            stroke={COLORS.GREY}
                             y1={dotY + DOT_SIZE / 2}
+                            stroke={theme.colors.grey}
                             strokeWidth={CONNECTOR_WIDTH}
                             key={`non-meal-line-end-lower-${Math.random()}`}
                         />
@@ -251,8 +251,8 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                             x1={offsetLineX}
                             x2={offsetLineX}
                             y1={dotY + GAP_SIZE}
-                            stroke={COLORS.GREY}
                             y2={nextDotY - GAP_SIZE}
+                            stroke={theme.colors.grey}
                             strokeWidth={CONNECTOR_WIDTH}
                             key={`non-meal-line-end-lower-${Math.random()}`}
                         />
@@ -268,16 +268,16 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
             const dotX = isMeal ? mainLineX : offsetLineX;
             const iconX = dotX + GAP_SIZE + ICON_SIZE / 2 + ICON_MARGIN;
 
-            elements.push(<Circle key={`dot-${index}`} cx={dotX} cy={y} r={DOT_SIZE / 2} fill={COLORS.GREY} />);
+            elements.push(<Circle key={`dot-${index}`} cx={dotX} cy={y} r={DOT_SIZE / 2} fill={theme.colors.grey} />);
             elements.push(
                 <Line
                     y1={y}
                     y2={y}
                     strokeWidth={1}
                     x1={dotX + GAP_SIZE}
-                    stroke={COLORS.GREY}
                     strokeDasharray="2,2"
                     x2={iconX - GAP_SIZE / 2}
+                    stroke={theme.colors.grey}
                     key={`connector-${index}`}
                 />
             );
@@ -296,18 +296,18 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
 const styles = StyleSheet.create({
     container: { flex: 1 },
     header: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: OFFSET.HORIZONTAL,
+        paddingVertical: OFFSET.POINT * 3,
         backgroundColor: '#156F93',
     },
     content: {
         flex: 1,
-        paddingBottom: 20,
+        paddingBottom: OFFSET.VERTICAL,
     },
     row: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 20,
+        paddingVertical: OFFSET.VERTICAL,
         position: 'relative',
         height: ROW_HEIGHT,
     },
@@ -326,9 +326,9 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '600',
-        color: COLORS.DARK_GREY,
-        marginVertical: 16,
-        paddingHorizontal: 16,
+        color: '#7B7B7B',
+        marginVertical: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL,
     },
     timelineContainer: {
         position: 'relative',
@@ -347,18 +347,18 @@ const getIconColorByType = (type: PhaseType) => {
         case 'ADDED_BY_PATIENT':
             return { bg: '#D4E09B', fg: '#647C2E', name: 'plus' as const };
         case 'MEASUREMENT':
-            return { bg: COLORS.LIGHT_GREY, fg: COLORS.BLACK, name: 'ruler' as const };
+            return { bg: '#F3F3F3', fg: '#000000', name: 'ruler' as const };
         case 'SUPPLEMENT':
         case 'MEDICATION':
-            return { bg: COLORS.LIGHT_GREY, fg: COLORS.BLACK, name: 'capsules' as const };
+            return { bg: '#F3F3F3', fg: '#000000', name: 'capsules' as const };
         case 'PHYSICAL_ACTIVITY':
-            return { bg: '#F9C1C3', fg: COLORS.BLACK, name: 'running' as const };
+            return { bg: '#F9C1C3', fg: '#000000', name: 'running' as const };
         case 'QUESTION':
             return { bg: '#E3F2FD', fg: '#1976D2', name: 'question' as const };
         case 'ANYTIME':
             return { bg: '#FFF3E0', fg: '#E65100', name: 'clock' as const };
         default:
-            return { bg: COLORS.LIGHTER_GREY, fg: COLORS.DARK_GREY, name: 'dot-circle' as const };
+            return { bg: '#DADADA', fg: '#7B7B7B', name: 'dot-circle' as const };
     }
 };
 
@@ -368,33 +368,6 @@ export const Overview: React.FC = () => {
     const dispatch = useAppDispatch();
     const { date, expectAnswer } = useAppSelector(selectDayOverview);
     const currentDate = date || moment().format('YYYY-MM-DD');
-
-    useEffect(() => {
-        navigation.setOptions({
-            headerTitle: () => (
-                <TimeSwitcher
-                    date={currentDate}
-                    disabled={Boolean(expectAnswer)}
-                    isHideLeftBtn={false}
-                    isHideRightBtn={false}
-                    init={({ date: nextDate }) => {
-                        const isCurrent = moment(nextDate).isSame(moment(), 'day');
-                        const isFuture = moment(nextDate).isAfter(moment(), 'day');
-                        const isPast = moment(nextDate).isBefore(moment(), 'day');
-                        dispatch(
-                            meta({
-                                date: nextDate,
-                                isPastDate: isPast,
-                                isFutureDate: isFuture,
-                                isCurrentDate: isCurrent,
-                                calendarDays: { [nextDate]: { selected: true } },
-                            })
-                        );
-                    }}
-                />
-            ),
-        });
-    }, [date, dispatch, navigation, currentDate, expectAnswer]);
 
     const { data, isLoading, isFetching } = useGetDayOverviewQuery(currentDate, {
         skip: !currentDate,

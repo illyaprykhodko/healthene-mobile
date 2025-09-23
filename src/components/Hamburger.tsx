@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 
 // local dependencies
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from 'hooks/useTheme';
 
 interface HamburgerProps {
     onPress: () => void;
@@ -24,7 +24,7 @@ export const Hamburger: React.FC<HamburgerProps> = ({ onPress, style }) => {
             <Icon
                 size={24}
                 name="bars"
-                color={theme.colors.text}
+                color={theme.colors.background}
             />
         </TouchableOpacity>
     );
@@ -32,7 +32,6 @@ export const Hamburger: React.FC<HamburgerProps> = ({ onPress, style }) => {
 
 const styles = StyleSheet.create({
     container: {
-        padding: 8,
         alignItems: 'center',
         justifyContent: 'center',
     },

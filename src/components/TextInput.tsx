@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, TextStyle } from 'react-native';
 import { TextInput as MInput, Text } from '@react-native-material/core';
+// local dependencies
+import { useTheme } from 'hooks/useTheme';
 
 interface TextInputProps {
   name: string;
@@ -31,20 +33,26 @@ const styles = StyleSheet.create({
 const TextInput: React.FC<TextInputProps> = ({
     name,
     value,
+    color,
     disabled,
+    inputStyle,
     error = {},
     touched = {},
     onChangeText,
-    color = '#1976d2',
     variant = 'standard',
     secureTextEntry = false,
-    inputStyle = { textAlign: 'right', color: '#1976d2' },
     ...input
 }) => {
+    const theme = useTheme();
     const errorText = error?.[name];
     const touchedField = touched?.[name];
     const [isBlur, setIsBlur] = useState(false);
     const isShowError = touchedField && errorText;
+    const resolvedPrimary = color || theme.colors.primary;
+    const resolvedInputStyle: TextStyle = StyleSheet.flatten([
+        { textAlign: 'right', color: resolvedPrimary },
+        inputStyle,
+    ]);
     return (
         <View>
             <MInput
@@ -52,17 +60,17 @@ const TextInput: React.FC<TextInputProps> = ({
                 variant={variant}
                 editable={!disabled}
                 autoCapitalize="none"
-                selectionColor={'#64b5f6'}
                 onChangeText={onChangeText}
                 secureTextEntry={secureTextEntry}
+                selectionColor={theme.colors.info}
                 onBlur={() => value && setIsBlur(true)}
-                color={isShowError ? '#d32f2f' : color}
                 style={{ backgroundColor: 'transparent' }}
-                inputStyle={isShowError ? { ...inputStyle, color: '#d32f2f' } : inputStyle}
+                color={isShowError ? theme.colors.error : resolvedPrimary}
+                inputStyle={isShowError ? { ...resolvedInputStyle, color: theme.colors.error } : resolvedInputStyle}
                 {...input}
             />
             <Text
-                style={StyleSheet.flatten([styles.errorText, { color: '#d32f2f', opacity: errorText ? 1 : 0 }])}
+                style={StyleSheet.flatten([styles.errorText, { color: theme.colors.error, opacity: errorText ? 1 : 0 }])}
             >
                 {(isShowError || isBlur) && errorText}
             </Text>

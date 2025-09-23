@@ -9,18 +9,19 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
+import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import TextInput from 'components/TextInput';
-import { ROUTES } from '../../constants/routes';
 import { IconButton } from 'components/IconButton';
 import BackgroundImage from 'components/BackgroundImage';
 
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
 import { useForgotPassword } from 'hooks/useForgotPassword';
-import { useForgotPasswordMutation } from '../../store/api/authApi';
-import { RootStackParamList } from '../../services/navigation/types';
-import { RootState, useAppDispatch, useAppSelector } from '../../store';
-import { setEmail, setError, setSuccess, reset, setSubmitting } from '../../store/slices/forgotPasswordSlice';
+import { useForgotPasswordMutation } from 'store/api/authApi';
+import { RootStackParamList } from 'services/navigation/types';
+import { RootState, useAppDispatch, useAppSelector } from 'store';
+import { setEmail, setError, setSuccess, reset, setSubmitting } from 'store/slices/forgotPasswordSlice';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -161,21 +162,21 @@ const styles = StyleSheet.create({
     //   },
     formContainer: {
         flex: 1,
-        padding: 32,
+        padding: OFFSET.VERTICAL * 1.6,
         justifyContent: 'center',
     },
     title: {
-        marginBottom: 12,
+        marginBottom: OFFSET.POINT * 3,
     },
     inputWrapper: {
-        marginTop: 32,
+        marginTop: OFFSET.VERTICAL * 1.6,
     },
     text: {
-        marginTop: 32,
+        marginTop: OFFSET.VERTICAL * 1.6,
     },
     row: {
         alignItems: 'center',
-        marginBottom: 32,
+        marginBottom: OFFSET.VERTICAL * 1.6,
     },
     successIcon: {
         alignItems: 'center',
@@ -185,7 +186,7 @@ const styles = StyleSheet.create({
         borderRadius: 23,
     },
     button: {
-        marginTop: 30,
+        marginTop: OFFSET.VERTICAL * 1.5,
     },
 });
 

@@ -6,17 +6,17 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 // local dependencies
 import ListItem from './ListItem';
-import { OVERVIEW_TYPE } from '../types';
-import Text from '../../../../components/Text';
-import { useAppSelector } from '../../../../store';
-import Screen from '../../../../components/Screen';
-import { COLORS } from '../../../../constants/colors';
-import { useTheme } from '../../../../hooks/useTheme';
-import { Button } from '../../../../components/Button';
-import SwipeList from '../../../../components/SwipeList';
-import { selectDayOverview } from '../../../../store/slices/dayOverviewSlice';
+import Text from 'components/Text';
+import { useAppSelector } from 'store';
+import Screen from 'components/Screen';
+import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
+import { Button } from 'components/Button';
+import SwipeList from 'components/SwipeList';
+import { selectDayOverview } from 'store/slices/dayOverviewSlice';
+import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS } from 'constants/spec';
 import { useGetDayOverviewQuery, useGetPhaseItemsQuery, useUpdatePhaseItemMutation,
-    useDeletePhaseItemMutation, useAddPhaseItemMutation, useUpdatePhaseMutation, useReplacePhaseItemMutation } from '../../../../store/api/dayOverviewApi';
+    useDeletePhaseItemMutation, useAddPhaseItemMutation, useUpdatePhaseMutation, useReplacePhaseItemMutation } from 'store/api/dayOverviewApi';
 
 // Temporary types until full migration
 interface PhaseItem {
@@ -31,8 +31,8 @@ interface PhaseItem {
     measurement?: any;
     medication?: any;
     supplement?: any;
-    physicalActivity?: any;
     id: string | number;
+    physicalActivity?: any;
     initialAmount?: number;
     modified?: boolean;
     weight?: {
@@ -51,28 +51,7 @@ interface EditProps {
     phaseId?: string | number;
 }
 
-// Temporary constants until full migration
-const PHASE_ITEM_STATUS = {
-    DONE: 'DONE',
-    PENDING: 'PENDING',
-    DID_NOT_EAT: 'DID_NOT_EAT',
-};
-
-const ENTITY_TYPE = {
-    FOOD: 'FOOD',
-    RECIPE: 'RECIPE',
-    SUPPLEMENT: 'SUPPLEMENT',
-    MEDICATION: 'MEDICATION',
-    MEASUREMENT: 'MEASUREMENT',
-    INGREDIENTS: 'INGREDIENTS',
-    CUSTOM_RECIPE: 'CUSTOM_RECIPE',
-    PHYSICAL_ACTIVITY: 'PHYSICAL_ACTIVITY',
-};
-
-const SECTION = {
-    ADDED_BY_HEALTHENE: 'Added by HealtheNe',
-    ADDED_BY_PATIENT: 'Added by Patient',
-};
+// PHASE_ITEM_STATUS, ENTITY_TYPE, SECTION centralized in constants/spec
 
 const convertTypeToTitle = (type: string, capitalize = false) => {
     const title = type.replace(/_/g, ' ').toLowerCase();
@@ -86,7 +65,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const { date: currentDate } = useAppSelector(selectDayOverview);
   
     const [scrollEnabled, setScrollEnabled] = useState(true);
-    const [initialized, setInitialized] = useState(false);
+    // const [initialized, setInitialized] = useState(false);
 
     const [localItems, setLocalItems] = useState<PhaseItem[]>([]);
   
@@ -106,25 +85,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         // refetchOnMountOrArgChange: true,
     });
     // mutations
-    const [updatePhaseItem, { data }] = useUpdatePhaseItemMutation();
+    const [updatePhaseItem] = useUpdatePhaseItemMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
     const [addPhaseItem] = useAddPhaseItemMutation();
     const [updatePhase] = useUpdatePhaseMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
-
-    useEffect(() => {
-        if (targetDate) {
-            navigation.setOptions({
-                headerBackVisible: false,
-                headerTitle: () => (
-                    <Text style={{ color: COLORS.WHITE, fontSize: 18, fontWeight: '600' }}>
-                        {moment(targetDate).format('ddd, MMM Do')}
-                    </Text>
-                )
-            });
-        }
-        // setInitialized(true);
-    }, [targetDate, navigation]);
 
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
   
@@ -243,7 +208,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     const handleCheckboxStatus = async (item: PhaseItem) => {
         try {
-            let newStatus: string;
+            // let newStatus: string;
             // const status = isDidNotEatItem
             // ? PHASE_ITEM_STATUS.DID_NOT_EAT
             // : isItemChecked
@@ -392,7 +357,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 </View>
                 {currentPhase?.type === OVERVIEW_TYPE.MEAL && !isPastDate && (
                     <View style={styles.titleButtons}>
-                        <TouchableOpacity onPress={() => console.log('Change meal')}>
+                        <TouchableOpacity onPress={() => { /* Change meal */ }}>
                             <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
                 Change Meal
                             </Text>
@@ -529,28 +494,26 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     separatorWrapper: {
-        backgroundColor: `${COLORS.LIGHT_GREY}80`, // 50% opacity
+        backgroundColor: '#F3F3F380', // 50% opacity
         paddingTop: 10,
         paddingBottom: 10,
         marginBottom: 10,
     },
     offset: {
-        color: COLORS.DARK_GREY,
+        color: '#7B7B7B',
         marginLeft: 16,
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginHorizontal: 24, // OFFSET.HORIZONTAL * 1.5
-        marginBottom: 20,
+        marginHorizontal: OFFSET.HORIZONTAL * 1.5,
+        marginBottom: OFFSET.VERTICAL,
     },
     mealDoneButton: {
         borderWidth: 0,
         backgroundColor: '#BCE8A6',
     },
-    mealDoneButtonDisabled: {
-        backgroundColor: COLORS.WHITE,
-    },
+    mealDoneButtonDisabled: {},
     addButton: {
         width: '90%',
         borderColor: '#7BAAC2',
@@ -563,7 +526,7 @@ const styles = StyleSheet.create({
         paddingBottom: 15,
     },
     emptyScreen: {
-        marginTop: 40, // OFFSET.VERTICAL * 2
+        marginTop: OFFSET.VERTICAL * 2,
     },
     opacity: {
         opacity: 0.4,

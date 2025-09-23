@@ -5,7 +5,9 @@ import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, I
 // local dependencies
 import { ExerciseType } from 'types';
 import { useTheme } from 'hooks/useTheme';
-import { PHASE_ITEM_STATUS } from '../types';
+import { OFFSET } from 'constants/offset';
+import { COLORS } from 'constants/colors';
+import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { EXERCISE_CONFIGS } from './exerciseFactory';
 import { useAppDispatch, useAppSelector } from 'store';
 import { initializeExercise, updateSteps, setLoading, clearExercise } from 'store/slices/exerciseSlice';
@@ -13,7 +15,6 @@ import { useGetPhysicalActivityItemQuery, useGetStretchingExerciseQuery, useGetA
 // components
 import Text from 'components/Text';
 import Screen from 'components/Screen';
-import { COLORS } from 'constants/colors';
 import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
 import { HTMLView } from 'components/HTMLView';
@@ -151,7 +152,7 @@ export default function ExerciseDetails () {
         parentNavigation?.setOptions({
             headerLeft: () => (
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={{ color: COLORS.WHITE }}>Back</Text>
+                    <Text style={{ color: theme.colors.white }}>Back</Text>
                 </TouchableOpacity>
             )
         });
@@ -272,7 +273,7 @@ export default function ExerciseDetails () {
 
     // Render tabs
     const renderTabs = useCallback(() => (
-        <View style={styles.tabsRow}>
+        <View style={[styles.tabsRow, { borderColor: theme.colors.primary }]}>
             {TABS.map((tab, index) => {
                 const isActive = activeTab === tab.key;
                 return (
@@ -280,12 +281,16 @@ export default function ExerciseDetails () {
                         key={tab.key}
                         style={[
                             styles.tabButton,
-                            isActive && styles.activeTabButton,
-                            { borderRightWidth: TABS.length === index + 1 ? 0 : 2 },
+                            isActive && [styles.activeTabButton, { backgroundColor: theme.colors.info }],
+                            { borderRightWidth: TABS.length === index + 1 ? 0 : 2, borderRightColor: theme.colors.primary },
                         ]}
                         onPress={() => setActiveTab(tab.key)}
                     >
-                        <Text style={[styles.tabText, isActive ? styles.activeTabText : {}]}>
+                        <Text style={StyleSheet.flatten([
+                            styles.tabText,
+                            { color: theme.colors.primary },
+                            isActive ? StyleSheet.flatten([styles.activeTabText, { color: theme.colors.white }]) : {},
+                        ])}>
                             {tab.label}
                         </Text>
                     </TouchableOpacity>
@@ -421,9 +426,9 @@ export default function ExerciseDetails () {
         </View>
     ), [scientificVideo, scientificDescription, toggle, toggleText]);
 
-    const clearHandler = useCallback(() => {
-        dispatch(updateSteps({ steps: memoizedSteps, selectedSteps: [] }));
-    }, [dispatch, memoizedSteps]);
+    // const clearHandler = useCallback(() => {
+    //     dispatch(updateSteps({ steps: memoizedSteps, selectedSteps: [] }));
+    // }, [dispatch, memoizedSteps]);
     
     return (
         <Screen initialized={!isLoading} clear={() => {}} style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -452,7 +457,7 @@ export default function ExerciseDetails () {
             />
             {showGoodWork && (
                 <Animated.View style={[styles.goodWorkContainer, { opacity: fadeAnim }]}>
-                    <Text style={styles.goodWorkText}>Good Work!</Text>
+                    <Text style={[styles.goodWorkText, { color: theme.colors.text }]}>Good Work!</Text>
                 </Animated.View>
             )}
             {activeTab === exercise?.type && (
@@ -557,26 +562,23 @@ const htmlStyles = StyleSheet.create({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.WHITE,
-        paddingTop: 16,
-        paddingLeft: -20,
-        paddingRight: -20,
+        paddingTop: OFFSET.VERTICAL,
     },
     row: {
         flexDirection: 'row',
         alignItems: 'center'
     },
     headerBanner: {
-        paddingHorizontal: 16 * 2,
-        marginBottom: 16 * 2,
+        paddingHorizontal: OFFSET.HORIZONTAL * 2,
+        marginBottom: OFFSET.VERTICAL * 2,
         justifyContent: 'space-between',
-        paddingVertical: 16,
+        paddingVertical: OFFSET.VERTICAL,
         backgroundColor: '#E0EBF7',
         flexDirection: 'row'
     },
     name: {
-        paddingRight: 16,
-        marginLeft: 16,
+        paddingRight: OFFSET.HORIZONTAL,
+        marginLeft: OFFSET.HORIZONTAL,
         fontWeight: '500',
         marginBottom: 0,
         fontSize: 20,
@@ -589,8 +591,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginHorizontal: 16,
-        marginBottom: 16,
+        marginHorizontal: OFFSET.HORIZONTAL,
+        marginBottom: OFFSET.VERTICAL,
         borderWidth: 2,
         borderColor: '#156F93',
         borderRadius: 8,
@@ -604,7 +606,7 @@ const styles = StyleSheet.create({
         borderRightColor: '#156F93'
     },
     activeTabButton: {
-        backgroundColor: COLORS.BLUE,
+        backgroundColor: '#2978A0',
     },
     tabText: {
         color: '#156F93',

@@ -1,25 +1,17 @@
 // outsource dependencies
 import React from 'react';
 import { StyleSheet, View, Image } from 'react-native';
-import Checkbox from '../../../../components/Checkbox';
 // local dependencies
+import Text from 'components/Text';
 import { filters } from 'services/filter';
-import Text from '../../../../components/Text';
-import { COLORS } from '../../../../constants/colors';
+import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
+import Checkbox from 'components/Checkbox';
+import { PHASE_ITEM_STATUS, ENTITY_TYPE } from 'constants/spec';
 
-// Temporary constants until full migration
-const PHASE_ITEM_STATUS = {
-    DONE: 'DONE',
-    PENDING: 'PENDING',
-    DID_NOT_EAT: 'DID_NOT_EAT',
-};
+// PHASE_ITEM_STATUS moved to constants/spec
 
-const ENTITY_TYPE = {
-    FOOD: 'FOOD',
-    RECIPE: 'RECIPE',
-    CUSTOM_RECIPE: 'CUSTOM_RECIPE',
-    INGREDIENTS: 'INGREDIENTS',
-};
+// ENTITY_TYPE centralized in constants/spec
 
 interface ListItemProps {
   item: any;
@@ -36,6 +28,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     disabled = false,
     handleCheckboxStatus,
 }) => {
+    const theme = useTheme();
     const isFood = item.type === ENTITY_TYPE.FOOD;
     const isRecipe = item.type === ENTITY_TYPE.RECIPE;
     const isDone = item.status === PHASE_ITEM_STATUS.DONE;
@@ -68,8 +61,8 @@ export const ListItem: React.FC<ListItemProps> = ({
             case PHASE_ITEM_STATUS.DID_NOT_EAT:
                 return (
                     <View style={styles.notEatText}>
-                        <Text style={{ fontWeight: 'bold' }} color={COLORS.BLUE}>Did</Text>
-                        <Text style={{ fontWeight: 'bold' }} color={COLORS.BLUE}>Not Eat</Text>
+                        <Text style={{ fontWeight: 'bold' }} color={theme.colors.blue}>Did</Text>
+                        <Text style={{ fontWeight: 'bold' }} color={theme.colors.blue}>Not Eat</Text>
                     </View>
                 );
         }
@@ -134,14 +127,14 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, isOpacity || {}]}>
+                        <Text style={[styles.title, { color: theme.colors.darkGrey }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Recipe'}`}
                         </Text>
-                        <Text style={[styles.subtitle, isOpacity || {}]}>
+                        <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
                             Status: {item.status || 'Unknown'}
                         </Text>
                         {item.modified && (
-                            <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
+                            <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
                                 edited by me
                             </Text>
                         )}
@@ -158,11 +151,11 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, { fontSize: 18 }, isOpacity || {}]}>
+                        <Text style={[styles.title, { fontSize: 18, color: theme.colors.darkGrey }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Ingredient'}`}
                         </Text>
                         {item.modified && (
-                            <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
+                            <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
                                 edited by me
                             </Text>
                         )}
@@ -178,17 +171,17 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, isOpacity || {}]}>
+                        <Text style={[styles.title, { color: theme.colors.darkGrey }, isOpacity || {}]}>
                             {item.recipe?.name || 'Recipe'}
                         </Text>
                         {amount && (
-                            <Text style={[styles.subtitle, isOpacity || {}]}>
+                            <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
                                 {prepareIngredientNameWithUnit(item)}
                                 {/* {prepareIngredientNameWithUnit(item, { withoutName: true })} */}
                             </Text>
                         )}
                         {item.modified && (
-                            <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
+                            <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
                                 edited by me
                             </Text>
                         )}
@@ -204,16 +197,16 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, isOpacity || {}]}>
+                        <Text style={[styles.title, { color: theme.colors.darkGrey }, isOpacity || {}]}>
                             {item.food?.name || 'Food'}
                         </Text>
                         {amount && (
-                            <Text style={[styles.subtitle, isOpacity || {}]}>
+                            <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
                                 {`${amount} ${item.weight?.unit?.name || ''}`}
                             </Text>
                         )}
                         {item.modified && (
-                            <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
+                            <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
                                 edited by me
                             </Text>
                         )}
@@ -226,16 +219,16 @@ export const ListItem: React.FC<ListItemProps> = ({
         return (
             <View style={styles.defaultContainer}>
                 <View style={styles.main}>
-                    <Text style={[styles.title, isOpacity || {}]}>
+                    <Text style={[styles.title, { color: theme.colors.darkGrey }, isOpacity || {}]}>
                         {item.title || 'Item'}
                     </Text>
                     {amount && (
-                        <Text style={[styles.subtitle, isOpacity || {}]}>
+                        <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''}`}
                         </Text>
                     )}
                     {item.modified && (
-                        <Text style={[styles.subtitle, { color: '#2978A0', fontWeight: '600' }]}>
+                        <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
                             edited by me
                         </Text>
                     )}
@@ -245,7 +238,8 @@ export const ListItem: React.FC<ListItemProps> = ({
     };
 
     return (
-        <View style={[styles.wrapper, nextSection && styles.divider]}>
+        <View style={[styles.wrapper, { backgroundColor: theme.colors.surface },
+            nextSection && [styles.divider, { borderBottomColor: theme.colors.black }]]}>
             <View style={styles.listItem}>
                 <View style={styles.listItemLink}>
                     {renderItemContent()}
@@ -259,12 +253,10 @@ export const ListItem: React.FC<ListItemProps> = ({
 
 const styles = StyleSheet.create({
     wrapper: {
-        backgroundColor: COLORS.WHITE,
-        paddingLeft: 4, // OFFSET.POINT
+        paddingLeft: OFFSET.POINT
     },
     divider: {
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.BLACK,
     },
     listItem: {
         width: '100%',
@@ -274,7 +266,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 0,
         justifyContent: 'space-between',
-        paddingVertical: 20, // OFFSET.VERTICAL
+        paddingVertical: OFFSET.VERTICAL,
         paddingLeft: 20,
         paddingRight: 5,
         borderBottomColor: '#E9E9E9',
@@ -300,7 +292,7 @@ const styles = StyleSheet.create({
     image: {
         width: 40,
         height: 40,
-        marginRight: 16, // OFFSET.HORIZONTAL
+        marginRight: OFFSET.HORIZONTAL,
         borderRadius: 4,
     },
     checkbox: {
@@ -308,20 +300,15 @@ const styles = StyleSheet.create({
         height: 25,
         borderRadius: 4,
         borderWidth: 2,
-        borderColor: COLORS.GREY,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 5,
     },
-    checkboxChecked: {
-        backgroundColor: COLORS.BLUE,
-        borderColor: COLORS.BLUE,
-    },
+    checkboxChecked: {},
     checkboxDisabled: {
         opacity: 0.5,
     },
     checkboxText: {
-        color: COLORS.WHITE,
         fontSize: 14,
         fontWeight: 'bold',
     },
@@ -340,15 +327,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     title: {
-        paddingTop: 20, // OFFSET.VERTICAL
-        marginBottom: 20, // OFFSET.VERTICAL
+        paddingTop: OFFSET.VERTICAL,
+        marginBottom: OFFSET.VERTICAL,
         fontSize: 16,
         fontWeight: '500',
-        color: COLORS.DARK_GREY,
     },
     subtitle: {
         fontSize: 14,
-        color: COLORS.GREY,
         marginBottom: 2,
     },
     notEatText: {

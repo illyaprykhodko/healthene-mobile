@@ -4,11 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 // local dependencies
-import { OVERVIEW_TYPE } from '../types';
-import Text from '../../../../components/Text';
-import Screen from '../../../../components/Screen';
-import { useTheme } from '../../../../hooks/useTheme';
-import { COLORS } from '../../../../constants/colors';
+import Text from 'components/Text';
+import Screen from 'components/Screen';
+import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
+import { COLORS } from 'constants/colors';
+import { ENTITY_TYPE, OVERVIEW_TYPE } from 'constants/spec';
 
 // Temporary types until full migration
 interface PhaseItem {
@@ -38,11 +39,7 @@ interface ItemProps {
     measurement?: any;
 }
 
-const ENTITY_TYPE = {
-    FOOD: 'FOOD',
-    RECIPE: 'RECIPE',
-    CUSTOM_RECIPE: 'CUSTOM_RECIPE',
-};
+// ENTITY_TYPE centralized (imported)
 
 const ITEM_TABS = {
     RECIPE: 'RECIPE',
@@ -106,7 +103,7 @@ export const Item: React.FC<ItemProps> = ({ item, phase, measurement }) => {
     const tabsList = () => {
         if (!item || !item.type) { return []; }
     
-        if ([ENTITY_TYPE.RECIPE, ENTITY_TYPE.FOOD, ENTITY_TYPE.CUSTOM_RECIPE].includes(item.type)) {
+        if ([ENTITY_TYPE.RECIPE, ENTITY_TYPE.FOOD, ENTITY_TYPE.CUSTOM_RECIPE].includes(item.type as any)) {
             return Object.values(ITEM_TABS).filter(tab =>
                 (isShownSurrogateRecipe(tab, item) ? null : tab)
             );
@@ -200,7 +197,7 @@ export const Item: React.FC<ItemProps> = ({ item, phase, measurement }) => {
         if (!recipe) {
             return (
                 <View style={{ padding: 16 }}>
-                    <Text style={{ textAlign: 'center', color: COLORS.GREY }}>
+                    <Text style={{ textAlign: 'center', color: theme.colors.grey }}>
                         No recipe information available
                     </Text>
                 </View>
@@ -253,7 +250,7 @@ export const Item: React.FC<ItemProps> = ({ item, phase, measurement }) => {
         if (!recipe || !recipe.ingredients) {
             return (
                 <View style={{ padding: 16 }}>
-                    <Text style={{ textAlign: 'center', color: COLORS.GREY }}>
+                    <Text style={{ textAlign: 'center', color: theme.colors.grey }}>
                         No ingredients information available
                     </Text>
                 </View>
@@ -321,12 +318,12 @@ export const Item: React.FC<ItemProps> = ({ item, phase, measurement }) => {
     };
 
     const renderBody = () => {
-        const tabs = tabsList();
-    
+        // const tabs = tabsList();
+
         switch (activeTab) {
             default:
                 return (
-                    <Text style={{ textAlign: 'center', color: COLORS.BLACK }}>
+                    <Text style={{ textAlign: 'center', color: theme.colors.text }}>
                         Nothing found
                     </Text>
                 );
@@ -405,8 +402,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginHorizontal: 16,
-        marginVertical: 20,
+        marginHorizontal: OFFSET.HORIZONTAL,
+        marginVertical: OFFSET.VERTICAL,
         borderWidth: 2,
         borderColor: '#156F93',
         borderRadius: 8,
@@ -415,12 +412,12 @@ const styles = StyleSheet.create({
     tabButton: {
         flex: 1,
         paddingVertical: 15,
-        backgroundColor: COLORS.LIGHT_GREY,
+        backgroundColor: '#F3F3F3',
         alignItems: 'center',
         borderRightColor: '#156F93',
     },
     activeTabButton: {
-        backgroundColor: COLORS.BLUE,
+        backgroundColor: '#2978A0',
     },
     tabText: {
         color: COLORS.BLACK,

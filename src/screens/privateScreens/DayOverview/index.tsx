@@ -1,79 +1,111 @@
 // outsource dependencies
 import React from 'react';
 import moment from 'moment';
-import { TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // local dependencies
 import Item from './Item';
 import Edit from './Edit';
 import UPCScan from './UPCScan';
+import Text from 'components/Text';
 import { Overview } from './Overview';
 import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
 import AddReplaceItem from './AddReplaceItem';
+import { Hamburger } from 'components/Hamburger';
+import TimeSwitcher from 'components/TimeSwitcher';
+import { useAppDispatch, useAppSelector } from 'store';
+import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
 import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
 
 const Stack = createNativeStackNavigator();
 
+const BackButton = ({ navigation, theme }: { navigation: any, theme: any }) => (
+    <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+    >
+        <Icon name="chevron-left" size={16} color={theme.colors.white} />
+        <Text style={[{ color: theme.colors.white }, styles.backText]}>Back</Text>
+    </TouchableOpacity>
+);
+
 const DayOverviewStack: React.FC = () => {
-    const currentDate = moment().format('ddd, MMM Do');
     const navigation = useNavigation();
     const theme = useTheme();
   
+    const dispatch = useAppDispatch();
+    const { date, expectAnswer } = useAppSelector(selectDayOverview);
+    const currentDate = date || moment().format('YYYY-MM-DD');
+    
     return (
-        <Stack.Navigator initialRouteName="DayOverviewOverview" screenOptions={{ headerShown: true }}>
+        <Stack.Navigator initialRouteName="DayOverview" screenOptions={() => ({
+            // title: currentDate,
+            headerStyle: {
+                backgroundColor: theme.colors.primary,
+            },
+            headerTintColor: theme.colors.white,
+            headerTitleStyle: {
+                fontWeight: '600',
+            },
+            headerTitle: () => (
+                <TimeSwitcher
+                    date={currentDate}
+                    isHideLeftBtn={false}
+                    isHideRightBtn={false}
+                    disabled={Boolean(expectAnswer)}
+                    init={({ date: nextDate }) => {
+                        const isCurrent = moment(nextDate).isSame(moment(), 'day');
+                        const isFuture = moment(nextDate).isAfter(moment(), 'day');
+                        const isPast = moment(nextDate).isBefore(moment(), 'day');
+                        dispatch(
+                            meta({
+                                date: nextDate,
+                                isPastDate: isPast,
+                                isFutureDate: isFuture,
+                                isCurrentDate: isCurrent,
+                                calendarDays: { [nextDate]: { selected: true } },
+                            })
+                        );
+                    }}
+                />
+            ),
+            headerLeft: () => (
+                <BackButton navigation={navigation} theme={theme} />
+            ),
+            headerRight: () => (
+                <Hamburger onPress={() => (navigation as any).openDrawer?.()} style={styles.menuButton} />
+            ),
+        })}>
             <Stack.Screen
-                name="DayOverviewOverview"
+                name="DayOverview"
                 component={Overview}
-                options={() => ({
-                    title: currentDate,
-                    headerStyle: {
-                        backgroundColor: theme.colors.primary,
-                    },
-                    headerTintColor: '#FFFFFF',
-                    headerTitleStyle: {
-                        fontWeight: '600',
-                    },
-                    headerLeft: () => (
-                        <TouchableOpacity
-                            onPress={() => navigation.goBack()}
-                            style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}
-                        >
-                            <Icon name="arrow-left" size={16} color="#FFFFFF" />
-                        </TouchableOpacity>
-                    ),
-                    headerRight: () => (
-                        <TouchableOpacity
-                            onPress={() => (navigation as any).openDrawer?.()}
-                            style={{ marginRight: 8 }}
-                        >
-                            <Icon name="bars" size={18} color="#FFFFFF" />
-                        </TouchableOpacity>
-                    ),
-                })}
             />
             <Stack.Screen
                 name="Item"
                 component={Item}
-                options={{ title: 'Item Details' }}
+                options={({ route, navigation }) => ({
+                    title: 'Item Details',
+                    headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
+                })}
             />
             <Stack.Screen
                 name="Edit"
                 component={Edit}
                 options={({ route, navigation }) => ({
                     title: 'Edit',
-                    headerLeft: () => (
-                        <TouchableOpacity onPress={() => navigation.navigate('Overview')}>
-                            <Icon name="arrow-left" size={20} color="#FFFFFF" />
-                        </TouchableOpacity>
-                    ),
+                    headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
                 })}
             />
             <Stack.Screen
                 name="AddReplaceItem"
                 component={AddReplaceItem}
-                options={{ title: 'Select Item' }}
+                options={({ route, navigation }) => ({
+                    title: 'Select Item',
+                    headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
+                })}
             />
             <Stack.Screen
                 name="UPCScan"
@@ -88,3 +120,19 @@ const DayOverviewStack: React.FC = () => {
 };
 
 export default DayOverviewStack;
+
+const styles = StyleSheet.create({
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    backText: {
+        fontSize: 16,
+        marginLeft: OFFSET.HORIZONTAL / 2,
+        fontWeight: '600',
+    },
+    menuButton: {
+        marginRight: OFFSET.HORIZONTAL / 2,
+    },
+});

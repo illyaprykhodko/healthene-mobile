@@ -2,19 +2,20 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
-import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 
 // local dependencies
-import Text from './Text';
-import { Button } from './Button';
-import { RootState } from '../store';
-import { ROUTES } from '../constants/routes';
-import { useTheme } from '../hooks/useTheme';
-import { navigate } from '../services/navigation';
-import { clearSession } from '../store/slices/appSlice';
+import { RootState } from 'store';
+import Text from 'components/Text';
+import { ROUTES } from 'constants/routes';
+import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
+import { Button } from 'components/Button';
+import { navigate } from 'services/navigation';
+import { clearSession } from 'store/slices/appSlice';
 
-const { width } = Dimensions.get('window');
+// const { width } = Dimensions.get('window');
 
 interface DrawerItemProps {
     icon: string;
@@ -29,8 +30,8 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
     
     return (
         <TouchableOpacity
-            style={[styles.menuItem, focused && styles.menuItemFocused]}
             onPress={onPress}
+            style={[styles.menuItem, focused && styles.menuItemFocused]}
         >
             <Icon
                 size={24}
@@ -49,8 +50,8 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                 <View style={[styles.badgeContainer, { backgroundColor: theme.colors.error }]}>
                     <Text
                         variant="bold"
-                        color={theme.colors.white}
                         style={styles.badgeText}
+                        color={theme.colors.white}
                     >
                         {badge > 99 ? '99+' : badge}
                     </Text>
@@ -112,8 +113,8 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
             route: ROUTES.LIBRARY,
         },
         {
-            icon: 'info-circle',
             title: 'Info',
+            icon: 'info-circle',
             route: ROUTES.INFO,
         },
         {
@@ -180,19 +181,19 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     drawerContent: {
-        paddingTop: 25,
+        paddingTop: OFFSET.VERTICAL + 5,
     },
     profileSection: {
-        padding: 20,
+        padding: OFFSET.VERTICAL,
         borderBottomWidth: 1,
-        marginBottom: 10,
+        marginBottom: OFFSET.POINT * 2.5,
     },
     menuItem: {
-        paddingVertical: 15,
+        paddingVertical: OFFSET.VERTICAL - 5,
         flexDirection: 'row',
         alignItems: 'center',
         borderBottomWidth: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: OFFSET.HORIZONTAL + 4,
         borderBottomColor: '#E5E5E5',
     },
     menuItemFocused: {
@@ -200,7 +201,7 @@ const styles = StyleSheet.create({
     },
     menuIcon: {
         width: 30,
-        marginRight: 10,
+        marginRight: OFFSET.POINT * 2.5,
     },
     menuText: {
         flex: 1,
@@ -219,7 +220,7 @@ const styles = StyleSheet.create({
         fontSize: 10,
     },
     logoutButton: {
-        margin: 20,
+        margin: OFFSET.VERTICAL,
         borderRadius: 30,
     },
 });

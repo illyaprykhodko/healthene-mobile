@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, StyleSheet, Modal, TouchableOpacity, Text } from 'react-native';
 // local dependencies
-import { COLORS } from '../constants/colors';
+import { useTheme } from 'hooks/useTheme';
 
 interface SwipeablePanelProps {
     style?: any;
@@ -30,6 +30,7 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
     showCloseButton = true,
     closeOnTouchOutside = true,
 }) => {
+    const theme = useTheme();
     if (!isActive) { return null; }
 
     return (
@@ -45,13 +46,13 @@ export const SwipeablePanel: React.FC<SwipeablePanelProps> = ({
                     style={styles.overlayTouchable}
                     onPress={closeOnTouchOutside ? onClose : undefined}
                 />
-                <View style={[styles.panel, style]}>
+                <View style={[styles.panel, { backgroundColor: theme.colors.surface }, style]}>
                     {showCloseButton && (
                         <TouchableOpacity
                             onPress={onPressCloseButton || onClose}
                             style={[styles.closeButton, closeIconStyle]}
                         >
-                            <Text style={styles.closeButtonText}>×</Text>
+                            <Text style={[styles.closeButtonText, { color: theme.colors.white }]}>×</Text>
                         </TouchableOpacity>
                     )}
                     {children}
@@ -71,7 +72,6 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     panel: {
-        backgroundColor: COLORS.WHITE,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         maxHeight: '80%',
@@ -90,7 +90,6 @@ const styles = StyleSheet.create({
         zIndex: 1,
     },
     closeButtonText: {
-        color: COLORS.WHITE,
         fontSize: 18,
         fontWeight: 'bold',
     },

@@ -4,8 +4,8 @@ import React, { memo, useCallback, useMemo } from 'react';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 // local dependencies
-import Text from './Text';
-import { COLORS } from '../constants/colors';
+import Text from 'components/Text';
+import { useTheme } from 'hooks/useTheme';
 
 export interface TimeSwitcherProps {
     date: string; // YYYY-MM-DD
@@ -43,6 +43,7 @@ const TimeSwitcherComponent: React.FC<TimeSwitcherProps> = ({
         return startOfWeek.isSame(d, 'day');
     }, [date]);
 
+    const theme = useTheme();
     return (
         <View style={styles.header}>
             <TouchableOpacity
@@ -52,13 +53,13 @@ const TimeSwitcherComponent: React.FC<TimeSwitcherProps> = ({
                 <FeatherIcon
                     size={18}
                     name="chevron-left"
-                    color={COLORS.WHITE}
+                    color={theme.colors.white}
                     style={[styles.touchableArea, (isHideLeftBtn || disabledLeftBtn) && styles.invisibleBtn]}
                 />
             </TouchableOpacity>
             <Text
                 variant="h4"
-                color={COLORS.WHITE}
+                color={theme.colors.white}
                 style={styles.headerTitle}
             >
                 {moment(date).format('ddd, MMM D')}
@@ -70,7 +71,7 @@ const TimeSwitcherComponent: React.FC<TimeSwitcherProps> = ({
                 <FeatherIcon
                     size={18}
                     name="chevron-right"
-                    color={COLORS.WHITE}
+                    color={theme.colors.white}
                     style={[styles.touchableArea, (isHideRightBtn || disabledRightBtn) && styles.invisibleBtn]}
                 />
             </TouchableOpacity>
@@ -87,8 +88,8 @@ const styles = StyleSheet.create({
         display: 'none',
     },
     headerTitle: {
-        paddingHorizontal: 12,
         fontWeight: 'bold',
+        paddingHorizontal: 12,
     },
     touchableArea: {
         paddingVertical: 15,

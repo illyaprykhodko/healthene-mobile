@@ -3,7 +3,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 // local dependencies
-import { COLORS } from '../../constants/colors';
+import { useTheme } from 'hooks/useTheme';
 
 const iconStyles = StyleSheet.create({
     container: {
@@ -23,73 +23,88 @@ interface IconProps {
   size?: number;
 }
 
-export const FoodIcon: React.FC<IconProps> = ({ disabled = false, size = 24 }) => (
-    <View style={[
-        iconStyles.container,
-        { backgroundColor: disabled ? COLORS.LIGHT_GREY : '#FFE0B3' },
-        disabled && iconStyles.disabled
-    ]}>
-        <Icon
-            name="utensils"
-            size={size}
-            color={disabled ? COLORS.GREY : '#C56A00'}
-        />
-    </View>
-);
+export const FoodIcon: React.FC<IconProps> = ({ disabled = false, size = 24 }) => {
+    const theme = useTheme();
+    return (
+        <View style={[
+            iconStyles.container,
+            { backgroundColor: disabled ? theme.colors.lightGrey : '#FFE0B3' },
+            disabled && iconStyles.disabled
+        ]}>
+            <Icon
+                name="utensils"
+                size={size}
+                color={disabled ? theme.colors.grey : '#C56A00'}
+            />
+        </View>
+    );
+};
 
-export const DrinkIcon: React.FC<IconProps> = ({ disabled = false, size = 24 }) => (
-    <View style={[
-        iconStyles.container,
-        { backgroundColor: disabled ? COLORS.LIGHT_GREY : '#E3F2FD' },
-        disabled && iconStyles.disabled
-    ]}>
-        <Icon
-            name="glass-martini"
-            size={size}
-            color={disabled ? COLORS.GREY : '#1976D2'}
-        />
-    </View>
-);
+export const DrinkIcon: React.FC<IconProps> = ({ disabled = false, size = 24 }) => {
+    const theme = useTheme();
+    return (
+        <View style={[
+            iconStyles.container,
+            { backgroundColor: disabled ? theme.colors.lightGrey : '#E3F2FD' },
+            disabled && iconStyles.disabled
+        ]}>
+            <Icon
+                name="glass-martini"
+                size={size}
+                color={disabled ? theme.colors.grey : '#1976D2'}
+            />
+        </View>
+    );
+};
 
-export const SupplementIcon: React.FC<IconProps> = ({ disabled = false, size = 24 }) => (
-    <View style={[
-        iconStyles.container,
-        { backgroundColor: disabled ? COLORS.LIGHT_GREY : '#F3E5F5' },
-        disabled && iconStyles.disabled
-    ]}>
-        <Icon
-            name="capsules"
-            size={size}
-            color={disabled ? COLORS.GREY : '#7B1FA2'}
-        />
-    </View>
-);
+export const SupplementIcon: React.FC<IconProps> = ({ disabled = false, size = 24 }) => {
+    const theme = useTheme();
+    return (
+        <View style={[
+            iconStyles.container,
+            { backgroundColor: disabled ? theme.colors.lightGrey : '#F3E5F5' },
+            disabled && iconStyles.disabled
+        ]}>
+            <Icon
+                name="capsules"
+                size={size}
+                color={disabled ? theme.colors.grey : '#7B1FA2'}
+            />
+        </View>
+    );
+};
 
-export const MeasurementIcon: React.FC<IconProps> = ({ disabled = false, size = 24 }) => (
-    <View style={[
-        iconStyles.container,
-        { backgroundColor: disabled ? COLORS.LIGHT_GREY : '#E8F5E8' },
-        disabled && iconStyles.disabled
-    ]}>
-        <Icon
-            name="ruler"
-            size={size}
-            color={disabled ? COLORS.GREY : '#388E3C'}
-        />
-    </View>
-);
+export const MeasurementIcon: React.FC<IconProps> = ({ disabled = false, size = 24 }) => {
+    const theme = useTheme();
+    return (
+        <View style={[
+            iconStyles.container,
+            { backgroundColor: disabled ? theme.colors.lightGrey : '#E8F5E8' },
+            disabled && iconStyles.disabled
+        ]}>
+            <Icon
+                name="ruler"
+                size={size}
+                color={disabled ? theme.colors.grey : '#388E3C'}
+            />
+        </View>
+    );
+};
 
-export const ActivityIcon: React.FC<IconProps> = ({ disabled = false, size = 24 }) => (
-    <View style={[
-        iconStyles.container,
-        { backgroundColor: disabled ? COLORS.LIGHT_GREY : '#FFF3E0' },
-        disabled && iconStyles.disabled
-    ]}>
-        <Icon
-            name="running"
-            size={size}
-            color={disabled ? COLORS.GREY : '#F57C00'}
-        />
-    </View>
-);
+export const ActivityIcon: React.FC<IconProps> = ({ disabled = false, size = 24 }) => {
+    const theme = useTheme();
+    return (
+        <View style={[
+            iconStyles.container,
+            { backgroundColor: disabled ? theme.colors.lightGrey : '#FFF3E0' },
+            disabled && iconStyles.disabled
+        ]}>
+            <Icon
+                name="running"
+                size={size}
+                color={disabled ? theme.colors.grey : '#F57C00'}
+            />
+        </View>
+    );
+};
 

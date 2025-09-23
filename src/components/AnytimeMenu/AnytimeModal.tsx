@@ -10,15 +10,165 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // local dependencies
-import Text from '../Text';
 import { Badge } from './Badge';
+import Text from 'components/Text';
+import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
+import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { AnytimeListItem } from './AnytimeListItem';
-import { useTheme } from '../../hooks/useTheme';
-import { useUpdatePhaseItemMutation } from '../../store/api/dayOverviewApi';
-import { COLORS } from '../../constants/colors';
-import type { AnytimeItem, AnytimeModalProps } from '../../types/anytime';
+import type { AnytimeItem, AnytimeModalProps } from 'types/anytime';
+import { useUpdatePhaseItemMutation } from 'store/api/dayOverviewApi';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+const getIconComponent = (icon: string, color: string) => {
+    const iconProps = {
+        size: 24,
+        color,
+    };
+
+    switch (icon) {
+        case 'utensils':
+            return <Icon name="utensils" {...iconProps} />;
+        case 'glass-martini':
+            return <Icon name="glass-martini" {...iconProps} />;
+        case 'capsules':
+            return <Icon name="capsules" {...iconProps} />;
+        case 'ruler':
+            return <Icon name="ruler" {...iconProps} />;
+        case 'running':
+            return <Icon name="running" {...iconProps} />;
+        default:
+            return <Icon name="circle" {...iconProps} />;
+    }
+};
+
+export const AnytimeModal: React.FC<AnytimeModalProps> = ({
+    icon,
+    items,
+    title,
+    onClose,
+    visible,
+    maxHeight,
+    disabled = false,
+    fullScreen = true,
+    isFutureDate = false,
+}) => {
+    const theme = useTheme();
+    const insets = useSafeAreaInsets();
+    const [updatePhaseItem] = useUpdatePhaseItemMutation();
+
+    const pendingItems = items.filter(item => item.status === PHASE_ITEM_STATUS.PENDING);
+    const completedItems = items.filter(item => item.status === PHASE_ITEM_STATUS.DONE);
+
+    const handleUpdateItem = async (item: AnytimeItem) => {
+        if (disabled || !item.phaseId) { return; }
+
+        const newStatus = item.status === PHASE_ITEM_STATUS.PENDING ? PHASE_ITEM_STATUS.DONE : PHASE_ITEM_STATUS.PENDING;
+    
+        try {
+            await updatePhaseItem({
+                id: item.id,
+                phaseId: item.phaseId,
+                data: {
+                    ...item,
+                    status: newStatus,
+                },
+            }).unwrap();
+        } catch (error) {
+            console.error('Failed to update anytime item:', error);
+        }
+    };
+
+    // Calculate modal style based on mode
+    const getModalStyle = () => {
+        const baseStyle = styles.modal;
+        
+        if (fullScreen) {
+            return [baseStyle, { top: insets.top, paddingBottom: insets.bottom }];
+        }
+        
+        // Partial mode
+        const calculatedMaxHeight = maxHeight || SCREEN_HEIGHT * 0.8;
+        return [
+            baseStyle,
+            {
+                bottom: 0,
+                top: undefined,
+                borderTopWidth: 1,
+                maxHeight: calculatedMaxHeight,
+                borderTopColor: theme.colors.border,
+            }
+        ];
+    };
+
+    if (!visible) { return null; }
+
+    return (
+        <View style={styles.overlay}>
+            <TouchableOpacity
+                onPress={onClose}
+                activeOpacity={1}
+                style={StyleSheet.absoluteFill}
+            />
+      
+            <View style={[getModalStyle(), { backgroundColor: theme.colors.surface }]}>
+                <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+                    <View style={styles.headerLeft}>
+                        <Badge count={pendingItems.length}>
+                            {getIconComponent(icon, theme.colors.blue)}
+                        </Badge>
+                        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+                            {title}
+                        </Text>
+                    </View>
+          
+                    <TouchableOpacity
+                        onPress={onClose}
+                        disabled={disabled}
+                        style={styles.closeButton}
+                    >
+                        <Icon name="times" size={20} color={theme.colors.text} />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.content}>
+                    {items.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                No items found
+                            </Text>
+                        </View>
+                    ) : (
+                        <ScrollView style={styles.scrollView}>
+                            {/* Pending items */}
+                            {pendingItems.map(item => (
+                                <AnytimeListItem
+                                    item={item}
+                                    disabled={disabled}
+                                    key={`pending-${item.id}`}
+                                    isFutureDate={isFutureDate}
+                                    onUpdateItem={handleUpdateItem}
+                                />
+                            ))}
+              
+                            {/* Completed items */}
+                            {completedItems.map(item => (
+                                <AnytimeListItem
+                                    item={item}
+                                    disabled={disabled}
+                                    isFutureDate={isFutureDate}
+                                    key={`completed-${item.id}`}
+                                    onUpdateItem={handleUpdateItem}
+                                />
+                            ))}
+                        </ScrollView>
+                    )}
+                </View>
+            </View>
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
     overlay: {
@@ -81,162 +231,7 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: COLORS.GREY,
+        color: '#808080',
         textAlign: 'center',
     },
 });
-
-const getIconComponent = (icon: string) => {
-    const iconProps = {
-        size: 24,
-        color: COLORS.BLUE,
-    };
-
-    switch (icon) {
-        case 'utensils':
-            return <Icon name="utensils" {...iconProps} />;
-        case 'glass-martini':
-            return <Icon name="glass-martini" {...iconProps} />;
-        case 'capsules':
-            return <Icon name="capsules" {...iconProps} />;
-        case 'ruler':
-            return <Icon name="ruler" {...iconProps} />;
-        case 'running':
-            return <Icon name="running" {...iconProps} />;
-        default:
-            return <Icon name="circle" {...iconProps} />;
-    }
-};
-
-export const AnytimeModal: React.FC<AnytimeModalProps> = ({
-    icon,
-    items,
-    title,
-    onClose,
-    visible,
-    maxHeight,
-    disabled = false,
-    fullScreen = true,
-    isFutureDate = false,
-}) => {
-    // const theme = useTheme();
-    const insets = useSafeAreaInsets();
-    const [updatePhaseItem] = useUpdatePhaseItemMutation();
-
-    const pendingItems = items.filter(item => item.status === 'PENDING');
-    const completedItems = items.filter(item => item.status === 'DONE');
-
-    const handleUpdateItem = async (item: AnytimeItem) => {
-        if (disabled || !item.phaseId) { return; }
-
-        const newStatus = item.status === 'PENDING' ? 'DONE' : 'PENDING';
-    
-        try {
-            await updatePhaseItem({
-                id: item.id,
-                phaseId: item.phaseId,
-                data: {
-                    ...item,
-                    status: newStatus,
-                },
-            }).unwrap();
-        } catch (error) {
-            console.error('Failed to update anytime item:', error);
-        }
-    };
-
-    // Calculate modal style based on mode
-    const getModalStyle = () => {
-        const baseStyle = styles.modal;
-        
-        if (fullScreen) {
-            return [
-                baseStyle,
-                {
-                    top: insets.top, // From safe area top
-                    paddingBottom: insets.bottom // From safe area bottom
-                }
-            ];
-        }
-        
-        // Partial mode
-        const calculatedMaxHeight = maxHeight || SCREEN_HEIGHT * 0.8;
-        return [
-            baseStyle,
-            {
-                bottom: 0,
-                top: undefined,
-                borderTopWidth: 1,
-                maxHeight: calculatedMaxHeight,
-                borderTopColor: COLORS.LIGHTER_GREY,
-            }
-        ];
-    };
-
-    if (!visible) { return null; }
-
-    return (
-        <View style={styles.overlay}>
-            <TouchableOpacity
-                onPress={onClose}
-                activeOpacity={1}
-                style={StyleSheet.absoluteFill}
-            />
-      
-            <View style={getModalStyle()}>
-                <View style={styles.header}>
-                    <View style={styles.headerLeft}>
-                        <Badge count={pendingItems.length}>
-                            {getIconComponent(icon)}
-                        </Badge>
-                        <Text style={styles.headerTitle}>
-                            {title}
-                        </Text>
-                    </View>
-          
-                    <TouchableOpacity
-                        onPress={onClose}
-                        disabled={disabled}
-                        style={styles.closeButton}
-                    >
-                        <Icon name="times" size={20} color={COLORS.BLACK} />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.content}>
-                    {items.length === 0 ? (
-                        <View style={styles.emptyState}>
-                            <Text style={styles.emptyText}>
-                No items found
-                            </Text>
-                        </View>
-                    ) : (
-                        <ScrollView style={styles.scrollView}>
-                            {/* Pending items */}
-                            {pendingItems.map(item => (
-                                <AnytimeListItem
-                                    item={item}
-                                    disabled={disabled}
-                                    key={`pending-${item.id}`}
-                                    isFutureDate={isFutureDate}
-                                    onUpdateItem={handleUpdateItem}
-                                />
-                            ))}
-              
-                            {/* Completed items */}
-                            {completedItems.map(item => (
-                                <AnytimeListItem
-                                    item={item}
-                                    disabled={disabled}
-                                    isFutureDate={isFutureDate}
-                                    key={`completed-${item.id}`}
-                                    onUpdateItem={handleUpdateItem}
-                                />
-                            ))}
-                        </ScrollView>
-                    )}
-                </View>
-            </View>
-        </View>
-    );
-};

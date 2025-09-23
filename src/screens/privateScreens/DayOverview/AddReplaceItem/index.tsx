@@ -1,19 +1,21 @@
 // outsource dependencies
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, FlatList, TextInput, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, FlatList, TextInput } from 'react-native';
 // local dependencies
-import Text from '../../../../components/Text';
-import Screen from '../../../../components/Screen';
-import { useTheme } from '../../../../hooks/useTheme';
-import { COLORS } from '../../../../constants/colors';
-import { Button } from '../../../../components/Button';
+import Text from 'components/Text';
+import Screen from 'components/Screen';
+import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
+import { Button } from 'components/Button';
 import {
     useGetCatalogPrototypeTreeNodesQuery,
     useGetRecipePrototypesQuery,
     useGetFoodsQuery,
     AvailableItem
-} from '../../../../store/api/dayOverviewApi';
+} from 'store/api/dayOverviewApi';
+import { CATALOG_TAG_TYPE, SEARCH_TYPE } from 'constants/spec';
 
 // Temporary types until full migration
 interface AddReplaceItemProps {
@@ -24,17 +26,7 @@ interface AddReplaceItemProps {
   onApply?: (item: any) => void;
 }
 
-// Temporary constants until full migration
-const TAG_TYPE = {
-    PATIENT_FOOD: 'PATIENT_FOOD',
-    PATIENT_RECIPES: 'PATIENT_RECIPES',
-    RESTAURANT: 'RESTAURANT',
-};
-
-const SEARCH_TYPE = {
-    TREE: 'TREE',
-    ITEM: 'ITEM',
-};
+// TAG_TYPE and SEARCH_TYPE centralized in constants/spec
 
 export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
     const theme = useTheme();
@@ -48,16 +40,16 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
     const [allItems, setAllItems] = useState<AvailableItem[]>([]);
 
     // default tab is Food/Drink
-    const initialEntityType: string = TAG_TYPE.PATIENT_FOOD;
+    const initialEntityType: string = CATALOG_TAG_TYPE.PATIENT_FOOD;
     const initialSearchType: string = SEARCH_TYPE.ITEM;
 
     const [activeTab, setActiveTab] = useState<string>(initialEntityType);
     const [searchType, setSearchType] = useState<string>(initialSearchType);
 
     const [currentNodeId, setCurrentNodeId] = useState<number | null>(null);
-    const [currentNodeName, setCurrentNodeName] = useState<string>('');
+    // const [currentNodeName, setCurrentNodeName] = useState<string>('');
   
-    const excludeIds = route.params?.excludeIds || [];
+    // const excludeIds = route.params?.excludeIds || [];
     const onApply = route.params?.onApply;
     const replaceMode = route.params?.replaceMode || false;
     const itemToReplace = route.params?.itemToReplace;
@@ -71,7 +63,7 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         return () => clearTimeout(timeoutId);
     }, [searchQuery]);
     useEffect(() => {
-        if (debouncedSearchQuery.trim().length === 0 && activeTab !== TAG_TYPE.RESTAURANT) {
+        if (debouncedSearchQuery.trim().length === 0 && activeTab !== CATALOG_TAG_TYPE.RESTAURANT) {
             setPage(0);
             setAllItems([]);
         }
@@ -90,7 +82,7 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         sort: 'name,ASC',
     }, {
         // skip: !(activeTab === TAG_TYPE.RESTAURANT),
-        skip: !(activeTab === TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE),
+        skip: !(activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE),
     });
 
     // recipe prototypes query (non-restaurants, item search)
@@ -105,7 +97,7 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         size: 10,
         sort: 'name,ASC',
     }, {
-        skip: !(activeTab === TAG_TYPE.PATIENT_RECIPES && searchType === SEARCH_TYPE.ITEM && debouncedSearchQuery.trim().length > 0),
+        skip: !(activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES && searchType === SEARCH_TYPE.ITEM && debouncedSearchQuery.trim().length > 0),
     });
 
     // foods query (non-restaurants, item search)
@@ -122,7 +114,7 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         size: 10,
         sort: 'name,ASC',
     }, {
-        skip: !(activeTab === TAG_TYPE.PATIENT_FOOD && searchType === SEARCH_TYPE.ITEM && debouncedSearchQuery.trim().length > 0),
+        skip: !(activeTab === CATALOG_TAG_TYPE.PATIENT_FOOD && searchType === SEARCH_TYPE.ITEM && debouncedSearchQuery.trim().length > 0),
     });
 
     // stable empty array reference
@@ -130,22 +122,22 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
 
     // determine which content to use and memoize to avoid identity churn
     const currentContent: any[] = useMemo(() => {
-        if (activeTab === TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE) {
+        if (activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE) {
             return catalogTreeData?.content || EMPTY;
         }
-        if (activeTab === TAG_TYPE.PATIENT_FOOD && searchType === SEARCH_TYPE.ITEM) {
+        if (activeTab === CATALOG_TAG_TYPE.PATIENT_FOOD && searchType === SEARCH_TYPE.ITEM) {
             return foodsData?.content || EMPTY;
         }
-        if (activeTab === TAG_TYPE.PATIENT_RECIPES && searchType === SEARCH_TYPE.ITEM) {
+        if (activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES && searchType === SEARCH_TYPE.ITEM) {
             return recipeData?.content || EMPTY;
         }
         return EMPTY;
     }, [activeTab, searchType, catalogTreeData, foodsData, recipeData, EMPTY]);
 
     const isLoading = useMemo(() => {
-        if (activeTab === TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE) { return !!isCatalogTreeLoading; }
-        if (activeTab === TAG_TYPE.PATIENT_FOOD && searchType === SEARCH_TYPE.ITEM) { return !!isFoodsLoading; }
-        if (activeTab === TAG_TYPE.PATIENT_RECIPES && searchType === SEARCH_TYPE.ITEM) { return !!isRecipeLoading; }
+        if (activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE) { return !!isCatalogTreeLoading; }
+        if (activeTab === CATALOG_TAG_TYPE.PATIENT_FOOD && searchType === SEARCH_TYPE.ITEM) { return !!isFoodsLoading; }
+        if (activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES && searchType === SEARCH_TYPE.ITEM) { return !!isRecipeLoading; }
         return false;
     }, [activeTab, searchType, isCatalogTreeLoading, isFoodsLoading, isRecipeLoading]);
 
@@ -153,7 +145,7 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
     const allItemsKey = useMemo(() => allItems.map(i => i.id).join('|'), [allItems]);
 
     useEffect(() => {
-        if (!Array.isArray(currentContent) || (debouncedSearchQuery.trim().length === 0 && activeTab !== TAG_TYPE.RESTAURANT)) { return; }
+        if (!Array.isArray(currentContent) || (debouncedSearchQuery.trim().length === 0 && activeTab !== CATALOG_TAG_TYPE.RESTAURANT)) { return; }
         if (page === 0) {
             if (contentKey !== allItemsKey) {
                 setAllItems(currentContent);
@@ -168,7 +160,7 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         }
     }, [page, contentKey, allItemsKey, currentContent, debouncedSearchQuery, activeTab]);
 
-    const filteredItems = allItems;
+    // const filteredItems = allItems; // keep placeholder for potential future filtering
 
     useEffect(() => {
         const title = replaceMode
@@ -216,30 +208,28 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         setSearchQuery('');
         setDebouncedSearchQuery('');
         setCurrentNodeId(null);
-        setCurrentNodeName('');
-        setSearchType(tabType === TAG_TYPE.RESTAURANT ? SEARCH_TYPE.TREE : SEARCH_TYPE.ITEM);
+        setSearchType(tabType === CATALOG_TAG_TYPE.RESTAURANT ? SEARCH_TYPE.TREE : SEARCH_TYPE.ITEM);
     };
 
     const handleNodePress = (node: any) => {
-        if (activeTab !== TAG_TYPE.RESTAURANT) { return; }
+        if (activeTab !== CATALOG_TAG_TYPE.RESTAURANT) { return; }
         setCurrentNodeId(node.id);
-        setCurrentNodeName(node.name);
         setPage(0);
         setAllItems([]);
     };
 
-    const handleScanUPC = () => {
-        (navigation as any).navigate('UPCScan', {
-            entityType: activeTab === TAG_TYPE.PATIENT_FOOD ? 'FOOD' : 'RECIPE',
-            onApply: (scannedItem: any) => { if (onApply) { onApply(scannedItem); } },
-        });
-    };
+    // const handleScanUPC = () => {
+    //     (navigation as any).navigate('UPCScan', {
+    //         entityType: activeTab === TAG_TYPE.PATIENT_FOOD ? 'FOOD' : 'RECIPE',
+    //         onApply: (scannedItem: any) => { if (onApply) { onApply(scannedItem); } },
+    //     });
+    // };
 
     const renderTabs = () => {
         const tabs = [
-            { label: 'Food/Drink', value: TAG_TYPE.PATIENT_FOOD },
-            { label: 'Recipes', value: TAG_TYPE.PATIENT_RECIPES },
-            { label: 'Restaurants', value: TAG_TYPE.RESTAURANT },
+            { label: 'Food/Drink', value: CATALOG_TAG_TYPE.PATIENT_FOOD },
+            { label: 'Recipes', value: CATALOG_TAG_TYPE.PATIENT_RECIPES },
+            { label: 'Restaurants', value: CATALOG_TAG_TYPE.RESTAURANT },
         ];
 
         return (
@@ -268,7 +258,7 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
 
     const renderItem = ({ item }: { item: AvailableItem }) => {
         const isSelected = selectedItems.find(selected => selected.id === item.id);
-        const isNode = activeTab === TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE;
+        const isNode = activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE;
     
         return (
             <TouchableOpacity
@@ -281,21 +271,21 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
                         <Text style={{ fontSize: 16, fontWeight: '500', color: theme.colors.text }}>
                             {item.name}
                         </Text>
-                        <Text style={{ fontSize: 14, color: COLORS.GREY, marginTop: 4 }}>
-                            {isNode ? 'Category' : (activeTab === TAG_TYPE.PATIENT_RECIPES ? 'RECIPE' : 'FOOD')}
+                        <Text style={{ fontSize: 14, color: theme.colors.grey, marginTop: 4 }}>
+                            {isNode ? 'Category' : (activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES ? 'RECIPE' : 'FOOD')}
                         </Text>
                         {item.description && (
-                            <Text style={{ fontSize: 12, color: COLORS.GREY, marginTop: 2 }}>
+                            <Text style={{ fontSize: 12, color: theme.colors.grey, marginTop: 2 }}>
                                 {item.description}
                             </Text>
                         )}
                     </View>
                 </View>
                 {!isNode && isSelected && (
-                    <Text style={{ color: COLORS.BLUE, fontSize: 18 }}>✓</Text>
+                    <Text style={{ color: theme.colors.blue, fontSize: 18 }}>✓</Text>
                 )}
                 {isNode && (
-                    <Text style={{ color: COLORS.GREY, fontSize: 16 }}>›</Text>
+                    <Text style={{ color: theme.colors.grey, fontSize: 16 }}>›</Text>
                 )}
             </TouchableOpacity>
         );
@@ -305,13 +295,13 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         <View style={[styles.search, styles.offset]}>
             <TextInput
                 value={searchQuery}
-                placeholder="Search..."
-                onChangeText={setSearchQuery}
-                placeholderTextColor={COLORS.GREY}
-                style={[styles.searchInput, { color: theme.colors.text }]}
                 autoCorrect={false}
                 autoCapitalize="none"
                 returnKeyType="search"
+                placeholder="Search..."
+                onChangeText={setSearchQuery}
+                placeholderTextColor={theme.colors.grey}
+                style={[styles.searchInput, { color: theme.colors.text }]}
             />
         </View>
     );
@@ -321,7 +311,7 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
 
         return (
             <View style={styles.replaceInfo}>
-                <Text style={{ fontSize: 14, color: COLORS.GREY, marginBottom: 8 }}>
+                <Text style={{ fontSize: 14, color: theme.colors.grey, marginBottom: 8 }}>
                     Replacing:
                 </Text>
                 <Text style={{ fontSize: 16, fontWeight: '500', color: theme.colors.text }}>
@@ -331,23 +321,22 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         );
     };
 
-    const renderBreadcrumb = () => {
-        if (!currentNodeName || !(activeTab === TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE)) { return null; }
-
-        return (
-            <View style={styles.breadcrumb}>
-                <TouchableOpacity onPress={() => {
-                    setCurrentNodeId(null);
-                    setCurrentNodeName('');
-                }}>
-                    <Text style={{ color: COLORS.BLUE, textDecorationLine: 'underline' }}>
-                        Back to root
-                    </Text>
-                </TouchableOpacity>
-                <Text style={{ color: COLORS.GREY }}> › {currentNodeName}</Text>
-            </View>
-        );
-    };
+    // const renderBreadcrumb = () => {
+    //     if (!currentNodeName || !(activeTab === TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE)) { return null; }
+    //     return (
+    //         <View style={styles.breadcrumb}>
+    //             <TouchableOpacity onPress={() => {
+    //                 setCurrentNodeId(null);
+    //                 setCurrentNodeName('');
+    //             }}>
+    //                 <Text style={{ color: theme.colors.blue, textDecorationLine: 'underline' }}>
+    //                     Back to root
+    //                 </Text>
+    //             </TouchableOpacity>
+    //             <Text style={{ color: theme.colors.grey }}> › {currentNodeName}</Text>
+    //         </View>
+    //     );
+    // };
 
     // if (isLoading && page === 0) {
     //     return (
@@ -384,7 +373,7 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
                 onEndReachedThreshold={0.5}
                 keyboardShouldPersistTaps="handled"
                 ListEmptyComponent={
-                    <Text style={[styles.emptyScreen, { textAlign: 'center', color: COLORS.GREY }]}>
+                    <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
             No items found
                     </Text>
                 }
@@ -435,13 +424,13 @@ const styles = StyleSheet.create({
         paddingRight: 0,
     },
     offset: {
-        paddingTop: 20,
-        paddingLeft: 16,
-        paddingRight: 16,
+        paddingTop: OFFSET.VERTICAL,
+        paddingLeft: OFFSET.HORIZONTAL,
+        paddingRight: OFFSET.HORIZONTAL,
     },
     title: {
-        paddingTop: 20,
-        marginBottom: 20,
+        paddingTop: OFFSET.VERTICAL,
+        marginBottom: OFFSET.VERTICAL,
     },
     replaceInfo: {
         paddingHorizontal: 16,
@@ -471,7 +460,7 @@ const styles = StyleSheet.create({
     tabButton: {
         flex: 1,
         paddingVertical: 12,
-        backgroundColor: COLORS.LIGHT_GREY,
+        backgroundColor: '#F3F3F3',
         alignItems: 'center',
         borderRightColor: '#156F93',
     },
@@ -523,7 +512,7 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         marginRight: 4,
-        backgroundColor: COLORS.LIGHT_GREY,
+        backgroundColor: '#F3F3F3',
         borderRadius: 4,
     },
     listTitle: {
@@ -536,7 +525,7 @@ const styles = StyleSheet.create({
     bottomSection: {
         padding: 16,
         borderTopWidth: 1,
-        borderTopColor: COLORS.LIGHT_GREY,
+        borderTopColor: '#F3F3F3',
     },
     scanButtonContainer: {
         marginBottom: 16,

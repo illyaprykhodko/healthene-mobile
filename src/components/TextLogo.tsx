@@ -2,25 +2,29 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, ImageBackground, Platform, StyleProp, TextStyle, ViewStyle } from 'react-native';
 // local dependencies
-import { COLORS } from '../constants/colors';
+import { useTheme } from 'hooks/useTheme';
 
 interface TextLogoProps {
     color?: string;
     style?: StyleProp<TextStyle>;
 }
 
-export const TextLogo: React.FC<TextLogoProps> = ({ style, color = COLORS.THEME_INVERSE }) => (
-    <Text
-        style={StyleSheet.flatten([
-            styles.textLogo,
-            color ? { color } : {},
-            style,
-        ])}
-        numberOfLines={1}
-    >
-        {' '}Healthene{' '}
-    </Text>
-);
+export const TextLogo: React.FC<TextLogoProps> = ({ style, color }) => {
+    const theme = useTheme();
+    const resolved = color || theme.colors.white;
+    return (
+        <Text
+            style={StyleSheet.flatten([
+                styles.textLogo,
+                resolved ? { color: resolved } : {},
+                style,
+            ])}
+            numberOfLines={1}
+        >
+            {' '}Healthene{' '}
+        </Text>
+    );
+};
 
 interface IconLogoProps {
     disabled?: boolean;

@@ -1,7 +1,6 @@
 //
 
 // outsource dependencies
-import { useDispatch } from 'react-redux';
 import { Text } from '@react-native-material/core';
 import Icon from 'react-native-vector-icons/Ionicons';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
@@ -12,6 +11,7 @@ import Screen from 'components/Screen';
 import { useAuth } from 'hooks/useAuth';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 // import { LoginData } from 'store/api/types';
 import TextInput from 'components/TextInput';
@@ -210,32 +210,31 @@ const styles = StyleSheet.create({
     // paddingRight: -20,
     },
     formContainer: {
-        margin: 16,
+        margin: OFFSET.HORIZONTAL,
     },
     input: {
-        marginBottom: 16,
+        marginBottom: OFFSET.VERTICAL - 4,
     },
     button: {
-        marginTop: 30,
-    // borderColor: 'transparent',
+        marginTop: OFFSET.VERTICAL * 1.5,
     },
     linksContainer: {
         alignItems: 'center',
-        marginTop: 20,
+        marginTop: OFFSET.VERTICAL,
     },
     link: {
-        marginTop: 20,
+        marginTop: OFFSET.VERTICAL,
         alignItems: 'center',
     },
     title: {
-        marginBottom: 20,
+        marginBottom: OFFSET.VERTICAL,
     },
     forgotPassword: {
-        marginTop: 20,
+        marginTop: OFFSET.VERTICAL,
         alignItems: 'center',
     },
     signUp: {
-        marginTop: 20,
+        marginTop: OFFSET.VERTICAL,
         alignItems: 'center',
     },
 });

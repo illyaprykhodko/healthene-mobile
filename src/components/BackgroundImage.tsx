@@ -1,6 +1,8 @@
 // outsource dependencies
 import React, { useCallback, useEffect, useState, ReactNode } from 'react';
 import { StyleSheet, ImageBackground, Platform, Keyboard, ViewStyle } from 'react-native';
+// local dependencies
+import { OFFSET } from 'constants/offset';
 
 interface BackgroundImageProps {
   style?: ViewStyle;
@@ -12,7 +14,7 @@ const styles = StyleSheet.create({
         width: '100%',
         alignItems: 'center',
         justifyContent: 'flex-end',
-        paddingBottom: 32, // OFFSET.VERTICAL * 2
+        paddingBottom: OFFSET.VERTICAL * 2,
     },
 });
 

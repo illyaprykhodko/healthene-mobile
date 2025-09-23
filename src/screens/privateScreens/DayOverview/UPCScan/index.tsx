@@ -1,13 +1,14 @@
 // outsource dependencies
 import React, { useState } from 'react';
+import { View, StyleSheet, TextInput } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 // local dependencies
-import Text from '../../../../components/Text';
-import Screen from '../../../../components/Screen';
-import { useTheme } from '../../../../hooks/useTheme';
-import { COLORS } from '../../../../constants/colors';
-import { Button } from '../../../../components/Button';
+import Text from 'components/Text';
+import Screen from 'components/Screen';
+import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
+import { COLORS } from 'constants/colors';
+import { Button } from 'components/Button';
 
 interface UPCScanProps {
     entityType?: string;
@@ -81,7 +82,7 @@ export const UPCScan: React.FC<UPCScanProps> = () => {
                         onChangeText={setUpcCode}
                         placeholder="Enter UPC code"
                         style={[styles.input, { color: theme.colors.text }]}
-                        placeholderTextColor={COLORS.GREY}
+                        placeholderTextColor={theme.colors.grey}
                         keyboardType="numeric"
                     />
                 </View>
@@ -117,16 +118,16 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        padding: 20,
+        padding: OFFSET.VERTICAL,
         justifyContent: 'center',
     },
     title: {
         textAlign: 'center',
-        marginBottom: 40,
+        marginBottom: OFFSET.VERTICAL * 2,
     },
     scanArea: {
         alignItems: 'center',
-        marginBottom: 40,
+        marginBottom: OFFSET.VERTICAL * 2,
     },
     scanFrame: {
         width: 250,

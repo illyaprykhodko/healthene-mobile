@@ -3,7 +3,7 @@ import React, { memo, useCallback } from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { StyleSheet, TouchableOpacity, ViewStyle, StyleProp } from 'react-native';
 // local dependencies
-import { COLORS } from '../constants/colors';
+import { useTheme } from 'hooks/useTheme';
 
 // Temporary status type until full migration
 export type PhaseItemStatus = 'DONE' | 'PENDING' | 'DID_NOT_EAT' | string;
@@ -30,14 +30,15 @@ const styles = StyleSheet.create({
 });
 
 const CheckboxComponent: React.FC<CheckboxProps> = ({
-    value = false,
-    size = 22,
-    status = 'PENDING',
-    editable = true,
-    isDayOverview = false,
-    onChange,
     style,
+    onChange,
+    size = 22,
+    value = false,
+    editable = true,
+    status = 'PENDING',
+    isDayOverview = false,
 }) => {
+    const theme = useTheme();
     const handlePress = useCallback(() => {
         if (!editable) { return; }
         onChange(!value);
@@ -45,17 +46,17 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
 
     const renderGeneralIcon = () => (value
         ? <Icon solid name="check-square" size={size + 15} color="#87CA67" />
-        : <Icon name="square" size={size + 15} color={COLORS.WHITE} />
+        : <Icon name="square" size={size + 15} color={theme.colors.white} />
     );
 
     const renderDayOverviewIcon = () => {
         switch (status) {
             default:
-                return <Icon name="square" size={size + 3} color={COLORS.WHITE} />;
+                return <Icon name="square" size={size + 3} color={theme.colors.white} />;
             case 'DONE':
                 return <Icon solid name="check-square" size={size + 13} color="#87CA67" />;
             case 'DID_NOT_EAT':
-                return <Icon solid name="minus-square" size={size + 5} color={COLORS.DARK_BLUE} />;
+                return <Icon solid name="minus-square" size={size + 5} color={theme.colors.darkBlue} />;
         }
     };
 
