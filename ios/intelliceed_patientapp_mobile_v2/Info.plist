@@ -65,6 +65,8 @@
 	<string>Allow "Healthene" to record steps</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Allow "Healthene" to upload your photo</string>
+	<key>RCTNewArchEnabled</key>
+	<true/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Outfit-Black.ttf</string>
