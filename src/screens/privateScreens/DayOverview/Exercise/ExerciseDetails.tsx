@@ -14,6 +14,7 @@ import { useGetPhysicalActivityItemQuery, useGetStretchingExerciseQuery, useGetA
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { COLORS } from 'constants/colors';
+import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
 import { HTMLView } from 'components/HTMLView';
 import { YoutubeVideo } from 'components/YoutubeVideo';
@@ -124,10 +125,6 @@ export default function ExerciseDetails () {
 
     // Initialize exercise when data loads
     useEffect(() => {
-        // console.log('ExerciseDetails useEffect - exerciseData:', exerciseData);
-        // console.log('ExerciseDetails useEffect - exercise:', exercise);
-        // console.log('ExerciseDetails useEffect - current exerciseState.id:', exerciseState.id);
-        
         if (exerciseData && exercise?.id && exercise?.type) {
             // Only initialize if we don't have data for this exercise yet or if the data is different
             if (exerciseState.id !== exercise.id || !exerciseState.initialized) {
@@ -136,14 +133,11 @@ export default function ExerciseDetails () {
                     exerciseType: exercise.type,
                     subtype: exerciseData?.type,
                     originalSteps: exerciseData?.steps,
-                    steps: [...(exerciseData?.steps || [])]?.sort((a: any, b: any) => a?.order - b?.order) || [],
-                    scientificDescription: exerciseData?.scientificDescription,
                     scientificVideo: exerciseData?.scientificVideo,
+                    scientificDescription: exerciseData?.scientificDescription,
+                    steps: [...(exerciseData?.steps || [])]?.sort((a: any, b: any) => a?.order - b?.order) || [],
                 };
-                
-                // console.log('ExerciseDetails - processedData:', processedData);
-                // console.log('ExerciseDetails - steps:', processedData.steps);
-                
+            
                 dispatch(initializeExercise({
                     id: exercise.id,
                     exerciseType: exercise.type,
@@ -259,9 +253,9 @@ export default function ExerciseDetails () {
             (step.id === stepId ? { ...step, ...vals, modified: true } : step)
         );
         dispatch(updateSteps({
+            isDirty: true,
             steps: updatedSteps,
             selectedSteps: updatedSteps.filter((step: any) => step.completed),
-            isDirty: true
         }));
     }, [memoizedSteps, dispatch]);
 
@@ -270,9 +264,9 @@ export default function ExerciseDetails () {
             (step.id === stepId ? { ...step, completed: !step.completed } : step)
         );
         dispatch(updateSteps({
+            isDirty: true,
             steps: updatedSteps,
             selectedSteps: updatedSteps.filter((step: any) => step.completed),
-            isDirty: true
         }));
     }, [memoizedSteps, dispatch]);
 
@@ -302,8 +296,6 @@ export default function ExerciseDetails () {
 
     // Render exercise content
     const renderExerciseContent = useCallback(() => {
-        // console.log('renderExerciseContent - steps:', memoizedSteps);
-        // console.log('renderExerciseContent - steps length:', memoizedSteps?.length);
         return (memoizedSteps || []).map((step: any) => {
             const { id: itemId, image, instruction, video, completed, modified } = step;
             const exerciseParams = getExerciseStepParams(exercise, step, subtype) || {};
@@ -338,15 +330,15 @@ export default function ExerciseDetails () {
                         </TouchableOpacity>
                     ) : null}
                     
-                    {image ? (
-                        <View style={styles.imageContainer}>
+                    <View style={styles.imageContainer}>
+                        {image ? (
                             <Image
                                 resizeMode="contain"
                                 source={{ uri: image?.url }}
                                 style={[styles.image, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.5 }]}
                             />
-                        </View>
-                    ) : null}
+                        ) : null}
+                    </View>
                     
                     {/* Goal row */}
                     <View style={styles.repsContainer}>
@@ -377,8 +369,8 @@ export default function ExerciseDetails () {
                                 <TouchableOpacity
                                     key={line}
                                     onPress={() => navigation.navigate('EditExercise', {
-                                        viewOnlyExtra: true,
                                         itemId,
+                                        viewOnlyExtra: true,
                                         onApply: (vals: any) => updateStepCallback(itemId, vals),
                                         ...exerciseParams,
                                     })}
@@ -464,21 +456,14 @@ export default function ExerciseDetails () {
                 </Animated.View>
             )}
             {activeTab === exercise?.type && (
-                <TouchableOpacity
+                <Button
+                    title="DONE"
+                    variant="primary"
                     disabled={!isDirty}
                     onPress={handleDone}
-                    style={!isDirty ? { ...styles.submitBtn, backgroundColor: '#EEEEEE' } : styles.submitBtn}
-                >
-                    <Text style={{
-                        fontSize: 20,
-                        fontWeight: '500',
-                        paddingVertical: 3,
-                        color: !isDirty ? '#888888' : '#4E733C',
-                        textAlign: 'center',
-                    }}>
-                        DONE
-                    </Text>
-                </TouchableOpacity>
+                    style={styles.submitBtn}
+                    textStyle={{ fontSize: 20, fontWeight: '500', paddingVertical: 3 }}
+                />
             )}
         </Screen>
     );
@@ -501,9 +486,9 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
             onPressCloseButton={closePanel}
             style={[styles.swipePanel, style]}
             closeIconStyle={{
-                backgroundColor: '#A5A5A5',
                 borderWidth: 1.5,
                 borderColor: '#A5A5A5',
+                backgroundColor: '#A5A5A5',
             }}
             closeRootStyle={{ backgroundColor: 'transparent' }}
         >
@@ -672,7 +657,7 @@ const styles = StyleSheet.create({
         width: '90%',
         borderRadius: 30,
         alignSelf: 'center',
-        backgroundColor: '#96E072',
+        // backgroundColor: '#96E072',
         borderColor: 'transparent',
         marginBottom: 16,
     },

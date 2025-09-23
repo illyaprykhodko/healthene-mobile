@@ -45,6 +45,11 @@ export const lightTheme: Theme = {
         success: baseColors.green,
         warning: baseColors.orange,
         info: baseColors.blue,
+        // extensions for CTA buttons
+        successAlt: '#96E072',
+        muted: '#EEEEEE',
+        textMuted: '#888888',
+        successAltText: '#4E733C',
     },
     typography: {
         fontFamily: {
@@ -82,6 +87,7 @@ export const lightTheme: Theme = {
         sm: 4,
         md: 8,
         lg: 16,
+        xl: 30,
     },
     dark: false,
 };
@@ -100,6 +106,10 @@ export const darkTheme: Theme = {
         success: '#4CAF50',
         warning: '#FFB74D',
         info: '#64B5F6',
+        successAlt: '#96E072',
+        muted: '#2A2A2A',
+        textMuted: '#888888',
+        successAltText: '#4E733C',
     },
     typography: lightTheme.typography,
     spacing: lightTheme.spacing,

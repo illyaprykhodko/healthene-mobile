@@ -1,17 +1,17 @@
 // outsource dependencies
+import { View, StyleSheet } from 'react-native';
 import React, { useMemo, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
+import { Button } from 'components/Button';
 import { isDecimalField } from './decimal-utils';
 import { IconButton } from 'components/IconButton';
 import { EXERCISE_CONFIGS } from './exerciseFactory';
 import { useAppSelector, useAppDispatch } from 'store';
-import { ExerciseFieldType, ExerciseType } from 'types';
 import { updateSteps } from 'store/slices/exerciseSlice';
-import MultiWheelPicker, { FieldDef } from './components/MultiWheelPicker';
+import MultiWheelPicker from './components/MultiWheelPicker';
 
 const DATA_MAP: Record<string, number[]> = {
     hours: Array.from({ length: 25 }, (_, i) => i),
@@ -68,7 +68,7 @@ export default function ExerciseEdit ({ route, navigation }: any) {
 
         const isDisabled = [...goalFields, ...extraFields].every(f => (step[f.key] ?? 0) === (origStep[f.key] ?? 0));
 
-        const handleApply = useCallback((vals: Record<string, number>) => {
+        const handleApply = useCallback((vals: Record<string, unknown>) => {
             const updatedSteps = steps.map((s: any) =>
                 (s.id === itemId ? { ...s, ...vals, modified: true } : s)
             );
@@ -109,26 +109,14 @@ export default function ExerciseEdit ({ route, navigation }: any) {
                     fields={viewOnlyExtra ? extraFields : goalFields}
                 />
                 <View style={styles.space} />
-                <TouchableOpacity
-                    style={[
-                        styles.submitBtn,
-                        { backgroundColor: theme.colors.primary },
-                        isDisabled ? { backgroundColor: '#EEEEEE' } : undefined
-                    ]}
+                <Button
+                    title="SAVE"
+                    variant="primary"
                     onPress={handleSave}
+                    style={styles.submitBtn}
                     disabled={disabled || isDisabled}
-                >
-                    <Text
-                        style={{
-                            fontSize: 20,
-                            fontWeight: '500',
-                            paddingVertical: 3,
-                            color: isDisabled ? '#888888' : '#4E733C',
-                        }}
-                    >
-                        SAVE
-                    </Text>
-                </TouchableOpacity>
+                    textStyle={{ fontSize: 20, fontWeight: '500', paddingVertical: 3 }}
+                />
             </Screen>
         );
     }
@@ -150,7 +138,7 @@ const styles = StyleSheet.create({
     submitBtn: {
         width: '90%',
         alignSelf: 'center',
-        backgroundColor: '#96E072',
+        // backgroundColor: '#96E072',
         marginBottom: 16,
         borderColor: 'transparent',
         borderRadius: 30,

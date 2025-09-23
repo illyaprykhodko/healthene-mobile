@@ -192,15 +192,15 @@ export default function ExerciseCategories () {
                 ...route.params,
                 list: item.list,
                 title: item.title,
-                deepCounter: (route.params?.deepCounter || 0) + 1,
-                refreshCurrentList
+                refreshCurrentList,
+                deepCounter: (route.params?.deepCounter || 0) + 1
             });
         } else {
             navigation.navigate('ExerciseDetails', {
                 ...route.params,
                 exercise: item,
-                deepCounter: route.params?.deepCounter,
-                refreshCurrentList
+                refreshCurrentList,
+                deepCounter: route.params?.deepCounter
             });
         }
     }, [navigation, route.params, refreshCurrentList]);
@@ -274,6 +274,7 @@ export default function ExerciseCategories () {
             {listIsDone && (<Text textAlign="center" style={styles.goodWorkText}>Keep It Up!</Text>)}
             {listIsDone && (
                 <Button
+                    variant="primary"
                     title="NEXT ACTIVITY"
                     style={styles.submitBtn}
                     textStyle={styles.submitBtnText}

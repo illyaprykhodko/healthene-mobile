@@ -1,21 +1,120 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { ITEM_HEIGHT, WheelPicker } from './WheelPicker';
-import DecimalWheelPicker from './DecimalWheelPicker';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+
+// local dependencies
 import { isDecimalField } from '../decimal-utils';
+import DecimalWheelPicker from './DecimalWheelPicker';
+import { ITEM_HEIGHT, WheelPicker } from './WheelPicker';
 
-export interface FieldDef {
-    label: string;
-    data?: number[] | null;
-    value?: number;
-    key: string;
+// ---- Types
+export type Field = {
+  key: string;
+  label: string;
+  value?: number;
+  data?: number[];
+};
+
+export type StepType = 'TIME' | 'DISTANCE';
+
+export interface Workout {
+  id: number;
+  order: number;
+  hours: number;
+  type: StepType;
+  minutes: number;
+  modified: boolean;
+  completed: boolean;
+  steps: number | null;
+  miles: number | null;
+  velocity: number | null;
+  elevation: number | null;
+  resistance: number | null;
 }
 
-interface Props {
-    step: any;
-    fields: FieldDef[];
-    onApply: (vals: Record<string, number>) => void;
-}
+type MultiWheelPickerProps = {
+  fields: Field[]; // mix of regular and decimal fields (decimal detected by isDecimalField)
+  step: Record<string, unknown>;
+  onApply: (update: Record<string, unknown>) => void;
+};
+
+const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApply }) => {
+    // NOTE: `values` keeps SELECTED INDEXES for regular wheels (not the values from data[])
+    const [values, setValues] = useState<number[]>(() => fields.map(f => f.value ?? 0));
+
+    // Split fields by decimal/regular
+    const regularFields = useMemo(() => fields.filter(f => !isDecimalField(f.key)), [fields]);
+    const decimalFields = useMemo(() => fields.filter(f => isDecimalField(f.key)), [fields]);
+
+    // Update handler for regular (index-based) wheels
+    const handleChange = useCallback(
+        (fieldIdx: number, newIdx: number) => {
+            setValues(prev => {
+                const newValues = [...prev];
+                newValues[fieldIdx] = newIdx;
+
+                // Build result object using the updated indexes
+                const result: Record<string, unknown> = {};
+                fields.forEach((f, i) => {
+                    // For regular fields we map index -> actual value from data[]
+                    if (!isDecimalField(f.key)) {
+                        result[f.key] = f.data?.[newValues[i]];
+                    }
+                });
+
+                // Keep existing `step` values but override with new regular-field selections
+                onApply({ ...step, ...result });
+                return newValues;
+            });
+        },
+        [fields, onApply, step]
+    );
+
+    // Update handler for decimal wheels (receives `{ [key]: number }` from DecimalWheelPicker)
+    const handleDecimalChange = useCallback(
+        (update: Record<string, number>) => {
+            // Merge decimal field(s) result into the step and propagate upward
+            onApply({ ...step, ...update });
+        },
+        [onApply, step]
+    );
+
+    return (
+        <View style={styles.container}>
+            {/* Regular fields */}
+            {regularFields.map((field, idx) => {
+                // We need to locate the original index in `fields` to read/write values[] correctly
+                const fieldIdx = fields.findIndex(f => f.key === field.key);
+                const isEven = idx % 2 === 0;
+
+                return (
+                    <View key={field.key} style={styles.pickerColumn}>
+                        <Text style={styles.title}>{field.label}</Text>
+                        <View style={isEven ? styles.backgroundFirst : styles.backgroundSecond}>
+                            <WheelPicker
+                                data={field.data ?? []}
+                                selectedIndex={values[fieldIdx] ?? 0}
+                                onSelect={(newIdx: number) => handleChange(fieldIdx, newIdx)}
+                                selectedItemStyle={(isEven
+                                    ? styles.selectedItemFirst
+                                    : styles.selectedItemSecond) as ViewStyle}
+                            />
+                        </View>
+                    </View>
+                );
+            })}
+
+            {/* Decimal fields */}
+            {decimalFields.map(field => (
+                <View key={field.key} style={{ width: '100%', marginBottom: 20 }}>
+                    <DecimalWheelPicker field={field} onApply={handleDecimalChange} />
+                </View>
+            ))}
+        </View>
+    );
+};
+
+export default MultiWheelPicker;
+
 
 const styles = StyleSheet.create({
     container: {
@@ -25,7 +124,7 @@ const styles = StyleSheet.create({
     },
     pickerColumn: {
         marginHorizontal: 3,
-        width: '48%'
+        width: '48%',
     },
     title: {
         fontWeight: 'bold',
@@ -38,58 +137,20 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    selectedItemFirst: { backgroundColor: '#CAE1F9' },
-    selectedItemSecond: { backgroundColor: '#E8EDD1' },
-    text: { color: '#8E8E8E', fontSize: 18 },
-    backgroundFirst: { backgroundColor: 'rgba(224, 235, 247, 0.5)' },
-    backgroundSecond: { backgroundColor: 'rgba(238, 241, 227, 0.5)' },
+    selectedItemFirst: {
+        backgroundColor: '#CAE1F9',
+    },
+    selectedItemSecond: {
+        backgroundColor: '#E8EDD1',
+    },
+    text: {
+        color: '#8E8E8E',
+        fontSize: 18,
+    },
+    backgroundFirst: {
+        backgroundColor: 'rgba(224, 235, 247, 0.5)',
+    },
+    backgroundSecond: {
+        backgroundColor: 'rgba(238, 241, 227, 0.5)',
+    },
 });
-
-export default function MultiWheelPicker ({ step, fields, onApply }: Props) {
-    const [values, setValues] = useState(fields.map(f => f.value ?? 0));
-
-    const regularFields = fields.filter(f => !isDecimalField(f.key));
-    const decimalFields = fields.filter(f => isDecimalField(f.key));
-
-    const handleChange = useCallback((fieldIdx: number, newIdx: number) => {
-        const newValues = [...values];
-        newValues[fieldIdx] = newIdx;
-        setValues(newValues);
-        const result: Record<string, number> = {};
-        fields.forEach((f, i) => {
-            if (f.data) { result[f.key] = (f.data as number[])[newValues[i]]; }
-        });
-        onApply(result);
-    }, [fields, values, onApply]);
-
-    const handleDecimalChange = useCallback((update: Record<string, number>) => {
-        onApply(update);
-    }, [onApply]);
-
-    return (
-        <View style={styles.container}>
-            {regularFields.map((field, idx) => {
-                const fieldIdx = fields.findIndex(f => f.key === field.key);
-                return (
-                    <View key={field.key} style={styles.pickerColumn}>
-                        <Text style={styles.title}>{field.label}</Text>
-                        <View style={idx % 2 === 0 ? styles.backgroundFirst : styles.backgroundSecond}>
-                            <WheelPicker
-                                data={(field.data as number[]) || []}
-                                selectedIndex={values[fieldIdx]}
-                                onSelect={newIdx => handleChange(fieldIdx, newIdx)}
-                                selectedItemStyle={idx % 2 === 0 ? styles.selectedItemFirst : styles.selectedItemSecond}
-                            />
-                        </View>
-                    </View>
-                );
-            })}
-
-            {decimalFields.map(field => (
-                <View key={field.key} style={{ width: '100%', marginBottom: 20 }}>
-                    <DecimalWheelPicker field={field} onApply={handleDecimalChange} />
-                </View>
-            ))}
-        </View>
-    );
-}

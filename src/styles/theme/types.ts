@@ -30,6 +30,11 @@ export interface ThemeColors {
   success: string;
   warning: string;
   info: string;
+  // App-specific extensions
+  successAlt?: string; // original green #96E072
+  muted?: string; // disabled background #EEEEEE
+  textMuted?: string; // disabled text #888888
+  successAltText?: string; // CTA text color '#4E733C'
 }
 
 export interface ThemeTypography {
@@ -74,6 +79,7 @@ export interface Theme {
     sm: number;
     md: number;
     lg: number;
+    xl?: number;
   };
   dark: boolean;
 }

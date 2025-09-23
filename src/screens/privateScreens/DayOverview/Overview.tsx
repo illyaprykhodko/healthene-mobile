@@ -11,20 +11,29 @@ import Screen from '../../../components/Screen';
 import { useTheme } from '../../../hooks/useTheme';
 import { COLORS } from '../../../constants/colors';
 import TimeSwitcher from '../../../components/TimeSwitcher';
+import { AnytimeMenu } from '../../../components/AnytimeMenu';
 import { useAppDispatch, useAppSelector } from '../../../store';
 import { useGetDayOverviewQuery, Phase } from '../../../store/api/dayOverviewApi';
 import { selectDayOverview, meta, setDateEntry } from '../../../store/slices/dayOverviewSlice';
 
 // Temporary types
-export type PhaseType = 'MEAL' | 'MEASUREMENT' | 'SUPPLEMENT' | 'MEDICATION' | 'ADDED_BY_PATIENT' | 'PHYSICAL_ACTIVITY' | 'QUESTION' | 'ANYTIME';
+export type PhaseType =
+  | 'MEAL'
+  | 'ANYTIME'
+  | 'QUESTION'
+  | 'SUPPLEMENT'
+  | 'MEDICATION'
+  | 'MEASUREMENT'
+  | 'ADDED_BY_PATIENT'
+  | 'PHYSICAL_ACTIVITY';
 
 interface PhaseItem {
-    title: string;
-    type: PhaseType;
-    sortKey?: number;
-    id: string | number;
-    phaseId?: string | number;
-    status?: 'DONE' | 'PENDING' | 'INCOMPLETE';
+  title: string;
+  type: PhaseType;
+  sortKey?: number;
+  id: string | number;
+  phaseId?: string | number;
+  status?: 'DONE' | 'PENDING' | 'INCOMPLETE';
 }
 
 const DOT_SIZE = 8;
@@ -41,162 +50,107 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
     const mealIconX = TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE / 2;
     const offsetLineX = mealIconX;
     const svgHeight = phases.length * ROW_HEIGHT;
-    
+
     const isMealPhase = (type: PhaseType) => type === 'MEAL';
-    
+
     const timelineElements = useMemo(() => {
         const elements: React.ReactElement[] = [];
-        
+
         // main vertical line - only for meal phases
         const mealPhases = phases.filter(phase => isMealPhase(phase.type));
         if (mealPhases.length > 1) {
             const firstMealIndex = phases.findIndex(phase => isMealPhase(phase.type));
             let lastMealIndex = -1;
             for (let i = phases.length - 1; i >= 0; i--) {
-                // console.log('phases type', phases[i].type);
                 if (isMealPhase(phases[i].type)) {
                     lastMealIndex = i;
                     break;
                 }
             }
-            
+
             // create vertical line segments
             for (let i = firstMealIndex; i < lastMealIndex; i++) {
                 const currentY = i * ROW_HEIGHT + ROW_HEIGHT / 2;
                 const nextY = (i + 1) * ROW_HEIGHT + ROW_HEIGHT / 2;
                 const nextPhase = phases[i + 1];
-                
+
                 const isNextPhaseHasMeal = isMealPhase(nextPhase.type);
                 const checkLineX = isNextPhaseHasMeal ? mainLineX : offsetLineX;
                 const checkLineY1 = isNextPhaseHasMeal ? currentY + GAP_SIZE : currentY + 30;
-                // upper segment (from previous gap to current dot)
+
                 elements.push(
                     <Line
                         y1={currentY}
                         y2={currentY}
                         x1={mainLineX}
-                        // y1={currentY - GAP_SIZE}
                         x2={mainLineX}
-                        // y2={currentY - DOT_SIZE / 2}
                         stroke={COLORS.GREY}
                         key={`main-line-upper-${i}`}
                         strokeWidth={CONNECTOR_WIDTH}
                     />
                 );
-                
-                // lower segment (from current dot to next gap)
+
                 if (!isNextPhaseHasMeal) {
                     elements.push(
                         <Line
-                            key={`main-line-lower-${i}`}
-                            // x1={mainLineX}
+                            x2={checkLineX}
                             x1={checkLineX}
                             y1={checkLineY1}
-                            y2={nextY - GAP_SIZE}
-                            // y1={currentY + DOT_SIZE / 2}
-                            x2={checkLineX}
-                            // x2={mainLineX}
-                            // y2={nextY - GAP_SIZE}
                             stroke={COLORS.GREY}
+                            y2={nextY - GAP_SIZE}
+                            key={`main-line-lower-${i}`}
                             strokeWidth={CONNECTOR_WIDTH}
                         />
                     );
                     elements.push(
                         <Line
-                            key={`main-line-lower-${Math.random()}`}
-                            // x1={offsetLineX}
                             x1={offsetLineX}
-                            // y1={currentY + 137}
-                            y1={nextY + ROW_HEIGHT + ICON_SIZE - DOT_SIZE}
-                            y2={nextY + ROW_HEIGHT * 2 - GAP_SIZE}
-                            // y2={nextY + 30}
                             x2={offsetLineX}
                             stroke={COLORS.GREY}
                             strokeWidth={CONNECTOR_WIDTH}
+                            y2={nextY + ROW_HEIGHT * 2 - GAP_SIZE}
+                            key={`main-line-lower-${Math.random()}`}
+                            y1={nextY + ROW_HEIGHT + ICON_SIZE - DOT_SIZE}
                         />
                     );
                 } else {
                     const isPrevPhaseHasMeal = isMealPhase(phases[i].type);
-                    // elements.push(
-                    //     <Line
-                    //         key={`main-line-lower-${i}`}
-                    //         x1={offsetLineX}
-                    //         y1={currentY + 137}
-                    //         y2={nextY + 30}
-                    //         x2={offsetLineX}
-                    //         stroke={COLORS.GREY}
-                    //         strokeWidth={CONNECTOR_WIDTH}
-                    //     />
-                    // );
-                    // !isNextPhaseHasMeal && elements.push(
-                    //     <Line
-                    //         key={`main-line-lower-${i}`}
-                    //         x1={offsetLineX}
-                    //         y1={currentY + 137}
-                    //         y2={nextY + 30}
-                    //         x2={offsetLineX}
-                    //         stroke={COLORS.GREY}
-                    //         strokeWidth={CONNECTOR_WIDTH}
-                    //     />
-                    // );
-                    // elements.push(
-                    //     <Line
-                    //         key={`main-line-lower-${i}`}
-                    //         x1={offsetLineX}
-                    //         y1={currentY + 137}
-                    //         y2={nextY + 30}
-                    //         x2={offsetLineX}
-                    //         stroke={COLORS.GREY}
-                    //         strokeWidth={CONNECTOR_WIDTH}
-                    //     />
-                    // );
-                    // }
-                    //(i + 1 !== lastMealIndex) &&
-                    isPrevPhaseHasMeal && elements.push(
-                        <Line
-                            key={`main-line-lower-${Math.random()}`}
-                            x1={mainLineX}
-                            y1={currentY + GAP_SIZE}
-                            y2={nextY - GAP_SIZE}
-                            // y1={currentY + DOT_SIZE / 2}
-                            x2={mainLineX}
-                            // y2={nextY - GAP_SIZE}
-                            stroke={COLORS.GREY}
-                            strokeWidth={CONNECTOR_WIDTH}
-                        />
-                    );
+                    isPrevPhaseHasMeal
+            && elements.push(
+                <Line
+                    x1={mainLineX}
+                    x2={mainLineX}
+                    stroke={COLORS.GREY}
+                    y2={nextY - GAP_SIZE}
+                    y1={currentY + GAP_SIZE}
+                    strokeWidth={CONNECTOR_WIDTH}
+                    key={`main-line-lower-${Math.random()}`}
+                />
+            );
                 }
             }
         }
-        
-        // handle non-meal phases - create isolated segments with gaps
+
+        // handle non-meal phases
         let currentNonMealStart: number | null = null;
         let nonMealDots: number[] = [];
-        
+
         phases.forEach((phase, index) => {
             const y = index * ROW_HEIGHT + ROW_HEIGHT / 2;
             const isMeal = isMealPhase(phase.type);
-            
+
             if (!isMeal) {
-                // Start or continue non-meal segment
-                if (currentNonMealStart === null) {
-                    currentNonMealStart = y;
-                }
+                if (currentNonMealStart === null) { currentNonMealStart = y; }
                 nonMealDots.push(y);
             } else {
-                // end non-meal segment
                 if (currentNonMealStart !== null && nonMealDots.length > 0) {
-                    // create isolated vertical line for non-meal phases with gaps around dots
                     const startY = currentNonMealStart;
                     const endY = y - ROW_HEIGHT / 2;
-                    
-                    // create segments between dots with gaps
+
                     for (let i = 0; i < nonMealDots.length; i++) {
                         const dotY = nonMealDots[i];
-                        
-                        // upper segment (from previous gap to current dot)
+
                         if (i === 0) {
-                            // first dot - from start to dot
                             elements.push(
                                 <Line
                                     y1={startY}
@@ -209,7 +163,6 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                                 />
                             );
                         } else {
-                            // from previous dot gap to current dot
                             const prevDotY = nonMealDots[i - 1];
                             elements.push(
                                 <Line
@@ -223,153 +176,116 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
                                 />
                             );
                         }
-                        
-                        // lower segment (from current dot to next gap)
+
                         if (i === nonMealDots.length - 1) {
-                            // last dot - from dot to end
                             elements.push(
                                 <Line
                                     x2={offsetLineX}
                                     x1={offsetLineX}
-                                    // y1={dotY + DOT_SIZE / 2}
                                     y1={dotY + GAP_SIZE}
-                                    // y2={endY}
                                     y2={endY + DOT_SIZE}
                                     stroke={COLORS.GREY}
                                     strokeWidth={CONNECTOR_WIDTH}
                                     key={`non-meal-line-lower-${index}-${Math.random()}`}
                                 />
                             );
-                        } else {
-                            // from current dot to next dot gap
-                            // const nextDotY = nonMealDots[i + 1];
-                            // elements.push(
-                            //     // <Line
-                            //     //     key={`non-meal-line-lower-${index}-${i}`}
-                            //     //     x1={offsetLineX}
-                            //     //     y1={dotY + DOT_SIZE / 2}
-                            //     //     x2={offsetLineX}
-                            //     //     y2={nextDotY - DOT_SIZE / 2}
-                            //     //     stroke={COLORS.GREY}
-                            //     //     strokeWidth={CONNECTOR_WIDTH}
-                            //     // />
-                            // );
                         }
                     }
-                    // console.log('elements', elements);
                     currentNonMealStart = null;
                     nonMealDots = [];
                 }
             }
         });
-        
-        // handle case where non-meal phases continue to the end
+
         if (currentNonMealStart !== null && nonMealDots.length > 0) {
             const endY = (phases.length - 1) * ROW_HEIGHT + ROW_HEIGHT / 2;
             const startY = currentNonMealStart;
-            // create segments
             for (let i = 0; i < nonMealDots.length; i++) {
                 const dotY = nonMealDots[i];
                 const isNextPhaseHasMeal = isMealPhase(phases[i + 1].type);
-                // upper segment (from previous gap to current dot)
+
                 if (i === 0) {
-                    // first dot - from start to dot
                     elements.push(
                         <Line
-                            key={`non-meal-line-end-upper-${Math.random()}`}
-                            x1={offsetLineX}
                             y1={startY}
-                            x2={offsetLineX}
-                            y2={dotY - DOT_SIZE / 2}
-                            stroke={COLORS.GREY}
-                            strokeWidth={CONNECTOR_WIDTH}
-                        />
-                    );
-                } else {
-                    // From previous dot gap to current dot
-                    const prevDotY = nonMealDots[i - 1];
-                    !isNextPhaseHasMeal && elements.push(
-                        <Line
                             x1={offsetLineX}
                             x2={offsetLineX}
-                            y2={dotY - GAP_SIZE}
                             stroke={COLORS.GREY}
-                            y1={prevDotY + GAP_SIZE}
+                            y2={dotY - DOT_SIZE / 2}
                             strokeWidth={CONNECTOR_WIDTH}
                             key={`non-meal-line-end-upper-${Math.random()}`}
                         />
                     );
+                } else {
+                    const prevDotY = nonMealDots[i - 1];
+                    !isNextPhaseHasMeal
+            && elements.push(
+                <Line
+                    x1={offsetLineX}
+                    x2={offsetLineX}
+                    y2={dotY - GAP_SIZE}
+                    stroke={COLORS.GREY}
+                    y1={prevDotY + GAP_SIZE}
+                    strokeWidth={CONNECTOR_WIDTH}
+                    key={`non-meal-line-end-upper-${Math.random()}`}
+                />
+            );
                 }
-                
-                // Lower segment (from current dot to next gap)
+
                 if (i === nonMealDots.length - 1) {
-                    // Last dot - from dot to end
                     elements.push(
                         <Line
-                            key={`non-meal-line-end-lower-${Math.random()}`}
-                            x1={offsetLineX}
-                            y1={dotY + DOT_SIZE / 2}
-                            x2={offsetLineX}
                             y2={endY}
+                            x1={offsetLineX}
+                            x2={offsetLineX}
                             stroke={COLORS.GREY}
+                            y1={dotY + DOT_SIZE / 2}
                             strokeWidth={CONNECTOR_WIDTH}
+                            key={`non-meal-line-end-lower-${Math.random()}`}
                         />
                     );
                 } else {
-                    // From current dot to next dot gap
                     const nextDotY = nonMealDots[i + 1];
                     elements.push(
                         <Line
-                            key={`non-meal-line-end-lower-${Math.random()}`}
                             x1={offsetLineX}
-                            // y1={dotY + 55}
-                            y1={dotY + GAP_SIZE}
-                            // y1={checkLineY1}
                             x2={offsetLineX}
-                            y2={nextDotY - GAP_SIZE}
-                            // y2={nextDotY - DOT_SIZE / 2}
+                            y1={dotY + GAP_SIZE}
                             stroke={COLORS.GREY}
+                            y2={nextDotY - GAP_SIZE}
                             strokeWidth={CONNECTOR_WIDTH}
+                            key={`non-meal-line-end-lower-${Math.random()}`}
                         />
                     );
                 }
             }
         }
-        
-        // dots and horizontal connectors
+
+        // dots + horizontal connectors
         phases.forEach((phase, index) => {
             const y = index * ROW_HEIGHT + ROW_HEIGHT / 2;
             const isMeal = isMealPhase(phase.type);
             const dotX = isMeal ? mainLineX : offsetLineX;
             const iconX = dotX + GAP_SIZE + ICON_SIZE / 2 + ICON_MARGIN;
 
-            elements.push(
-                <Circle
-                    key={`dot-${index}`}
-                    cx={dotX}
-                    cy={y}
-                    r={DOT_SIZE / 2}
-                    fill={COLORS.GREY}
-                />
-            );
-
+            elements.push(<Circle key={`dot-${index}`} cx={dotX} cy={y} r={DOT_SIZE / 2} fill={COLORS.GREY} />);
             elements.push(
                 <Line
-                    key={`connector-${index}`}
-                    x1={dotX + GAP_SIZE}
                     y1={y}
-                    x2={iconX - GAP_SIZE / 2}
                     y2={y}
-                    stroke={COLORS.GREY}
                     strokeWidth={1}
+                    x1={dotX + GAP_SIZE}
+                    stroke={COLORS.GREY}
                     strokeDasharray="2,2"
+                    x2={iconX - GAP_SIZE / 2}
+                    key={`connector-${index}`}
                 />
             );
         });
-        
+
         return elements;
     }, [phases, svgHeight]);
-    
+
     return (
         <Svg width={SCREEN_WIDTH} height={svgHeight} style={{ position: 'absolute', top: 0, left: 0 }}>
             {timelineElements}
@@ -386,7 +302,6 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        // paddingHorizontal: 16,
         paddingBottom: 20,
     },
     row: {
@@ -418,6 +333,10 @@ const styles = StyleSheet.create({
     timelineContainer: {
         position: 'relative',
         minHeight: 0,
+    },
+    birdOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 2,
     },
 });
 
@@ -451,7 +370,6 @@ export const Overview: React.FC = () => {
     const currentDate = date || moment().format('YYYY-MM-DD');
 
     useEffect(() => {
-        console.log('date', date);
         navigation.setOptions({
             headerTitle: () => (
                 <TimeSwitcher
@@ -463,27 +381,24 @@ export const Overview: React.FC = () => {
                         const isCurrent = moment(nextDate).isSame(moment(), 'day');
                         const isFuture = moment(nextDate).isAfter(moment(), 'day');
                         const isPast = moment(nextDate).isBefore(moment(), 'day');
-                        dispatch(meta({
-                            date: nextDate,
-                            isPastDate: isPast,
-                            isFutureDate: isFuture,
-                            isCurrentDate: isCurrent,
-                            calendarDays: { [nextDate]: { selected: true } },
-                        }));
-                    // RTK Query hook depends on date arg; changing date triggers automatic refetch
+                        dispatch(
+                            meta({
+                                date: nextDate,
+                                isPastDate: isPast,
+                                isFutureDate: isFuture,
+                                isCurrentDate: isCurrent,
+                                calendarDays: { [nextDate]: { selected: true } },
+                            })
+                        );
                     }}
                 />
-                // <Text style={{ color: COLORS.WHITE, fontSize: 18, fontWeight: '600' }}>
-                //     {moment(date).format('ddd, MMM Do')}
-                // </Text>
-            )
+            ),
         });
     }, [date, dispatch, navigation, currentDate, expectAnswer]);
 
-    // Skip query if no date available
     const { data, isLoading, isFetching } = useGetDayOverviewQuery(currentDate, {
         skip: !currentDate,
-        refetchOnMountOrArgChange: true
+        refetchOnMountOrArgChange: true,
     });
 
     useEffect(() => {
@@ -508,17 +423,22 @@ export const Overview: React.FC = () => {
             if (p.type === 'MEASUREMENT') { return sum + (p.items?.length || 0); }
             return sum + 1;
         }, 0);
-        dispatch(setDateEntry({ date: currentDate, entry: { overview: data as any, countPhases } }));
+        dispatch(setDateEntry({
+            date: currentDate,
+            entry: {
+                countPhases,
+                overview: data as any,
+                anytimePhaseId: data.anytimePhaseId
+            }
+        }));
     }, [data, currentDate, dispatch]);
 
     const phases: PhaseItem[] = useMemo(() => {
         if (!data?.phases) { return []; }
-        
         const rows: PhaseItem[] = [];
 
         data.phases.forEach((p: Phase) => {
             if (p.type === 'MEASUREMENT') {
-                // expand measurement phases into individual items
                 const items = [...(p.items || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
                 items.forEach(item => {
                     rows.push({
@@ -530,8 +450,9 @@ export const Overview: React.FC = () => {
                         status: item.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
                     });
                 });
-            } else if (['MEAL', 'MEDICATION', 'SUPPLEMENT', 'PHYSICAL_ACTIVITY', 'ADDED_BY_PATIENT'].includes(p.type)) {
-                // handle other phase types
+            } else if (
+                ['MEAL', 'MEDICATION', 'SUPPLEMENT', 'PHYSICAL_ACTIVITY', 'ADDED_BY_PATIENT'].includes(p.type)
+            ) {
                 rows.push({
                     id: p.id,
                     sortKey: p.order ?? 0,
@@ -549,32 +470,38 @@ export const Overview: React.FC = () => {
 
     const handlePhasePress = (phase: PhaseItem) => {
         if ((phase.type === 'MEASUREMENT' || phase.type === 'ANYTIME') && phase.phaseId) {
-            // TODO: check nav point after create component
-            (navigation as any).navigate('Edit', {
-                phaseId: phase.phaseId,
-                date: currentDate
-            });
+            (navigation as any).navigate('Edit', { phaseId: phase.phaseId, date: currentDate });
         } else if (phase.type === 'PHYSICAL_ACTIVITY') {
+            // Find the physical activity phase for status tracking
+            const physicalActivityPhase = data?.phases?.find(p => p.type === 'PHYSICAL_ACTIVITY');
+            
             (navigation as any).navigate('ExerciseCategories', {
-                date: currentDate,
-                parentNavigation: navigation,
                 list: [],
                 deepCounter: 0,
+                date: currentDate,
+                parentNavigation: navigation,
+                onClose: () => navigation.goBack(),
+                deepPhaseId: physicalActivityPhase?.id,
+                exercisePhaseStatus: physicalActivityPhase?.status,
+                onRefresh: () => {
+                    // Refetch day overview data to update UI
+                    dispatch(setDateEntry({
+                        date: currentDate,
+                        entry: { needsRefresh: true }
+                    }));
+                }
             });
         } else {
-            (navigation as any).navigate('Edit', {
-                phaseId: phase.id,
-                date: currentDate
-            });
+            (navigation as any).navigate('Edit', { phaseId: phase.id, date: currentDate });
         }
     };
 
     if (isLoading) {
         return (
-            <Screen initialized={true} style={styles.container}>
+            <Screen initialized style={styles.container}>
                 <View style={styles.content}>
                     <Text variant="h3" style={{ marginTop: 12, marginBottom: 8, color: theme.colors.text }}>
-                        Loading...
+            Loading...
                     </Text>
                 </View>
             </Screen>
@@ -582,19 +509,16 @@ export const Overview: React.FC = () => {
     }
 
     return (
-        <Screen initialized={true} style={styles.container}>
+        <Screen initialized style={styles.container}>
             <View style={styles.content}>
-                <Text style={styles.title}>
-                    My Daily Plan
-                </Text>
+                <Text style={styles.title}>My Daily Plan</Text>
 
                 <View style={styles.timelineContainer}>
                     <FlatList
                         data={phases}
-                        // scrollEnabled={false}
                         keyExtractor={item => String(item.id)}
                         ListHeaderComponent={<TimelineSVG phases={phases} />}
-                        renderItem={({ item, index }) => {
+                        renderItem={({ item }) => {
                             const { bg, fg, name } = getIconColorByType(item.type);
                             const isMeal = isMealPhase(item.type);
                             const iconMarginLeft = isMeal
@@ -602,11 +526,7 @@ export const Overview: React.FC = () => {
                                 : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
 
                             return (
-                                <TouchableOpacity
-                                    key={String(item.id)}
-                                    style={styles.row}
-                                    onPress={() => handlePhasePress(item)}
-                                >
+                                <TouchableOpacity key={String(item.id)} style={styles.row} onPress={() => handlePhasePress(item)}>
                                     <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: iconMarginLeft }]}>
                                         <Icon name={name} color={fg} size={18} />
                                     </View>
@@ -615,7 +535,7 @@ export const Overview: React.FC = () => {
                                             {item.title}
                                         </Text>
                                         <Text style={{ color: theme.colors.text, fontSize: 12, marginTop: 4 }}>
-                                            Status: {item.status || 'Unknown'}
+                      Status: {item.status || 'Unknown'}
                                         </Text>
                                     </View>
                                 </TouchableOpacity>
@@ -624,6 +544,12 @@ export const Overview: React.FC = () => {
                     />
                 </View>
             </View>
+
+            {/* Anytime Menu */}
+            <AnytimeMenu
+                date={currentDate}
+                disabled={Boolean(expectAnswer) || isLoading}
+            />
         </Screen>
     );
 };

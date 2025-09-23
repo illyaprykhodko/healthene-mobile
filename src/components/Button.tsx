@@ -39,10 +39,18 @@ export const Button: React.FC<ButtonProps> = ({
     const theme = useTheme();
 
     const getBackgroundColor = () => {
-        if (disabled) { return theme.colors.textSecondary; }
+        if (disabled) {
+            switch (variant) {
+                case 'primary':
+                    return theme.colors.muted;
+                default:
+                    return theme.colors.textSecondary;
+            }
+        }
         switch (variant) {
             case 'primary':
-                return theme.colors.primary;
+                return theme.colors.successAlt;
+                // return theme.colors.primary;
             case 'secondary':
                 return theme.colors.secondary;
             case 'outline':
@@ -54,11 +62,19 @@ export const Button: React.FC<ButtonProps> = ({
     };
 
     const getTextColor = () => {
-        if (disabled) { return theme.colors.textSecondary; }
+        if (disabled) {
+            switch (variant) {
+                case 'primary':
+                    return theme.colors.textMuted;
+                default:
+                    return theme.colors.textSecondary;
+            }
+        }
         switch (variant) {
             case 'primary':
             case 'secondary':
-                return theme.colors.background;
+                // return theme.colors.background;
+                return theme.colors.successAltText;
             case 'outline':
             case 'text':
                 return theme.colors.primary;
@@ -121,9 +137,9 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
     button: {
+        minHeight: 44,
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: 44,
     },
     outline: {
         borderWidth: 1,

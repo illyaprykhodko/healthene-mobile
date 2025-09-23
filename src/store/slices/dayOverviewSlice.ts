@@ -9,6 +9,7 @@ import { RootState } from '..';
 export interface DayOverviewByDateEntry {
   overview: any | null;
   countPhases: number | null;
+  needsRefresh?: boolean | null;
   anytime?: Record<string, any> | null;
   anytimePhaseId?: string | number | null;
 }
