@@ -36,7 +36,6 @@ export default defineConfig([
             "react/jsx-key": ["warn"],
             "react/forbid-prop-types": ["warn", { "forbid": ["any"] }],
             "react/prefer-stateless-function": ["warn", { "ignorePureComponents": true }],
-            "react/prop-types": ["error"],
             "react/no-unused-state": ["error"],
             "react/no-unused-prop-types": ["error"],
             "react/require-default-props": ["off"],
