@@ -20,6 +20,7 @@ export interface DayOverviewResponse {
     anytime?: Phase;
     patient?: Phase;
     id: number | string;
+    anytimePhaseId?: number | string;
     currentWeekIncompleteDays?: Array<{ date: string }>;
 }
 
@@ -150,25 +151,29 @@ export const dayOverviewApi = createApi({
         getDayOverview: builder.query<DayOverviewResponse, string>({
             query: date => `/patient-service/patients/me/day-overview/${date}`,
             providesTags: (result, error, date) => [{ type: 'DayOverview', id: date }],
-            transformResponse: (success: any): DayOverviewResponse => ({
-                ...success,
-                phases: (success?.phases || [])
-                    .filter((item: Phase) =>
-                        [
-                            'MEAL',
-                            'ANYTIME',
-                            'QUESTION',
-                            'MEDICATION',
-                            'SUPPLEMENT',
-                            'MEASUREMENT',
-                            'ADDED_BY_PATIENT',
-                            'PHYSICAL_ACTIVITY',
-                        ].includes(item.type)
-                    )
-                    .sort((a: Phase, b: Phase) => (a.order ?? 0) - (b.order ?? 0)),
-                anytime: (success?.phases || []).find((i: Phase) => i.type === 'ANYTIME'),
-                patient: (success?.phases || []).find((i: Phase) => i.type === 'ADDED_BY_PATIENT'),
-            }),
+            transformResponse: (success: any): DayOverviewResponse => {
+                const anytimePhase = (success?.phases || []).find((i: Phase) => i.type === 'ANYTIME');
+                return {
+                    ...success,
+                    phases: (success?.phases || [])
+                        .filter((item: Phase) =>
+                            [
+                                'MEAL',
+                                'ANYTIME',
+                                'QUESTION',
+                                'MEDICATION',
+                                'SUPPLEMENT',
+                                'MEASUREMENT',
+                                'ADDED_BY_PATIENT',
+                                'PHYSICAL_ACTIVITY',
+                            ].includes(item.type)
+                        )
+                        .sort((a: Phase, b: Phase) => (a.order ?? 0) - (b.order ?? 0)),
+                    anytime: anytimePhase,
+                    patient: (success?.phases || []).find((i: Phase) => i.type === 'ADDED_BY_PATIENT'),
+                    anytimePhaseId: anytimePhase?.id,
+                };
+            },
         }),
   
         getPhaseItems: builder.query<Record<string, any[]>, number | string>({
@@ -237,7 +242,7 @@ export const dayOverviewApi = createApi({
   
         updatePhaseItem: builder.mutation<
         PhaseItem,
-        { id: number | string; phaseId: number | string; data: Partial<PhaseItem> }
+        { id: number | string; phaseId: number | string; data: Partial<PhaseItem>; date?: string }
       >({
           query: ({ id, data }) => ({
               url: `/patient-service/patients/day-overview/phase/item/${id}`,
@@ -247,8 +252,9 @@ export const dayOverviewApi = createApi({
           invalidatesTags: (result, error, { id, phaseId }) => [
               { type: 'PhaseItem', id },
               { type: 'PhaseItems', id: phaseId },
+              'DayOverview',
           ],
-          async onQueryStarted ({ id, phaseId, data }, { dispatch, queryFulfilled }) {
+          async onQueryStarted ({ id, phaseId, data, date }, { dispatch, queryFulfilled }) {
               const patch = dispatch(
                   dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
                       for (const arr of Object.values(draft) as any[][]) {
@@ -261,10 +267,34 @@ export const dayOverviewApi = createApi({
                       }
                   })
               );
+
+              // Optimistically update DayOverview cache if we know the date
+              let dayOverviewPatched: any | null = null;
+              if (date) {
+                  try {
+                      dayOverviewPatched = dispatch(
+                          dayOverviewApi.util.updateQueryData('getDayOverview', date, (draft: any) => {
+                              if (!draft?.phases) { return; }
+                              for (const phase of draft.phases) {
+                                  if (Array.isArray(phase.items)) {
+                                      const item = (phase.items as any[]).find(x => x.id === id);
+                                      if (item) {
+                                          Object.assign(item, data);
+                                          break;
+                                      }
+                                  }
+                              }
+                          })
+                      );
+                  } catch {
+                      /* ignore */
+                  }
+              }
               try {
                   await queryFulfilled;
               } catch {
                   patch.undo();
+                  if (dayOverviewPatched) { dayOverviewPatched.undo(); }
               }
           },
       }),

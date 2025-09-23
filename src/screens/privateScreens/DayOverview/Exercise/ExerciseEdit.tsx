@@ -70,17 +70,18 @@ export default function ExerciseEdit ({ route, navigation }: any) {
 
         const handleApply = useCallback((vals: Record<string, number>) => {
             const updatedSteps = steps.map((s: any) =>
-                (s.id === itemId ? { ...s, ...vals } : s)
+                (s.id === itemId ? { ...s, ...vals, modified: true } : s)
             );
             dispatch(updateSteps({ steps: updatedSteps, selectedSteps: updatedSteps }));
             
-            // call onApply if provided
-            onApply?.({ ...step, ...vals });
+            // call onApply if provided - this actually saves the changes
+            onApply?.({ ...step, ...vals, modified: true });
         }, [dispatch, itemId, onApply, step, steps]);
 
         const handleSave = useCallback(() => {
+            handleApply(step);
             navigation.goBack();
-        }, [navigation]);
+        }, [navigation, handleApply, step]);
 
         return (
             <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>

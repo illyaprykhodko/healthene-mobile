@@ -1,20 +1,24 @@
-import React, { useCallback, useRef, useState, useEffect, useLayoutEffect, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
-import Text from 'components/Text';
-import Screen from 'components/Screen';
-import Checkbox from 'components/Checkbox';
-import { COLORS } from 'constants/colors';
-import { PHASE_ITEM_STATUS } from '../types';
+// outsource dependencies
 import { useRoute, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useRef, useState, useEffect, useLayoutEffect, useMemo } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image } from 'react-native';
+// local dependencies
+import { ExerciseType } from 'types';
+import { useTheme } from 'hooks/useTheme';
+import { PHASE_ITEM_STATUS } from '../types';
+import { EXERCISE_CONFIGS } from './exerciseFactory';
 import { useAppDispatch, useAppSelector } from 'store';
 import { initializeExercise, updateSteps, setLoading, clearExercise } from 'store/slices/exerciseSlice';
-import { useGetPhysicalActivityItemQuery, useGetStretchingExerciseQuery, useGetAerobicExerciseQuery, useGetResistanceExerciseQuery, useUpdateStretchingStepsMutation, useUpdateAerobicStepsMutation, useUpdateResistanceStepsMutation } from 'store/api/dayOverviewApi';
-import { ExerciseType } from 'types';
-import { EXERCISE_CONFIGS } from './exerciseFactory';
+import { useGetPhysicalActivityItemQuery, useGetStretchingExerciseQuery, useGetAerobicExerciseQuery, useGetResistanceExerciseQuery, useUpdateStretchingStepsMutation, useUpdateAerobicStepsMutation, useUpdateResistanceStepsMutation, useUpdatePhaseItemMutation } from 'store/api/dayOverviewApi';
+// components
+import Text from 'components/Text';
+import Screen from 'components/Screen';
+import { COLORS } from 'constants/colors';
+import Checkbox from 'components/Checkbox';
+import { HTMLView } from 'components/HTMLView';
 import { YoutubeVideo } from 'components/YoutubeVideo';
 import { PrivateVideo } from 'components/PrivateVideo';
 import { SwipeablePanel } from 'components/SwipeablePanel';
-import { HTMLView } from 'components/HTMLView';
 
 // Helper function to get exercise step parameters
 const getExerciseStepParams = (exercise: any, step: any, subtype: any) => ({
@@ -34,10 +38,11 @@ const humanize = (text: string) => {
 };
 
 export default function ExerciseDetails () {
+    const theme = useTheme();
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
-    const { exercise, updatePhaseItem, refreshCurrentList, parentNavigation } = route.params || {};
+    const { exercise, refreshCurrentList, parentNavigation, deepPhaseId, date } = route.params || {};
     const [showGoodWork, setShowGoodWork] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const title = exercise?.title || 'Exercise';
@@ -136,13 +141,13 @@ export default function ExerciseDetails () {
                     scientificVideo: exerciseData?.scientificVideo,
                 };
                 
-                console.log('ExerciseDetails - processedData:', processedData);
-                console.log('ExerciseDetails - steps:', processedData.steps);
+                // console.log('ExerciseDetails - processedData:', processedData);
+                // console.log('ExerciseDetails - steps:', processedData.steps);
                 
                 dispatch(initializeExercise({
                     id: exercise.id,
                     exerciseType: exercise.type,
-                    data: processedData
+                    data: { ...processedData, isDirty: false }
                 }));
             }
         }
@@ -169,9 +174,17 @@ export default function ExerciseDetails () {
     const [updateStretchingSteps] = useUpdateStretchingStepsMutation();
     const [updateAerobicSteps] = useUpdateAerobicStepsMutation();
     const [updateResistanceSteps] = useUpdateResistanceStepsMutation();
+    const [updatePhaseItemApi] = useUpdatePhaseItemMutation();
 
     const updateExerciseDataCallback = useCallback(async (status: string, steps: any[]) => {
-        updatePhaseItem?.({ ...exercise, status });
+        // Persist phase item status first
+        if (exercise?.id && deepPhaseId) {
+            try {
+                await updatePhaseItemApi({ id: exercise.id, phaseId: deepPhaseId, data: { status }, date }).unwrap();
+            } catch (error) {
+                console.error('Failed to update phase item status:', error);
+            }
+        }
         
         // Update steps via API
         const updateMutation = exercise?.type === ExerciseType.STRETCHING
@@ -186,6 +199,7 @@ export default function ExerciseDetails () {
             try {
                 dispatch(setLoading(true));
                 await updateMutation(steps).unwrap();
+                // info: mutation executed
                 // await updateMutation({ steps }).unwrap();
                 dispatch(setLoading(false));
             } catch (error) {
@@ -193,7 +207,7 @@ export default function ExerciseDetails () {
                 dispatch(setLoading(false));
             }
         }
-    }, [updatePhaseItem, exercise?.id, exercise?.type, updateStretchingSteps, updateAerobicSteps, updateResistanceSteps, dispatch]);
+    }, [updatePhaseItemApi, deepPhaseId, exercise?.id, exercise?.type, updateStretchingSteps, updateAerobicSteps, updateResistanceSteps, dispatch]);
 
     const handleDone = useCallback(async () => {
         setShowGoodWork(true);
@@ -214,17 +228,25 @@ export default function ExerciseDetails () {
             ? PHASE_ITEM_STATUS.DONE
             : memoizedSteps.some((step: any) => step.completed) ? PHASE_ITEM_STATUS.INCOMPLETE : PHASE_ITEM_STATUS.PENDING;
         
-        if (nextStatus === PHASE_ITEM_STATUS.DONE) {
-            setTimeout(() => {
-                navigation.goBack();
-            }, 700);
+        // Save changes and reset dirty flag
+        try {
+            await updateExerciseDataCallback(nextStatus, memoizedSteps);
+            dispatch(updateSteps({
+                isDirty: false, // Reset dirty flag after successful save
+                steps: memoizedSteps,
+                selectedSteps: memoizedSteps.filter((step: any) => step.completed),
+            }));
             refreshCurrentList?.(exercise.id, 'status', nextStatus);
-            updateExerciseDataCallback(nextStatus, memoizedSteps);
-        } else {
-            refreshCurrentList?.(exercise.id, 'status', nextStatus);
-            updateExerciseDataCallback(nextStatus, memoizedSteps);
+            
+            if (nextStatus === PHASE_ITEM_STATUS.DONE) {
+                setTimeout(() => {
+                    navigation.goBack();
+                }, 700);
+            }
+        } catch (error) {
+            console.error('Failed to save exercise:', error);
         }
-    }, [memoizedSteps, exercise?.id, refreshCurrentList, updateExerciseDataCallback, navigation, fadeAnim]);
+    }, [memoizedSteps, exercise?.id, refreshCurrentList, updateExerciseDataCallback, navigation, fadeAnim, dispatch]);
 
     // Panel state for video/instruction
     const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -238,7 +260,8 @@ export default function ExerciseDetails () {
         );
         dispatch(updateSteps({
             steps: updatedSteps,
-            selectedSteps: updatedSteps.filter((step: any) => step.completed)
+            selectedSteps: updatedSteps.filter((step: any) => step.completed),
+            isDirty: true
         }));
     }, [memoizedSteps, dispatch]);
 
@@ -248,7 +271,8 @@ export default function ExerciseDetails () {
         );
         dispatch(updateSteps({
             steps: updatedSteps,
-            selectedSteps: updatedSteps.filter((step: any) => step.completed)
+            selectedSteps: updatedSteps.filter((step: any) => step.completed),
+            isDirty: true
         }));
     }, [memoizedSteps, dispatch]);
 
@@ -278,8 +302,8 @@ export default function ExerciseDetails () {
 
     // Render exercise content
     const renderExerciseContent = useCallback(() => {
-        console.log('renderExerciseContent - steps:', memoizedSteps);
-        console.log('renderExerciseContent - steps length:', memoizedSteps?.length);
+        // console.log('renderExerciseContent - steps:', memoizedSteps);
+        // console.log('renderExerciseContent - steps length:', memoizedSteps?.length);
         return (memoizedSteps || []).map((step: any) => {
             const { id: itemId, image, instruction, video, completed, modified } = step;
             const exerciseParams = getExerciseStepParams(exercise, step, subtype) || {};
@@ -316,9 +340,11 @@ export default function ExerciseDetails () {
                     
                     {image ? (
                         <View style={styles.imageContainer}>
-                            <Text style={[styles.image, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.5 }]}>
-                                Image: {image?.url || 'No URL'}
-                            </Text>
+                            <Image
+                                resizeMode="contain"
+                                source={{ uri: image?.url }}
+                                style={[styles.image, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.5 }]}
+                            />
                         </View>
                     ) : null}
                     
@@ -408,15 +434,15 @@ export default function ExerciseDetails () {
     }, [dispatch, memoizedSteps]);
     
     return (
-        <Screen initialized={!isLoading} clear={() => {}} style={styles.container}>
+        <Screen initialized={!isLoading} clear={() => {}} style={[styles.container, { backgroundColor: theme.colors.background }]}>
             {renderTabs()}
-            <View style={styles.headerBanner}>
+            <View style={[styles.headerBanner, { backgroundColor: theme.colors.surface }]}>
                 <View style={styles.row} />
-                <Text textAlign="center" color={COLORS.BLACK} style={styles.name}>
+                <Text textAlign="center" style={[styles.name, { color: theme.colors.text }]}>
                     {title}
                 </Text>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={{ fontSize: 24, color: COLORS.BLACK }}>×</Text>
+                    <Text style={{ fontSize: 24, color: theme.colors.text }}>×</Text>
                 </TouchableOpacity>
             </View>
             <ScrollView>

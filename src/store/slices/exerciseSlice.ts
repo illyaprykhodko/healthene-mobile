@@ -132,14 +132,19 @@ const exerciseSlice = createSlice({
             state.isDirty = false;
         },
         
-        // Update steps and selectedSteps (like in original code)
+        // Update steps and selectedSteps
         updateSteps: (state, action: PayloadAction<{
             steps: ExerciseStep[];
             selectedSteps: ExerciseStep[];
+            isDirty?: boolean;
         }>) => {
             state.steps = action.payload.steps;
             state.selectedSteps = action.payload.selectedSteps;
-            state.isDirty = true;
+            if (action.payload.isDirty !== undefined) {
+                state.isDirty = action.payload.isDirty;
+            } else {
+                state.isDirty = true;
+            }
         },
         
         // Set loading state
