@@ -50,31 +50,6 @@ const DayOverviewStack: React.FC = () => {
             headerTitleStyle: {
                 fontWeight: '600',
             },
-            headerTitle: () => (
-                <TimeSwitcher
-                    date={currentDate}
-                    isHideLeftBtn={false}
-                    isHideRightBtn={false}
-                    disabled={Boolean(expectAnswer)}
-                    init={({ date: nextDate }) => {
-                        const isCurrent = moment(nextDate).isSame(moment(), 'day');
-                        const isFuture = moment(nextDate).isAfter(moment(), 'day');
-                        const isPast = moment(nextDate).isBefore(moment(), 'day');
-                        dispatch(
-                            meta({
-                                date: nextDate,
-                                isPastDate: isPast,
-                                isFutureDate: isFuture,
-                                isCurrentDate: isCurrent,
-                                calendarDays: { [nextDate]: { selected: true } },
-                            })
-                        );
-                    }}
-                />
-            ),
-            headerLeft: () => (
-                <BackButton navigation={navigation} theme={theme} />
-            ),
             headerRight: () => (
                 <Hamburger onPress={() => (navigation as any).openDrawer?.()} style={styles.menuButton} />
             ),
@@ -82,21 +57,66 @@ const DayOverviewStack: React.FC = () => {
             <Stack.Screen
                 name="DayOverview"
                 component={Overview}
+                options={() => ({ title: 'Day Overview', headerTitle: () => (
+                    <TimeSwitcher
+                        date={currentDate}
+                        isHideLeftBtn={false}
+                        isHideRightBtn={false}
+                        disabled={Boolean(expectAnswer)}
+                        init={({ date: nextDate }) => {
+                            const isCurrent = moment(nextDate).isSame(moment(), 'day');
+                            const isFuture = moment(nextDate).isAfter(moment(), 'day');
+                            const isPast = moment(nextDate).isBefore(moment(), 'day');
+                            dispatch(
+                                meta({
+                                    date: nextDate,
+                                    isPastDate: isPast,
+                                    isFutureDate: isFuture,
+                                    isCurrentDate: isCurrent,
+                                    calendarDays: { [nextDate]: { selected: true } },
+                                })
+                            );
+                        }}
+                    />
+                ),
+                headerLeft: () => (
+                    <BackButton navigation={navigation} theme={theme} />
+                ), })}
             />
             <Stack.Screen
                 name="Item"
                 component={Item}
-                options={({ route, navigation }) => ({
+                options={{
                     title: 'Item Details',
-                    headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
-                })}
+                }}
             />
             <Stack.Screen
                 name="Edit"
                 component={Edit}
-                options={({ route, navigation }) => ({
+                options={() => ({
                     title: 'Edit',
-                    headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
+                    headerTitle: () => (
+                        <TimeSwitcher
+                            date={currentDate}
+                            isHideLeftBtn={false}
+                            isHideRightBtn={false}
+                            disabled={Boolean(expectAnswer)}
+                            init={({ date: nextDate }) => {
+                                const isCurrent = moment(nextDate).isSame(moment(), 'day');
+                                const isFuture = moment(nextDate).isAfter(moment(), 'day');
+                                const isPast = moment(nextDate).isBefore(moment(), 'day');
+                                dispatch(
+                                    meta({
+                                        date: nextDate,
+                                        isPastDate: isPast,
+                                        isFutureDate: isFuture,
+                                        isCurrentDate: isCurrent,
+                                        calendarDays: { [nextDate]: { selected: true } },
+                                    })
+                                );
+                            }}
+                        />
+                    )
                 })}
             />
             <Stack.Screen
@@ -104,7 +124,14 @@ const DayOverviewStack: React.FC = () => {
                 component={AddReplaceItem}
                 options={({ route, navigation }) => ({
                     title: 'Select Item',
-                    headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
+                    headerTitle: () =>
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
                 })}
             />
             <Stack.Screen
@@ -112,9 +139,30 @@ const DayOverviewStack: React.FC = () => {
                 component={UPCScan}
                 options={{ title: 'Scan UPC Code' }}
             />
-            <Stack.Screen name="ExerciseCategories" component={ExerciseCategories} options={{ title: 'Exercise' }} />
-            <Stack.Screen name="ExerciseDetails" component={ExerciseDetails} options={{ title: 'Exercise Details' }} />
-            <Stack.Screen name="EditExercise" component={ExerciseEdit} options={{ title: 'Edit Exercise' }} />
+            <Stack.Screen name="ExerciseCategories" component={ExerciseCategories} options={{ title: 'Exercise', headerTitle: () =>
+                <TimeSwitcher
+                    disabled
+                    isHideLeftBtn
+                    isHideRightBtn
+                    init={() => {}}
+                    date={currentDate}
+                /> }} />
+            <Stack.Screen name="ExerciseDetails" component={ExerciseDetails} options={{ title: 'Exercise Details', headerTitle: () =>
+                <TimeSwitcher
+                    disabled
+                    isHideLeftBtn
+                    isHideRightBtn
+                    init={() => {}}
+                    date={currentDate}
+                /> }} />
+            <Stack.Screen name="EditExercise" component={ExerciseEdit} options={{ title: 'Edit Exercise', headerTitle: () =>
+                <TimeSwitcher
+                    disabled
+                    isHideLeftBtn
+                    isHideRightBtn
+                    init={() => {}}
+                    date={currentDate}
+                /> }} />
         </Stack.Navigator>
     );
 };
