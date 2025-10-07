@@ -9,6 +9,7 @@ interface BadgeProps {
   children: React.ReactNode;
   count: number;
   showZero?: boolean;
+  bgColor?: string;
 }
 
 const styles = StyleSheet.create({
@@ -17,8 +18,8 @@ const styles = StyleSheet.create({
     },
     badge: {
         position: 'absolute',
-        top: -5,
-        right: -5,
+        top: -10,
+        right: -10,
         backgroundColor: '#f55353',
         borderRadius: 10,
         minWidth: 20,
@@ -38,7 +39,8 @@ const styles = StyleSheet.create({
 export const Badge: React.FC<BadgeProps> = ({
     children,
     count,
-    showZero = false
+    showZero = false,
+    bgColor,
 }) => {
     const theme = useTheme();
     const shouldShowBadge = count > 0 || (showZero && count === 0);
@@ -48,8 +50,8 @@ export const Badge: React.FC<BadgeProps> = ({
         <View style={styles.container}>
             {children}
             {shouldShowBadge && (
-                <View style={[styles.badge, { backgroundColor: theme.colors.error }]}>
-                    <Text style={[styles.badgeText, { color: theme.colors.white }]}>
+                <View style={[styles.badge, { backgroundColor: bgColor || theme.colors.aqua }]}>
+                    <Text style={[styles.badgeText, { color: theme.colors.black }]}>
                         {displayCount}
                     </Text>
                 </View>

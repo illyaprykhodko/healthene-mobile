@@ -7,7 +7,6 @@ import {
     ScrollView,
     TouchableOpacity,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // local dependencies
 import { Badge } from './Badge';
@@ -16,30 +15,33 @@ import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { AnytimeListItem } from './AnytimeListItem';
+import {
+    FoodIcon,
+    DrinkIcon,
+    CloseIcon,
+    ActivityIcon,
+    SupplementIcon,
+    MeasurementIcon,
+} from './AnytimeIcons';
 import type { AnytimeItem, AnytimeModalProps } from 'types/anytime';
 import { useUpdatePhaseItemMutation } from 'store/api/dayOverviewApi';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const getIconComponent = (icon: string, color: string) => {
-    const iconProps = {
-        size: 24,
-        color,
-    };
-
+const getIconComponent = (icon: string, size: number = 24) => {
     switch (icon) {
         case 'utensils':
-            return <Icon name="utensils" {...iconProps} />;
+            return <FoodIcon size={size} />;
         case 'glass-martini':
-            return <Icon name="glass-martini" {...iconProps} />;
+            return <DrinkIcon size={size} />;
         case 'capsules':
-            return <Icon name="capsules" {...iconProps} />;
+            return <SupplementIcon size={16} />;
         case 'ruler':
-            return <Icon name="ruler" {...iconProps} />;
+            return <MeasurementIcon size={size} />;
         case 'running':
-            return <Icon name="running" {...iconProps} />;
+            return <ActivityIcon size={size} />;
         default:
-            return <Icon name="circle" {...iconProps} />;
+            return <FoodIcon size={size} />;
     }
 };
 
@@ -85,7 +87,9 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
         const baseStyle = styles.modal;
         
         if (fullScreen) {
-            return [baseStyle, { top: insets.top, paddingBottom: insets.bottom }];
+            return [baseStyle, { paddingBottom: insets.bottom }];
+            // Align to below DayOverview header (menu + TimeSwitcher), full height to bottom
+            // return [baseStyle, { top: headerHeight }];
         }
         
         // Partial mode
@@ -113,11 +117,13 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
             />
       
             <View style={[getModalStyle(), { backgroundColor: theme.colors.surface }]}>
-                <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+                <View style={[styles.header, { backgroundColor: '#E0EBF7', borderBottomColor: theme.colors.border }]}>
                     <View style={styles.headerLeft}>
-                        <Badge count={pendingItems.length}>
-                            {getIconComponent(icon, theme.colors.blue)}
+                        {/* <View style={styles.badgeContainer}> */}
+                        <Badge count={pendingItems.length} bgColor={theme.colors.aqua} showZero>
+                            {getIconComponent(icon, 24)}
                         </Badge>
+                        {/* </View> */}
                         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
                             {title}
                         </Text>
@@ -128,16 +134,24 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                         disabled={disabled}
                         style={styles.closeButton}
                     >
-                        <Icon name="times" size={20} color={theme.colors.text} />
+                        <CloseIcon size={24} color="#181818" />
                     </TouchableOpacity>
                 </View>
 
                 <View style={styles.content}>
-                    {items.length === 0 ? (
+                    {icon === 'ruler' ? (
+                        <View style={styles.emptyState}>
+                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>Feature in development</Text>
+                        </View>
+                    ) : icon === 'running' ? (
                         <View style={styles.emptyState}>
                             <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                No items found
+                                Exercise functionality will be implemented separately
                             </Text>
+                        </View>
+                    ) : items.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No items found</Text>
                         </View>
                     ) : (
                         <ScrollView style={styles.scrollView}>
@@ -209,12 +223,12 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         marginLeft: 16,
-        fontSize: 18,
-        fontWeight: '600',
-        color: COLORS.BLACK,
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#181818',
     },
     closeButton: {
-        padding: 8,
+        // padding: 8,
         borderRadius: 20,
     },
     content: {
