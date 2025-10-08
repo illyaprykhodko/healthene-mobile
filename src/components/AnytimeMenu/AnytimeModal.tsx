@@ -63,19 +63,13 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
     const pendingItems = items.filter(item => item.status === PHASE_ITEM_STATUS.PENDING);
     const completedItems = items.filter(item => item.status === PHASE_ITEM_STATUS.DONE);
 
-    const handleUpdateItem = async (item: AnytimeItem) => {
-        if (disabled || !item.phaseId) { return; }
-
-        const newStatus = item.status === PHASE_ITEM_STATUS.PENDING ? PHASE_ITEM_STATUS.DONE : PHASE_ITEM_STATUS.PENDING;
-    
+    const handleUpdateItem = async (data: AnytimeItem) => {
+        if (disabled || !data.phaseId) { return; }
         try {
             await updatePhaseItem({
-                id: item.id,
-                phaseId: item.phaseId,
-                data: {
-                    ...item,
-                    status: newStatus,
-                },
+                id: data.id,
+                phaseId: data.phaseId,
+                data,
             }).unwrap();
         } catch (error) {
             console.error('Failed to update anytime item:', error);

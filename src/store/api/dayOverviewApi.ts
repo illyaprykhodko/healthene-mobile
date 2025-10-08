@@ -38,9 +38,11 @@ export interface PhaseItem {
     amount?: number;
     section?: string;
     measurement?: any;
+    modified?: boolean;
     id: string | number;
     initialAmount?: number;
-    modified?: boolean;
+    /** Amount that has been consumed so far (client + server contract) */
+    consumedAmount?: number;
     weight?: {
         unit: {
             name: string;
@@ -247,7 +249,7 @@ export const dayOverviewApi = createApi({
           query: ({ id, data }) => ({
               url: `/patient-service/patients/day-overview/phase/item/${id}`,
               method: 'PUT',
-              body: data,
+              body: data, // Pass the entire data object like in original
           }),
           invalidatesTags: (result, error, { id, phaseId }) => [
               { type: 'PhaseItem', id },

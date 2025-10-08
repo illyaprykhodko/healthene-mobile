@@ -60,6 +60,7 @@ export const useAnytimeData = (date?: string) => {
                 amount: item.amount,
                 phaseId: anytimePhaseId,
                 status: item.status || 'PENDING',
+                consumedAmount: item.consumedAmount ?? 0,
             };
 
             switch (item.type) {
