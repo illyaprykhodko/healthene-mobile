@@ -15,7 +15,6 @@ module.exports = {
         },
       },
     ],
-    // important: the reanimated plugin must be last
-    'react-native-reanimated/plugin',
+    'react-native-worklets/plugin',
   ],
 };

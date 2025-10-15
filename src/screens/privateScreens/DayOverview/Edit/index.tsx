@@ -1,9 +1,12 @@
 // outsource dependencies
 import _ from 'lodash';
 import moment from 'moment';
+import RNFS from 'react-native-fs';
+import { WebView } from 'react-native-webview';
 import React, { useEffect, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
+
 // local dependencies
 import ListItem from './ListItem';
 import Text from 'components/Text';
@@ -17,6 +20,7 @@ import { selectDayOverview } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS } from 'constants/spec';
 import { useGetDayOverviewQuery, useGetPhaseItemsQuery, useUpdatePhaseItemMutation,
     useDeletePhaseItemMutation, useAddPhaseItemMutation, useUpdatePhaseMutation, useReplacePhaseItemMutation } from 'store/api/dayOverviewApi';
+
 
 // Temporary types until full migration
 interface PhaseItem {
@@ -63,20 +67,20 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const navigation = useNavigation();
     const route = useRoute<any>();
     const { date: currentDate } = useAppSelector(selectDayOverview);
-  
+
     const [scrollEnabled, setScrollEnabled] = useState(true);
     // const [initialized, setInitialized] = useState(false);
 
     const [localItems, setLocalItems] = useState<PhaseItem[]>([]);
-  
+
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
-  
+
     // get day overview data
     const { data: dayOverviewData, isLoading: isDayOverviewLoading } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
     });
-  
+
     // get phase items
     const { data: phaseItems, isLoading: isPhaseItemsLoading } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
@@ -92,10 +96,12 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const [replacePhaseItem] = useReplacePhaseItemMutation();
 
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
-  
+
     const items: PhaseItem[] = React.useMemo(() => {
-        if (!phaseItems) { return []; }
-    
+        if (!phaseItems) {
+            return [];
+        }
+
         const flatItems: PhaseItem[] = [];
         Object.entries(phaseItems).forEach(([type, typeItems]) => {
             (typeItems as any[]).forEach((item: any) => {
@@ -123,7 +129,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 });
             });
         });
-    
+
         return flatItems.sort((a, b) => (a.order || 0) - (b.order || 0));
     }, [phaseItems]);
 
@@ -166,11 +172,13 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     };
 
     const handleAddItem = () => {
-        if (!targetPhaseId || !currentPhase) { return; }
+        if (!targetPhaseId || !currentPhase) {
+            return;
+        }
 
         const excludeIds = computeExcludeIds();
         const entityType = mapPhaseTypeToEntityType();
-    
+
         (navigation as any).navigate('AddReplaceItem', {
             excludeIds,
             entityType,
@@ -193,8 +201,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     };
 
     const handlePhaseDone = async () => {
-        if (!targetPhaseId) { return; }
-    
+        if (!targetPhaseId) {
+            return;
+        }
+
         try {
             await updatePhase({
                 id: targetPhaseId,
@@ -251,7 +261,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 prevItems.map(prevItem =>
                     (prevItem.id === item.id
                         ? { ...item }
-                        // ? { ...prevItem, status: newStatus }
+                    // ? { ...prevItem, status: newStatus }
                         : prevItem)
                 )
             );
@@ -287,7 +297,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         }
 
         const excludeIds = items.map(item => String(item.id));
-    
+
         (navigation as any).navigate('AddReplaceItem', {
             excludeIds,
             entityType: ENTITY_TYPE.RECIPE,
@@ -328,7 +338,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const handleScrollDisabled = () => setScrollEnabled(false);
 
     const isLoading = isDayOverviewLoading || isPhaseItemsLoading;
-  
+
     // if (isLoading) {
     //     return (
     //         <Screen initialized={false} style={styles.container}>
@@ -341,128 +351,174 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     const groupedBySection = _.groupBy(localItems, 'section');
     const title = currentPhase?.meal?.name
-                  || (currentPhase?.type === 'QUESTION' ? 'Health Question'
-                      : currentPhase?.type === 'ANYTIME' ? 'Anytime'
-                          : convertTypeToTitle(currentPhase?.type || '', true));
+      || (currentPhase?.type === 'QUESTION' ? 'Health Question'
+          : currentPhase?.type === 'ANYTIME' ? 'Anytime'
+              : convertTypeToTitle(currentPhase?.type || '', true));
     const isPastDate = moment(targetDate).isBefore(moment(), 'day');
     const isFutureDate = moment(targetDate).isAfter(moment(), 'day');
 
+
+
+
+    // const videoTransparent = require('../../../../../assets/animation/output_resized.mov');
+    const path = `${RNFS.MainBundlePath}/output_resized.mov`;
+
+    const source = { uri: `file://${path}` };
+
     return (
-        <Screen initialized={!isLoading} style={styles.container}>
-            <View style={[styles.title, isFutureDate && styles.opacity]}>
-                <View>
-                    <Text style={styles.titleText}>
-                        {title}
-                    </Text>
-                </View>
-                {currentPhase?.type === OVERVIEW_TYPE.MEAL && !isPastDate && (
-                    <View style={styles.titleButtons}>
-                        <TouchableOpacity onPress={() => { /* Change meal */ }}>
-                            <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
-                Change Meal
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
+        <>
+            <View
+                style={{
+                    borderWidth: 1,
+                    position: 'absolute',
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 1,
+                    pointerEvents: 'none'
+                }}
+            >
+
+                {/*<Video*/}
+                {/*    source={{uri: path}}*/}
+                {/*    onError={error => console.log(error)}*/}
+                {/*    onLoadStart={load => console.log('load', load)}*/}
+                {/*    style={{ width: 250, height: 250 }}*/}
+                {/*    muted*/}
+                {/*    repeat*/}
+                {/*    resizeMode="contain"*/}
+                {/*/>*/}
+                {/*<VLCPlayer*/}
+                {/*    source={{uri: path}}*/}
+                {/*    resizeMode="cover"*/}
+                {/*    style={{ width: '100%', height: 300 }}*/}
+                {/*    onLoad={props => console.log('props', props)}*/}
+                {/*    onError={error => console.log('error', error)}*/}
+                {/*/>*/}
+                <TransparentVideo
+                    source={{uri: path}}
+                    style={{ width: '100%', height: 500 }}
+                />
             </View>
 
-            <View style={styles.list}>
-                <ScrollView style={isFutureDate && styles.opacity} scrollEnabled={scrollEnabled}>
-                    {!_.isEmpty(localItems) ? (
-                        Object.entries(groupedBySection).map(([section, sectionItems]) => (
-                            <SwipeList
-                                key={section}
-                                data={sectionItems}
-                                scrollEnabled={false}
-                                isPastDate={isPastDate}
-                                isFutureDate={isFutureDate}
-                                onDelete={handleDeleteItem}
-                                onReplace={handleReplaceItem}
-                                recipeReplacementEnable={true}
-                                type={currentPhase?.type || ''}
-                                noReplaceItem={handleNoReplaceItem}
-                                onRowDidClose={handleScrollEnabled}
-                                onSwipeValueChange={handleScrollDisabled}
-                                handleCheckboxStatus={handleCheckboxStatus}
-                                keyExtractor={({ id, status }) => String(status + id)}
-                                renderItem={({ item }) => (
-                                    <ListItem
-                                        item={item}
-                                        disabled={false}
-                                        updateData={updatePhaseItem}
-                                        nextSection={_.get(item, 'section')}
-                                        handleCheckboxStatus={handleCheckboxStatus}
+            <Screen initialized={!isLoading} style={styles.container}>
+
+                <View style={[styles.title, isFutureDate && styles.opacity]}>
+                    <View>
+                        <Text style={styles.titleText}>
+                            {title}
+                        </Text>
+                    </View>
+                    {currentPhase?.type === OVERVIEW_TYPE.MEAL && !isPastDate && (
+                        <View style={styles.titleButtons}>
+                            <TouchableOpacity onPress={() => { /* Change meal */ }}>
+                                <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
+                                    Change Meal
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
+
+                <View style={styles.list} pointerEvents="auto">
+                    <ScrollView style={isFutureDate && styles.opacity} scrollEnabled={scrollEnabled} pointerEvents="auto">
+                        {!_.isEmpty(localItems) ? (
+                            Object.entries(groupedBySection).map(([section, sectionItems]) => (
+                                <SwipeList
+                                    key={section}
+                                    data={sectionItems}
+                                    scrollEnabled={false}
+                                    isPastDate={isPastDate}
+                                    isFutureDate={isFutureDate}
+                                    onDelete={handleDeleteItem}
+                                    onReplace={handleReplaceItem}
+                                    recipeReplacementEnable={true}
+                                    type={currentPhase?.type || ''}
+                                    noReplaceItem={handleNoReplaceItem}
+                                    onRowDidClose={handleScrollEnabled}
+                                    onSwipeValueChange={handleScrollDisabled}
+                                    handleCheckboxStatus={handleCheckboxStatus}
+                                    keyExtractor={({ id, status }) => String(status + id)}
+                                    renderItem={({ item }) => (
+                                        <ListItem
+                                            item={item}
+                                            disabled={false}
+                                            updateData={updatePhaseItem}
+                                            nextSection={_.get(item, 'section')}
+                                            handleCheckboxStatus={handleCheckboxStatus}
+                                        />
+                                    )}
+                                    ListHeaderComponent={() => (
+                                        (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
+                                            <View style={[
+                                                styles.separatorWrapper,
+                                                {
+                                                    borderTopColor: theme.colors.black,
+                                                    borderTopWidth: section === 'Added' ? 0 : 1,
+                                                    backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}80`
+                                                }
+                                            ]}>
+                                                <Text variant="h3" style={styles.offset}>
+                                                    {section || 'No section'}
+                                                </Text>
+                                            </View>
+                                        ) : null
+                                    )}
+                                />
+                            ))
+                        ) : (
+                            <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
+              No items found
+                            </Text>
+                        )}
+                    </ScrollView>
+
+                    {(currentPhase?.type === OVERVIEW_TYPE.MEAL
+                  || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? (
+                            <View style={styles.buttonContainer}>
+                                <Button
+                                    icon="plus"
+                                    title="Add"
+                                    variant="primary"
+                                    onPress={handleAddItem}
+                                    textStyle={styles.textAddButton}
+                                    style={{
+                                        ...styles.button,
+                                        ...styles.addButtonActive,
+                                        width: isFutureDate ? '100%' : '45%',
+                                        backgroundColor: theme.colors.transparent,
+                                    }}
+                                />
+                                {!isFutureDate && (
+                                    <Button
+                                        title="Meal Done"
+                                        variant="secondary"
+                                        onPress={handlePhaseDone}
+                                        textStyle={styles.textMealDoneButton}
+                                        style={{
+                                            ...styles.button,
+                                            ...styles.mealDoneButton,
+                                        }}
                                     />
                                 )}
-                                ListHeaderComponent={() => (
-                                    (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
-                                        <View style={[
-                                            styles.separatorWrapper,
-                                            {
-                                                borderTopColor: theme.colors.black,
-                                                borderTopWidth: section === 'Added' ? 0 : 1,
-                                                backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}80`
-                                            }
-                                        ]}>
-                                            <Text variant="h3" style={styles.offset}>
-                                                {section || 'No section'}
-                                            </Text>
-                                        </View>
-                                    ) : null
-                                )}
-                            />
-                        ))
-                    ) : (
-                        <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
-              No items found
-                        </Text>
-                    )}
-                </ScrollView>
-
-                {(currentPhase?.type === OVERVIEW_TYPE.MEAL
-                  || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? (
-                        <View style={styles.buttonContainer}>
+                            </View>
+                        ) : (
                             <Button
                                 icon="plus"
                                 title="Add"
                                 variant="primary"
                                 onPress={handleAddItem}
-                                textStyle={styles.textAddButton}
+                                textStyle={{ color: '#7BAAC2' }}
                                 style={{
                                     ...styles.button,
-                                    ...styles.addButtonActive,
-                                    width: isFutureDate ? '100%' : '45%',
-                                    backgroundColor: theme.colors.transparent,
+                                    ...styles.addButton,
                                 }}
                             />
-                            {!isFutureDate && (
-                                <Button
-                                    title="Meal Done"
-                                    variant="secondary"
-                                    onPress={handlePhaseDone}
-                                    textStyle={styles.textMealDoneButton}
-                                    style={{
-                                        ...styles.button,
-                                        ...styles.mealDoneButton,
-                                    }}
-                                />
-                            )}
-                        </View>
-                    ) : (
-                        <Button
-                            icon="plus"
-                            title="Add"
-                            variant="primary"
-                            onPress={handleAddItem}
-                            textStyle={{ color: '#7BAAC2' }}
-                            style={{
-                                ...styles.button,
-                                ...styles.addButton,
-                            }}
-                        />
-                    )}
-            </View>
-        </Screen>
+                        )}
+                </View>
+            </Screen>
+        </>
     );
 };
 
@@ -472,6 +528,7 @@ const styles = StyleSheet.create({
     container: {
         paddingLeft: 0,
         paddingRight: 0,
+        pointerEvents: 'auto'
     },
     title: {
         paddingHorizontal: 16,
@@ -546,5 +603,12 @@ const styles = StyleSheet.create({
         color: '#4E733C',
         fontSize: 20,
         fontWeight: '500',
+    },
+    transparentVideo: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
     },
 });

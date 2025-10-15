@@ -50,7 +50,7 @@ const Screen: React.FC<ScreenProps> = ({
 
     const theme = useTheme();
     return (
-        <View style={styles.container}>
+        <View style={styles.container} pointerEvents="auto" >
             <StatusBar
                 hidden={statusBarHidden}
                 barStyle={statusBarVariant}
@@ -58,7 +58,7 @@ const Screen: React.FC<ScreenProps> = ({
                 backgroundColor={statusBarBg}
             />
             <BoxHolder active={!initialized}>
-                <View style={StyleSheet.flatten([styles.screen, { backgroundColor: theme.colors.background }, style])}>{children}</View>
+                <View pointerEvents="auto" style={StyleSheet.flatten([styles.screen, { backgroundColor: theme.colors.background }, style])}>{children}</View>
             </BoxHolder>
         </View>
     );
