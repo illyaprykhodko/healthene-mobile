@@ -17,6 +17,9 @@ end
 target 'intelliceed_patientapp_mobile_v2' do
   config = use_native_modules!
 
+  pod 'react-native-blob-util',
+      :path => '../node_modules/react-native-blob-util'
+
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
