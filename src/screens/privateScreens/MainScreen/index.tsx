@@ -32,114 +32,116 @@ type DrawerParamList = {
 };
 
 export const MainScreen: React.FC = () => {
-    const theme = useTheme();
-    const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
-    const user = useAppSelector((state: RootState) => state.app.user);
-    const timeGreeting = () => {
-        const hour = new Date().getHours();
-        const name = user?.firstName || '';
-        
-        if (hour < 12) { return `Good Morning ${name}`; }
-        if (hour < 18) { return `Good Afternoon ${name}`; }
-        return `Good Evening ${name}`;
-    };
+  const theme = useTheme();
+  const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
+  const user = useAppSelector((state: RootState) => state.app.user);
+  const timeGreeting = () => {
+    const hour = new Date().getHours();
+    const name = user?.firstName || '';
 
-    const handleGetStarted = () => {
-        navigation.navigate(ROUTES.DAILY_PLAN);
-    };
+    if (hour < 12) { return `Good Morning ${name}`; }
+    if (hour < 18) { return `Good Afternoon ${name}`; }
+    return `Good Evening ${name}`;
+  };
 
-    const handleOpenDrawer = () => {
-        navigation.openDrawer();
-    };
+  const handleGetStarted = () => {
+    navigation.navigate(ROUTES.DAILY_PLAN);
+  };
 
-    return (
-        <Screen style={styles.container} initialized={true}>
-            <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
-                <View style={styles.textLogoWrapper}>
-                    <TextLogo color={theme.colors.background} />
-                </View>
-                <Hamburger onPress={handleOpenDrawer} style={styles.hamburger} />
-            </View>
+  const handleOpenDrawer = () => {
+    navigation.openDrawer();
+  };
 
-            <View style={styles.content}>
-                <View style={styles.descriptionWrapper}>
-                    <Text variant="h1" style={[styles.title, { color: theme.colors.text }]}>
-                        {timeGreeting()}
-                    </Text>
-                </View>
-                
-                <View style={styles.imageWrapper}>
-                    <Image
-                        resizeMode="contain"
-                        style={styles.image}
-                        source={{ uri: 'https://via.placeholder.com/400x300/007AFF/FFFFFF?text=Welcome+Image' }}
-                    />
-                </View>
-                
-                <Button
-                    title="GET STARTED"
-                    style={styles.button}
-                    onPress={handleGetStarted}
-                />
-            </View>
-        </Screen>
-    );
+  return (
+    <Screen style={ styles.container } initialized={ true }>
+      <View style={ [styles.header, { backgroundColor: theme.colors.primary }] }>
+        <View style={ styles.textLogoWrapper }>
+          <TextLogo color={ theme.colors.background } />
+        </View>
+        <Hamburger onPress={ handleOpenDrawer } style={ styles.hamburger } />
+      </View>
+
+      <View style={ styles.content }>
+        <View style={ styles.descriptionWrapper }>
+          <Text variant="h1" style={ [styles.title, { color: theme.colors.text }] }>
+            {timeGreeting()}
+          </Text>
+        </View>
+
+        <View style={ styles.imageWrapper }>
+          <Image
+            resizeMode="contain"
+            style={ styles.image }
+            source={ {
+              uri: 'https://via.placeholder.com/400x300/007AFF/FFFFFF?text=Welcome+Image',
+            } }
+          />
+        </View>
+
+        <Button
+          title="GET STARTED"
+          style={ styles.button }
+          onPress={ handleGetStarted }
+        />
+      </View>
+    </Screen>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    textLogo: {
-        alignSelf: 'center',
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        justifyContent: 'flex-end',
-        paddingTop: OFFSET.VERTICAL * 2.5,
-        paddingBottom: OFFSET.POINT * 2.5,
-        paddingHorizontal: OFFSET.HORIZONTAL,
-    },
-    textLogoWrapper: {
-        width: '90%',
+  container: {
+    flex: 1,
+  },
+  textLogo: {
+    alignSelf: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    paddingTop: OFFSET.VERTICAL * 2.5,
+    paddingBottom: OFFSET.POINT * 2.5,
+    paddingHorizontal: OFFSET.HORIZONTAL,
+  },
+  textLogoWrapper: {
+    width: '90%',
 
-    },
-    hamburger: {
-        marginRight: 8,
-        alignItems: 'flex-end',
-    },
-    content: {
-        flex: 1,
-        paddingHorizontal: OFFSET.HORIZONTAL,
-        paddingBottom: OFFSET.VERTICAL,
-    },
-    descriptionWrapper: {
-        flexDirection: 'row',
-        marginBottom: OFFSET.VERTICAL,
-        marginTop: OFFSET.VERTICAL * 2,
-    },
-    title: {
-        flex: 1,
-        fontSize: 24,
-        textAlign: 'center',
-        fontWeight: '600',
-    },
-    imageWrapper: {
-        flex: 1,
-        alignItems: 'center',
-        paddingTop: OFFSET.VERTICAL * 2,
-    },
-    image: {
-        height: '100%',
-        width: '100%',
-        maxWidth: width * 0.8,
-    },
-    button: {
-        paddingVertical: OFFSET.VERTICAL,
-        marginBottom: OFFSET.VERTICAL,
-        borderRadius: 50,
-        width: '90%',
-        alignSelf: 'center',
-    },
+  },
+  hamburger: {
+    marginRight: 8,
+    alignItems: 'flex-end',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: OFFSET.HORIZONTAL,
+    paddingBottom: OFFSET.VERTICAL,
+  },
+  descriptionWrapper: {
+    flexDirection: 'row',
+    marginBottom: OFFSET.VERTICAL,
+    marginTop: OFFSET.VERTICAL * 2,
+  },
+  title: {
+    flex: 1,
+    fontSize: 24,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  imageWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    paddingTop: OFFSET.VERTICAL * 2,
+  },
+  image: {
+    height: '100%',
+    width: '100%',
+    maxWidth: width * 0.8,
+  },
+  button: {
+    paddingVertical: OFFSET.VERTICAL,
+    marginBottom: OFFSET.VERTICAL,
+    borderRadius: 50,
+    width: '90%',
+    alignSelf: 'center',
+  },
 });
