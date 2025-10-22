@@ -1,9 +1,7 @@
 pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
 plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
-    println("🔍 [DEBUG] Starting autolink via ReactSettingsExtension...")
     ex.autolinkLibrariesFromCommand()
-    println("✅ [DEBUG] Autolink completed successfully.")
 }
 rootProject.name = 'intelliceed_patientapp_mobile_v2'
 include ':app'
