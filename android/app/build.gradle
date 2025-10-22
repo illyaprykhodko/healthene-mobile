@@ -129,10 +129,9 @@ android {
             resValue "string", "build_config_package", "com.healthene"
         }
         development {
-//            applicationId "com.healthene.dev"
-//            minSdkVersion rootProject.ext.minSdkVersion
-//            targetSdkVersion rootProject.ext.targetSdkVersion
-//            resValue "string", "build_config_package", "com.healthene"
+            minSdkVersion rootProject.ext.minSdkVersion
+            targetSdkVersion rootProject.ext.targetSdkVersion
+            resValue "string", "build_config_package", "com.healthene"
         }
         production {
             applicationId "com.healthene"
