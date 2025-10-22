@@ -74,7 +74,6 @@ export const TOKEN_KEYS = {
 let isRefreshing = false;
 let stuckRequests: Array<StuckRequest> = [];
 
-console.log('config', config)
 const BASE_API = `${config.serviceUrl}/${config.apiPath}`;
 
 export const sessionManager = {
