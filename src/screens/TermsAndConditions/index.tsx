@@ -7,12 +7,10 @@ import {Linking, Pressable, StyleSheet, Text, View} from 'react-native';
 // local dependencies
 import { config } from 'constants'
 import {BUSINESS_PROPERTIES} from "types";
-import {useTheme} from "hooks/useTheme.ts";
 import Screen from "components/Screen.tsx";
 import {useGetTermsQuery} from "store/api/publicApi.ts";
 
 export const TermsAndConditions = () => {
-  const theme = useTheme();
   const handleAttach = async () => {
     if (config.landingUrl) {
       try {
