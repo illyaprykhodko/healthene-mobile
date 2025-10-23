@@ -24,7 +24,7 @@ import { addInterceptor, applyInterceptors } from './interceptors';
 //     };
 //     return args;
 //   });
-  
+
 // add response interceptor
 addInterceptor.response(async (response, args, api) => {
     // log response in debug mode
@@ -33,7 +33,7 @@ addInterceptor.response(async (response, args, api) => {
     }
     return response;
 });
-  
+
 // add error interceptor
 addInterceptor.error(async (error, args, api) => {
     const refreshError: RefreshError = {
@@ -56,13 +56,13 @@ addInterceptor.error(async (error, args, api) => {
     //   headers?: Record<string, string>;
     };
   };
-  
+
   type StuckRequest = {
     resolve: (value: unknown) => void;
     reject: (error: unknown) => void;
     args: FetchArgs;
   };
-  
+
 export const TOKEN_KEYS = {
     STORE: 'sAuth',
     BEARER: 'Bearer ',
@@ -87,7 +87,7 @@ export const sessionManager = {
             await AsyncStorage.removeItem(TOKEN_KEYS.STORE);
         }
     },
-  
+
     async get () {
         try {
             const session = await AsyncStorage.getItem(TOKEN_KEYS.STORE);
@@ -102,7 +102,7 @@ export const sessionManager = {
         return !!(session?.accessToken && session?.refreshToken);
     }
 };
-  
+
 
 const handleRefreshToken = async (
     error: RefreshError,
@@ -110,13 +110,13 @@ const handleRefreshToken = async (
 ): Promise<any> => {
     if (!isRefreshing) {
         isRefreshing = true;
-  
+
         try {
             const session = await sessionManager.get();
             if (!session?.[TOKEN_KEYS.REFRESH]) {
                 throw new Error('No refresh token available');
             }
-  
+
             const refreshResult = await baseQueryRaw(
                 {
                     url: '/auth/token/refresh',
@@ -125,7 +125,7 @@ const handleRefreshToken = async (
                 },
                 api, {}
             );
-  
+
             if (refreshResult.data
             && typeof refreshResult.data === 'object'
              && (TOKEN_KEYS.ACCESS in refreshResult.data)) {
@@ -155,7 +155,7 @@ const handleRefreshToken = async (
             isRefreshing = false;
         }
     }
-  
+
     if (!error.originalArgs.wasTryingToRestore) {
         return new Promise((resolve, reject) => {
             error.originalArgs.wasTryingToRestore = true;
@@ -166,7 +166,7 @@ const handleRefreshToken = async (
             });
         });
     }
-  
+
     return error;
 };
 
@@ -182,7 +182,7 @@ const baseQueryRaw = fetchBaseQuery({
         } else {
             console.log('No access token found in session');
         }
-        
+
         headers.set('Content-Type', 'application/json');
         headers.set('user-platform', Platform.OS === 'ios' ? 'IOS' : 'ANDROID');
         return headers;
@@ -196,4 +196,23 @@ export const baseQuery = async (
 ) => {
     const fetchArgs = typeof args === 'string' ? { url: args } : args;
     return applyInterceptors(fetchArgs, api, baseQueryRaw);
+};
+
+// Public baseQueryRawPub and baseQueryPub (no auth, like instancePub)
+const baseQueryRawPub = fetchBaseQuery({
+    baseUrl: BASE_API,
+    prepareHeaders: async (headers) => {
+        headers.set('Content-Type', 'application/json');
+        headers.set('user-platform', Platform.OS === 'ios' ? 'IOS' : 'ANDROID');
+        return headers;
+    },
+});
+
+export const baseQueryPub = async (
+  args: string | FetchArgs,
+  api: BaseQueryApi,
+  extraOptions: any
+) => {
+    const fetchArgs = typeof args === 'string' ? { url: args } : args;
+    return applyInterceptors(fetchArgs, api, baseQueryRawPub);
 };

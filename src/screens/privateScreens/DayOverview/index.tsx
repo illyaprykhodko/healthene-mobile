@@ -1,19 +1,19 @@
 // outsource dependencies
 import React from 'react';
 import moment from 'moment';
-import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet } from 'react-native';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
 // local dependencies
 import Item from './Item';
 import Edit from './Edit';
 import UPCScan from './UPCScan';
-import Text from 'components/Text';
 import { Overview } from './Overview';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import AddReplaceItem from './AddReplaceItem';
+import BackButton from 'components/BackButton';
 import { Hamburger } from 'components/Hamburger';
 import TimeSwitcher from 'components/TimeSwitcher';
 import { useAppDispatch, useAppSelector } from 'store';
@@ -22,24 +22,14 @@ import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
 
 const Stack = createNativeStackNavigator();
 
-const BackButton = ({ navigation, theme }: { navigation: any, theme: any }) => (
-    <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-    >
-        <Icon name="chevron-left" size={16} color={theme.colors.white} />
-        <Text style={[{ color: theme.colors.white }, styles.backText]}>Back</Text>
-    </TouchableOpacity>
-);
-
 const DayOverviewStack: React.FC = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavigationProp<any>>();
     const theme = useTheme();
-  
+
     const dispatch = useAppDispatch();
     const { date, expectAnswer } = useAppSelector(selectDayOverview);
     const currentDate = date || moment().format('YYYY-MM-DD');
-    
+
     return (
         <Stack.Navigator initialRouteName="DayOverview" screenOptions={() => ({
             // title: currentDate,

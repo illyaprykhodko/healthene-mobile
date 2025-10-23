@@ -5,6 +5,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { authApi } from './api/authApi';
 import appReducer from './slices/appSlice';
 import signInReducer from './slices/signInSlice';
+import { publicApi } from "store/api/publicApi.ts";
 import exerciseReducer from './slices/exerciseSlice';
 import { dayOverviewApi } from './api/dayOverviewApi';
 import { dayOverviewReducer } from './slices/dayOverviewSlice';
@@ -18,11 +19,12 @@ export const store = configureStore({
         dayOverview: dayOverviewReducer,
         forgotPassword: forgotPasswordReducer,
         [authApi.reducerPath]: authApi.reducer,
+        [publicApi.reducerPath]: publicApi.reducer,
         [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({ serializableCheck: false })
-            .concat(authApi.middleware, dayOverviewApi.middleware),
+            .concat(authApi.middleware, dayOverviewApi.middleware, publicApi.middleware),
 });
 
 // Types

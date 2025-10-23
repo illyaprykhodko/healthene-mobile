@@ -6,7 +6,8 @@ export type RootStackParamList = {
   [ROUTES.SIGN_IN]: undefined;
   [ROUTES.SIGN_UP]: undefined;
   [ROUTES.FORGOT_PASSWORD]: undefined;
-  
+  [ROUTES.TERMS_AND_CONDITIONS]: undefined;
+
   // Private screens
   [ROUTES.HOME]: undefined;
   [ROUTES.PROFILE]: undefined;
