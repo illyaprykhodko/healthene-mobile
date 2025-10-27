@@ -1,6 +1,6 @@
 // local dependencies
-import { ExerciseFieldType, ExerciseType } from 'types';
 import { formatDecimalValue } from './decimal-utils';
+import { ExerciseFieldType, ExerciseType } from 'types';
 
 export interface ExerciseStep {
     order?: number;
