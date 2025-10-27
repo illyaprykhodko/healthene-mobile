@@ -78,8 +78,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
             case 'MEASUREMENT':
                 return {
                     icon: 'ruler',
-                    items: [],
-                    // items: data.measurements,
+                    items: data.measurements,
                     title: 'Anytime Measurements',
                 };
             case 'PHYSICAL_ACTIVITY':

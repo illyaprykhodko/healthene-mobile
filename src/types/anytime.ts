@@ -9,11 +9,11 @@ export type AnytimeItemType =
   | 'PHYSICAL_ACTIVITY';
 
 export interface AnytimeBaseItem {
+  order?: number;
+  amount?: number;
   id: string | number;
   type: AnytimeItemType;
   status: AnytimeItemStatus;
-  amount?: number;
-  order?: number;
   phaseId?: string | number;
   /**
    * Tracks how much of the item has been consumed. Used for multi-serve foods/drinks.
@@ -78,6 +78,20 @@ export interface AnytimeMeasurementItem extends AnytimeBaseItem {
   measurement: {
     id: string | number;
     name: string;
+    type?: string; // WEIGHT, BLOOD_PRESSURE, BLOOD_GLUCOSE, etc.
+    description?: string;
+    coverImage?: {
+      url?: string;
+    };
+    video?: {
+      url?: string;
+      embedUrl?: string;
+    };
+    units?: Array<{
+      id: number;
+      name: string;
+      symbol?: string;
+    }>;
   };
 }
 

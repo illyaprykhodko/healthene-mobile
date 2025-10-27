@@ -1,5 +1,5 @@
 // outsource dependencies
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     StyleSheet,
@@ -15,6 +15,7 @@ import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { AnytimeListItem } from './AnytimeListItem';
+import { MeasurementInputModal } from './MeasurementInputModal';
 import {
     FoodIcon,
     DrinkIcon,
@@ -23,8 +24,8 @@ import {
     SupplementIcon,
     MeasurementIcon,
 } from './AnytimeIcons';
-import type { AnytimeItem, AnytimeModalProps } from 'types/anytime';
 import { useUpdatePhaseItemMutation } from 'store/api/dayOverviewApi';
+import type { AnytimeItem, AnytimeModalProps, AnytimeMeasurementItem } from 'types/anytime';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -59,6 +60,7 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
     const theme = useTheme();
     const insets = useSafeAreaInsets();
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
+    const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
 
     const pendingItems = items.filter(item => item.status === PHASE_ITEM_STATUS.PENDING);
     const completedItems = items.filter(item => item.status === PHASE_ITEM_STATUS.DONE);
@@ -74,6 +76,16 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
         } catch (error) {
             console.error('Failed to update anytime item:', error);
         }
+    };
+
+    const handleMeasurementPress = (item: AnytimeItem) => {
+        if (item.type === 'MEASUREMENT' && item.status !== 'DONE') {
+            setSelectedMeasurement(item as AnytimeMeasurementItem);
+        }
+    };
+
+    const closeMeasurementModal = () => {
+        setSelectedMeasurement(null);
     };
 
     // Calculate modal style based on mode
@@ -134,9 +146,28 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
 
                 <View style={styles.content}>
                     {icon === 'ruler' ? (
-                        <View style={styles.emptyState}>
-                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>Feature in development</Text>
-                        </View>
+                        <ScrollView style={styles.scrollView}>
+                            {pendingItems.map(item => (
+                                <AnytimeListItem
+                                    item={item}
+                                    disabled={disabled}
+                                    key={`pending-${item.id}`}
+                                    isFutureDate={isFutureDate}
+                                    onUpdateItem={handleUpdateItem}
+                                    onPress={() => handleMeasurementPress(item)}
+                                />
+                            ))}
+                            {completedItems.map(item => (
+                                <AnytimeListItem
+                                    item={item}
+                                    disabled={disabled}
+                                    isFutureDate={isFutureDate}
+                                    key={`completed-${item.id}`}
+                                    onUpdateItem={handleUpdateItem}
+                                    onPress={() => handleMeasurementPress(item)}
+                                />
+                            ))}
+                        </ScrollView>
                     ) : icon === 'running' ? (
                         <View style={styles.emptyState}>
                             <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
@@ -149,7 +180,6 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                         </View>
                     ) : (
                         <ScrollView style={styles.scrollView}>
-                            {/* Pending items */}
                             {pendingItems.map(item => (
                                 <AnytimeListItem
                                     item={item}
@@ -159,8 +189,6 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                                     onUpdateItem={handleUpdateItem}
                                 />
                             ))}
-              
-                            {/* Completed items */}
                             {completedItems.map(item => (
                                 <AnytimeListItem
                                     item={item}
@@ -174,6 +202,14 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                     )}
                 </View>
             </View>
+            {selectedMeasurement && (
+                <MeasurementInputModal
+                    item={selectedMeasurement}
+                    visible={!!selectedMeasurement}
+                    onClose={closeMeasurementModal}
+                    disabled={disabled}
+                />
+            )}
         </View>
     );
 };
@@ -201,13 +237,13 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
     },
     header: {
+        paddingVertical: 20,
+        borderBottomWidth: 1,
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 24,
-        paddingVertical: 20,
         backgroundColor: '#E0EBF7',
-        borderBottomWidth: 1,
+        justifyContent: 'space-between',
         borderBottomColor: COLORS.LIGHTER_GREY,
     },
     headerLeft: {
@@ -216,10 +252,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     headerTitle: {
-        marginLeft: 16,
         fontSize: 20,
-        fontWeight: '700',
+        marginLeft: 16,
         color: '#181818',
+        fontWeight: '700',
     },
     closeButton: {
         // padding: 8,
@@ -233,9 +269,9 @@ const styles = StyleSheet.create({
     },
     emptyState: {
         flex: 1,
+        paddingVertical: 40,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 40,
     },
     emptyText: {
         fontSize: 16,

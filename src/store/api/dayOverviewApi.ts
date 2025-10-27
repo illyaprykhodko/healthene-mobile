@@ -124,20 +124,20 @@ export interface RecipePrototypeFilter {
 }
 
 export interface FoodFilter {
+    upc?: string;
     name?: string;
-    nameFragment?: string;
-    categoryNodeId?: number;
+    tagIds?: number[];
     isEnabled?: boolean;
+    prefixName?: string;
+    treeTypeId?: number;
+    onlyNodeId?: number;
+    foodPlanFilter?: any;
     excludeIds?: number[];
     includeIds?: number[];
-    prefixName?: string;
-    tagIds?: number[];
-    treeTypeId?: number;
-    treeTypeViewLabel?: 'PATIENT_NAVIGATION';
-    upc?: string;
-    onlyNodeId?: number;
+    nameFragment?: string;
+    categoryNodeId?: number;
     foodPatientPlanFilter?: any;
-    foodPlanFilter?: any;
+    treeTypeViewLabel?: 'PATIENT_NAVIGATION';
 }
 
 export const dayOverviewApi = createApi({
@@ -145,6 +145,18 @@ export const dayOverviewApi = createApi({
     baseQuery,
     tagTypes: ['DayOverview', 'Questions', 'Anytime', 'PhaseItems', 'PhaseItem', 'AvailableItems'],
     endpoints: builder => ({
+        // Create measurement record (manual or third-party)
+        addMeasurementRecord: builder.mutation<any, {
+            type: string; // e.g. WEIGHT, BLOOD_GLUCOSE, BLOOD_PRESSURE
+            payload: any; // formatted payload per backend contract
+        }>({
+            query: ({ payload }) => ({
+                body: payload,
+                method: 'POST',
+                url: '/patient-service/patients/me/measurement/third-party',
+            }),
+            invalidatesTags: ['DayOverview'],
+        }),
         getQuestions: builder.query<Question, string>({
             query: date => `/patient-service/patient/me/disease-questions/${date}`,
             providesTags: ['Questions'],
@@ -199,20 +211,20 @@ export const dayOverviewApi = createApi({
   
         getCategoryTreeNodes: builder.query<any, { filter: CategoryNodeFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
-                url: '/patient-service/category-tree/nodes/filter',
-                method: 'POST',
                 body: filter,
+                method: 'POST',
                 params: { page, size /* sort */ },
+                url: '/patient-service/category-tree/nodes/filter',
             }),
             providesTags: ['AvailableItems'],
         }),
   
         getCatalogPrototypeTreeNodes: builder.query<any, { filter: RecipePrototypeCatalogFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
-                url: '/patient-service/catalog-prototype-tree/nodes/filter',
-                method: 'POST',
                 body: filter,
+                method: 'POST',
                 params: { page, size, sort },
+                url: '/patient-service/catalog-prototype-tree/nodes/filter',
             }),
             providesTags: ['AvailableItems'],
         }),
@@ -349,7 +361,7 @@ export const dayOverviewApi = createApi({
                         })
                     );
                 } catch (error) {
-                    console.error('error', error);
+                    // console.error('error', error);
                 }
             },
         }),
@@ -425,6 +437,62 @@ export const dayOverviewApi = createApi({
         }),
         updateResistanceSteps: builder.mutation<any, ExerciseStepsUpdate>({
             query: body => ({ url: '/patient-service/day-overview-resistance-exercises/steps', method: 'PUT', body }),
+        }),
+
+        // Measurement Chart Data
+        getAggregateMeasurementData: builder.query<any, {
+            type: string; // WEIGHT, BLOOD_GLUCOSE, BLOOD_PRESSURE, etc.
+            date: string; // YYYY-MM-DD
+            period: string; // 1-day, 1-week, 1-month, 6-month, 1-year
+            offset: number; // timezone offset in hours
+        }>({
+            query: ({ type, period, date, offset }) => ({
+                url: `/patient-service/patients/me/measurement/aggregate-fixed/${type}/${period}/${date}`,
+                params: { offset },
+            }),
+            providesTags: (result, error, { type }) => [{ type: 'PhaseItems', id: `measurement-${type}` }],
+        }),
+
+        getLoggedMeasurementData: builder.mutation<any, {
+            type: string;
+            page?: number;
+            size?: number;
+            sort?: string;
+        }>({
+            query: ({ type, page = 0, size = 15, sort = 'timestamp,DESC' }) => ({
+                method: 'POST',
+                body: { type },
+                params: { page, size, sort },
+                url: '/patient-service/patients/me/measurement/logged',
+            }),
+        }),
+
+        getMeasurementTypes: builder.query<any, {
+            dateTime: string;
+            period: string;
+        }>({
+            query: ({ dateTime, period }) => ({
+                url: '/patient-service/patients/me/measurement/types',
+                params: { dateTime, period },
+            }),
+            transformResponse: (response: any) => {
+                return response;
+            },
+            providesTags: (result, error, { dateTime, period }) => [{ type: 'PhaseItems', id: `measurement-types-${dateTime}-${period}` }],
+        }),
+
+        getLastMeasurement: builder.query<any, string>({
+            query: type => `/patient-service/patients/me/measurement/${type}/last`,
+            providesTags: (result, error, type) => [{ type: 'PhaseItems', id: `measurement-last-${type}` }],
+        }),
+
+        deleteMeasurements: builder.mutation<void, number[]>({
+            query: measurementIds => ({
+                method: 'DELETE',
+                body: measurementIds,
+                url: '/patient-service/patients/me/measurement',
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
         }),
     }),
 });
@@ -747,4 +815,11 @@ export const {
     useUpdateAerobicStepsMutation,
     useGetResistanceExerciseQuery,
     useUpdateResistanceStepsMutation,
+    useAddMeasurementRecordMutation,
+    // Measurement Chart
+    useGetAggregateMeasurementDataQuery,
+    useGetLoggedMeasurementDataMutation,
+    useGetMeasurementTypesQuery,
+    useGetLastMeasurementQuery,
+    useDeleteMeasurementsMutation,
 } = dayOverviewApi;

@@ -1,7 +1,7 @@
 // outsource dependencies
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, FlatList } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { COLORS } from 'constants/colors';
@@ -13,9 +13,10 @@ import { splitAmountToServings, getServingState, isServingEnabled, isServingDone
 
 interface AnytimeListItemProps {
   item: AnytimeItem;
-  onUpdateItem: (item: AnytimeItem) => void;
   disabled?: boolean;
   isFutureDate?: boolean;
+  onPress?: (item: AnytimeItem) => void; // For measurements
+  onUpdateItem: (item: AnytimeItem) => void;
 }
 
 const getItemDisplayData = (item: AnytimeItem) => {
@@ -56,6 +57,7 @@ const getItemDisplayData = (item: AnytimeItem) => {
 
 export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
     item,
+    onPress,
     onUpdateItem,
     disabled = false,
     isFutureDate = false,
@@ -65,6 +67,7 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
 
     const isCompleted = item.status === 'DONE';
     const canToggle = !disabled && !isFutureDate;
+    const isMeasurement = item.type === 'MEASUREMENT';
 
     const isFoodOrDrink = item.type === 'FOOD' || item.type === 'DRINK';
     // const multiAmount = isFoodOrDrink ? (item.amount || 0) > 1 : false;
@@ -78,7 +81,17 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
         onUpdateItem({ ...item, status: nextStatus, consumedAmount: nextConsumed } as AnytimeItem);
     };
 
-    const unitName = isFoodOrDrink ? (item as (AnytimeFoodItem | AnytimeDrinkItem)).weight?.unit?.name || '' : '';
+    const handleItemPress = () => {
+        if (isMeasurement && !isCompleted && onPress) {
+            onPress(item);
+        }
+    };
+
+    const unitName = isFoodOrDrink
+        ? (item as (AnytimeFoodItem | AnytimeDrinkItem)).weight?.unit?.name || ''
+        : item.type === 'MEASUREMENT'
+            ? (item as any)?.measurement?.measurement?.units?.[0]?.name || (item as any)?.measurement?.units?.[0]?.name || ''
+            : '';
 
     const consumedAmount = isFoodOrDrink ? (item.consumedAmount ?? 0) : 0;
     const { integerConsumed, decimalConsumed } = getServingState(consumedAmount);
@@ -102,11 +115,14 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
     }, [disabled, canToggle, isFoodOrDrink, consumedAmount, item.amount, onUpdateItem, item]);
     return (
         <View>
-            <View
+            <TouchableOpacity
+                onPress={handleItemPress}
+                activeOpacity={isMeasurement ? 0.7 : 1}
+                disabled={!isMeasurement || isCompleted || !onPress}
                 style={[
                     styles.container,
-                    { borderBottomColor: theme.colors.border },
                     isCompleted && styles.completed,
+                    { borderBottomColor: theme.colors.border },
                 ]}
             >
                 <View style={styles.content}>
@@ -139,16 +155,27 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
                                 <Icon name={expanded ? 'chevron-up' : 'chevron-down'} color={theme.colors.blue} size={18} />
                             </TouchableOpacity>
                         )}
-                        {showParentCheckbox && (
+                        {isMeasurement && !isCompleted && (
+                            <Icon name="chevron-right" size={22} color={theme.colors.blue} style={{ marginRight: 4 }} />
+                        )}
+                        {showParentCheckbox && !isMeasurement && (
                             <Checkbox
                                 value={isCompleted}
                                 editable={!disabled}
                                 onChange={handleToggleParent}
                             />
                         )}
+                        {/* Measurement completed checkbox (read-only visual) */}
+                        {isMeasurement && isCompleted && (
+                            <Checkbox
+                                value={true}
+                                editable={false}
+                                onChange={() => {}}
+                            />
+                        )}
                     </View>
                 )}
-            </View>
+            </TouchableOpacity>
 
             {/* {expanded && isDetailsEnabled && (
                 <FlatList
@@ -269,9 +296,9 @@ const styles = StyleSheet.create({
     },
     itemName: {
         fontSize: 16,
+        marginBottom: 4,
         fontWeight: '500',
         color: COLORS.BLACK,
-        marginBottom: 4,
     },
     itemDetails: {
         fontSize: 14,

@@ -15,8 +15,13 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import AddReplaceItem from './AddReplaceItem';
 import { Hamburger } from 'components/Hamburger';
+import SaveValueScreen from '../SaveValueScreen';
+import SmartScaleScreen from '../SmartScaleScreen';
 import TimeSwitcher from 'components/TimeSwitcher';
 import { useAppDispatch, useAppSelector } from 'store';
+import AllRecordedDataScreen from '../AllRecordedDataScreen';
+import MeasurementChartScreen from '../MeasurementChartScreen';
+import WeightMeasurementScreen from '../WeightMeasurementScreen';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
 import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
 
@@ -163,6 +168,78 @@ const DayOverviewStack: React.FC = () => {
                     init={() => {}}
                     date={currentDate}
                 /> }} />
+
+
+            {/* Measurement Screens */}
+            <Stack.Screen
+                name="SaveValue"
+                component={SaveValueScreen}
+                options={({ route }) => ({
+                    title: (route.params as any)?.measurementName || 'Measurement',
+                    headerTitle: () => (
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
+                    ),
+                })}
+            />
+
+            <Stack.Screen
+                name="MeasurementChart"
+                component={MeasurementChartScreen}
+                options={({ route }) => ({
+                    title: (route.params as any)?.measurementName || 'Measurement',
+                    headerTitle: () => (
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
+                    ),
+                })}
+            />
+
+            <Stack.Screen
+                name="AllRecordedData"
+                component={AllRecordedDataScreen}
+                options={{
+                    title: 'All Recorded Data',
+                    headerTitle: () => (
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
+                    ),
+                }}
+            />
+
+            {/* WEIGHT-SPECIFIC SCREENS: Smart Scale and Manual Input */}
+            <Stack.Screen
+                name="WeightMeasurement"
+                component={WeightMeasurementScreen}
+                options={{
+                    title: 'Measurement',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
+            />
+            
+            <Stack.Screen
+                name="SmartScale"
+                component={SmartScaleScreen}
+                options={{
+                    title: 'Smart Scale',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
+            />
         </Stack.Navigator>
     );
 };
