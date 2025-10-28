@@ -361,8 +361,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
   // bird animation handler
   const [birdAnimationStep, setBirdAnimationStep] = useState(false);
   useEffect(() => {
-    const allDone = localItems.every(item => item.status === 'DONE');
-    setBirdAnimationStep(allDone);
+    if(!_.isEmpty(localItems)) {
+      const allDone = localItems.every(item => item.status === 'DONE');
+      setBirdAnimationStep(allDone);
+    }
   }, [localItems]);
 
   return (

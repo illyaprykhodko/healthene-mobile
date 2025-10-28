@@ -1,10 +1,11 @@
 // outsource dependencies
-import { WebView } from 'react-native-webview';
+import {WebView} from 'react-native-webview';
+import {StyleSheet, View} from 'react-native';
 import RNBlobUtil from 'react-native-blob-util';
-import { StyleSheet, View } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 // local dependencies
+import {WebViewMessageEvent} from "react-native-webview/src/WebViewTypes.ts";
 
 export const WEBVIEW_MESSAGES = {
   VIDEO_LOADED: 'VIDEO_LOADED',
@@ -12,60 +13,95 @@ export const WEBVIEW_MESSAGES = {
 };
 
 export enum BirdAnimationStep {
-  DEFAULT = 0,
-  TAKEOFF = 1,
+  WALKS_OUT = 0,
+  SITTING = 1,
   FLY = 2,
-  LANDING = 3
+  LANDING = 4
 }
 
 interface BirdAnimationProps {
   startAnimation: boolean;
 }
 
-export const BirdAnimation = ({ startAnimation }: BirdAnimationProps) => {
+export const BirdAnimation = ({startAnimation = false}: BirdAnimationProps) => {
   const webViewRef = useRef<WebView>(null);
   const [base64, setBase64] = useState<string | null>(null);
-  const [isWebViewReady, setIsWebViewReady] = useState(false);
-  const [phase, setPhase] = useState<BirdAnimationStep>(BirdAnimationStep.DEFAULT);
-  useEffect(() => {
-    console.log('Trying to send phase to WebView:', phase);
-    if (isWebViewReady && startAnimation && webViewRef.current && phase !== null) {
-      webViewRef.current.postMessage(JSON.stringify({ phase }));
-    } else {
-      console.log('WebView not ready or phase is null');
-    }
-  }, [phase, isWebViewReady, startAnimation]);
+  const [phase, setPhase] = useState<BirdAnimationStep>(BirdAnimationStep.WALKS_OUT);
 
+  const readFile = async (path: string | null) => {
+    if (path) {
+      try {
+        const base64 = await RNBlobUtil.fs.readFile(path, 'base64');
+        setBase64(base64);
+      } catch (error) {
+        console.error('Error read file: ', error);
+        return null;
+      }
+    }
+  };
+  const [animations, setAnimations] = useState<string[]>([])
+  const handleAnimations = (path: string) => setAnimations(prev => [...prev, path]);
   useEffect(() => {
     const loadVideo = async () => {
-      const path = `${RNBlobUtil.fs.dirs.MainBundleDir}/default_behaviour.mov`;
-      await readFile(path);
+      const path = `${RNBlobUtil.fs.dirs.MainBundleDir}/walks_out.mov`;
+      const base64 = await RNBlobUtil.fs.readFile(path, 'base64');
+      setBase64(base64);
+      handleAnimations(path)
+      const sittingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/sitting.mov`;
+      handleAnimations(sittingBird)
+      const flyingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/flying.mov`;
+      handleAnimations(flyingBird)
     };
     (async () => {
       await loadVideo();
-
-      if (startAnimation) {
-        setPhase(BirdAnimationStep.TAKEOFF);
-      }
     })();
-  }, [startAnimation]);
+  }, []);
 
-  const readFile = async (path: string) => {
-    try {
-      const base64 = await RNBlobUtil.fs.readFile(path, 'base64');
-      setBase64(base64);
-    } catch (error) {
-      console.error('Error read file: ', error);
-      return null;
+  useEffect(() => {
+    if (startAnimation) {
+      setPhase(BirdAnimationStep.FLY)
+      readFile(animations[BirdAnimationStep.FLY])
+        .catch((err) => {
+          console.error('Failed to load flying bird video', err);
+        });
     }
-  };
+  }, [startAnimation, animations]);
+
+
+  const handleMessage = useCallback((event: WebViewMessageEvent) => {
+    const message = event.nativeEvent.data;
+    if (message.startsWith('[WEBVIEW LOG]')) {
+      console.log(message);
+      return;
+    }
+    if (!message.startsWith('{')) {
+      return;
+    }
+    const data = JSON.parse(message)
+    if (data?.reachedPhase !== phase) {
+      console.log('reachedPhase', data?.reachedPhase)
+
+      try {
+        switch (data?.reachedPhase) {
+          case BirdAnimationStep.SITTING:
+            readFile(animations[data.reachedPhase]).then(() => {
+              setPhase(data?.reachedPhase);
+            });
+            break;
+        }
+
+      } catch (e) {
+        console.log('Invalid message from WebView:', message);
+      }
+    }
+  }, [readFile])
 
   return (
-    <View style={ styles.container }>
+    <View style={styles.container}>
       <WebView
-        ref={ webViewRef }
-        style={ { backgroundColor: 'transparent' } }
-        source={ {
+        ref={webViewRef}
+        onMessage={handleMessage}
+        source={{
           html: `
               <html>
                 <head>
@@ -74,15 +110,16 @@ export const BirdAnimation = ({ startAnimation }: BirdAnimationProps) => {
                       margin: 0;
                       background: transparent;
                       overflow: hidden;
+                      border: red 1px solid;
                     }
                     #videoContainer {
                       position: absolute;
                       top: 0;
-                      right: 0;
+                      left: calc(100vw - 120px);
                       width: 120px;
                       height: 120px;
-                      border: #449fdb 1px solid;
                       overflow: hidden;
+                      border: #449fdb 1px solid;
                     }
                     video {
                       width: 100%;
@@ -91,6 +128,7 @@ export const BirdAnimation = ({ startAnimation }: BirdAnimationProps) => {
                     }
                   </style>
                   <script>
+                    window.phase = { value: ${phase} };
                     window.onload = () => {
                       const log = (...args) => {
                         if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
@@ -98,111 +136,83 @@ export const BirdAnimation = ({ startAnimation }: BirdAnimationProps) => {
                         }
                         console.__log && console.__log(...args); 
                       };
+                      const video = document.getElementById('video');
+                      
+                      if (video) {
+                        if (window.phase.value === ${BirdAnimationStep.WALKS_OUT}) {
+                          video.loop = false;
+                        } else {
+                          video.loop = true;
+                        }
+                      }
                       const container = document.getElementById('videoContainer');
                       const screenWidth = window.innerWidth;
                       const screenHeight = window.innerHeight;
-                      let x = screenWidth - 150;
+                      let x = screenWidth - 120;
                       let y = 0;
-                      let phase = { value: 0 };
-                     
-                      window.addEventListener('message', event => {
-                        try {
-                          const data = JSON.parse(event.data);
-                          log('HELLO', data.phase)
-                          if (data.phase !== undefined) {
-                            phase.value = data.phase;
-                            log('Updated phase to', phase.value);
-                          }
-                        } catch (e) {}
-                      });
                       let takeoffFrame = 0;
+                      function changePhase(phase){
+                        window.phase.value = phase;
+                        const payload = JSON.stringify({ reachedPhase: phase });
+                        window.ReactNativeWebView.postMessage(payload);
+                      }
                       function animate() {
                         requestAnimationFrame(animate);
-                        log('PHASE!!!', phase.value)
-                        
-                        if(phase.value === ${BirdAnimationStep.TAKEOFF}) {
-                            takeoffFrame++;
-                            log('takeoffFrame', takeoffFrame)
-                            x -= 1.5;
-                            y -= 2;
-                            if (takeoffFrame >= (60*1)) {
-                              const payload = JSON.stringify({ 
-                                reachedPhase: ${BirdAnimationStep.FLY} 
-                              });
-                              window.ReactNativeWebView.postMessage(payload);
-                            }
-                        } else if (phase.value === ${BirdAnimationStep.FLY}) {
-                          x -= 2;
-                          y += 2;
+                        if (window.phase.value === ${BirdAnimationStep.WALKS_OUT}) {
+                          if(video.duration - video.currentTime <= .5) {
+                            changePhase(${BirdAnimationStep.SITTING});
+                          }
+                        } 
+                        else if(window.phase.value === ${BirdAnimationStep.FLY}) {
+                            x -= 2;
+                            y += 4;
                           if (x <= 0 && y >= screenHeight / 2) {
                             x = 0;
-                            y = screenHeight / 2;
+                            y = screenHeight - 120;
                             if (
                               window.ReactNativeWebView && window.ReactNativeWebView.postMessage
                             ) {
-                              const payload = JSON.stringify({ 
-                                reachedPhase: ${BirdAnimationStep.LANDING} 
-                              });
-                              console.log("Sending JSON:", payload);
-                              window.ReactNativeWebView.postMessage(payload);
                             }
                           }
-                        } else if (phase.value === ${BirdAnimationStep.LANDING}) {
-                          x += 2;
-                          y += 2;
                         }
-  
                         container.style.left = \`\${x}px\`;
                         container.style.top = \`\${y}px\`;
                       }
-  
                       animate();
                     }
                   </script>
                 </head>
                 <body>
                   <div id="videoContainer">
-                    <video
-                      loop
-                      muted
-                      autoplay
-                      id="video"
-                      playsinline
-                      onerror="window
-                        .ReactNativeWebView
-                        .postMessage('${WEBVIEW_MESSAGES.VIDEO_FAILED}')"
-                      onloadeddata="window
-                        .ReactNativeWebView
-                        .postMessage('${WEBVIEW_MESSAGES.VIDEO_LOADED}')"
-                    >
-                      <source src="data:video/mov;base64,${base64}" type="video/quicktime"/>
-                    </video>
+                    <div id="videoWrapper" style="opacity: 1; transition: opacity 0.3s ease;">
+                      <video
+                        loop
+                        muted
+                        autoplay
+                        id="video"
+                        playsinline
+                        onerror="window
+                          .ReactNativeWebView
+                          .postMessage('${WEBVIEW_MESSAGES.VIDEO_FAILED}')"
+                        onloadeddata="window
+                          .ReactNativeWebView
+                          .postMessage('${WEBVIEW_MESSAGES.VIDEO_LOADED}')"
+                      >
+                        <source src="data:video/mov;base64,${base64}" type="video/quicktime"/>
+                      </video>
+                    </div>
                   </div>
               </body>
               </html>
-
             `,
-        } }
-        onMessage={ event => {
-          const message = event.nativeEvent.data;
-          console.log('RAW JS message:', message);
+        }}
+        style={{backgroundColor: 'transparent'}}
+        onError={e => console.log('Video error', e)}
+        allowsInlineMediaPlayback={true}
+        mediaPlaybackRequiresUserAction={false}
+        useWebKit={true}
+        originWhitelist={['*']}
 
-          if (message === WEBVIEW_MESSAGES.VIDEO_LOADED) {
-            setIsWebViewReady(true);
-            return;
-          }
-          try {
-            const data = JSON.parse(message);
-            setPhase(data.reachedPhase);
-          } catch (e) {
-            console.log('Invalid message from WebView:', message);
-          }
-        } }
-        onError={ e => console.log('Video error', e) }
-        allowsInlineMediaPlayback={ true }
-        mediaPlaybackRequiresUserAction={ false }
-        useWebKit={ true }
-        originWhitelist={ ['*'] }
       />
     </View>
   );
@@ -219,3 +229,5 @@ const styles = StyleSheet.create({
     pointerEvents: 'none',
   },
 });
+
+
