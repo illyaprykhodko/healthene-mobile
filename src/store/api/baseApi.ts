@@ -197,3 +197,22 @@ export const baseQuery = async (
     const fetchArgs = typeof args === 'string' ? { url: args } : args;
     return applyInterceptors(fetchArgs, api, baseQueryRaw);
 };
+
+// Public baseQueryRawPub and baseQueryPub (no auth, like instancePub)
+const baseQueryRawPub = fetchBaseQuery({
+    baseUrl: BASE_API,
+    prepareHeaders: async (headers) => {
+        headers.set('Content-Type', 'application/json');
+        headers.set('user-platform', Platform.OS === 'ios' ? 'IOS' : 'ANDROID');
+        return headers;
+    },
+});
+
+export const baseQueryPub = async (
+  args: string | FetchArgs,
+  api: BaseQueryApi,
+  extraOptions: any
+) => {
+    const fetchArgs = typeof args === 'string' ? { url: args } : args;
+    return applyInterceptors(fetchArgs, api, baseQueryRawPub);
+};
