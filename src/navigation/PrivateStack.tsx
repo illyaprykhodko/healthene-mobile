@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { PrivateDrawer } from './PrivateDrawer';
 
 const Stack = createStackNavigator();
-
+console.log('PrivateDrawer', PrivateDrawer)
 export const PrivateStack = () => {
     return (
         <Stack.Navigator

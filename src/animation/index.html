@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Base64 Video Test</title>
+    <style>
+        body {
+            background: #111;
+            color: #fff;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        video {
+            width: 320px;
+            height: auto;
+            margin-top: 20px;
+            background: black;
+        }
+        textarea {
+            width: 90%;
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>🎥 Base64 Video Test</h2>
+
+<textarea id="base64Input" placeholder="Вставь сюда base64 без data:video/..."></textarea>
+<br />
+<button onclick="loadVideo()">▶️ Показать видео</button>
+
+<video id="videoPlayer" controls autoplay muted></video>
+
+<script>
+    function loadVideo() {
+        const base64 = document.getElementById('base64Input').value.trim();
+        const video = document.getElementById('videoPlayer');
+        video.src = `data:video/mp4;base64,${base64}`;
+        video.load();
+        video.play().catch(err => console.error('Ошибка воспроизведения:', err));
+    }
+</script>
+
+</body>
+</html>

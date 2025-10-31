@@ -25,7 +25,7 @@ interface BirdAnimationProps {
 
 export const BirdAnimation = ({startAnimation = false}: BirdAnimationProps) => {
   const webViewRef = useRef<WebView>(null);
-  const [base64, setBase64] = useState<string | null>(null);
+  const [base64, setBase64] = useState<string[]>([]);
   const [phase, setPhase] = useState<BirdAnimationStep>(BirdAnimationStep.WALKS_OUT);
 
   const readFile = async (path: string | null) => {
@@ -39,18 +39,17 @@ export const BirdAnimation = ({startAnimation = false}: BirdAnimationProps) => {
       }
     }
   };
-  const [animations, setAnimations] = useState<string[]>([])
-  const handleAnimations = (path: string) => setAnimations(prev => [...prev, path]);
+  const handleBase64 = (path: string) => setBase64(prev => [...prev, path]);
   useEffect(() => {
     const loadVideo = async () => {
-      const path = `${RNBlobUtil.fs.dirs.MainBundleDir}/walks_out.mov`;
-      const base64 = await RNBlobUtil.fs.readFile(path, 'base64');
-      setBase64(base64);
-      handleAnimations(path)
-      const sittingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/sitting.mov`;
-      handleAnimations(sittingBird)
-      const flyingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/flying.mov`;
-      handleAnimations(flyingBird)
+      const walksOut = `${RNBlobUtil.fs.dirs.MainBundleDir}/walks_out.mov`;
+      const walksOutBase64 = await RNBlobUtil.fs.readFile(walksOut, 'base64');
+      handleBase64(walksOutBase64);
+      const sitting = `${RNBlobUtil.fs.dirs.MainBundleDir}/sitting.mov`;
+      const sittingBase64 = await RNBlobUtil.fs.readFile(sitting, 'base64');
+      handleBase64(sittingBase64);
+      const flyingBase64 = `${RNBlobUtil.fs.dirs.MainBundleDir}/flying.mov`;
+      handleBase64(flyingBase64)
     };
     (async () => {
       await loadVideo();
@@ -60,12 +59,12 @@ export const BirdAnimation = ({startAnimation = false}: BirdAnimationProps) => {
   useEffect(() => {
     if (startAnimation) {
       setPhase(BirdAnimationStep.FLY)
-      readFile(animations[BirdAnimationStep.FLY])
-        .catch((err) => {
-          console.error('Failed to load flying bird video', err);
-        });
+      // readFile(animations[BirdAnimationStep.FLY])
+      //   .catch((err) => {
+      //     console.error('Failed to load flying bird video', err);
+      //   });
     }
-  }, [startAnimation, animations]);
+  }, [startAnimation]);
 
 
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
@@ -84,9 +83,10 @@ export const BirdAnimation = ({startAnimation = false}: BirdAnimationProps) => {
       try {
         switch (data?.reachedPhase) {
           case BirdAnimationStep.SITTING:
-            readFile(animations[data.reachedPhase]).then(() => {
-              setPhase(data?.reachedPhase);
-            });
+            // setPhase(data?.reachedPhase);
+            // readFile(animations[data.reachedPhase]).then(() => {
+            //   setPhase(data?.reachedPhase);
+            // });
             break;
         }
 
@@ -95,6 +95,8 @@ export const BirdAnimation = ({startAnimation = false}: BirdAnimationProps) => {
       }
     }
   }, [readFile])
+
+  if (!base64[phase]) return null;
 
   return (
     <View style={styles.container}>
@@ -129,20 +131,51 @@ export const BirdAnimation = ({startAnimation = false}: BirdAnimationProps) => {
                   </style>
                   <script>
                     window.phase = { value: ${phase} };
+                    window.animations = {
+                      0: '${base64[0]}',
+                      1: '${base64[1]}',
+                      2: '${base64[2]}',
+                      4: '${base64[3]}'
+                    };
                     window.onload = () => {
+                      // Dynamically switch between even/odd video sources depending on phase
+                      function changePhase(phase){
+                        window.phase.value = phase;
+                      
+                        const videoEven = document.getElementById('videoEven');
+                        const videoOdd = document.getElementById('videoOdd');
+                        if (phase % 2 === 0) {
+                          videoEven.style.display = 'block';
+                          videoOdd.style.display = 'none';
+                        } else {
+                          videoEven.style.display = 'none';
+                          videoOdd.style.display = 'block';
+                        }
+                        
+                        const payload = JSON.stringify({ reachedPhase: phase });
+                        window.ReactNativeWebView?.postMessage(payload);
+                      }
+                      changePhase(${phase})
                       const log = (...args) => {
                         if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
                           window.ReactNativeWebView.postMessage('[WEBVIEW LOG] ' + args.join(' '));
                         }
                         console.__log && console.__log(...args); 
                       };
-                      const video = document.getElementById('video');
+                      const videoEven = document.getElementById('videoEven');
+                      const videoOdd = document.getElementById('videoOdd');
+
+                      if (videoEven && window.phase.value === ${BirdAnimationStep.WALKS_OUT}) {
+                        // Ensure video starts from the very beginning for WALKS_OUT phase
+                        videoEven.currentTime = 0;
+                        videoEven.play();
+                      }
                       
-                      if (video) {
+                      if (videoEven) {
                         if (window.phase.value === ${BirdAnimationStep.WALKS_OUT}) {
-                          video.loop = false;
+                          videoEven.loop = false;
                         } else {
-                          video.loop = true;
+                          videoEven.loop = true;
                         }
                       }
                       const container = document.getElementById('videoContainer');
@@ -151,19 +184,18 @@ export const BirdAnimation = ({startAnimation = false}: BirdAnimationProps) => {
                       let x = screenWidth - 120;
                       let y = 0;
                       let takeoffFrame = 0;
-                      function changePhase(phase){
-                        window.phase.value = phase;
-                        const payload = JSON.stringify({ reachedPhase: phase });
-                        window.ReactNativeWebView.postMessage(payload);
-                      }
+                      
+                      // Animation loop: updates position and handles phase-based transitions
                       function animate() {
                         requestAnimationFrame(animate);
                         if (window.phase.value === ${BirdAnimationStep.WALKS_OUT}) {
-                          if(video.duration - video.currentTime <= .5) {
+                          // When video is near its end, switch to the SITTING phase
+                          if(videoEven.duration - videoEven.currentTime <= .5) {
                             changePhase(${BirdAnimationStep.SITTING});
                           }
                         } 
                         else if(window.phase.value === ${BirdAnimationStep.FLY}) {
+                            // Move the video container diagonally up-left to simulate flying
                             x -= 2;
                             y += 4;
                           if (x <= 0 && y >= screenHeight / 2) {
@@ -186,19 +218,27 @@ export const BirdAnimation = ({startAnimation = false}: BirdAnimationProps) => {
                   <div id="videoContainer">
                     <div id="videoWrapper" style="opacity: 1; transition: opacity 0.3s ease;">
                       <video
+                        id="videoEven"
+                        loop
+                        muted
+                        playsinline
+                        style="display: none;"
+                        onerror="window.ReactNativeWebView.postMessage('${WEBVIEW_MESSAGES.VIDEO_FAILED}')"
+                        onloadeddata="window.ReactNativeWebView.postMessage('${WEBVIEW_MESSAGES.VIDEO_LOADED}')"
+                      >
+                        <source type="video/quicktime" src="data:video/mov;base64,${base64[phase]}" />
+                      </video>
+                      <video
+                        id="videoOdd"
                         loop
                         muted
                         autoplay
-                        id="video"
                         playsinline
-                        onerror="window
-                          .ReactNativeWebView
-                          .postMessage('${WEBVIEW_MESSAGES.VIDEO_FAILED}')"
-                        onloadeddata="window
-                          .ReactNativeWebView
-                          .postMessage('${WEBVIEW_MESSAGES.VIDEO_LOADED}')"
+                        style="display: none;"
+                        onerror="window.ReactNativeWebView.postMessage('${WEBVIEW_MESSAGES.VIDEO_FAILED}')"
+                        onloadeddata="window.ReactNativeWebView.postMessage('${WEBVIEW_MESSAGES.VIDEO_LOADED}')"
                       >
-                        <source src="data:video/mov;base64,${base64}" type="video/quicktime"/>
+                        <source type="video/quicktime" src="data:video/mov;base64,${base64[phase]}" />
                       </video>
                     </div>
                   </div>
@@ -212,6 +252,7 @@ export const BirdAnimation = ({startAnimation = false}: BirdAnimationProps) => {
         mediaPlaybackRequiresUserAction={false}
         useWebKit={true}
         originWhitelist={['*']}
+        key={phase}
 
       />
     </View>
@@ -229,5 +270,4 @@ const styles = StyleSheet.create({
     pointerEvents: 'none',
   },
 });
-
 
