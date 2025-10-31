@@ -3,6 +3,7 @@ import React from 'react';
 import { View, StyleSheet, Modal, TouchableOpacity, Text } from 'react-native';
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { COLORS } from 'constants/colors';
 
 interface SwipeablePanelProps {
     style?: any;
@@ -72,6 +73,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     panel: {
+        backgroundColor: COLORS.WHITE,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         maxHeight: '80%',
@@ -90,6 +92,7 @@ const styles = StyleSheet.create({
         zIndex: 1,
     },
     closeButtonText: {
+        color: COLORS.WHITE,
         fontSize: 18,
         fontWeight: 'bold',
     },

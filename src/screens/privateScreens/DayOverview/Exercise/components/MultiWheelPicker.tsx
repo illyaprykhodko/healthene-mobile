@@ -1,3 +1,4 @@
+// outsource dependencies
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 
@@ -52,16 +53,13 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
                 const newValues = [...prev];
                 newValues[fieldIdx] = newIdx;
 
-                // Build result object using the updated indexes
                 const result: Record<string, unknown> = {};
                 fields.forEach((f, i) => {
-                    // For regular fields we map index -> actual value from data[]
                     if (!isDecimalField(f.key)) {
                         result[f.key] = f.data?.[newValues[i]];
                     }
                 });
 
-                // Keep existing `step` values but override with new regular-field selections
                 onApply({ ...step, ...result });
                 return newValues;
             });
@@ -69,10 +67,8 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
         [fields, onApply, step]
     );
 
-    // Update handler for decimal wheels (receives `{ [key]: number }` from DecimalWheelPicker)
     const handleDecimalChange = useCallback(
         (update: Record<string, number>) => {
-            // Merge decimal field(s) result into the step and propagate upward
             onApply({ ...step, ...update });
         },
         [onApply, step]
@@ -80,9 +76,7 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
 
     return (
         <View style={styles.container}>
-            {/* Regular fields */}
             {regularFields.map((field, idx) => {
-                // We need to locate the original index in `fields` to read/write values[] correctly
                 const fieldIdx = fields.findIndex(f => f.key === field.key);
                 const isEven = idx % 2 === 0;
 
@@ -103,7 +97,6 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
                 );
             })}
 
-            {/* Decimal fields */}
             {decimalFields.map(field => (
                 <View key={field.key} style={{ width: '100%', marginBottom: 20 }}>
                     <DecimalWheelPicker field={field} onApply={handleDecimalChange} />

@@ -86,7 +86,7 @@ export default function ExerciseEdit ({ route, navigation }: any) {
 
         return (
             <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
-                <View style={[styles.headerBanner, { backgroundColor: theme.colors.surface }]}>
+                <View style={[styles.headerBanner, { backgroundColor: theme.colors.surfaceAlt || theme.colors.surface }]}>
                     <View style={styles.row} />
                     <Text
                         variant="h3"

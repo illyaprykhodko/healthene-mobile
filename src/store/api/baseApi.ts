@@ -9,8 +9,8 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // local dependencies
 import { RootState } from 'store';
+import { config } from 'constants';
 import { UserSession } from 'types';
-import { config } from '../../constants';
 import { addInterceptor, applyInterceptors } from './interceptors';
 
 //   // add request interceptor

@@ -7,6 +7,7 @@ import { ExerciseType } from 'types';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
+import { filters } from 'services/filter';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { EXERCISE_CONFIGS } from './exerciseFactory';
 import { useAppDispatch, useAppSelector } from 'store';
@@ -29,22 +30,12 @@ const getExerciseStepParams = (exercise: any, step: any, subtype: any) => ({
     subtype,
 });
 
-// Helper function to humanize text
-const humanize = (text: string) => {
-    return text
-        .replace(/^EXERCISE_/, '')
-        .toLowerCase()
-        .split('_')
-        .map(s => s.charAt(0).toUpperCase() + s.slice(1))
-        .join(' ');
-};
-
 export default function ExerciseDetails () {
     const theme = useTheme();
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
-    const { exercise, refreshCurrentList, parentNavigation, deepPhaseId, date } = route.params || {};
+    const { exercise, refreshCurrentList, parentNavigation, deepPhaseId, date, onRefresh } = route.params || {};
     const [showGoodWork, setShowGoodWork] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const title = exercise?.title || 'Exercise';
@@ -110,7 +101,6 @@ export default function ExerciseDetails () {
     const exerciseState = useAppSelector((state: any) => state.exercise || {});
     const { steps = [], scientificDescription, scientificVideo, subtype, isDirty = false } = exerciseState;
     
-    // Memoize steps to prevent infinite loops - use a more stable approach
     const memoizedSteps = useMemo(() => {
         return steps;
     }, [steps]);
@@ -119,7 +109,6 @@ export default function ExerciseDetails () {
     // Clear exercise state when exercise ID changes
     useEffect(() => {
         if (exercise?.id && exerciseState.id && exerciseState.id !== exercise.id) {
-            // console.log('Clearing exercise state for new exercise:', exercise.id);
             dispatch(clearExercise());
         }
     }, [exercise?.id, exerciseState.id, dispatch]);
@@ -160,7 +149,7 @@ export default function ExerciseDetails () {
 
     // Define tabs
     const TABS = [
-        { key: exercise?.type, label: humanize(exercise?.type?.replace(/^EXERCISE_/, '') || '') },
+        { key: exercise?.type, label: filters.humanize(exercise?.type?.replace(/^EXERCISE_/, '') || '') },
         { key: 'science', label: 'Science' },
     ];
     const [activeTab, setActiveTab] = useState(TABS[0].key);
@@ -175,7 +164,13 @@ export default function ExerciseDetails () {
         // Persist phase item status first
         if (exercise?.id && deepPhaseId) {
             try {
-                await updatePhaseItemApi({ id: exercise.id, phaseId: deepPhaseId, data: { status }, date }).unwrap();
+                const payload = {
+                    status,
+                    id: exercise.id,
+                    type: exercise?.type,
+                    title: exercise?.title || (exercise as any)?.name || title,
+                };
+                await updatePhaseItemApi({ id: exercise.id, phaseId: deepPhaseId, data: payload, date }).unwrap();
             } catch (error) {
                 console.error('Failed to update phase item status:', error);
             }
@@ -232,6 +227,7 @@ export default function ExerciseDetails () {
                 selectedSteps: memoizedSteps.filter((step: any) => step.completed),
             }));
             refreshCurrentList?.(exercise.id, 'status', nextStatus);
+            onRefresh?.();
             
             if (nextStatus === PHASE_ITEM_STATUS.DONE) {
                 setTimeout(() => {
@@ -241,7 +237,7 @@ export default function ExerciseDetails () {
         } catch (error) {
             console.error('Failed to save exercise:', error);
         }
-    }, [memoizedSteps, exercise?.id, refreshCurrentList, updateExerciseDataCallback, navigation, fadeAnim, dispatch]);
+    }, [memoizedSteps, exercise?.id, refreshCurrentList, updateExerciseDataCallback, navigation, fadeAnim, dispatch, onRefresh]);
 
     // Panel state for video/instruction
     const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -281,6 +277,7 @@ export default function ExerciseDetails () {
                         key={tab.key}
                         style={[
                             styles.tabButton,
+                            { backgroundColor: theme.colors.lightGrey },
                             isActive && [styles.activeTabButton, { backgroundColor: theme.colors.info }],
                             { borderRightWidth: TABS.length === index + 1 ? 0 : 2, borderRightColor: theme.colors.primary },
                         ]}
@@ -319,7 +316,7 @@ export default function ExerciseDetails () {
                     style={[
                         styles.tabContent,
                         isExerciseComplete && { opacity: 0.5 },
-                        { borderBottomWidth: 1, borderColor: '#E1E1E1' },
+                        { borderBottomWidth: 1, borderColor: theme.colors.border },
                     ]}
                 >
                     {(video || instruction) ? (
@@ -331,7 +328,7 @@ export default function ExerciseDetails () {
                                 setInstructionData(instruction);
                             }}
                         >
-                            <Text style={styles.videoText}>Video</Text>
+                            <Text style={[styles.videoText, { color: theme.colors.info }]}>Video</Text>
                         </TouchableOpacity>
                     ) : null}
                     
@@ -358,7 +355,7 @@ export default function ExerciseDetails () {
                                 });
                             }}
                         >
-                            <Text style={styles.videoText}>{goalDisplay}</Text>
+                            <Text style={[styles.videoText, { color: theme.colors.info }]}>{goalDisplay}</Text>
                         </TouchableOpacity>
                         <Checkbox
                             size={15}
@@ -380,7 +377,7 @@ export default function ExerciseDetails () {
                                         ...exerciseParams,
                                     })}
                                 >
-                                    <Text style={[styles.videoText, { marginBottom: 5 }]}>{line}</Text>
+                                    <Text style={[styles.videoText, { marginBottom: 5, color: theme.colors.info }]}>{line}</Text>
                                 </TouchableOpacity>
                             ))}
                         </View>
@@ -433,7 +430,7 @@ export default function ExerciseDetails () {
     return (
         <Screen initialized={!isLoading} clear={() => {}} style={[styles.container, { backgroundColor: theme.colors.background }]}>
             {renderTabs()}
-            <View style={[styles.headerBanner, { backgroundColor: theme.colors.surface }]}>
+            <View style={[styles.headerBanner, { backgroundColor: theme.colors.surfaceAlt || theme.colors.surface }]}>
                 <View style={styles.row} />
                 <Text textAlign="center" style={[styles.name, { color: theme.colors.text }]}>
                     {title}
@@ -477,6 +474,7 @@ export default function ExerciseDetails () {
 // Description component for swipeable panel
 const Description = React.memo(({ closePanel, isPanelOpen, description, video, style }: any) => {
     const [toggle, setToggle] = useState(false);
+    const theme = useTheme();
     const toggleText = useCallback(() => setToggle(prevState => !prevState), []);
     
     return (
@@ -492,8 +490,8 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
             style={[styles.swipePanel, style]}
             closeIconStyle={{
                 borderWidth: 1.5,
-                borderColor: '#A5A5A5',
-                backgroundColor: '#A5A5A5',
+                borderColor: theme.colors.grey,
+                backgroundColor: theme.colors.grey,
             }}
             closeRootStyle={{ backgroundColor: 'transparent' }}
         >
