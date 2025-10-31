@@ -2,7 +2,7 @@
 import React from 'react';
 import moment from 'moment';
 import { StyleSheet } from 'react-native';
-import {NavigationProp, useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // local dependencies
@@ -19,6 +19,7 @@ import SaveValueScreen from '../SaveValueScreen';
 import SmartScaleScreen from '../SmartScaleScreen';
 import TimeSwitcher from 'components/TimeSwitcher';
 import { useAppDispatch, useAppSelector } from 'store';
+import { RootStackParamList } from 'services/navigation';
 import AllRecordedDataScreen from '../AllRecordedDataScreen';
 import MeasurementChartScreen from '../MeasurementChartScreen';
 import WeightMeasurementScreen from '../WeightMeasurementScreen';
@@ -28,7 +29,7 @@ import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
 const Stack = createNativeStackNavigator();
 
 const DayOverviewStack: React.FC = () => {
-    const navigation = useNavigation<NavigationProp<any>>();
+    const navigation = useNavigation<RootStackParamList>();
     const theme = useTheme();
 
     const dispatch = useAppDispatch();
@@ -221,7 +222,7 @@ const DayOverviewStack: React.FC = () => {
                     headerTitleStyle: { fontSize: 18 },
                 }}
             />
-            
+
             <Stack.Screen
                 name="SmartScale"
                 component={SmartScaleScreen}

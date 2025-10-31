@@ -2,7 +2,7 @@
 import { Text } from '@react-native-material/core';
 import Icon from 'react-native-vector-icons/Ionicons';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import {View, StyleSheet, Animated, TouchableWithoutFeedback, Pressable} from 'react-native';
+import { View, StyleSheet, Animated, TouchableWithoutFeedback, Pressable } from 'react-native';
 // local dependencies
 import { LoginData } from 'types';
 import Screen from 'components/Screen';
