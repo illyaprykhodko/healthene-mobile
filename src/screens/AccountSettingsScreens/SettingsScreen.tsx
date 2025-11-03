@@ -1,17 +1,16 @@
 // outsource dependencies
 import React from 'react';
-import { StyleSheet, View, FlatList } from 'react-native';
+import FeatherIcon from 'react-native-vector-icons/Feather';
+import { StyleSheet, View, FlatList, Pressable } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // local dependencies
-import { Humanize } from 'services/filter';
+import Text from 'components/Text.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
-import Text from 'components/Text.tsx';
-import FeatherIcon from 'react-native-vector-icons/Feather';
-
-interface MenuScreenProps {
-  // props here
-}
+import { ROUTES } from 'constants/routes.ts';
+import { useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from 'services/navigation';
 
 const ITEM = {
     ADDRESS: 'Address',
@@ -21,10 +20,12 @@ const ITEM = {
     FOOD_PREFERENCES: 'Food Preferences',
     PERSONAL_INFORMATION: 'Personal Information',
 };
-const SettingsScreen = (props: MenuScreenProps) => {
+
+const SettingsScreen = () => {
     const theme = useTheme();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const settingItem = [
-        { title: ITEM.PERSONAL_INFORMATION },
+        { title: ITEM.PERSONAL_INFORMATION, navigate: () => navigation.navigate(ROUTES.PERSONAL_INFORMATION) },
         { title: ITEM.ADDRESS },
         { title: ITEM.SETTINGS },
         { title: ITEM.FOOD_PREFERENCES },
@@ -34,14 +35,14 @@ const SettingsScreen = (props: MenuScreenProps) => {
     return <View style={styles.container}>
         <FlatList
             data={settingItem}
-            renderItem={({ item }) => <View style={[styles.itemContainer, { borderBottomColor: theme.colors.border }]}>
+            renderItem={({ item }) => <Pressable onPress={item.navigate} style={[styles.itemContainer, { borderBottomColor: theme.colors.border }]}>
                 <Text>{item.title}</Text>
                 <FeatherIcon
                     size={24}
                     name="chevron-right"
                     color={theme.colors.grey}
                 />
-            </View>}
+            </Pressable>}
         />
     </View>;
 };

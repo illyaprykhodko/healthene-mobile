@@ -9,7 +9,7 @@ import { PhaseItem } from 'store/api/dayOverviewApi';
 //   [ROUTES.SIGN_IN]: undefined;
 //   [ROUTES.SIGN_UP]: undefined;
 //   [ROUTES.FORGOT_PASSWORD]: undefined;
-  
+
 //   // Private screens
 //   [ROUTES.HOME]: undefined;
 //   [ROUTES.PROFILE]: undefined;
@@ -28,7 +28,8 @@ export type RootStackParamList = {
   [ROUTES.PROFILE]: undefined;
   [ROUTES.SETTINGS]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
-  
+  [ROUTES.PERSONAL_INFORMATION]: undefined;
+
   // Example of a screen that requires params
   [ROUTES.SMART_SCALE]: {
     measurementPhaseItem: object;

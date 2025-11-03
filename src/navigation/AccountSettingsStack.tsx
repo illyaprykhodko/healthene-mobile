@@ -4,9 +4,11 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme.ts';
-import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
-import BackButton from 'components/BackButton.tsx';
 import { OFFSET } from 'constants/offset.ts';
+import { ROUTES } from 'constants/routes.ts';
+import BackButton from 'components/BackButton.tsx';
+import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
+import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
 
 const Stack = createStackNavigator();
 
@@ -32,11 +34,14 @@ export const AccountSettingsStack = () => {
             })}
         >
             <Stack.Screen
-                name="SettingsScreen"
-                options={{
-                    title: 'Account Settings',
-                }}
                 component={SettingsScreen}
+                name={ROUTES.ACCOUNT_SETTINGS}
+                options={{ title: 'Account Settings' }}
+            />
+            <Stack.Screen
+                name={ROUTES.PERSONAL_INFORMATION}
+                component={PersonalInformationScreen}
+                options={{ title: 'Personal Information' }}
             />
         </Stack.Navigator>
     );

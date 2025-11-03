@@ -22,6 +22,10 @@ export const ROUTES = {
     MEASUREMENT_CHART: 'MeasurementChart',
     CUISINE_DISTRIBUTION: 'CuisineDistribution',
 
+    // Account Settings
+    ACCOUNT_SETTINGS: 'AccountSettings',
+    PERSONAL_INFORMATION: 'PersonalInformation',
+
     // Legacy routes (for compatibility)
     HOME: 'Home',
     PROFILE: 'Profile',
