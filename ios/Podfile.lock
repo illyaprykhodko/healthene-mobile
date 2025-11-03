@@ -1810,7 +1810,7 @@ PODS:
     - react-native-config/App (= 1.5.5)
   - react-native-config/App (1.5.5):
     - React-Core
-  - react-native-safe-area-context (5.6.1):
+  - react-native-safe-area-context (5.6.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -1828,8 +1828,8 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-safe-area-context/common (= 5.6.1)
-    - react-native-safe-area-context/fabric (= 5.6.1)
+    - react-native-safe-area-context/common (= 5.6.2)
+    - react-native-safe-area-context/fabric (= 5.6.2)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -1840,7 +1840,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-safe-area-context/common (5.6.1):
+  - react-native-safe-area-context/common (5.6.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -1868,7 +1868,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-safe-area-context/fabric (5.6.1):
+  - react-native-safe-area-context/fabric (5.6.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -2460,7 +2460,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNGestureHandler (2.28.0):
+  - RNGestureHandler (2.29.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2608,7 +2608,7 @@ PODS:
     - RNWorklets
     - SocketRocket
     - Yoga
-  - RNScreens (4.17.1):
+  - RNScreens (4.18.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2635,10 +2635,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNScreens/common (= 4.17.1)
+    - RNScreens/common (= 4.18.0)
     - SocketRocket
     - Yoga
-  - RNScreens/common (4.17.1):
+  - RNScreens/common (4.18.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2752,7 +2752,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNWorklets (0.5.1):
+  - RNWorklets (0.5.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -2779,10 +2779,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets (= 0.5.1)
+    - RNWorklets/worklets (= 0.5.2)
     - SocketRocket
     - Yoga
-  - RNWorklets/worklets (0.5.1):
+  - RNWorklets/worklets (0.5.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -2809,10 +2809,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNWorklets/worklets/apple (= 0.5.1)
+    - RNWorklets/worklets/apple (= 0.5.2)
     - SocketRocket
     - Yoga
-  - RNWorklets/worklets/apple (0.5.1):
+  - RNWorklets/worklets/apple (0.5.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -3156,7 +3156,7 @@ SPEC CHECKSUMS:
   react-native-ble-plx: 11f6fd40d1454c0bb4ccfce89645d2dea295b535
   react-native-blob-util: f9fce545a5f63e686d5e7d9999db4a0233849e01
   react-native-config: 3367df9c1f25bb96197007ec531c7087ed4554c3
-  react-native-safe-area-context: 6d8a7b750e496e37bda47c938320bf2c734d441f
+  react-native-safe-area-context: 54d812805f3c4e08a4580ad086cbde1d8780c2e4
   react-native-webview: 8b9097e270a99ee8798449f191a7ea27c790fa1c
   React-NativeModulesApple: b5d18bc109c45c9a1c6b71664991b5cc3adc4e48
   React-oscompat: 93b5535ea7f7dff46aaee4f78309a70979bdde9d
@@ -3190,13 +3190,13 @@ SPEC CHECKSUMS:
   ReactCommon: 00df7b9f859c9d02181844255bb89a8bca544374
   RNAppleHealthKit: 60a6beefdd89a75811e9a8873a5e24f351dee681
   RNCAsyncStorage: a9e087b68308fd829e66f5e932976f23c4e1005b
-  RNGestureHandler: 4f7cc97a71d4fe0fcba38c94acdd969f5f17c91c
+  RNGestureHandler: 26f87adea5239bdbc4e428b4badf074e8654c590
   RNPermissions: 13321e51b4e00941e1ddf6cbc8be78e7d3e855b5
   RNReanimated: 5f5ea9ba506ef48182d76070eaf96b032deefb1a
-  RNScreens: d3b832c50356686916d18e28d3c5b9107382191c
+  RNScreens: 3693ec4bbc0065151b843269e50e9807644e9918
   RNSVG: 4a4f7d4897abbfdc6dfe30be5d6cc5ffee23ea43
   RNVectorIcons: 6acc19c833be864e9c70894e101a587fe491150a
-  RNWorklets: 582ee5c59370d483a7a3c3f8a8014d48b1bff6bd
+  RNWorklets: 7009206bd2f62421bf6da0e9c823c1d64e4da634
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 922d794dce2af9c437f864bf4093abfa7a131adb
 

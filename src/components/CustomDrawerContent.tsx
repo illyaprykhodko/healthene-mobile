@@ -2,8 +2,8 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { View, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 
 // local dependencies
 import { RootState } from 'store';
@@ -27,7 +27,7 @@ interface DrawerItemProps {
 
 const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, badge }) => {
     const theme = useTheme();
-    
+
     return (
         <TouchableOpacity
             onPress={onPress}
@@ -71,7 +71,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     const theme = useTheme();
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.app.user);
-    
+
     const handleLogout = () => {
         dispatch(clearSession());
     };
@@ -132,12 +132,17 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
                 <View style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
-                    <Text variant="h4" color={theme.colors.text}>
-                        {user?.firstName} {user?.lastName}
-                    </Text>
-                    <Text variant="body" color={theme.colors.textSecondary}>
-                        {user?.email}
-                    </Text>
+                    <View>
+                        <Text variant="h4" color={theme.colors.text}>
+                            {user?.firstName} {user?.lastName}
+                        </Text>
+                        <Text variant="body" color={theme.colors.textSecondary}>
+                            {user?.email}
+                        </Text>
+                        <Pressable onPress={() => props.navigation.navigate('AccountSettings')}>
+                            <Text color={theme.colors.primary}>Account Settings</Text>
+                        </Pressable>
+                    </View>
                 </View>
                 {menuItems.map(item => {
                     const focused = getFocusedRoute() === item.route;
@@ -165,7 +170,6 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                     focused={getFocusedRoute() === ROUTES.CUISINE_DISTRIBUTION}
                 /> */}
             </DrawerContentScrollView>
-
             <Button
                 title="LOGOUT"
                 variant="outline"
