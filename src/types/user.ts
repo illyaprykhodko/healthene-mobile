@@ -129,6 +129,7 @@ export interface User {
   email: string;
   phone?: string;
   firstName: string;
+  middleName: string;
   lastName: string;
   title?: string;
   avatar?: Url;
