@@ -43,6 +43,8 @@ export const Button: React.FC<ButtonProps> = ({
             switch (variant) {
                 case 'primary':
                     return theme.colors.muted;
+                case 'outline':
+                    return theme.colors.background;
                 default:
                     return theme.colors.textSecondary;
             }
@@ -64,6 +66,7 @@ export const Button: React.FC<ButtonProps> = ({
     const getTextColor = () => {
         if (disabled) {
             switch (variant) {
+                case 'outline':
                 case 'primary':
                     return theme.colors.textMuted;
                 default:

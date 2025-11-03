@@ -131,6 +131,7 @@ export interface User {
   firstName: string;
   middleName: string;
   lastName: string;
+  birthday: Date;
   prefix: string;
   suffix: string;
   gender: string;

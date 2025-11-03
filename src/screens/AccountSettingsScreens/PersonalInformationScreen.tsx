@@ -1,6 +1,7 @@
 // outsource dependencies
 import { Formik } from 'formik';
 import { RootState } from 'store';
+import moment from 'moment/moment';
 import React, { useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -9,16 +10,19 @@ import { BottomSheetBackdrop, BottomSheetModal } from '@gorhom/bottom-sheet';
 // local dependencies
 import Text from 'components/Text.tsx';
 import { filters } from 'services/filter';
+import Select from 'components/Select.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
-import { Select } from 'components/Select.tsx';
+import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
+import DatePickerSelector from 'components/DatePicker.tsx';
 import { PREFIXES, SUFFIXES, GENDERS } from 'constants/spec.ts';
 
 const SELECTS = {
     GENDER: 'GENDER',
     PREFIXES: 'PREFIXES',
     SUFFIXES: 'SUFFIXES',
+    DATE_OF_BIRTH: 'DATE_OF_BIRTH',
 } as const;
 type SelectsValue = keyof typeof SELECTS;
 
@@ -26,6 +30,7 @@ export const PersonalInformationScreen = () => {
     const theme = useTheme();
     const user = useSelector((state: RootState) => state.app.user);
     // Select Bottom Sheet
+    const [dateModalOpen, setDateModalOpen] = React.useState(false);
     const [select, setSelect] = React.useState<SelectsValue | null>(null);
     const bottomSheetRef = useRef<BottomSheetModal>(null);
     const openBottomSheet = (select: SelectsValue) => {
@@ -40,6 +45,7 @@ export const PersonalInformationScreen = () => {
                     prefix: user?.prefix,
                     suffix: user?.suffix,
                     gender: user?.gender,
+                    birthday: user?.birthday,
                     lastName: user?.lastName,
                     firstName: user?.firstName,
                     middleName: user?.middleName,
@@ -47,8 +53,8 @@ export const PersonalInformationScreen = () => {
                 onSubmit={async data => {
                     console.log('data', data);
                 }}>
-                {({ values, errors, touched, handleChange, handleSubmit }) => (
-                    <View>
+                {({ values, errors, touched, handleChange, handleSubmit, dirty }) => (
+                    <View style={styles.flex}>
                         <TextInput
                             name="firstName"
                             disabled={false}
@@ -102,6 +108,19 @@ export const PersonalInformationScreen = () => {
                             </Pressable>
                         </View>
                         <View style={styles.paddingVertical}>
+                            <Text variant="caption">Date of Birth</Text>
+                            <Pressable
+                                onPress={() => setDateModalOpen(true)}
+                                style={[styles.currentItem, { borderBottomColor: theme.colors.grey }]}
+                            >
+                                <Text
+                                    color={values.birthday ? theme.colors.black : theme.colors.grey}
+                                >
+                                    {values.birthday ? moment(values.birthday).format('YYYY-MM-DD') : 'Select birthday'}
+                                </Text>
+                            </Pressable>
+                        </View>
+                        <View style={styles.paddingVertical}>
                             <Text variant="caption">Gender</Text>
                             <Pressable
                                 onPress={() => openBottomSheet(SELECTS.GENDER)}
@@ -114,6 +133,19 @@ export const PersonalInformationScreen = () => {
                                 </Text>
                             </Pressable>
                         </View>
+                        <Button
+                            disabled={!dirty}
+                            variant="outline"
+                            onPress={handleSubmit}
+                            title="Update Information"
+                            style={styles.updateBtn}
+                        />
+                        <DatePickerSelector
+                            modalOpened={dateModalOpen}
+                            onCancel={() => setDateModalOpen(false)}
+                            onSelect={(value: string) => handleChange('birthday')(value)}
+                            currentDate={values?.birthday ? values.birthday.toString() : new Date().toString()}
+                        />
                         <BottomSheetModal
                             ref={bottomSheetRef}
                             enablePanDownToClose
@@ -168,8 +200,12 @@ export const PersonalInformationScreen = () => {
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
         paddingHorizontal: OFFSET.HORIZONTAL,
         paddingVertical: OFFSET.VERTICAL,
+    },
+    flex: {
+        flex: 1
     },
     inputStyle: {
         textAlign: 'left',
@@ -181,5 +217,8 @@ const styles = StyleSheet.create({
     },
     paddingVertical: {
         paddingTop: OFFSET.POINT * 4,
+    },
+    updateBtn: {
+        marginTop: 'auto'
     }
 });
