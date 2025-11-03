@@ -5,9 +5,9 @@
  * @format
  */
 // outsource dependencies
-import { Provider } from 'react-redux';
-// import './ReactotronConfig';
 import React from 'react';
+import { Provider } from 'react-redux';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 // local dependencies
@@ -33,9 +33,11 @@ function App (): React.JSX.Element {
         <Provider store={store}>
             <SafeAreaProvider>
                 <GestureHandlerRootView style={{ flex: 1 }}>
-                    <ThemeProvider>
-                        <AppContent />
-                    </ThemeProvider>
+                    <BottomSheetModalProvider>
+                        <ThemeProvider>
+                            <AppContent />
+                        </ThemeProvider>
+                    </BottomSheetModalProvider>
                 </GestureHandlerRootView>
             </SafeAreaProvider>
         </Provider>

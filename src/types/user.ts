@@ -131,6 +131,9 @@ export interface User {
   firstName: string;
   middleName: string;
   lastName: string;
+  prefix: string;
+  suffix: string;
+  gender: string;
   title?: string;
   avatar?: Url;
   preferences?: {

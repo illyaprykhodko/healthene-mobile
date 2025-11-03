@@ -58,3 +58,25 @@ export const SEARCH_TYPE = {
 
 export type SearchType = typeof SEARCH_TYPE[keyof typeof SEARCH_TYPE];
 
+export const GENDERS = [
+    { label: 'Male', value: 'Male' },
+    { label: 'Female', value: 'Female' },
+];
+
+export const PREFIXES = [
+    { label: 'Mr', value: 'Mr' },
+    { label: 'Mrs', value: 'Mrs' },
+    { label: 'Ms', value: 'Ms' },
+];
+
+export const SUFFIXES = [
+    { label: 'Jr.', value: 'Jr.' },
+    { label: 'Sr.', value: 'Sr.' },
+    { label: '2nd', value: '2nd' },
+    { label: 'C3rd', value: 'C3rd' },
+    { label: 'II', value: 'II' },
+    { label: 'III', value: 'III' },
+    { label: 'IV', value: 'IV' },
+    { label: 'V', value: 'V' },
+    { label: 'VI', value: 'VI' },
+];
