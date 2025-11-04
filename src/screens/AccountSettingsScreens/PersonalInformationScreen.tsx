@@ -10,7 +10,6 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { BottomSheetBackdrop, BottomSheetModal } from '@gorhom/bottom-sheet';
 
 // local dependencies
-import { config } from 'constants';
 import Text from 'components/Text.tsx';
 import { filters } from 'services/filter';
 import Select from 'components/Select.tsx';
@@ -33,8 +32,6 @@ type SelectsValue = keyof typeof SELECTS;
 export const PersonalInformationScreen = () => {
     const theme = useTheme();
     const user = useSelector((state: RootState) => state.app.user);
-    console.log('USER', user);
-    console.log('config', config);
     // Field Bottom Sheet
     const [dateModalOpen, setDateModalOpen] = React.useState(false);
     const [select, setSelect] = React.useState<SelectsValue | null>(null);
