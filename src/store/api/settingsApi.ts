@@ -6,8 +6,8 @@ import { User } from 'types';
 import { baseQuery } from 'store/api/baseApi.ts';
 
 export const settingsApi = createApi({
-    reducerPath: 'settingsApi',
     baseQuery,
+    reducerPath: 'settingsApi',
     endpoints: builder => ({
         updateUserData: builder.mutation<any, Partial<User>>({
             query: body => ({

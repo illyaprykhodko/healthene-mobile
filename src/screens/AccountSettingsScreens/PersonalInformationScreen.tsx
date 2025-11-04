@@ -1,4 +1,5 @@
 // outsource dependencies
+import * as yup from 'yup';
 import { Formik } from 'formik';
 import { RootState } from 'store';
 import moment from 'moment/moment';
@@ -33,14 +34,23 @@ const SELECTS = {
 } as const;
 type SelectsValue = keyof typeof SELECTS;
 
+const validationSchema = yup.object().shape({
+    firstName: yup.string()
+        .required('First name is required'),
+    lastName: yup.string()
+        .required('Last name is required'),
+    birthday: yup.string()
+        .required('Birthday is required'),
+    gender: yup.string()
+        .required('Gender is required'),
+});
+
 export const PersonalInformationScreen = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
+    const [updateUserData] = useUpdateUserDataMutation();
     const user = useSelector((state: RootState) => state.app.user);
-    const [updateUserData, { isLoading, isSuccess, error }] = useUpdateUserDataMutation();
-    console.log('isLoading', isLoading);
-    console.log('isSuccess', isSuccess);
-    console.log('error', error);
+
     // Field Bottom Sheet
     const [dateModalOpen, setDateModalOpen] = useState(false);
     const [select, setSelect] = useState<SelectsValue | null>(null);
@@ -66,11 +76,11 @@ export const PersonalInformationScreen = () => {
                 text1: 'Profile updated',
                 text2: 'Your personal information has been successfully updated.',
             });
-        } catch (error) {
+        } catch (error: any) {
             Toast.show({
                 type: 'error',
                 text1: 'Update failed',
-                text2: 'Something went wrong while updating your information. Please try again later.',
+                text2: String(filters.humanize(error?.data?.errorCode)) || 'Something went wrong while updating your information. Please try again later.',
             });
         }
     };
@@ -79,6 +89,8 @@ export const PersonalInformationScreen = () => {
     return <>
         <View style={styles.container}>
             <Formik
+                onSubmit={handleSubmit}
+                validationSchema={validationSchema}
                 initialValues={{
                     prefix: user?.prefix,
                     suffix: user?.suffix,
@@ -89,9 +101,8 @@ export const PersonalInformationScreen = () => {
                     middleName: user?.middleName,
                     coverImage: user?.coverImage
                 }}
-                onSubmit={handleSubmit}>
+            >
                 {({ values, errors, touched, handleChange, handleSubmit, dirty }) => {
-
                     const uploadImage = async () => {
                         userImgSheetRef.current?.close();
                         setIsImgLoading(true);
@@ -120,11 +131,12 @@ export const PersonalInformationScreen = () => {
                             <TextInput
                                 name="firstName"
                                 disabled={false}
+                                touched={touched}
                                 label="First Name"
                                 value={values.firstName}
                                 onChangeText={handleChange('firstName')}
                                 inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
-                                error={touched.firstName && errors.firstName ? { [errors.firstName]: errors.firstName } : undefined}
+                                error={touched.firstName && errors.firstName ? { firstName: errors.firstName } : undefined}
                             />
                             <TextInput
                                 name="middleName"
@@ -138,10 +150,11 @@ export const PersonalInformationScreen = () => {
                                 name="lastName"
                                 disabled={false}
                                 label="Last Name"
+                                touched={touched}
                                 value={values.lastName}
                                 onChangeText={handleChange('lastName')}
                                 inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
-                                error={touched.lastName && errors.lastName ? { [errors.lastName]: errors.lastName } : undefined}
+                                error={touched.lastName && errors.lastName ? { lastName: errors.lastName } : undefined}
                             />
                             <View>
                                 <Text variant="caption">Prefix</Text>
@@ -170,28 +183,23 @@ export const PersonalInformationScreen = () => {
                                 </Pressable>
                             </View>
                             <View style={styles.paddingVertical}>
-                                <Text variant="caption">Date of Birth</Text>
+                                <Text
+                                    variant="caption"
+                                    color={touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.black}
+                                >
+                                    Date of Birth
+                                </Text>
                                 <Pressable
                                     onPress={() => setDateModalOpen(true)}
-                                    style={[styles.currentItem, { borderBottomColor: theme.colors.grey }]}
+                                    style={[
+                                        styles.currentItem,
+                                        { borderBottomColor: touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.grey }
+                                    ]}
                                 >
                                     <Text
                                         color={values.birthday ? theme.colors.black : theme.colors.grey}
                                     >
                                         {values.birthday ? moment(values.birthday).format('YYYY-MM-DD') : 'Select birthday'}
-                                    </Text>
-                                </Pressable>
-                            </View>
-                            <View style={styles.paddingVertical}>
-                                <Text variant="caption">Gender</Text>
-                                <Pressable
-                                    onPress={() => openBottomSheet(SELECTS.GENDER)}
-                                    style={[styles.currentItem, { borderBottomColor: theme.colors.grey }]}
-                                >
-                                    <Text
-                                        color={values.gender ? theme.colors.black : theme.colors.grey}
-                                    >
-                                        {values.gender ? filters.humanize(values.gender) : 'Select gender'}
                                     </Text>
                                 </Pressable>
                             </View>
@@ -201,7 +209,27 @@ export const PersonalInformationScreen = () => {
                                 onSelect={(value: string) => handleChange('birthday')(value)}
                                 currentDate={values?.birthday ? values.birthday.toString() : new Date().toString()}
                             />
-
+                            <View style={styles.paddingVertical}>
+                                <Text
+                                    variant="caption"
+                                    color={touched?.gender && errors?.gender ? theme.colors.error : theme.colors.black}
+                                >
+                                    Gender
+                                </Text>
+                                <Pressable
+                                    onPress={() => openBottomSheet(SELECTS.GENDER)}
+                                    style={[
+                                        styles.currentItem,
+                                        { borderBottomColor: touched?.gender && errors?.gender ? theme.colors.error : theme.colors.grey }
+                                    ]}
+                                >
+                                    <Text
+                                        color={values.gender ? theme.colors.black : theme.colors.grey}
+                                    >
+                                        {values.gender ? filters.humanize(values.gender) : 'Select gender'}
+                                    </Text>
+                                </Pressable>
+                            </View>
                         </ScrollView>
                         <Button
                             disabled={!dirty}
