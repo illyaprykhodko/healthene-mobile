@@ -14,6 +14,7 @@ import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import { navigate } from 'services/navigation';
 import { clearSession } from 'store/slices/appSlice';
+import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // const { width } = Dimensions.get('window');
 
@@ -131,7 +132,10 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
-                <View style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
+                <Pressable onPress={() => props.navigation.navigate('AccountSettings')} style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
+                    <View style={styles.userIcon}>
+                        <FeatherIcon size={48} name="user" />
+                    </View>
                     <View>
                         <Text variant="h4" color={theme.colors.text}>
                             {user?.firstName} {user?.lastName}
@@ -139,11 +143,9 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                         <Text variant="body" color={theme.colors.textSecondary}>
                             {user?.email}
                         </Text>
-                        <Pressable onPress={() => props.navigation.navigate('AccountSettings')}>
-                            <Text color={theme.colors.primary}>Account Settings</Text>
-                        </Pressable>
+                        <Text color={theme.colors.primary}>Account Settings</Text>
                     </View>
-                </View>
+                </Pressable>
                 {menuItems.map(item => {
                     const focused = getFocusedRoute() === item.route;
                     return (
@@ -188,9 +190,17 @@ const styles = StyleSheet.create({
         paddingTop: OFFSET.VERTICAL + 5,
     },
     profileSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
         padding: OFFSET.VERTICAL,
         borderBottomWidth: 1,
         marginBottom: OFFSET.POINT * 2.5,
+    },
+    userIcon: {
+        marginRight: OFFSET.POINT * 2,
+        borderWidth: 1,
+        borderRadius: 48/2,
+        overflow: 'hidden',
     },
     menuItem: {
         paddingVertical: OFFSET.VERTICAL - 5,
