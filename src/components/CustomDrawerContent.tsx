@@ -3,7 +3,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
-import { View, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Pressable, Image } from 'react-native';
 
 // local dependencies
 import { RootState } from 'store';
@@ -134,7 +134,10 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
             <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
                 <Pressable onPress={() => props.navigation.navigate('AccountSettings')} style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
                     <View style={styles.userIcon}>
-                        <FeatherIcon size={48} name="user" />
+                        {user?.coverImage?.url
+                            ? <Image source={{ uri: user?.coverImage.url }} width={48} height={48} />
+                            : <FeatherIcon size={48} name="user" />
+                        }
                     </View>
                     <View>
                         <Text variant="h4" color={theme.colors.text}>
@@ -192,7 +195,7 @@ const styles = StyleSheet.create({
     profileSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: OFFSET.VERTICAL,
+        paddingVertical: OFFSET.VERTICAL,
         borderBottomWidth: 1,
         marginBottom: OFFSET.POINT * 2.5,
     },

@@ -137,6 +137,9 @@ export interface User {
   gender: string;
   title?: string;
   avatar?: Url;
+  coverImage: {
+    url: string;
+  },
   preferences?: {
     language?: string;
     timezone?: string;

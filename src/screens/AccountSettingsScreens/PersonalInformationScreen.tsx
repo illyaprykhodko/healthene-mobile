@@ -2,14 +2,16 @@
 import { Formik } from 'formik';
 import { RootState } from 'store';
 import moment from 'moment/moment';
-import React, { useRef } from 'react';
-import { useSelector } from 'react-redux';
+import Toast from 'react-native-toast-message';
+import React, { useRef, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
 import FeatherIcon from 'react-native-vector-icons/Feather';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { BottomSheetBackdrop, BottomSheetModal } from '@gorhom/bottom-sheet';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 // local dependencies
+import { User } from 'types';
 import Text from 'components/Text.tsx';
 import { filters } from 'services/filter';
 import Select from 'components/Select.tsx';
@@ -17,9 +19,11 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
+import { setUser } from 'store/slices/appSlice.ts';
 import { getPicture } from 'services/image-picker';
 import DatePickerSelector from 'components/DatePicker.tsx';
 import { PREFIXES, SUFFIXES, GENDERS } from 'constants/spec.ts';
+import { useUpdateUserDataMutation } from 'store/api/settingsApi.ts';
 
 const SELECTS = {
     GENDER: 'GENDER',
@@ -31,10 +35,15 @@ type SelectsValue = keyof typeof SELECTS;
 
 export const PersonalInformationScreen = () => {
     const theme = useTheme();
+    const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.app.user);
+    const [updateUserData, { isLoading, isSuccess, error }] = useUpdateUserDataMutation();
+    console.log('isLoading', isLoading);
+    console.log('isSuccess', isSuccess);
+    console.log('error', error);
     // Field Bottom Sheet
-    const [dateModalOpen, setDateModalOpen] = React.useState(false);
-    const [select, setSelect] = React.useState<SelectsValue | null>(null);
+    const [dateModalOpen, setDateModalOpen] = useState(false);
+    const [select, setSelect] = useState<SelectsValue | null>(null);
     const bottomSheetRef = useRef<BottomSheetModal>(null);
     const openBottomSheet = (select: SelectsValue) => {
         setSelect(select);
@@ -42,14 +51,30 @@ export const PersonalInformationScreen = () => {
     };
 
     // User Image Bottom Sheet
+    const [isImgLoading, setIsImgLoading] = useState(false);
     const userImgSheetRef = useRef<BottomSheetModal>(null);
     const openUserImgBottomSheet = () => {
         userImgSheetRef.current?.present();
     };
 
-    const uploadImage = async () => {
-        await getPicture();
+    const handleSubmit = async (data: Partial<User>) => {
+        try {
+            const submit = await updateUserData(data).unwrap();
+            dispatch(setUser(submit));
+            Toast.show({
+                type: 'success',
+                text1: 'Profile updated',
+                text2: 'Your personal information has been successfully updated.',
+            });
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Update failed',
+                text2: 'Something went wrong while updating your information. Please try again later.',
+            });
+        }
     };
+
 
     return <>
         <View style={styles.container}>
@@ -62,16 +87,28 @@ export const PersonalInformationScreen = () => {
                     lastName: user?.lastName,
                     firstName: user?.firstName,
                     middleName: user?.middleName,
+                    coverImage: user?.coverImage
                 }}
-                onSubmit={async data => {
-                    console.log('data', data);
-                }}>
-                {({ values, errors, touched, handleChange, handleSubmit, dirty }) => (
-                    <>
+                onSubmit={handleSubmit}>
+                {({ values, errors, touched, handleChange, handleSubmit, dirty }) => {
+
+                    const uploadImage = async () => {
+                        userImgSheetRef.current?.close();
+                        setIsImgLoading(true);
+                        const url = await getPicture();
+                        if (url) {
+                            handleChange('coverImage.url')(url);
+                        }
+                        setIsImgLoading(false);
+                    };
+                    return <>
                         <ScrollView style={styles.flex}>
                             <View style={styles.imageContainer}>
                                 <Pressable style={styles.userImg} onPress={openUserImgBottomSheet}>
-                                    <FeatherIcon size={65} name="user" />
+                                    {values?.coverImage?.url
+                                        ? <Image source={{ uri: values?.coverImage.url }} width={65} height={65} />
+                                        : <FeatherIcon size={65} name="user"/>
+                                    }
                                 </Pressable>
                                 <View style={styles.flexShrink}>
                                     <Text color={theme.colors.primary}>Profile Picture</Text>
@@ -210,7 +247,9 @@ export const PersonalInformationScreen = () => {
                                             <Select
                                                 data={GENDERS}
                                                 currentValue={user?.gender}
-                                                onSelect={value => handleChange('gender')(value)}
+                                                onSelect={value => {
+                                                    handleChange('gender')(value);
+                                                }}
                                             />
                                         );
                                     default:
@@ -218,35 +257,35 @@ export const PersonalInformationScreen = () => {
                                 }
                             })()}
                         </BottomSheetModal>
-                    </>
-                )}
+                        <BottomSheetModal
+                            ref={userImgSheetRef}
+                            enablePanDownToClose
+                            snapPoints={['25%']}
+                            enableDynamicSizing={false}
+                            backdropComponent={backdropProps => (
+                                // show overlay
+                                <BottomSheetBackdrop
+                                    {...backdropProps}
+                                    opacity={0.5}
+                                    appearsOnIndex={0}
+                                    disappearsOnIndex={-1}
+                                />
+                            )}>
+                            <View style={styles.userImgModal}>
+                                <Pressable onPress={() => uploadImage()} style={styles.userImgOption}>
+                                    <EntypoIcon style={styles.marginRight} size={20} name="camera" />
+                                    <Text>Take a Photo</Text>
+                                </Pressable>
+                                <Pressable onPress={() => uploadImage()} style={styles.userImgOption}>
+                                    <EntypoIcon style={styles.marginRight} size={20} name="image-inverted" />
+                                    <Text>Choose Photo</Text>
+                                </Pressable>
+                            </View>
+                        </BottomSheetModal>
+                    </>;
+                }}
             </Formik>
         </View>
-        <BottomSheetModal
-            ref={userImgSheetRef}
-            enablePanDownToClose
-            snapPoints={['25%']}
-            enableDynamicSizing={false}
-            backdropComponent={backdropProps => (
-                // show overlay
-                <BottomSheetBackdrop
-                    {...backdropProps}
-                    opacity={0.5}
-                    appearsOnIndex={0}
-                    disappearsOnIndex={-1}
-                />
-            )}>
-            <View style={styles.userImgModal}>
-                <Pressable onPress={() => uploadImage()} style={styles.userImgOption}>
-                    <EntypoIcon style={styles.marginRight} size={20} name="camera" />
-                    <Text>Take a Photo</Text>
-                </Pressable>
-                <Pressable onPress={() => uploadImage()} style={styles.userImgOption}>
-                    <EntypoIcon style={styles.marginRight} size={20} name="image-inverted" />
-                    <Text>Choose Photo</Text>
-                </Pressable>
-            </View>
-        </BottomSheetModal>
     </>;
 };
 

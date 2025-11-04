@@ -59,8 +59,8 @@ export const SEARCH_TYPE = {
 export type SearchType = typeof SEARCH_TYPE[keyof typeof SEARCH_TYPE];
 
 export const GENDERS = [
-    { label: 'Male', value: 'Male' },
-    { label: 'Female', value: 'Female' },
+    { label: 'Male', value: 'MALE' },
+    { label: 'Female', value: 'FEMALE' },
 ];
 
 export const PREFIXES = [
