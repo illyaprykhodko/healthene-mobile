@@ -74,6 +74,9 @@ export const takePicture = async () => {
             multiple: false,
             includeBase64: true,
             cropperCircleOverlay: true,
+            cropperToolbarColor: '#156F93',
+            cropperActiveWidgetColor: '#FFFFFF',
+            cropperToolbarWidgetColor: '#FFFFFF',
             cropperToolbarTitle: 'Crop your image',
         }).then(image => uploadPicture(image));
     }
@@ -89,6 +92,9 @@ export const getPicture = async () => {
             multiple: false,
             includeBase64: true,
             cropperCircleOverlay: true,
+            cropperToolbarColor: '#156F93',
+            cropperActiveWidgetColor: '#FFFFFF',
+            cropperToolbarWidgetColor: '#FFFFFF',
             cropperToolbarTitle: 'Crop your image',
         }).then(image => uploadPicture(image));
     }
