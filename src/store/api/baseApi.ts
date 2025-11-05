@@ -172,7 +172,7 @@ const handleRefreshToken = async (
 
 const baseQueryRaw = fetchBaseQuery({
     baseUrl: BASE_API,
-    prepareHeaders: async (headers, { getState }) => {
+    prepareHeaders: async (headers, { getState, endpoint }) => {
         const session = await sessionManager.get();
         const token = (getState() as RootState).app.accessToken;
         const actualToken = session?.[TOKEN_KEYS.ACCESS] || token;
@@ -182,8 +182,9 @@ const baseQueryRaw = fetchBaseQuery({
         } else {
             console.log('No access token found in session');
         }
-
-        headers.set('Content-Type', 'application/json');
+        if (endpoint !== 'uploadImage') {
+            headers.set('Content-Type', 'application/json');
+        }
         headers.set('user-platform', Platform.OS === 'ios' ? 'IOS' : 'ANDROID');
         return headers;
     }
@@ -201,7 +202,7 @@ export const baseQuery = async (
 // Public baseQueryRawPub and baseQueryPub (no auth, like instancePub)
 const baseQueryRawPub = fetchBaseQuery({
     baseUrl: BASE_API,
-    prepareHeaders: async (headers) => {
+    prepareHeaders: async headers => {
         headers.set('Content-Type', 'application/json');
         headers.set('user-platform', Platform.OS === 'ios' ? 'IOS' : 'ANDROID');
         return headers;
@@ -209,9 +210,9 @@ const baseQueryRawPub = fetchBaseQuery({
 });
 
 export const baseQueryPub = async (
-  args: string | FetchArgs,
-  api: BaseQueryApi,
-  extraOptions: any
+    args: string | FetchArgs,
+    api: BaseQueryApi,
+    extraOptions: any
 ) => {
     const fetchArgs = typeof args === 'string' ? { url: args } : args;
     return applyInterceptors(fetchArgs, api, baseQueryRawPub);

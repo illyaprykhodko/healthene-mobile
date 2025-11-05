@@ -21,8 +21,8 @@ import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
 import { setUser } from 'store/slices/appSlice.ts';
-import { getPicture } from 'services/image-picker';
 import DatePickerSelector from 'components/DatePicker.tsx';
+import { getPicture, takePicture } from 'services/image-picker';
 import { PREFIXES, SUFFIXES, GENDERS } from 'constants/spec.ts';
 import { useUpdateUserDataMutation } from 'store/api/settingsApi.ts';
 
@@ -112,6 +112,15 @@ export const PersonalInformationScreen = () => {
                         }
                         setIsImgLoading(false);
                     };
+                    const uploadCameraImage = async () => {
+                        userImgSheetRef.current?.close();
+                        setIsImgLoading(true);
+                        const url = await takePicture();
+                        if (url) {
+                            handleChange('coverImage.url')(url);
+                        }
+                        setIsImgLoading(false);
+                    };
                     return <>
                         <KeyboardAvoidingView
                             style={styles.flex}
@@ -133,7 +142,16 @@ export const PersonalInformationScreen = () => {
                                         </Text>
                                     </View>
                                 </View>
-
+                                <TextInput
+                                    name="firstName"
+                                    disabled={false}
+                                    touched={touched}
+                                    label="First Name"
+                                    value={values.firstName}
+                                    onChangeText={handleChange('firstName')}
+                                    inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
+                                    error={touched.firstName && errors.firstName ? { firstName: errors.firstName } : undefined}
+                                />
                                 <TextInput
                                     name="middleName"
                                     disabled={false}
@@ -226,16 +244,6 @@ export const PersonalInformationScreen = () => {
                                         </Text>
                                     </Pressable>
                                 </View>
-                                <TextInput
-                                    name="firstName"
-                                    disabled={false}
-                                    touched={touched}
-                                    label="First Name"
-                                    value={values.firstName}
-                                    onChangeText={handleChange('firstName')}
-                                    inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
-                                    error={touched.firstName && errors.firstName ? { firstName: errors.firstName } : undefined}
-                                />
                             </ScrollView>
                         </KeyboardAvoidingView>
                         <Button
@@ -307,7 +315,7 @@ export const PersonalInformationScreen = () => {
                                 />
                             )}>
                             <View style={styles.userImgModal}>
-                                <Pressable onPress={() => uploadImage()} style={styles.userImgOption}>
+                                <Pressable onPress={() => uploadCameraImage()} style={styles.userImgOption}>
                                     <EntypoIcon style={styles.marginRight} size={20} name="camera" />
                                     <Text>Take a Photo</Text>
                                 </Pressable>
