@@ -39,14 +39,7 @@ export const getPicture = async () => {
         multiple: false,
         includeBase64: true
     })
-        .then(image => uploadPicture(image))
-        .catch(() => {
-            Toast.show({
-                type: 'error',
-                text1: 'Image selection failed',
-                text2: 'Please try again later.',
-            });
-        });
+        .then(image => uploadPicture(image));
 };
 
 

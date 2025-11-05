@@ -19,7 +19,8 @@ const Select = ({ onSelect, data, currentValue = null }: SelectProps) => {
     const [selected, setSelected] = useState<string>(currentValue ?? data[1].value);
     return <Picker
         selectedValue={selected}
-        style={{ backgroundColor: theme.colors.background }}
+        itemStyle={{ color: theme.colors.black }}
+        style={{ backgroundColor: theme.colors.green, color: theme.colors.black }}
         onValueChange={itemValue => {
             setSelected(itemValue);
             onSelect(itemValue);

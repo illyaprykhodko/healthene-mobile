@@ -9,7 +9,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { BottomSheetBackdrop, BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
 
 // local dependencies
 import { User } from 'types';
@@ -113,124 +113,131 @@ export const PersonalInformationScreen = () => {
                         setIsImgLoading(false);
                     };
                     return <>
-                        <ScrollView style={styles.flex}>
-                            <View style={styles.imageContainer}>
-                                <Pressable style={styles.userImg} onPress={openUserImgBottomSheet}>
-                                    {values?.coverImage?.url
-                                        ? <Image source={{ uri: values?.coverImage.url }} width={65} height={65} />
-                                        : <FeatherIcon size={65} name="user"/>
-                                    }
-                                </Pressable>
-                                <View style={styles.flexShrink}>
-                                    <Text color={theme.colors.primary}>Profile Picture</Text>
-                                    <Text variant="caption" color={theme.colors.grey}>
+                        <KeyboardAvoidingView
+                            style={styles.flex}
+                            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                            keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100}
+                        >
+                            <ScrollView style={styles.flex}>
+                                <View style={styles.imageContainer}>
+                                    <Pressable style={styles.userImg} onPress={openUserImgBottomSheet}>
+                                        {values?.coverImage?.url
+                                            ? <Image source={{ uri: values?.coverImage.url }} width={65} height={65} />
+                                            : <FeatherIcon size={65} name="user"/>
+                                        }
+                                    </Pressable>
+                                    <View style={styles.flexShrink}>
+                                        <Text color={theme.colors.primary}>Profile Picture</Text>
+                                        <Text variant="caption" color={theme.colors.grey}>
                                         This photo is used for your profile and appears in places where you check in.
-                                    </Text>
+                                        </Text>
+                                    </View>
                                 </View>
-                            </View>
-                            <TextInput
-                                name="firstName"
-                                disabled={false}
-                                touched={touched}
-                                label="First Name"
-                                value={values.firstName}
-                                onChangeText={handleChange('firstName')}
-                                inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
-                                error={touched.firstName && errors.firstName ? { firstName: errors.firstName } : undefined}
-                            />
-                            <TextInput
-                                name="middleName"
-                                disabled={false}
-                                label="Middle Name"
-                                value={values.middleName}
-                                onChangeText={handleChange('middleName')}
-                                inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
-                            />
-                            <TextInput
-                                name="lastName"
-                                disabled={false}
-                                label="Last Name"
-                                touched={touched}
-                                value={values.lastName}
-                                onChangeText={handleChange('lastName')}
-                                inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
-                                error={touched.lastName && errors.lastName ? { lastName: errors.lastName } : undefined}
-                            />
-                            <View>
-                                <Text variant="caption">Prefix</Text>
-                                <Pressable
-                                    onPress={() => openBottomSheet(SELECTS.PREFIXES)}
-                                    style={[styles.currentItem, { borderBottomColor: theme.colors.grey }]}
-                                >
-                                    <Text
-                                        color={values.prefix ? theme.colors.black : theme.colors.grey}
+
+                                <TextInput
+                                    name="middleName"
+                                    disabled={false}
+                                    label="Middle Name"
+                                    value={values.middleName}
+                                    onChangeText={handleChange('middleName')}
+                                    inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
+                                />
+                                <TextInput
+                                    name="lastName"
+                                    disabled={false}
+                                    label="Last Name"
+                                    touched={touched}
+                                    value={values.lastName}
+                                    onChangeText={handleChange('lastName')}
+                                    inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
+                                    error={touched.lastName && errors.lastName ? { lastName: errors.lastName } : undefined}
+                                />
+                                <View>
+                                    <Text variant="caption">Prefix</Text>
+                                    <Pressable
+                                        onPress={() => openBottomSheet(SELECTS.PREFIXES)}
+                                        style={[styles.currentItem, { borderBottomColor: theme.colors.grey }]}
                                     >
-                                        {values.prefix ? values.prefix : 'Select prefix'}
-                                    </Text>
-                                </Pressable>
-                            </View>
-                            <View style={styles.paddingVertical}>
-                                <Text variant="caption">Suffix</Text>
-                                <Pressable
-                                    onPress={() => openBottomSheet(SELECTS.SUFFIXES)}
-                                    style={[styles.currentItem, { borderBottomColor: theme.colors.grey }]}
-                                >
-                                    <Text
-                                        color={values.suffix ? theme.colors.black : theme.colors.grey}
+                                        <Text
+                                            color={values.prefix ? theme.colors.black : theme.colors.grey}
+                                        >
+                                            {values.prefix ? values.prefix : 'Select prefix'}
+                                        </Text>
+                                    </Pressable>
+                                </View>
+                                <View style={styles.paddingVertical}>
+                                    <Text variant="caption">Suffix</Text>
+                                    <Pressable
+                                        onPress={() => openBottomSheet(SELECTS.SUFFIXES)}
+                                        style={[styles.currentItem, { borderBottomColor: theme.colors.grey }]}
                                     >
-                                        {values.suffix ? values.suffix : 'Select suffix'}
-                                    </Text>
-                                </Pressable>
-                            </View>
-                            <View style={styles.paddingVertical}>
-                                <Text
-                                    variant="caption"
-                                    color={touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.black}
-                                >
+                                        <Text
+                                            color={values.suffix ? theme.colors.black : theme.colors.grey}
+                                        >
+                                            {values.suffix ? values.suffix : 'Select suffix'}
+                                        </Text>
+                                    </Pressable>
+                                </View>
+                                <View style={styles.paddingVertical}>
+                                    <Text
+                                        variant="caption"
+                                        color={touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.black}
+                                    >
                                     Date of Birth
-                                </Text>
-                                <Pressable
-                                    onPress={() => setDateModalOpen(true)}
-                                    style={[
-                                        styles.currentItem,
-                                        { borderBottomColor: touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.grey }
-                                    ]}
-                                >
-                                    <Text
-                                        color={values.birthday ? theme.colors.black : theme.colors.grey}
-                                    >
-                                        {values.birthday ? moment(values.birthday).format('YYYY-MM-DD') : 'Select birthday'}
                                     </Text>
-                                </Pressable>
-                            </View>
-                            <DatePickerSelector
-                                modalOpened={dateModalOpen}
-                                onCancel={() => setDateModalOpen(false)}
-                                onSelect={(value: string) => handleChange('birthday')(value)}
-                                currentDate={values?.birthday ? values.birthday.toString() : new Date().toString()}
-                            />
-                            <View style={styles.paddingVertical}>
-                                <Text
-                                    variant="caption"
-                                    color={touched?.gender && errors?.gender ? theme.colors.error : theme.colors.black}
-                                >
+                                    <Pressable
+                                        onPress={() => setDateModalOpen(true)}
+                                        style={[
+                                            styles.currentItem,
+                                            { borderBottomColor: touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.grey }
+                                        ]}
+                                    >
+                                        <Text
+                                            color={values.birthday ? theme.colors.black : theme.colors.grey}
+                                        >
+                                            {values.birthday ? moment(values.birthday).format('YYYY-MM-DD') : 'Select birthday'}
+                                        </Text>
+                                    </Pressable>
+                                </View>
+                                <DatePickerSelector
+                                    modalOpened={dateModalOpen}
+                                    onCancel={() => setDateModalOpen(false)}
+                                    onSelect={(value: string) => handleChange('birthday')(value)}
+                                    currentDate={values?.birthday ? values.birthday.toString() : new Date().toString()}
+                                />
+                                <View style={styles.paddingVertical}>
+                                    <Text
+                                        variant="caption"
+                                        color={touched?.gender && errors?.gender ? theme.colors.error : theme.colors.black}
+                                    >
                                     Gender
-                                </Text>
-                                <Pressable
-                                    onPress={() => openBottomSheet(SELECTS.GENDER)}
-                                    style={[
-                                        styles.currentItem,
-                                        { borderBottomColor: touched?.gender && errors?.gender ? theme.colors.error : theme.colors.grey }
-                                    ]}
-                                >
-                                    <Text
-                                        color={values.gender ? theme.colors.black : theme.colors.grey}
-                                    >
-                                        {values.gender ? filters.humanize(values.gender) : 'Select gender'}
                                     </Text>
-                                </Pressable>
-                            </View>
-                        </ScrollView>
+                                    <Pressable
+                                        onPress={() => openBottomSheet(SELECTS.GENDER)}
+                                        style={[
+                                            styles.currentItem,
+                                            { borderBottomColor: touched?.gender && errors?.gender ? theme.colors.error : theme.colors.grey }
+                                        ]}
+                                    >
+                                        <Text
+                                            color={values.gender ? theme.colors.black : theme.colors.grey}
+                                        >
+                                            {values.gender ? filters.humanize(values.gender) : 'Select gender'}
+                                        </Text>
+                                    </Pressable>
+                                </View>
+                                <TextInput
+                                    name="firstName"
+                                    disabled={false}
+                                    touched={touched}
+                                    label="First Name"
+                                    value={values.firstName}
+                                    onChangeText={handleChange('firstName')}
+                                    inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
+                                    error={touched.firstName && errors.firstName ? { firstName: errors.firstName } : undefined}
+                                />
+                            </ScrollView>
+                        </KeyboardAvoidingView>
                         <Button
                             disabled={!dirty}
                             variant="outline"
