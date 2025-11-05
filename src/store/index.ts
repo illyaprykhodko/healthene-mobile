@@ -28,7 +28,13 @@ export const store = configureStore({
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({ serializableCheck: false })
-            .concat(authApi.middleware, dayOverviewApi.middleware, publicApi.middleware),
+            .concat(
+                authApi.middleware,
+                publicApi.middleware,
+                settingsApi.middleware,
+                s3ServiceApi.middleware,
+                dayOverviewApi.middleware,
+            ),
 });
 
 // Types

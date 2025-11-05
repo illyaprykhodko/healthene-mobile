@@ -30,7 +30,6 @@ const checkPermission = async (permission: Permission): Promise<boolean> => {
     };
     try {
         const currentStatus = await check(permission);
-        console.log('Permission check result:', currentStatus);
 
         if (currentStatus === RESULTS.GRANTED || currentStatus === RESULTS.LIMITED) {
             return true;
@@ -38,7 +37,6 @@ const checkPermission = async (permission: Permission): Promise<boolean> => {
 
         if (currentStatus === RESULTS.DENIED) {
             const requestStatus = await request(permission);
-            console.log('Permission request result:', requestStatus);
 
             if (requestStatus === RESULTS.GRANTED || requestStatus === RESULTS.LIMITED) {
                 return true;
@@ -53,7 +51,6 @@ const checkPermission = async (permission: Permission): Promise<boolean> => {
             return showPermissionBlockedToast();
         }
     } catch (error) {
-        console.warn('Permission check error:', error);
         Toast.show({
             type: 'error',
             text1: 'Permission check failed',
