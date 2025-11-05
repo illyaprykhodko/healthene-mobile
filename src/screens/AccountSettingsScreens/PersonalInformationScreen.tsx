@@ -15,24 +15,16 @@ import { Image, Pressable, ScrollView, StyleSheet, View, KeyboardAvoidingView, P
 import { User } from 'types';
 import Text from 'components/Text.tsx';
 import { filters } from 'services/filter';
-import Select from 'components/Select.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
+import { Dropdown } from 'components/Dropdown.tsx';
 import { setUser } from 'store/slices/appSlice.ts';
 import DatePickerSelector from 'components/DatePicker.tsx';
 import { getPicture, takePicture } from 'services/image-picker';
 import { PREFIXES, SUFFIXES, GENDERS } from 'constants/spec.ts';
 import { useUpdateUserDataMutation } from 'store/api/settingsApi.ts';
-
-const SELECTS = {
-    GENDER: 'GENDER',
-    PREFIXES: 'PREFIXES',
-    SUFFIXES: 'SUFFIXES',
-    DATE_OF_BIRTH: 'DATE_OF_BIRTH',
-} as const;
-type SelectsValue = keyof typeof SELECTS;
 
 const validationSchema = yup.object().shape({
     firstName: yup.string()
@@ -51,14 +43,8 @@ export const PersonalInformationScreen = () => {
     const [updateUserData] = useUpdateUserDataMutation();
     const user = useSelector((state: RootState) => state.app.user);
 
-    // Field Bottom Sheet
+    // Birthday Bottom Sheet
     const [dateModalOpen, setDateModalOpen] = useState(false);
-    const [select, setSelect] = useState<SelectsValue | null>(null);
-    const bottomSheetRef = useRef<BottomSheetModal>(null);
-    const openBottomSheet = (select: SelectsValue) => {
-        setSelect(select);
-        bottomSheetRef.current?.present();
-    };
 
     // User Image Bottom Sheet
     const [isImgLoading, setIsImgLoading] = useState(false);
@@ -170,31 +156,19 @@ export const PersonalInformationScreen = () => {
                                     inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
                                     error={touched.lastName && errors.lastName ? { lastName: errors.lastName } : undefined}
                                 />
-                                <View>
-                                    <Text variant="caption">Prefix</Text>
-                                    <Pressable
-                                        onPress={() => openBottomSheet(SELECTS.PREFIXES)}
-                                        style={[styles.currentItem, { borderBottomColor: theme.colors.grey }]}
-                                    >
-                                        <Text
-                                            color={values.prefix ? theme.colors.black : theme.colors.grey}
-                                        >
-                                            {values.prefix ? values.prefix : 'Select prefix'}
-                                        </Text>
-                                    </Pressable>
-                                </View>
+                                <Dropdown
+                                    label="Prefix"
+                                    data={PREFIXES}
+                                    value={values.prefix}
+                                    onSelect={value => handleChange('prefix')(value)}
+                                />
                                 <View style={styles.paddingVertical}>
-                                    <Text variant="caption">Suffix</Text>
-                                    <Pressable
-                                        onPress={() => openBottomSheet(SELECTS.SUFFIXES)}
-                                        style={[styles.currentItem, { borderBottomColor: theme.colors.grey }]}
-                                    >
-                                        <Text
-                                            color={values.suffix ? theme.colors.black : theme.colors.grey}
-                                        >
-                                            {values.suffix ? values.suffix : 'Select suffix'}
-                                        </Text>
-                                    </Pressable>
+                                    <Dropdown
+                                        label="Suffix"
+                                        data={SUFFIXES}
+                                        value={values.suffix}
+                                        onSelect={value => handleChange('suffix')(value)}
+                                    />
                                 </View>
                                 <View style={styles.paddingVertical}>
                                     <Text
@@ -224,25 +198,14 @@ export const PersonalInformationScreen = () => {
                                     currentDate={values?.birthday ? values.birthday.toString() : new Date().toString()}
                                 />
                                 <View style={styles.paddingVertical}>
-                                    <Text
-                                        variant="caption"
-                                        color={touched?.gender && errors?.gender ? theme.colors.error : theme.colors.black}
-                                    >
-                                    Gender
-                                    </Text>
-                                    <Pressable
-                                        onPress={() => openBottomSheet(SELECTS.GENDER)}
-                                        style={[
-                                            styles.currentItem,
-                                            { borderBottomColor: touched?.gender && errors?.gender ? theme.colors.error : theme.colors.grey }
-                                        ]}
-                                    >
-                                        <Text
-                                            color={values.gender ? theme.colors.black : theme.colors.grey}
-                                        >
-                                            {values.gender ? filters.humanize(values.gender) : 'Select gender'}
-                                        </Text>
-                                    </Pressable>
+                                    <Dropdown
+                                        label="Gender"
+                                        data={GENDERS}
+                                        value={values.gender}
+                                        touched={touched?.gender}
+                                        errorText={errors?.gender}
+                                        onSelect={value => handleChange('gender')(value)}
+                                    />
                                 </View>
                             </ScrollView>
                         </KeyboardAvoidingView>
@@ -253,53 +216,6 @@ export const PersonalInformationScreen = () => {
                             title="Update Information"
                             style={styles.updateBtn}
                         />
-                        <BottomSheetModal
-                            ref={bottomSheetRef}
-                            enablePanDownToClose
-                            snapPoints={['35%']}
-                            enableDynamicSizing={false}
-                            backdropComponent={backdropProps => (
-                                // show overlay
-                                <BottomSheetBackdrop
-                                    {...backdropProps}
-                                    opacity={0.5}
-                                    appearsOnIndex={0}
-                                    disappearsOnIndex={-1}
-                                />
-                            )}>
-                            {(() => {
-                                switch (select) {
-                                    case SELECTS.PREFIXES:
-                                        return (
-                                            <Select
-                                                data={PREFIXES}
-                                                currentValue={user?.prefix}
-                                                onSelect={value => handleChange('prefix')(value)}
-                                            />
-                                        );
-                                    case SELECTS.SUFFIXES:
-                                        return (
-                                            <Select
-                                                data={SUFFIXES}
-                                                currentValue={user?.suffix}
-                                                onSelect={value => handleChange('suffix')(value)}
-                                            />
-                                        );
-                                    case SELECTS.GENDER:
-                                        return (
-                                            <Select
-                                                data={GENDERS}
-                                                currentValue={user?.gender}
-                                                onSelect={value => {
-                                                    handleChange('gender')(value);
-                                                }}
-                                            />
-                                        );
-                                    default:
-                                        return null;
-                                }
-                            })()}
-                        </BottomSheetModal>
                         <BottomSheetModal
                             ref={userImgSheetRef}
                             enablePanDownToClose

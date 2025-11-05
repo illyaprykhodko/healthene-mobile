@@ -2488,34 +2488,6 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNCPicker (2.11.4):
-    - boost
-    - DoubleConversion
-    - fast_float
-    - fmt
-    - glog
-    - hermes-engine
-    - RCT-Folly
-    - RCT-Folly/Fabric
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - SocketRocket
-    - Yoga
   - RNGestureHandler (2.29.0):
     - boost
     - DoubleConversion
@@ -3042,7 +3014,6 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNAppleHealthKit (from `../node_modules/react-native-health`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
-  - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNImageCropPicker (from `../node_modules/react-native-image-crop-picker`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
@@ -3218,8 +3189,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-health"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
-  RNCPicker:
-    :path: "../node_modules/@react-native-picker/picker"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNImageCropPicker:
@@ -3319,10 +3288,9 @@ SPEC CHECKSUMS:
   ReactCommon: 00df7b9f859c9d02181844255bb89a8bca544374
   RNAppleHealthKit: 60a6beefdd89a75811e9a8873a5e24f351dee681
   RNCAsyncStorage: a9e087b68308fd829e66f5e932976f23c4e1005b
-  RNCPicker: 3fc4d505041318ee8f59662d8d66892ce3c3295c
   RNGestureHandler: 26f87adea5239bdbc4e428b4badf074e8654c590
   RNImageCropPicker: c456a5d12cfc902ec8865c79af97f6df137250ba
-  RNPermissions: 13321e51b4e00941e1ddf6cbc8be78e7d3e855b5
+  RNPermissions: 7ab6bff156bb08ff53566390403369a1bb7ad2b2
   RNReanimated: 5f5ea9ba506ef48182d76070eaf96b032deefb1a
   RNScreens: 3693ec4bbc0065151b843269e50e9807644e9918
   RNSVG: 4a4f7d4897abbfdc6dfe30be5d6cc5ffee23ea43
@@ -3332,6 +3300,6 @@ SPEC CHECKSUMS:
   TOCropViewController: 797deaf39c90e6e9ddd848d88817f6b9a8a09888
   Yoga: 922d794dce2af9c437f864bf4093abfa7a131adb
 
-PODFILE CHECKSUM: 278e9cfc1f6aaaac6e78ba3c1bff15389aef01c7
+PODFILE CHECKSUM: 65570f2447ab8b8f77c76e5b4188e3f440e6c27e
 
 COCOAPODS: 1.16.2
