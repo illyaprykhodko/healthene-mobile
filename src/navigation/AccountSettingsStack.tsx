@@ -8,6 +8,7 @@ import { OFFSET } from 'constants/offset.ts';
 import { ROUTES } from 'constants/routes.ts';
 import BackButton from 'components/BackButton.tsx';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
+import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen.tsx';
 import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
 
 const Stack = createStackNavigator();
@@ -37,6 +38,11 @@ export const AccountSettingsStack = () => {
                 component={SettingsScreen}
                 name={ROUTES.ACCOUNT_SETTINGS}
                 options={{ title: 'Account Settings' }}
+            />
+            <Stack.Screen
+                name={ROUTES.ADDRESS}
+                component={AddressScreen}
+                options={{ title: 'My Addresses' }}
             />
             <Stack.Screen
                 name={ROUTES.PERSONAL_INFORMATION}
