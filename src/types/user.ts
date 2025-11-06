@@ -154,7 +154,7 @@ export interface User {
       activityVisible: boolean;
     };
   };
-  address?: Address;
+  addresses?: Address[];
   health?: {
     bloodType?: string;
     allergies?: string[];

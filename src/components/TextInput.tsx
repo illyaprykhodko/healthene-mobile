@@ -45,7 +45,10 @@ const TextInput: React.FC<TextInputProps> = ({
 }) => {
     const theme = useTheme();
     const errorText = error?.[name];
+    console.log('touched', touched);
+    console.log('name', name);
     const touchedField = touched?.[name];
+    console.log('touchedField', touchedField);
     const [isBlur, setIsBlur] = useState(false);
     const isShowError = touchedField && errorText;
     const resolvedPrimary = color || theme.colors.primary;
