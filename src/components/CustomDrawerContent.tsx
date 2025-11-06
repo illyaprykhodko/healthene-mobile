@@ -129,10 +129,12 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         return props.state?.routes[props.state?.index]?.name;
     };
 
+    const goToAccountSettings = () => navigate('AccountSettings');
+
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
-                <Pressable onPress={() => props.navigation.navigate('AccountSettings')} style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
+                <Pressable onPress={goToAccountSettings} style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
                     <View style={styles.userIcon}>
                         {user?.coverImage?.url
                             ? <Image source={{ uri: user?.coverImage.url }} width={48} height={48} />

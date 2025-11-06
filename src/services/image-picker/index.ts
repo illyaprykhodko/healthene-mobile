@@ -22,9 +22,9 @@ const checkPermission = async (permission: Permission): Promise<boolean> => {
     const showPermissionBlockedToast = () => {
         Toast.show({
             type: 'error',
+            onPress: openAppSettings,
             text1: 'Permission denied',
             text2: 'You need to grant access to upload photos',
-            onPress: openAppSettings,
         });
         return false;
     };

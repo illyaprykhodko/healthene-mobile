@@ -28,6 +28,7 @@ export type RootStackParamList = {
   [ROUTES.PROFILE]: undefined;
   [ROUTES.SETTINGS]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
+  [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
 
   // Example of a screen that requires params

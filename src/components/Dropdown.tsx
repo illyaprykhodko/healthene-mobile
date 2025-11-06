@@ -1,3 +1,4 @@
+// outsource dependencies
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Dropdown as RNDropdown } from 'react-native-element-dropdown';
