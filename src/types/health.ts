@@ -13,10 +13,10 @@ export type MeasurementType =
   | 'CREATINE'
   | 'POTASSIUM'
   | 'HEART_RATE'
+  | 'HEMOGLOBIN'
   | 'TEMPERATURE'
   | 'BLOOD_GLUCOSE'
   | 'BLOOD_PRESSURE'
-  | 'HEMOGLOBIN_A1C'
   | 'RESPIRATORY_RATE'
   ;
 

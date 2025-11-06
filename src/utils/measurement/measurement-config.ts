@@ -281,8 +281,8 @@ export const MEASUREMENT_CONFIG: Record<MeasurementType, MeasurementConfig> = {
         maxDecimalPlaces: 0,
     },
 
-    HEMOGLOBIN_A1C: {
-        type: 'HEMOGLOBIN_A1C',
+    HEMOGLOBIN: {
+        type: 'HEMOGLOBIN',
         fields: [
             {
                 min: 3,
