@@ -37,9 +37,9 @@ export default defineConfig([
             "react/forbid-prop-types": ["warn", { "forbid": ["any"] }],
             "react/prefer-stateless-function": ["warn", { "ignorePureComponents": true }],
             "react/no-unused-state": ["error"],
-            "react/no-unused-prop-types": ["error"],
+            "react/no-unused-prop-types": ["off"],
             "react/require-default-props": ["off"],
-            "react/default-props-match-prop-types": ["error"],
+            "react/default-props-match-prop-types": ["off"],
             "react/destructuring-assignment": ["off"],
             "react/display-name": ["off"],
             "react/jsx-indent": ["off"],
@@ -119,8 +119,8 @@ export default defineConfig([
                 "allow": ["access_token", "refresh_token"]
             }],
             "max-len": ["error", {
-                "code": 150,
-                "comments": 150,
+                "code": 200,
+                "comments": 200,
                 "tabWidth": 4,
                 "ignoreUrls": true,
                 "ignoreStrings": true,

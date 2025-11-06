@@ -6,10 +6,35 @@ import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
 
 interface BadgeProps {
-  children: React.ReactNode;
-  count: number;
-  showZero?: boolean;
+    count: number;
+    bgColor?: string;
+    showZero?: boolean;
+    children: React.ReactNode;
 }
+
+export const Badge: React.FC<BadgeProps> = ({
+    count,
+    bgColor,
+    children,
+    showZero = false,
+}) => {
+    const theme = useTheme();
+    const shouldShowBadge = count > 0 || (showZero && count === 0);
+    const displayCount = count > 99 ? '99+' : count.toString();
+
+    return (
+        <View style={styles.container}>
+            {children}
+            {shouldShowBadge && (
+                <View style={[styles.badge, { backgroundColor: bgColor || theme.colors.aqua }]}>
+                    <Text style={[styles.badgeText, { color: theme.colors.black }]}>
+                        {displayCount}
+                    </Text>
+                </View>
+            )}
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -17,8 +42,8 @@ const styles = StyleSheet.create({
     },
     badge: {
         position: 'absolute',
-        top: -5,
-        right: -5,
+        top: -10,
+        right: -10,
         backgroundColor: '#f55353',
         borderRadius: 10,
         minWidth: 20,
@@ -34,27 +59,3 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
 });
-
-export const Badge: React.FC<BadgeProps> = ({
-    children,
-    count,
-    showZero = false
-}) => {
-    const theme = useTheme();
-    const shouldShowBadge = count > 0 || (showZero && count === 0);
-    const displayCount = count > 99 ? '99+' : count.toString();
-
-    return (
-        <View style={styles.container}>
-            {children}
-            {shouldShowBadge && (
-                <View style={[styles.badge, { backgroundColor: theme.colors.error }]}>
-                    <Text style={[styles.badgeText, { color: theme.colors.white }]}>
-                        {displayCount}
-                    </Text>
-                </View>
-            )}
-        </View>
-    );
-};
-

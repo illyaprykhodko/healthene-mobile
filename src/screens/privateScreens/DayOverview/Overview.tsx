@@ -1,19 +1,21 @@
 // outsource dependencies
 import moment from 'moment';
-import React, { useEffect, useMemo } from 'react';
 import Svg, { Line, Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 // local dependencies
-import Text from '../../../components/Text';
-import Screen from '../../../components/Screen';
-import { useTheme } from '../../../hooks/useTheme';
-import { OFFSET } from '../../../constants/offset';
-import { AnytimeMenu } from '../../../components/AnytimeMenu';
-import { useAppDispatch, useAppSelector } from '../../../store';
-import { useGetDayOverviewQuery, Phase } from '../../../store/api/dayOverviewApi';
-import { selectDayOverview, meta, setDateEntry } from '../../../store/slices/dayOverviewSlice';
+import Text from 'components/Text';
+import Screen from 'components/Screen';
+import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
+import { AnytimeMenu } from 'components/AnytimeMenu';
+import { useAppDispatch, useAppSelector } from 'store';
+import type { AnytimeMeasurementItem } from 'types/anytime';
+import { useGetDayOverviewQuery, Phase } from 'store/api/dayOverviewApi';
+import { MeasurementInputModal } from 'components/AnytimeMenu/MeasurementInputModal';
+import { selectDayOverview, meta, setDateEntry } from 'store/slices/dayOverviewSlice';
 
 // Temporary types
 export type PhaseType =
@@ -323,6 +325,12 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingLeft: 12,
     },
+    graphIconContainer: {
+        paddingRight: 16,
+        paddingLeft: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     title: {
         fontSize: 18,
         fontWeight: '600',
@@ -368,6 +376,7 @@ export const Overview: React.FC = () => {
     const dispatch = useAppDispatch();
     const { date, expectAnswer } = useAppSelector(selectDayOverview);
     const currentDate = date || moment().format('YYYY-MM-DD');
+    const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
 
     const { data, isLoading, isFetching } = useGetDayOverviewQuery(currentDate, {
         skip: !currentDate,
@@ -442,10 +451,43 @@ export const Overview: React.FC = () => {
     const isMealPhase = (type: PhaseType) => type === 'MEAL';
 
     const handlePhasePress = (phase: PhaseItem) => {
-        if ((phase.type === 'MEASUREMENT' || phase.type === 'ANYTIME') && phase.phaseId) {
+        if (phase.type === 'MEASUREMENT') {
+            const measurementPhase = data?.phases?.find(p => p.type === 'MEASUREMENT');
+            const measurementItem = measurementPhase?.items?.find((item: any) => item.id === phase.id);
+            
+            if (measurementItem) {
+                const measurementType = measurementItem.measurement?.type;
+                if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
+                    (navigation as any).navigate('WeightMeasurement', {
+                        measurementPhaseItem: measurementItem,
+                        date: currentDate,
+                    });
+                    return;
+                }
+                if (phase.status === 'DONE') {
+                    (navigation as any).navigate('SaveValue', {
+                        measurementType: measurementItem.measurement?.type,
+                        measurementName: measurementItem.measurement?.name,
+                        measurementPhaseItem: measurementItem,
+                        date: currentDate,
+                    });
+                    return;
+                }
+                const anytimeMeasurement: AnytimeMeasurementItem = {
+                    id: measurementItem.id,
+                    type: 'MEASUREMENT',
+                    status: measurementItem.status || 'PENDING',
+                    phaseId: measurementPhase!.id,
+                    measurement: measurementItem.measurement,
+                };
+                setSelectedMeasurement(anytimeMeasurement);
+            }
+            return;
+        }
+        
+        if (phase.type === 'ANYTIME' && phase.phaseId) {
             (navigation as any).navigate('Edit', { phaseId: phase.phaseId, date: currentDate });
         } else if (phase.type === 'PHYSICAL_ACTIVITY') {
-            // Find the physical activity phase for status tracking
             const physicalActivityPhase = data?.phases?.find(p => p.type === 'PHYSICAL_ACTIVITY');
             
             (navigation as any).navigate('ExerciseCategories', {
@@ -457,7 +499,6 @@ export const Overview: React.FC = () => {
                 deepPhaseId: physicalActivityPhase?.id,
                 exercisePhaseStatus: physicalActivityPhase?.status,
                 onRefresh: () => {
-                    // Refetch day overview data to update UI
                     dispatch(setDateEntry({
                         date: currentDate,
                         entry: { needsRefresh: true }
@@ -489,6 +530,7 @@ export const Overview: React.FC = () => {
                 <View style={styles.timelineContainer}>
                     <FlatList
                         data={phases}
+                        style={{ marginBottom: 35 }}
                         keyExtractor={item => String(item.id)}
                         ListHeaderComponent={<TimelineSVG phases={phases} />}
                         renderItem={({ item }) => {
@@ -511,6 +553,11 @@ export const Overview: React.FC = () => {
                       Status: {item.status || 'Unknown'}
                                         </Text>
                                     </View>
+                                    {/* {item.type === 'MEASUREMENT' && item.status === 'DONE' && (
+                                        <View style={styles.graphIconContainer}>
+                                            <Icon name="chart-line" color="#2978A0" size={20} />
+                                        </View>
+                                    )} */}
                                 </TouchableOpacity>
                             );
                         }}
@@ -518,11 +565,19 @@ export const Overview: React.FC = () => {
                 </View>
             </View>
 
-            {/* Anytime Menu */}
             <AnytimeMenu
                 date={currentDate}
                 disabled={Boolean(expectAnswer) || isLoading}
             />
+
+            {selectedMeasurement && (
+                <MeasurementInputModal
+                    item={selectedMeasurement}
+                    visible={!!selectedMeasurement}
+                    disabled={Boolean(expectAnswer)}
+                    onClose={() => setSelectedMeasurement(null)}
+                />
+            )}
         </Screen>
     );
 };

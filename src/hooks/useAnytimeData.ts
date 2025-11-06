@@ -51,13 +51,16 @@ export const useAnytimeData = (date?: string) => {
         const physicalActivities: AnytimePhysicalActivityItem[] = [];
 
         // Process different types of items
-        Object.values(anytimeItems).flat().forEach((item: any) => {
+        const flatItems = Object.values(anytimeItems).flat();
+        
+        flatItems.forEach((item: any) => {
             const baseItem = {
                 id: item.id,
-                status: item.status || 'PENDING',
-                amount: item.amount,
                 order: item.order,
+                amount: item.amount,
                 phaseId: anytimePhaseId,
+                status: item.status || 'PENDING',
+                consumedAmount: item.consumedAmount ?? 0,
             };
 
             switch (item.type) {
@@ -111,13 +114,15 @@ export const useAnytimeData = (date?: string) => {
             }
         });
 
-        return {
+        const result = {
             foods: foods.sort((a, b) => (a.order || 0) - (b.order || 0)),
             drinks: drinks.sort((a, b) => (a.order || 0) - (b.order || 0)),
             supplements: supplements.sort((a, b) => (a.order || 0) - (b.order || 0)),
             measurements: measurements.sort((a, b) => (a.order || 0) - (b.order || 0)),
             physicalActivities: physicalActivities.sort((a, b) => (a.order || 0) - (b.order || 0)),
         };
+        
+        return result;
     }, [anytimeItems, anytimePhaseId]);
 
     const getPendingCount = (items: AnytimeItem[]) =>

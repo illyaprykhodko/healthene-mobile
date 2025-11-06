@@ -1,5 +1,5 @@
 // outsource dependencies
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 // local dependencies
 import { Badge } from './Badge';
@@ -13,7 +13,10 @@ import {
     MeasurementIcon,
 } from './AnytimeIcons';
 import { AnytimeModal } from './AnytimeModal';
+import { PHASE_ITEM_STATUS } from 'constants/spec';
 import type { AnytimeItemType } from '../../types/anytime';
+import { AnytimeExercisesModal } from './AnytimeExercisesModal';
+import { useGetDayOverviewQuery } from 'store/api/dayOverviewApi';
 
 interface AnytimeMenuProps {
     date?: string;
@@ -21,22 +24,6 @@ interface AnytimeMenuProps {
     modalFullScreen?: boolean;
     modalMaxHeight?: number;
 }
-
-const styles = StyleSheet.create({
-    container: {
-        borderTopWidth: 2,
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingVertical: 16,
-        marginBottom: Platform.OS === 'ios' ? 16 : 0,
-    },
-    iconButton: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 8,
-    },
-});
 
 export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
     date,
@@ -46,20 +33,26 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 }) => {
     const theme = useTheme();
     const { data, counts, isLoading, hasAnytimePhase } = useAnytimeData(date);
+    const { data: dayOverviewData } = useGetDayOverviewQuery(date || new Date().toISOString().split('T')[0]);
     const [activeModal, setActiveModal] = useState<AnytimeItemType | null>(null);
-
-    // Don't render if there's no anytime phase
-    if (!hasAnytimePhase) {
-        return null;
-    }
+    const [showExercisesModal, setShowExercisesModal] = useState(false);
 
     const handleIconPress = (type: AnytimeItemType) => {
         if (disabled || isLoading) { return; }
-        setActiveModal(type);
+        
+        if (type === 'PHYSICAL_ACTIVITY') {
+            setShowExercisesModal(true);
+        } else {
+            setActiveModal(type);
+        }
     };
 
     const handleCloseModal = () => {
         setActiveModal(null);
+    };
+
+    const handleCloseExercisesModal = () => {
+        setShowExercisesModal(false);
     };
 
     const getModalProps = (type: AnytimeItemType) => {
@@ -103,6 +96,20 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
         }
     };
 
+    const exercisePendingCount = useMemo(() => {
+        const anytimePhase = dayOverviewData?.phases?.find(phase => phase.type === 'ANYTIME');
+        const anytimeItems = anytimePhase?.items || [];
+        const exerciseItems = anytimeItems.filter(item =>
+            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
+        );
+        return exerciseItems.filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
+    }, [dayOverviewData]);
+
+    // Don't render if there's no anytime phase
+    if (!hasAnytimePhase) {
+        return null;
+    }
+
     return (
         <>
             <View style={[styles.container, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.blue }]}>
@@ -141,8 +148,8 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
                     disabled={disabled || isLoading}
                     onPress={() => handleIconPress('PHYSICAL_ACTIVITY')}
                 >
-                    <Badge count={counts.physicalActivities}>
-                        <ActivityIcon disabled={!counts.physicalActivities || disabled || isLoading} />
+                    <Badge count={exercisePendingCount}>
+                        <ActivityIcon disabled={!exercisePendingCount || disabled || isLoading} />
                     </Badge>
                 </TouchableOpacity>
 
@@ -168,6 +175,30 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
                     disabled={disabled || isLoading}
                 />
             )}
+
+            <AnytimeExercisesModal
+                visible={showExercisesModal}
+                onClose={handleCloseExercisesModal}
+                date={date}
+                disabled={disabled || isLoading}
+            />
         </>
     );
 };
+
+const styles = StyleSheet.create({
+    container: {
+        borderTopWidth: 2,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        // paddingVertical: 5,
+        paddingTop: 5,
+        marginBottom: Platform.OS === 'ios' ? 16 : 0,
+    },
+    iconButton: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 8,
+    },
+});

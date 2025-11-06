@@ -230,7 +230,7 @@ export default function ExerciseCategories () {
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <ScrollView>
-                <View style={[styles.header, { backgroundColor: theme.colors.surface }]}>
+                <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt || theme.colors.surface }]}>
                     <View style={styles.row}>
                         {title === 'Exercise' && (
                             <Badge count={activeExercisesCount}>

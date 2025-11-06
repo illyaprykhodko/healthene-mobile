@@ -45,7 +45,7 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
     }, [editable, onChange, value]);
 
     const renderGeneralIcon = () => (value
-        ? <Icon solid name="check-square" size={size + 15} color="#87CA67" />
+        ? <Icon solid name="check-square" size={size + 15} color={theme.colors.successAlt} />
         : <Icon name="square" size={size + 15} color={theme.colors.white} />
     );
 
@@ -54,7 +54,7 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
             default:
                 return <Icon name="square" size={size + 3} color={theme.colors.white} />;
             case 'DONE':
-                return <Icon solid name="check-square" size={size + 13} color="#87CA67" />;
+                return <Icon solid name="check-square" size={size + 13} color={theme.colors.successAlt} />;
             case 'DID_NOT_EAT':
                 return <Icon solid name="minus-square" size={size + 5} color={theme.colors.darkBlue} />;
         }
@@ -66,8 +66,8 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
             onPress={handlePress}
             style={StyleSheet.flatten([styles.container, style, {
                 paddingVertical: 0.5,
-                borderColor: value ? 'transparent' : '#8A95A3',
                 paddingHorizontal: status === 'DONE' ? 0 : 2.7,
+                borderColor: value ? 'transparent' : theme.colors.border,
             }])}
         >
             {isDayOverview ? renderDayOverviewIcon() : renderGeneralIcon()}
@@ -77,4 +77,3 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
 
 export const Checkbox = memo(CheckboxComponent);
 export default Checkbox;
-

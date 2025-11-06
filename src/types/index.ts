@@ -6,6 +6,7 @@ export * from './habit';
 export * from './store';
 export * from './recipe';
 export * from './common';
+export * from './health';
 export * from './contact';
 export * from './medical';
 export * from './business';

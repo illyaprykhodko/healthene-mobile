@@ -15,8 +15,13 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import AddReplaceItem from './AddReplaceItem';
 import { Hamburger } from 'components/Hamburger';
+import SaveValueScreen from '../SaveValueScreen';
+import SmartScaleScreen from '../SmartScaleScreen';
 import TimeSwitcher from 'components/TimeSwitcher';
 import { useAppDispatch, useAppSelector } from 'store';
+import AllRecordedDataScreen from '../AllRecordedDataScreen';
+import MeasurementChartScreen from '../MeasurementChartScreen';
+import WeightMeasurementScreen from '../WeightMeasurementScreen';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
 import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
 
@@ -50,31 +55,6 @@ const DayOverviewStack: React.FC = () => {
             headerTitleStyle: {
                 fontWeight: '600',
             },
-            headerTitle: () => (
-                <TimeSwitcher
-                    date={currentDate}
-                    isHideLeftBtn={false}
-                    isHideRightBtn={false}
-                    disabled={Boolean(expectAnswer)}
-                    init={({ date: nextDate }) => {
-                        const isCurrent = moment(nextDate).isSame(moment(), 'day');
-                        const isFuture = moment(nextDate).isAfter(moment(), 'day');
-                        const isPast = moment(nextDate).isBefore(moment(), 'day');
-                        dispatch(
-                            meta({
-                                date: nextDate,
-                                isPastDate: isPast,
-                                isFutureDate: isFuture,
-                                isCurrentDate: isCurrent,
-                                calendarDays: { [nextDate]: { selected: true } },
-                            })
-                        );
-                    }}
-                />
-            ),
-            headerLeft: () => (
-                <BackButton navigation={navigation} theme={theme} />
-            ),
             headerRight: () => (
                 <Hamburger onPress={() => (navigation as any).openDrawer?.()} style={styles.menuButton} />
             ),
@@ -82,21 +62,66 @@ const DayOverviewStack: React.FC = () => {
             <Stack.Screen
                 name="DayOverview"
                 component={Overview}
+                options={() => ({ title: 'Day Overview', headerTitle: () => (
+                    <TimeSwitcher
+                        date={currentDate}
+                        isHideLeftBtn={false}
+                        isHideRightBtn={false}
+                        disabled={Boolean(expectAnswer)}
+                        init={({ date: nextDate }) => {
+                            const isCurrent = moment(nextDate).isSame(moment(), 'day');
+                            const isFuture = moment(nextDate).isAfter(moment(), 'day');
+                            const isPast = moment(nextDate).isBefore(moment(), 'day');
+                            dispatch(
+                                meta({
+                                    date: nextDate,
+                                    isPastDate: isPast,
+                                    isFutureDate: isFuture,
+                                    isCurrentDate: isCurrent,
+                                    calendarDays: { [nextDate]: { selected: true } },
+                                })
+                            );
+                        }}
+                    />
+                ),
+                headerLeft: () => (
+                    <BackButton navigation={navigation} theme={theme} />
+                ), })}
             />
             <Stack.Screen
                 name="Item"
                 component={Item}
-                options={({ route, navigation }) => ({
+                options={{
                     title: 'Item Details',
-                    headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
-                })}
+                }}
             />
             <Stack.Screen
                 name="Edit"
                 component={Edit}
-                options={({ route, navigation }) => ({
+                options={() => ({
                     title: 'Edit',
-                    headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
+                    headerTitle: () => (
+                        <TimeSwitcher
+                            date={currentDate}
+                            isHideLeftBtn={false}
+                            isHideRightBtn={false}
+                            disabled={Boolean(expectAnswer)}
+                            init={({ date: nextDate }) => {
+                                const isCurrent = moment(nextDate).isSame(moment(), 'day');
+                                const isFuture = moment(nextDate).isAfter(moment(), 'day');
+                                const isPast = moment(nextDate).isBefore(moment(), 'day');
+                                dispatch(
+                                    meta({
+                                        date: nextDate,
+                                        isPastDate: isPast,
+                                        isFutureDate: isFuture,
+                                        isCurrentDate: isCurrent,
+                                        calendarDays: { [nextDate]: { selected: true } },
+                                    })
+                                );
+                            }}
+                        />
+                    )
                 })}
             />
             <Stack.Screen
@@ -104,7 +129,14 @@ const DayOverviewStack: React.FC = () => {
                 component={AddReplaceItem}
                 options={({ route, navigation }) => ({
                     title: 'Select Item',
-                    headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
+                    headerTitle: () =>
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
                 })}
             />
             <Stack.Screen
@@ -112,9 +144,100 @@ const DayOverviewStack: React.FC = () => {
                 component={UPCScan}
                 options={{ title: 'Scan UPC Code' }}
             />
-            <Stack.Screen name="ExerciseCategories" component={ExerciseCategories} options={{ title: 'Exercise' }} />
-            <Stack.Screen name="ExerciseDetails" component={ExerciseDetails} options={{ title: 'Exercise Details' }} />
-            <Stack.Screen name="EditExercise" component={ExerciseEdit} options={{ title: 'Edit Exercise' }} />
+            <Stack.Screen name="ExerciseCategories" component={ExerciseCategories} options={{ title: 'Exercise', headerTitle: () =>
+                <TimeSwitcher
+                    disabled
+                    isHideLeftBtn
+                    isHideRightBtn
+                    init={() => {}}
+                    date={currentDate}
+                /> }} />
+            <Stack.Screen name="ExerciseDetails" component={ExerciseDetails} options={{ title: 'Exercise Details', headerTitle: () =>
+                <TimeSwitcher
+                    disabled
+                    isHideLeftBtn
+                    isHideRightBtn
+                    init={() => {}}
+                    date={currentDate}
+                /> }} />
+            <Stack.Screen name="EditExercise" component={ExerciseEdit} options={{ title: 'Edit Exercise', headerTitle: () =>
+                <TimeSwitcher
+                    disabled
+                    isHideLeftBtn
+                    isHideRightBtn
+                    init={() => {}}
+                    date={currentDate}
+                /> }} />
+
+            <Stack.Screen
+                name="SaveValue"
+                component={SaveValueScreen}
+                options={({ route }) => ({
+                    title: (route.params as any)?.measurementName || 'Measurement',
+                    headerTitle: () => (
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
+                    ),
+                })}
+            />
+
+            <Stack.Screen
+                name="MeasurementChart"
+                component={MeasurementChartScreen}
+                options={({ route }) => ({
+                    title: (route.params as any)?.measurementName || 'Measurement',
+                    headerTitle: () => (
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
+                    ),
+                })}
+            />
+
+            <Stack.Screen
+                name="AllRecordedData"
+                component={AllRecordedDataScreen}
+                options={{
+                    title: 'All Recorded Data',
+                    headerTitle: () => (
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
+                    ),
+                }}
+            />
+
+            {/* WEIGHT-SPECIFIC SCREENS: Smart Scale and Manual Input */}
+            <Stack.Screen
+                name="WeightMeasurement"
+                component={WeightMeasurementScreen}
+                options={{
+                    title: 'Measurement',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
+            />
+            
+            <Stack.Screen
+                name="SmartScale"
+                component={SmartScaleScreen}
+                options={{
+                    title: 'Smart Scale',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
+            />
         </Stack.Navigator>
     );
 };
