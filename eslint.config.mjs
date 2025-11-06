@@ -1,12 +1,12 @@
-import react from 'eslint-plugin-react';
-import reactNative from '@react-native/eslint-config';
-import { defineConfig } from "eslint/config";
-import globals from "globals";
 import js from "@eslint/js";
-import TSParser from "@typescript-eslint/parser";
-import tsPlugin from "@typescript-eslint/eslint-plugin";
-import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
+import globals from "globals";
+import react from 'eslint-plugin-react';
 import importPlugin from "eslint-plugin-import";
+import TSParser from "@typescript-eslint/parser";
+import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
+import tsPlugin from "@typescript-eslint/eslint-plugin";
+
+const defineConfig = config => config;
 export default defineConfig([
     {
         files: ['**/*.ts', '**/*.tsx'],

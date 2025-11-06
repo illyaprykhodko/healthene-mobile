@@ -3,7 +3,8 @@ export const ROUTES = {
     SIGN_IN: 'SignIn',
     SIGN_UP: 'SignUp',
     FORGOT_PASSWORD: 'ForgotPassword',
-  
+    TERMS_AND_CONDITIONS: 'TermsAndConditions',
+
     // Private routes - Drawer Navigator
     MAIN: 'Main',
     INFO: 'Info',
@@ -20,7 +21,11 @@ export const ROUTES = {
     ALL_RECORDED_DATA: 'AllRecordedData',
     MEASUREMENT_CHART: 'MeasurementChart',
     CUISINE_DISTRIBUTION: 'CuisineDistribution',
-    
+
+    // Account Settings
+    ACCOUNT_SETTINGS: 'AccountSettings',
+    PERSONAL_INFORMATION: 'PersonalInformation',
+
     // Legacy routes (for compatibility)
     HOME: 'Home',
     PROFILE: 'Profile',

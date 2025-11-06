@@ -474,11 +474,11 @@ export const Overview: React.FC = () => {
                     return;
                 }
                 const anytimeMeasurement: AnytimeMeasurementItem = {
-                    id: measurementItem.id,
                     type: 'MEASUREMENT',
-                    status: measurementItem.status || 'PENDING',
+                    id: measurementItem.id,
                     phaseId: measurementPhase!.id,
                     measurement: measurementItem.measurement,
+                    status: measurementItem.status || 'PENDING',
                 };
                 setSelectedMeasurement(anytimeMeasurement);
             }

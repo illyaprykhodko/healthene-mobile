@@ -21,13 +21,16 @@ export type RootStackParamList = {
   [ROUTES.SIGN_IN]: undefined;
   [ROUTES.SIGN_UP]: undefined;
   [ROUTES.FORGOT_PASSWORD]: undefined;
-  
+  [ROUTES.TERMS_AND_CONDITIONS]: undefined;
+
   // Private screens
   [ROUTES.HOME]: undefined;
   [ROUTES.PROFILE]: undefined;
   [ROUTES.SETTINGS]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
-  
+  [ROUTES.ACCOUNT_SETTINGS]: undefined;
+  [ROUTES.PERSONAL_INFORMATION]: undefined;
+
   // Example of a screen that requires params
   [ROUTES.SMART_SCALE]: {
     measurementPhaseItem: object;

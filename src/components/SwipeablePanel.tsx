@@ -4,6 +4,7 @@ import { View, StyleSheet, Modal, TouchableOpacity, Text } from 'react-native';
 // local dependencies
 import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
+import { COLORS } from 'constants/colors';
 
 interface SwipeablePanelProps {
     style?: any;

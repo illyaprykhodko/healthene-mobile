@@ -238,9 +238,9 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                                 )}
                                 <TextSVG
                                     x={shift}
-                                    fill={theme.colors.textSecondary}
                                     fontSize={14}
                                     fontWeight="bold"
+                                    fill={theme.colors.textSecondary}
                                 >
                                     {label}
                                 </TextSVG>
@@ -477,12 +477,10 @@ const createStyles = (theme: any) => StyleSheet.create({
         flex: 1,
         paddingHorizontal: 20,
     },
-
     dateText: {
         fontSize: 14,
         marginTop: 2,
     },
-
     currentInformation: {
         width: '100%',
         flexDirection: 'row',
@@ -496,29 +494,24 @@ const createStyles = (theme: any) => StyleSheet.create({
         alignItems: 'center',
         marginLeft: 10,
     },
-
     currentLabel: {
         fontSize: 14,
         marginBottom: 4,
         fontWeight: '500',
     },
-
     currentValueRow: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-
     currentValue: {
         fontSize: 26,
         fontWeight: 'bold',
     },
-
     currentUnit: {
         fontSize: 16,
         fontWeight: '600',
     },
 
-    // tooltip overlay styles
     tooltipOverlay: {
         position: 'absolute',
         zIndex: 10,
@@ -530,7 +523,6 @@ const createStyles = (theme: any) => StyleSheet.create({
     tooltipValue: {
         fontSize: 24,
         fontWeight: 'bold',
-        // first line - main number(s)
     },
     tooltipUnit: {
         fontSize: 14,

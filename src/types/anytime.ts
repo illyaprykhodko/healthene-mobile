@@ -13,10 +13,9 @@ export interface AnytimeBaseItem {
   amount?: number;
   id: string | number;
   type: AnytimeItemType;
+  consumedAmount?: number;
   status: AnytimeItemStatus;
   phaseId?: string | number;
-
-  consumedAmount?: number;
 }
 
 export interface AnytimeFoodItem extends AnytimeBaseItem {

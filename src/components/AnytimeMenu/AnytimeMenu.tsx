@@ -177,10 +177,10 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
             )}
 
             <AnytimeExercisesModal
-                visible={showExercisesModal}
-                onClose={handleCloseExercisesModal}
                 date={date}
+                visible={showExercisesModal}
                 disabled={disabled || isLoading}
+                onClose={handleCloseExercisesModal}
             />
         </>
     );

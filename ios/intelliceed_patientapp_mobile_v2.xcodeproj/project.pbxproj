@@ -118,6 +118,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		6A68E58C2E9F77DC00F745AD /* Bird-Animations */ = {
+			isa = PBXGroup;
+			children = (
+				6A68E58D2E9F782800F745AD /* default_behaviour.mov */,
+			);
+			path = "Bird-Animations";
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -267,6 +275,7 @@
 				E0D77524F52748ED8A095E0F /* NunitoSans-Italic.ttf in Resources */,
 				58EE5A5728574B648FC8D6E1 /* NunitoSans-Light.ttf in Resources */,
 				6C0AC7EDF48546859601243E /* NunitoSans-LightItalic.ttf in Resources */,
+				6A68E58E2E9F782800F745AD /* default_behaviour.mov in Resources */,
 				AAB311E0ABBA47F5827B08D0 /* NunitoSans-Regular.ttf in Resources */,
 				45A3C23683E34A418A5A6661 /* NunitoSans-SemiBold.ttf in Resources */,
 				6C8A4E8528284AA5B1FC0850 /* NunitoSans-SemiBoldItalic.ttf in Resources */,
