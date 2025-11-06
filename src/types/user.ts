@@ -129,9 +129,17 @@ export interface User {
   email: string;
   phone?: string;
   firstName: string;
+  middleName: string;
   lastName: string;
+  birthday: Date;
+  prefix: string;
+  suffix: string;
+  gender: string;
   title?: string;
   avatar?: Url;
+  coverImage: {
+    url: string;
+  },
   preferences?: {
     language?: string;
     timezone?: string;

@@ -2,8 +2,8 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { View, StyleSheet, TouchableOpacity, Pressable, Image } from 'react-native';
 
 // local dependencies
 import { RootState } from 'store';
@@ -14,6 +14,7 @@ import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import { navigate } from 'services/navigation';
 import { clearSession } from 'store/slices/appSlice';
+import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // const { width } = Dimensions.get('window');
 
@@ -27,7 +28,7 @@ interface DrawerItemProps {
 
 const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, badge }) => {
     const theme = useTheme();
-    
+
     return (
         <TouchableOpacity
             onPress={onPress}
@@ -71,7 +72,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     const theme = useTheme();
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.app.user);
-    
+
     const handleLogout = () => {
         dispatch(clearSession());
     };
@@ -128,17 +129,28 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         return props.state?.routes[props.state?.index]?.name;
     };
 
+    const goToAccountSettings = () => navigate('AccountSettings');
+
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
-                <View style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
-                    <Text variant="h4" color={theme.colors.text}>
-                        {user?.firstName} {user?.lastName}
-                    </Text>
-                    <Text variant="body" color={theme.colors.textSecondary}>
-                        {user?.email}
-                    </Text>
-                </View>
+                <Pressable onPress={goToAccountSettings} style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
+                    <View style={styles.userIcon}>
+                        {user?.coverImage?.url
+                            ? <Image source={{ uri: user?.coverImage.url }} width={48} height={48} />
+                            : <FeatherIcon size={48} name="user" />
+                        }
+                    </View>
+                    <View>
+                        <Text variant="h4" color={theme.colors.text}>
+                            {user?.firstName} {user?.lastName}
+                        </Text>
+                        <Text variant="body" color={theme.colors.textSecondary}>
+                            {user?.email}
+                        </Text>
+                        <Text color={theme.colors.primary}>Account Settings</Text>
+                    </View>
+                </Pressable>
                 {menuItems.map(item => {
                     const focused = getFocusedRoute() === item.route;
                     return (
@@ -165,7 +177,6 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                     focused={getFocusedRoute() === ROUTES.CUISINE_DISTRIBUTION}
                 /> */}
             </DrawerContentScrollView>
-
             <Button
                 title="LOGOUT"
                 variant="outline"
@@ -184,9 +195,17 @@ const styles = StyleSheet.create({
         paddingTop: OFFSET.VERTICAL + 5,
     },
     profileSection: {
-        padding: OFFSET.VERTICAL,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: OFFSET.VERTICAL,
         borderBottomWidth: 1,
         marginBottom: OFFSET.POINT * 2.5,
+    },
+    userIcon: {
+        marginRight: OFFSET.POINT * 2,
+        borderWidth: 1,
+        borderRadius: 48/2,
+        overflow: 'hidden',
     },
     menuItem: {
         paddingVertical: OFFSET.VERTICAL - 5,
