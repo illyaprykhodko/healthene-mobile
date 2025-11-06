@@ -66,8 +66,8 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
             onPress={handlePress}
             style={StyleSheet.flatten([styles.container, style, {
                 paddingVertical: 0.5,
-                borderColor: value ? 'transparent' : theme.colors.border,
                 paddingHorizontal: status === 'DONE' ? 0 : 2.7,
+                borderColor: value ? 'transparent' : theme.colors.border,
             }])}
         >
             {isDayOverview ? renderDayOverviewIcon() : renderGeneralIcon()}
@@ -77,4 +77,3 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
 
 export const Checkbox = memo(CheckboxComponent);
 export default Checkbox;
-

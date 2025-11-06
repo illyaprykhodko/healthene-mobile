@@ -21,7 +21,7 @@ export const ITEM_HEIGHT = 50;
 // ---- WheelPicker
 type WheelPickerProps = {
   data: number[];
-  selectedIndex: number; // index corresponds to the value in data
+  selectedIndex: number;
   selectedItemStyle: ViewStyle;
   onSelect: (index: number) => void;
 };
@@ -40,7 +40,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
                 try {
                     flatListRef.current?.scrollToIndex({ index: selectedIndex, animated: true });
                 } catch {
-                    // ignore out-of-range errors (RN may throw if not yet measured)
+                    // ignore out-of-range errors
                 }
             });
         }

@@ -1,7 +1,3 @@
-/**
- * MeasurementField Component
- * Dynamic measurement input field that adapts to field configuration
- */
 // outsource dependencies
 import React from 'react';
 import { View, TextInput, StyleSheet, Platform } from 'react-native';
@@ -21,13 +17,13 @@ interface MeasurementFieldProps {
 }
 
 export const MeasurementField: React.FC<MeasurementFieldProps> = ({
+    unit,
     field,
     value,
-    unit,
     error,
-    disabled = false,
-    onChange,
     onBlur,
+    onChange,
+    disabled = false,
 }) => {
     const theme = useTheme();
 

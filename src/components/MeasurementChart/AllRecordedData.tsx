@@ -1,18 +1,15 @@
-/**
- * AllRecordedData Screen
- * Displays complete history of measurement records with pagination
- */
-
+// outsource dependencies
 import moment from 'moment';
 import React, { useState, useCallback, useEffect } from 'react';
 import {
     View,
     Text,
     FlatList,
-    ActivityIndicator,
     StyleSheet,
     Dimensions,
+    ActivityIndicator,
 } from 'react-native';
+// local dependencies
 import { useGetLoggedMeasurementDataMutation } from 'store/api/dayOverviewApi';
 
 interface RecordItem {
@@ -36,7 +33,6 @@ const AllRecordedData: React.FC<AllRecordedDataProps> = ({
 
     const [getLoggedData, { isLoading }] = useGetLoggedMeasurementDataMutation();
 
-    // Load initial data
     useEffect(() => {
         loadData(0);
     }, [measurementType]);
@@ -171,4 +167,3 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
 });
-

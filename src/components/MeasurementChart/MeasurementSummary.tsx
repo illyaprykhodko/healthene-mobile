@@ -1,7 +1,3 @@
-/**
- * MeasurementSummary Component
- * Displays starting value and total change for measurements
- */
 // outsource dependencies
 import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';

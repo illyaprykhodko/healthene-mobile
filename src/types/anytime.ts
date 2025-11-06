@@ -13,13 +13,9 @@ export interface AnytimeBaseItem {
   amount?: number;
   id: string | number;
   type: AnytimeItemType;
+  consumedAmount?: number;
   status: AnytimeItemStatus;
   phaseId?: string | number;
-  /**
-   * Tracks how much of the item has been consumed. Used for multi-serve foods/drinks.
-   * If omitted by the backend, it is treated as 0 on the client.
-   */
-  consumedAmount?: number;
 }
 
 export interface AnytimeFoodItem extends AnytimeBaseItem {

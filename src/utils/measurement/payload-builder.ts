@@ -1,7 +1,6 @@
 /**
  * Measurement Payload Builder
  * Converts form values to backend API format
- * Based on legacy prepareData/prepareOtherData logic
  */
 // outsource dependencies
 import moment from 'moment';

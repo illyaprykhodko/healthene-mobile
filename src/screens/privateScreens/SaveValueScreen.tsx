@@ -1,8 +1,3 @@
-/**
- * SaveValueScreen
- * Shows current measurement value after saving
- * Provides access to Graph and Delete functionality
- */
 // outsource dependencies
 import moment from 'moment';
 import React, { useCallback, useMemo } from 'react';
@@ -44,7 +39,6 @@ const SaveValueScreen: React.FC = () => {
     const isSameDate = moment().isSame(currentDate, 'day');
     const isFutureDate = moment(currentDate).isAfter(moment(), 'day');
 
-    // Fetch current day data
     const { data: aggregateData, isLoading } = useGetAggregateMeasurementDataQuery({
         type: measurementType,
         period: '1-day',
@@ -79,7 +73,6 @@ const SaveValueScreen: React.FC = () => {
         }, []);
     }, [aggregateData]);
 
-    // Navigate to Chart
     const handleGoToChart = useCallback(() => {
         navigation.navigate(ROUTES.MEASUREMENT_CHART, {
             measurementType,
@@ -88,7 +81,6 @@ const SaveValueScreen: React.FC = () => {
         });
     }, [navigation, measurementType, measurementName, currentDate]);
 
-    // Delete measurement
     const handleDelete = useCallback(() => {
         if (measurementIds.length === 0) {
             MessageService.toastWarning('No measurements to delete');
@@ -125,7 +117,6 @@ const SaveValueScreen: React.FC = () => {
         );
     }, [measurementIds, deleteMeasurements, navigation]);
 
-    // Done - update status and go back
     const handleDone = useCallback(async () => {
         try {
             if (measurementPhaseItem) {
@@ -161,7 +152,6 @@ const SaveValueScreen: React.FC = () => {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            {/* Graph Button */}
             <TouchableOpacity
                 style={[
                     styles.graphButton,
@@ -184,7 +174,6 @@ const SaveValueScreen: React.FC = () => {
 
             <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
-            {/* Title */}
             <Text variant="h1" textAlign="center" style={styles.title}>
                 {!currentValue && !moment().isSame(currentDate)
                     ? `No ${measurementName}`
@@ -193,7 +182,6 @@ const SaveValueScreen: React.FC = () => {
 
             {!isFutureDate && (
                 <>
-                    {/* Current Value */}
                     <View
                         style={[
                             styles.valueContainer,
@@ -218,8 +206,6 @@ const SaveValueScreen: React.FC = () => {
                             </Text>
                         )}
                     </View>
-
-                    {/* Delete Button */}
                     <View style={styles.deleteBtnWrapper}>
                         <TouchableOpacity
                             onPress={handleDelete}
@@ -247,7 +233,6 @@ const SaveValueScreen: React.FC = () => {
                 </>
             )}
 
-            {/* Done Button */}
             <TouchableOpacity
                 onPress={handleDone}
                 disabled={isDisabled}

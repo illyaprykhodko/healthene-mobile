@@ -1,10 +1,6 @@
-/**
- * Chart Helpers
- * Helper functions for chart calculations and rendering
- */
-
+// outsource dependencies
 import moment from 'moment';
-import { DATE_PERIOD, type DatePeriod } from '../../constants/measurement-chart';
+import { DATE_PERIOD, type DatePeriod } from 'constants/measurement-chart';
 
 /**
  * Generate horizontal labels based on period

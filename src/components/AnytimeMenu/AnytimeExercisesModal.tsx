@@ -91,9 +91,9 @@ interface AnytimeExercisesModalProps {
 }
 
 export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
+    date,
     onClose,
     visible,
-    date,
     disabled = false,
 }) => {
     const theme = useTheme();
@@ -209,7 +209,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                 date,
                 deepCounter: 1,
                 title: item?.title,
-                deepPhaseId: anytimePhaseId, // propagate Anytime phase id so ExerciseDetails can update the correct phase item
+                deepPhaseId: anytimePhaseId,
                 onRefresh: refreshAnytimeExercises,
             });
         } else {
@@ -298,8 +298,6 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                         </ScrollView>
                     )}
                 </View>
-                
-                {/* Keep It Up! and NEXT ACTIVITY buttons */}
                 {listIsDone && (
                     <View style={styles.completionContainer}>
                         <Text style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>

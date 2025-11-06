@@ -1,7 +1,3 @@
-/**
- * DateTabs Component
- * Tab selector for measurement chart date periods (D, W, M, 6M, Y)
- */
 // outsource dependencies
 import React, { memo, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
@@ -9,10 +5,10 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { getMeasurementTabs, type MeasurementTab } from 'constants/measurement-chart';
 
 interface DateTabsProps {
+    date?: string;
     disabled?: boolean;
     activeTab: MeasurementTab;
     onTabChange: (tab: MeasurementTab) => void;
-    date?: string;
 }
 
 const DateTabs: React.FC<DateTabsProps> = ({

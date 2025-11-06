@@ -1,7 +1,3 @@
-/**
- * AllRecordedDataScreen
- * Screen wrapper for AllRecordedData component
- */
 // outsource dependencies
 import React from 'react';
 import { View, StyleSheet } from 'react-native';

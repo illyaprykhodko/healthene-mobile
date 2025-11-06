@@ -1,6 +1,7 @@
 // outsource dependencies
 import moment from 'moment';
 import React, { useState, useCallback, useMemo } from 'react';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
 // local dependencies
@@ -11,10 +12,9 @@ import {
     useGetLastMeasurementQuery,
     useGetMeasurementTypesQuery,
     useGetAggregateMeasurementDataQuery,
-} from '../../store/api/dayOverviewApi';
+} from 'store/api/dayOverviewApi';
 import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
-import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from 'services/navigation/types';
 
 type Navigation = StackNavigationProp<RootStackParamList>;
@@ -23,35 +23,27 @@ const MeasurementChartScreen: React.FC = () => {
     const navigation = useNavigation<Navigation>();
     const route = useRoute();
     const theme = useTheme();
-    // Get measurement type and name from route params
     const measurementType = (route.params as any)?.measurementType || 'WEIGHT';
     const measurementName = (route.params as any)?.measurementName || measurementType;
     
     const [activeTab, setActiveTab] = useState<MeasurementTab>(getMeasurementTabs()[1]); // Week by default
     const [date, setDate] = useState(moment().format('YYYY-MM-DD'));
 
-    // Fetch aggregate data
     const { data: aggregateData, isLoading: isLoadingAggregate } = useGetAggregateMeasurementDataQuery({
+        date,
         type: measurementType,
         period: activeTab.request,
-        date,
         offset: moment().utcOffset() / 60,
     });
 
-    // Fetch last measurement
-    const { data: lastMeasurement, currentData: currentLastMeasurement } = useGetLastMeasurementQuery(measurementType);
-    // Fetch measurement types for initial values
-    // const response = useGetMeasurementTypesQuery({
-    //     dateTime: moment().toISOString(),
-    //     period: '1-year', // TODO: change to activeTab.request
-    // });
+    const { data: lastMeasurement } = useGetLastMeasurementQuery(measurementType);
+
     const queryArgs = React.useMemo(() => ({
         dateTime: moment().startOf('day').toISOString(),
         period: '1-year',
     }), []);
       
     const { data: measurementTypes } = useGetMeasurementTypesQuery(queryArgs);
-    // Prepare data - process raw data from API
     const offset = moment().utcOffset() / 60;
     
     // Separate blood pressure data into systolic and diastolic
@@ -79,13 +71,13 @@ const MeasurementChartScreen: React.FC = () => {
             const fromDate = moment(item?.fromDate);
             const toDate = moment(item?.toDate);
             const diff = toDate.diff(fromDate) / 2;
-            
             return {
                 ...item,
-                toDate: moment(item?.toDate).utcOffset(offset).format('YYYY-MM-DD HH:mm:ss'),
-                fromDate: moment(item?.fromDate).utcOffset(offset).format('YYYY-MM-DD HH:mm:ss'),
+                toDate: moment(item?.toDate).utcOffset(offset).format('MMMDD, h:mm A -'), // YYYY-MM-DD HH:mm:ss
+                fromDate: moment(item?.fromDate).utcOffset(offset).format('MMMDD, h:mm A -'),
                 // Keep averageDate as Moment object for calculateXCoordinate
                 averageDate: moment(fromDate).add(diff, 'ms'),
+                units: isBloodPressure ? [{ ...item?.units?.[0], name: 'mmHg' }] : item?.units,
             };
         });
 
@@ -108,27 +100,69 @@ const MeasurementChartScreen: React.FC = () => {
         chartData = processData(rawData);
     }
 
-    // Current value - ALWAYS show last measurement (doesn't change on swipe)
-    // Only the date below it changes on swipe to show current period
     const currentValue = useMemo(() => {
-        if (lastMeasurement?.values?.[0]) {
-            const result = {
-                value: lastMeasurement.values[0].value,
-                unit: isBloodPressure ? 'mmHg' : lastMeasurement.values[0].measurementUnit?.name || '',
-            };
-            return result;
+        if (!lastMeasurement?.values?.[0]) {
+            return undefined;
         }
-        return undefined;
-    }, [lastMeasurement, measurementType]);
+        if (isBloodPressure && lastMeasurement.values.length >= 2) {
+            const systolic = lastMeasurement.values.find((v: any) =>
+                v.measurementUnit?.unitType === 'SYSTOLIC' || v.measurementUnit?.id === 1
+            );
+            const diastolic = lastMeasurement.values.find((v: any) =>
+                v.measurementUnit?.unitType === 'DIASTOLIC' || v.measurementUnit?.id === 2
+            );
+
+            return {
+                unit: 'mmHg',
+                isBloodPressure: true,
+                value: systolic?.value || 0,
+                systolic: systolic?.value || 0,
+                diastolic: diastolic?.value || 0,
+            };
+        }
+
+        // Single value measurements
+        return {
+            isBloodPressure: false,
+            value: lastMeasurement.values[0].value,
+            unit: lastMeasurement.values[0].measurementUnit?.name || '',
+        };
+    }, [lastMeasurement, isBloodPressure]);
 
     // Calculate starting value and total change
-    const currentMeasurement = (measurementTypes?.content || []).find(
+    const currentMeasurement = (measurementTypes || []).find(
         (m: any) => m?.measurement?.type === measurementType
     );
+    
+    // BP-specific: extract both systolic and diastolic starting values and calculate changes
+    const bpValues = useMemo(() => {
+        if (!isBloodPressure || !currentMeasurement?.initialValues) {
+            return null;
+        }
+        
+        const systolicInitial = currentMeasurement.initialValues.find(
+            (v: any) => v.measurementUnit?.unitType === 'SYSTOLIC' || v.measurementUnit?.id === 1
+        );
+        const diastolicInitial = currentMeasurement.initialValues.find(
+            (v: any) => v.measurementUnit?.unitType === 'DIASTOLIC' || v.measurementUnit?.id === 2
+        );
+        
+        const startingSystolic = systolicInitial?.value || 0;
+        const startingDiastolic = diastolicInitial?.value || 0;
+        const totalChangeSystolic = currentValue?.systolic ? currentValue.systolic - startingSystolic : 0;
+        const totalChangeDiastolic = currentValue?.diastolic ? currentValue.diastolic - startingDiastolic : 0;
+        
+        return {
+            startingSystolic,
+            startingDiastolic,
+            totalChangeSystolic,
+            totalChangeDiastolic,
+        };
+    }, [isBloodPressure, currentMeasurement, currentValue]);
+    
     const startingValue = currentMeasurement?.initialValues?.[0]?.value || 0;
     const totalChange = currentValue ? currentValue.value - startingValue : 0;
 
-    // Handle tab change
     const handleTabChange = useCallback((tab: MeasurementTab) => {
         setActiveTab(tab);
     }, []);
@@ -147,7 +181,6 @@ const MeasurementChartScreen: React.FC = () => {
         });
     }, [navigation, measurementType, measurementName]);
 
-    // Handle DONE button - navigate back to DayOverview
     const handleDone = useCallback(() => {
         navigation.goBack();
     }, [navigation]);
@@ -165,8 +198,8 @@ const MeasurementChartScreen: React.FC = () => {
             <View style={{ height: '90%' }}>
                 <MeasurementChart
                     data={chartData}
-                    initialDate={date} // Pass date from parent
-                    showSummary={false} // Current value now shown in ChartRenderer renderTopBar
+                    initialDate={date}
+                    showSummary={false}
                     restData={restData}
                     activeTab={activeTab}
                     totalChange={totalChange}
@@ -177,10 +210,13 @@ const MeasurementChartScreen: React.FC = () => {
                     measurementType={measurementType}
                     isBloodPressure={isBloodPressure}
                     onShowAllData={handleShowAllData}
+                    // BP-specific props
+                    startingSystolic={bpValues?.startingSystolic}
+                    startingDiastolic={bpValues?.startingDiastolic}
+                    totalChangeSystolic={bpValues?.totalChangeSystolic}
+                    totalChangeDiastolic={bpValues?.totalChangeDiastolic}
                 />
             </View>
-            
-            {/* DONE Button */}
             <TouchableOpacity
                 onPress={handleDone}
                 style={[styles.doneButton, { backgroundColor: theme.colors.successAlt || '#96E072' }]}
@@ -206,7 +242,6 @@ const styles = StyleSheet.create({
     },
     doneButton: {
         borderWidth: 0,
-        // backgroundColor moved to inline style with theme
         paddingVertical: 18,
         marginHorizontal: 25,
         marginBottom: 60,
@@ -215,9 +250,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     doneButtonText: {
-        // color moved to inline style with theme
         fontSize: 20,
         fontWeight: '700',
     },
 });
-

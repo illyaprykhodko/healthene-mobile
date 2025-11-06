@@ -1,7 +1,3 @@
-/**
- * MeasurementInputModal Component
- * Modal for inputting measurement values (manual or from health app)
- */
 // outsource dependencies
 import { Formik } from 'formik';
 import { useNavigation } from '@react-navigation/native';
@@ -106,7 +102,6 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                 return;
             }
 
-            // Populate form with fetched values
             if (measurementType === 'BLOOD_PRESSURE') {
                 const bpValue = sample.value as { systolic: number; diastolic: number };
                 setValues({
@@ -132,11 +127,9 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
 
     const showHealthButton = config.supportsHealthApp && healthAppAvailable && healthAppPermissions;
 
-    // Handle info panel
     const openPanel = () => setIsPanelOpen(true);
     const closePanel = () => setIsPanelOpen(false);
 
-    // Handle navigation to chart
     const goToChart = () => {
         onClose(); // Close modal first
         (navigation as any).navigate('MeasurementChart', {
@@ -156,7 +149,6 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 style={styles.container}
             >
-                {/* Header */}
                 <View style={[styles.header, { backgroundColor: '#E0EBF7', borderBottomColor: theme.colors.border }]}>
                     <View style={styles.headerLeft}>
                         <MeasurementIcon size={24} />
@@ -176,12 +168,9 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                 >
                     {({ values, errors, touched, setFieldValue, setFieldTouched, handleSubmit, setValues }) => (
                         <ScrollView contentContainerStyle={styles.content}>
-                            {/* Label */}
                             <Text style={[styles.label, { color: theme.colors.text }]}>
                 Input {item.measurement?.name}
                             </Text>
-
-                            {/* Fields */}
                             {measurementType === 'BLOOD_PRESSURE' ? (
                                 <BloodPressureFields
                                     systolicField={config.fields[0]}
@@ -257,8 +246,6 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                                     </Text>
                                 </TouchableOpacity>
                             )}
-
-                            {/* Graph Button */}
                             {hasLastMeasurement && (
                                 <TouchableOpacity
                                     onPress={goToChart}
@@ -271,8 +258,6 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                                     <GraphIcon />
                                 </TouchableOpacity>
                             )}
-
-                            {/* Fetch from Health App Button */}
                             {showHealthButton && !healthAppLoading && (
                                 <TouchableOpacity
                                     disabled={isSubmitting}
@@ -312,7 +297,6 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                     )}
                 </Formik>
 
-                {/* SwipeablePanel for instructions */}
                 <SwipeablePanel
                     onClose={closePanel}
                     isActive={isPanelOpen}
@@ -496,7 +480,6 @@ const styles = StyleSheet.create({
     },
 });
 
-// HTML styles for description content
 const htmlStyles = {
     p: {
         fontSize: 16,

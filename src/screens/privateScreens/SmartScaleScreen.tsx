@@ -1,8 +1,3 @@
-/**
- * SmartScaleScreen
- * Screen for scanning and reading weight from BLE smart scales
- * Handles Bluetooth permissions, device scanning, and weight display
- */
 // outsource dependencies
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
@@ -37,7 +32,6 @@ const SmartScaleScreen: React.FC = () => {
 
     const animation = useRef(new Animated.Value(0)).current;
 
-    // Get measurement item from route params
     const measurementPhaseItem = (route.params as any)?.measurementPhaseItem;
     const item = measurementPhaseItem || {};
 
@@ -74,7 +68,6 @@ const SmartScaleScreen: React.FC = () => {
         checkBluetooth();
     }, []);
 
-    // Request location permissions (required for BLE on Android)
     useEffect(() => {
         const fetchPermissions = async () => {
             const permission
@@ -87,7 +80,6 @@ const SmartScaleScreen: React.FC = () => {
         fetchPermissions();
     }, []);
 
-    // Start scanning when permissions are granted
     useEffect(() => {
         if (bluetoothStatus === State.PoweredOn && locationStatus === RESULTS.GRANTED) {
             setIsScanning(true);
@@ -135,7 +127,6 @@ const SmartScaleScreen: React.FC = () => {
         }
     }, [weightData, submit]);
 
-    // Render Bluetooth status messages
     const renderBluetoothStatus = () => {
         switch (bluetoothStatus) {
             case State.PoweredOff:
@@ -181,10 +172,7 @@ const SmartScaleScreen: React.FC = () => {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            {/* Bluetooth Status Messages */}
             {renderBluetoothStatus()}
-
-            {/* Location Permission Message */}
             {locationStatus && locationStatus !== RESULTS.GRANTED && (
                 <View style={styles.messageContainer}>
                     <Text style={[styles.messageText, { color: theme.colors.primary }]}>
@@ -200,7 +188,6 @@ const SmartScaleScreen: React.FC = () => {
                 </View>
             )}
 
-            {/* "Please step on scale" message */}
             {isReadyToScan && (
                 <Animated.View style={{ opacity }}>
                     <Text style={[styles.instructionText, { color: theme.colors.primary }]}>
@@ -209,7 +196,6 @@ const SmartScaleScreen: React.FC = () => {
                 </Animated.View>
             )}
 
-            {/* Weight Display */}
             <View style={styles.scaleContainer}>
                 <View style={[styles.valueContainer, { borderColor: theme.colors.text }]}>
                     <Text style={[styles.weightText, { color: theme.colors.text }]}>
@@ -224,8 +210,6 @@ const SmartScaleScreen: React.FC = () => {
                     )}
                 </View>
             </View>
-
-            {/* Save Button */}
             <TouchableOpacity
                 style={[
                     styles.saveButton,

@@ -1,8 +1,3 @@
-/**
- * WeightMeasurementScreen
- * Special screen for WEIGHT measurement with Smart Scale and Manual input options
- * This screen is ONLY used for weight, other measurements use MeasurementInputModal
- */
 // outsource dependencies
 import * as yup from 'yup';
 import moment from 'moment';
@@ -40,7 +35,6 @@ const WeightMeasurementScreen: React.FC = () => {
     const theme = useTheme();
     const [isPanelOpen, setIsPanelOpen] = useState(false);
 
-    // Get measurement item from route params
     const measurementPhaseItem = (route.params as any)?.measurementPhaseItem;
     const item = measurementPhaseItem || {};
 
@@ -58,7 +52,6 @@ const WeightMeasurementScreen: React.FC = () => {
             setIsPanelOpen(false);
             return;
         }
-        // Navigate to Smart Scale screen
         navigation.navigate(ROUTES.SMART_SCALE, {
             measurementPhaseItem: item,
         });
@@ -86,7 +79,6 @@ const WeightMeasurementScreen: React.FC = () => {
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                {/* Overlay when panel is open */}
                 {isPanelOpen && (
                     <TouchableOpacity
                         activeOpacity={1}
@@ -95,7 +87,6 @@ const WeightMeasurementScreen: React.FC = () => {
                     />
                 )}
 
-                {/* Step on Scale Button */}
                 <TouchableOpacity
                     onPress={handleSmartScalePress}
                     style={[styles.scaleButton, { borderColor: theme.colors.success }]}
@@ -105,7 +96,6 @@ const WeightMeasurementScreen: React.FC = () => {
                     </Text>
                 </TouchableOpacity>
 
-                {/* Add Manually Button */}
                 <TouchableOpacity
                     onPress={handleManualPress}
                     style={[styles.manualButton, { borderColor: theme.colors.primary }]}
@@ -115,7 +105,6 @@ const WeightMeasurementScreen: React.FC = () => {
                     </Text>
                 </TouchableOpacity>
 
-                {/* Manual Input Panel (Swipe up from bottom) */}
                 {isPanelOpen && (
                     <Formik
                         onSubmit={handleSubmit}
@@ -124,7 +113,6 @@ const WeightMeasurementScreen: React.FC = () => {
                     >
                         {({ values, errors, touched, setFieldValue, setFieldTouched, handleSubmit }) => (
                             <View style={styles.formContainer}>
-                                {/* Header */}
                                 <View style={styles.header}>
                                     <TouchableOpacity
                                         onPress={() => setIsPanelOpen(false)}
@@ -157,8 +145,6 @@ const WeightMeasurementScreen: React.FC = () => {
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
-
-                                {/* Date/Time/Weight Fields */}
                                 <View style={styles.dateContainer}>
                                     <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
                                         <Text style={[styles.itemLabel, { color: theme.colors.text }]}>

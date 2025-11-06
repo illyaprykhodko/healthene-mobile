@@ -1,7 +1,3 @@
-/**
- * BloodPressureFields Component
- * Special layout for Blood Pressure (systolic/diastolic with visual separator)
- */
 // outsource dependencies
 import React from 'react';
 import { View, TextInput, StyleSheet, Platform } from 'react-native';

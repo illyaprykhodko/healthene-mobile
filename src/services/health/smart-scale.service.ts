@@ -206,13 +206,13 @@ const reset = (): void => {
  * Smart Scale Service (functional API)
  */
 const SmartScaleService = {
+    reset,
+    stopScan,
     getStatus,
-    setOnWeightUpdate,
+    startScan,
     setOnDeviceFound,
     getCurrentWeight,
-    startScan,
-    stopScan,
-    reset,
+    setOnWeightUpdate,
 };
 
 export default SmartScaleService;

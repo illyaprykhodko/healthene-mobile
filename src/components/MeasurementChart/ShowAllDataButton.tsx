@@ -1,7 +1,3 @@
-/**
- * ShowAllDataButton Component
- * Button to navigate to All Recorded Data screen
- */
 // outsource dependencies
 import React, { memo } from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -23,8 +19,8 @@ export default memo(ShowAllDataButton);
 const styles = StyleSheet.create({
     button: {
         padding: 20,
-        marginTop: 30,
-        marginBottom: 30,
+        // marginTop: 25,
+        marginBottom: 20,
         flexDirection: 'row',
         alignItems: 'center',
         borderColor: '#E0E0E0',

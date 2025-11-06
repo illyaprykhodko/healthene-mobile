@@ -9,7 +9,7 @@ import { PhaseItem } from 'store/api/dayOverviewApi';
 //   [ROUTES.SIGN_IN]: undefined;
 //   [ROUTES.SIGN_UP]: undefined;
 //   [ROUTES.FORGOT_PASSWORD]: undefined;
-
+  
 //   // Private screens
 //   [ROUTES.HOME]: undefined;
 //   [ROUTES.PROFILE]: undefined;

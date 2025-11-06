@@ -128,4 +128,3 @@ export enum BLEPermissionStatus {
   RESETTING = 'Resetting',
   UNSUPPORTED = 'Unsupported',
 }
-

@@ -160,8 +160,6 @@ const DayOverviewStack: React.FC = () => {
                     date={currentDate}
                 /> }} />
 
-
-            {/* Measurement Screens */}
             <Stack.Screen
                 name="SaveValue"
                 component={SaveValueScreen}
@@ -222,7 +220,7 @@ const DayOverviewStack: React.FC = () => {
                     headerTitleStyle: { fontSize: 18 },
                 }}
             />
-
+            
             <Stack.Screen
                 name="SmartScale"
                 component={SmartScaleScreen}

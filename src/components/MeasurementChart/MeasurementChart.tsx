@@ -1,18 +1,17 @@
-/**
- * MeasurementChart Component
- * Main chart component with SVG visualization, gestures and animations
- */
-
+// outsource dependencies
 import moment from 'moment';
 import { View, StyleSheet } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-
+// local dependencies
 import DateTabs from './DateTabs';
+import Text from 'components/Text';
+import { filters } from 'services/filter';
 import ChartRenderer from './ChartRenderer';
 import { prepareChartData } from './chart-helpers';
 import ShowAllDataButton from './ShowAllDataButton';
 import MeasurementSummary from './MeasurementSummary';
+import BloodPressureSummary from './BloodPressureSummary';
 import { DATE_PERIOD, type MeasurementTab } from 'constants/measurement-chart';
 
 interface MeasurementChartProps {
@@ -27,8 +26,19 @@ interface MeasurementChartProps {
     activeTab: MeasurementTab;
     onShowAllData: () => void;
     onTabChange: (tab: MeasurementTab) => void;
-    currentValue?: { value: number; unit: string };
+    currentValue?: {
+        unit: string;
+        value: number;
+        systolic?: number;
+        diastolic?: number;
+        isBloodPressure?: boolean;
+    };
     onDateChange: (date: string, tab: MeasurementTab) => void;
+    // BP-specific props
+    startingSystolic?: number;
+    startingDiastolic?: number;
+    totalChangeSystolic?: number;
+    totalChangeDiastolic?: number;
 }
 
 const MeasurementChart: React.FC<MeasurementChartProps> = ({
@@ -45,6 +55,11 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
     showSummary = true,
     isBloodPressure = false,
     initialDate = moment().format('YYYY-MM-DD'),
+    // BP-specific
+    startingSystolic,
+    startingDiastolic,
+    totalChangeSystolic,
+    totalChangeDiastolic,
 }) => {
     const [tooltip, setTooltip] = useState<any | null>(null);
     const [date, setDate] = useState(initialDate);
@@ -156,20 +171,30 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
                 : []),
         [restData, activeTab, date, isBloodPressure]
     );
-
     return (
         <PanGestureHandler onHandlerStateChange={onPanGesture}>
             <View style={styles.container}>
+                <Text style={styles.title}>{filters.humanize(measurementType)}</Text>
                 <DateTabs
                     date={date}
                     activeTab={activeTab}
                     onTabChange={handleTabChange}
                 />
-                <MeasurementSummary
-                    totalChange={totalChange}
-                    startingValue={startingValue}
-                    unit={currentValue?.unit || ''}
-                />
+                {isBloodPressure && startingSystolic !== undefined && startingDiastolic !== undefined ? (
+                    <BloodPressureSummary
+                        startingSystolic={startingSystolic}
+                        unit={currentValue?.unit || 'mmHg'}
+                        startingDiastolic={startingDiastolic}
+                        totalChangeSystolic={totalChangeSystolic || 0}
+                        totalChangeDiastolic={totalChangeDiastolic || 0}
+                    />
+                ) : (
+                    <MeasurementSummary
+                        totalChange={totalChange}
+                        startingValue={startingValue}
+                        unit={currentValue?.unit || ''}
+                    />
+                )}
                 <ChartRenderer
                     tooltip={tooltip}
                     points={chartPoints}
@@ -192,5 +217,11 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#FFFFFF',
     },
+    title: {
+        fontSize: 24,
+        fontWeight: '400',
+        marginVertical: 5,
+        color: '#7B7B7B',
+        alignSelf: 'center',
+    },
 });
-

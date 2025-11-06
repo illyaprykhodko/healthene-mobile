@@ -451,16 +451,12 @@ export const Overview: React.FC = () => {
     const isMealPhase = (type: PhaseType) => type === 'MEAL';
 
     const handlePhasePress = (phase: PhaseItem) => {
-        // Special handling for MEASUREMENT
         if (phase.type === 'MEASUREMENT') {
-            // Find the full measurement item from data
             const measurementPhase = data?.phases?.find(p => p.type === 'MEASUREMENT');
             const measurementItem = measurementPhase?.items?.find((item: any) => item.id === phase.id);
             
             if (measurementItem) {
                 const measurementType = measurementItem.measurement?.type;
-                
-                // SPECIAL FLOW FOR WEIGHT: Use dedicated screens with Smart Scale support
                 if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
                     (navigation as any).navigate('WeightMeasurement', {
                         measurementPhaseItem: measurementItem,
@@ -478,11 +474,11 @@ export const Overview: React.FC = () => {
                     return;
                 }
                 const anytimeMeasurement: AnytimeMeasurementItem = {
-                    id: measurementItem.id,
                     type: 'MEASUREMENT',
-                    status: measurementItem.status || 'PENDING',
+                    id: measurementItem.id,
                     phaseId: measurementPhase!.id,
                     measurement: measurementItem.measurement,
+                    status: measurementItem.status || 'PENDING',
                 };
                 setSelectedMeasurement(anytimeMeasurement);
             }
@@ -492,7 +488,6 @@ export const Overview: React.FC = () => {
         if (phase.type === 'ANYTIME' && phase.phaseId) {
             (navigation as any).navigate('Edit', { phaseId: phase.phaseId, date: currentDate });
         } else if (phase.type === 'PHYSICAL_ACTIVITY') {
-            // Find the physical activity phase for status tracking
             const physicalActivityPhase = data?.phases?.find(p => p.type === 'PHYSICAL_ACTIVITY');
             
             (navigation as any).navigate('ExerciseCategories', {
@@ -504,7 +499,6 @@ export const Overview: React.FC = () => {
                 deepPhaseId: physicalActivityPhase?.id,
                 exercisePhaseStatus: physicalActivityPhase?.status,
                 onRefresh: () => {
-                    // Refetch day overview data to update UI
                     dispatch(setDateEntry({
                         date: currentDate,
                         entry: { needsRefresh: true }
@@ -559,7 +553,6 @@ export const Overview: React.FC = () => {
                       Status: {item.status || 'Unknown'}
                                         </Text>
                                     </View>
-                                    {/* Show graph icon for completed measurements */}
                                     {/* {item.type === 'MEASUREMENT' && item.status === 'DONE' && (
                                         <View style={styles.graphIconContainer}>
                                             <Icon name="chart-line" color="#2978A0" size={20} />
@@ -572,13 +565,11 @@ export const Overview: React.FC = () => {
                 </View>
             </View>
 
-            {/* Anytime Menu */}
             <AnytimeMenu
                 date={currentDate}
                 disabled={Boolean(expectAnswer) || isLoading}
             />
 
-            {/* Measurement Input Modal (for phase items) */}
             {selectedMeasurement && (
                 <MeasurementInputModal
                     item={selectedMeasurement}
