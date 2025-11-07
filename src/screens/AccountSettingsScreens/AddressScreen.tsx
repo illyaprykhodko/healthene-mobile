@@ -21,10 +21,15 @@ import { setUser } from 'store/slices/appSlice.ts';
 import { MessageService } from 'services/messages';
 import { useUpdateUserDataMutation } from 'store/api/settingsApi.ts';
 
-interface AddressScreenProps {
-  // props here
-}
-
+// configure
+const emptyAddress = {
+    city: '',
+    zipCode: '',
+    country: '',
+    address1: '',
+    address2: '',
+    description: '',
+};
 const validationSchema = yup.object().shape({
     addresses: yup
         .array()
@@ -61,7 +66,7 @@ const validationSchema = yup.object().shape({
         .min(1, 'At least one address is required'),
 });
 
-export const AddressScreen = (props: AddressScreenProps) => {
+export const AddressScreen = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const [updateUserData] = useUpdateUserDataMutation();
@@ -103,9 +108,10 @@ export const AddressScreen = (props: AddressScreenProps) => {
             return <View style={styles.flexGrow}>
                 <FieldArray name="addresses">
                     {({ push, remove }) => {
+                        const addAddress = () => push(emptyAddress);
                         return <>
                             { (values?.addresses || []).length ? (<View style={{ paddingHorizontal: OFFSET.HORIZONTAL, flex: 1 }}>
-                                <ScrollView style={styles.flexGrow}>
+                                <ScrollView showsVerticalScrollIndicator={false} style={styles.flexGrow}>
                                     {values?.addresses.map((address, index) => {
                                         const descriptionName = `addresses[${index}].description`;
                                         const descriptionError = addressErrors?.[index]?.description;
@@ -154,7 +160,7 @@ export const AddressScreen = (props: AddressScreenProps) => {
                                                 onChangeText={handleChange(descriptionName)}
                                                 onBlur={() => setFieldTouched(descriptionName, true)}
                                                 inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
-                                                touched={{ [descriptionName]: touched?.addresses?.[index].description ?? false }}
+                                                touched={{ [descriptionName]: touched?.addresses?.[index]?.description ?? false }}
                                                 error={(touched.addresses?.[index]?.description && descriptionError)
                                                     ? { [descriptionName]: descriptionError }
                                                     : undefined
@@ -169,7 +175,7 @@ export const AddressScreen = (props: AddressScreenProps) => {
                                                     onChangeText={handleChange(address1Name)}
                                                     onBlur={() => setFieldTouched(address1Name, true)}
                                                     inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
-                                                    touched={{ [address1Name]: touched?.addresses?.[index].address1 ?? false }}
+                                                    touched={{ [address1Name]: touched?.addresses?.[index]?.address1 ?? false }}
                                                     error={(touched.addresses?.[index]?.address1 && address1Error)
                                                         ? { [address1Name]: address1Error }
                                                         : undefined
@@ -185,7 +191,7 @@ export const AddressScreen = (props: AddressScreenProps) => {
                                                     onChangeText={handleChange(address2Name)}
                                                     onBlur={() => setFieldTouched(address2Name, true)}
                                                     inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
-                                                    touched={{ [address2Name]: touched?.addresses?.[index].address2 ?? false }}
+                                                    touched={{ [address2Name]: touched?.addresses?.[index]?.address2 ?? false }}
                                                     error={(touched.addresses?.[index]?.address2 && address2Error)
                                                         ? { [address2Name]: address2Error }
                                                         : undefined
@@ -201,7 +207,7 @@ export const AddressScreen = (props: AddressScreenProps) => {
                                                     onChangeText={handleChange(cityName)}
                                                     onBlur={() => setFieldTouched(cityName, true)}
                                                     inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
-                                                    touched={{ [cityName]: touched?.addresses?.[index].city ?? false }}
+                                                    touched={{ [cityName]: touched?.addresses?.[index]?.city ?? false }}
                                                     error={(touched.addresses?.[index]?.city && cityError)
                                                         ? { [cityName]: cityError }
                                                         : undefined
@@ -217,7 +223,7 @@ export const AddressScreen = (props: AddressScreenProps) => {
                                                     onChangeText={handleChange(zipCodeName)}
                                                     onBlur={() => setFieldTouched(zipCodeName, true)}
                                                     inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
-                                                    touched={{ [zipCodeName]: touched?.addresses?.[index].zipCode ?? false }}
+                                                    touched={{ [zipCodeName]: touched?.addresses?.[index]?.zipCode ?? false }}
                                                     error={(touched.addresses?.[index]?.zipCode && zipCodeError)
                                                         ? { [zipCodeName]: zipCodeError }
                                                         : undefined
@@ -231,7 +237,7 @@ export const AddressScreen = (props: AddressScreenProps) => {
                                     <Button
                                         variant="outline"
                                         title="Add Address"
-                                        onPress={handleSubmit}
+                                        onPress={addAddress}
                                     />
                                     <Button
                                         disabled={!dirty}
@@ -253,7 +259,7 @@ export const AddressScreen = (props: AddressScreenProps) => {
                                         <Button
                                             variant="outline"
                                             title="Add Address"
-                                            onPress={handleSubmit}
+                                            onPress={addAddress}
                                             style={styles.addAddressBtn}
                                         />
                                     </View>
@@ -303,6 +309,7 @@ const styles = StyleSheet.create({
         margin: 'auto',
         width: '100%',
         gap: OFFSET.POINT * 4,
+        paddingTop: OFFSET.POINT * 2,
         paddingBottom: OFFSET.POINT * 8,
     },
 });
