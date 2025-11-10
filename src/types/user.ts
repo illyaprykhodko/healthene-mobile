@@ -1,4 +1,4 @@
-import { Url, IdName, Country, State } from './common';
+import { Url, IdName, Country } from './common';
 import { AdditionalContacts, Address } from './contact';
 import { FileAttachment, PatientMedicalProblem } from './medical';
 import { Gender, OnboardingStatus, OnboardingStep } from './common/enums';
