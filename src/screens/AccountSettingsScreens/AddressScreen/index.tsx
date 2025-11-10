@@ -5,7 +5,7 @@ import React, { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FieldArray, Formik, FormikErrors } from 'formik';
 import EvilIcon from 'react-native-vector-icons/EvilIcons';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 // local dependencies
 import { RootState } from 'store';
@@ -105,89 +105,98 @@ export const AddressScreen = () => {
         }
     };
 
-    return <Formik
-        onSubmit={onSubmit}
-        initialValues={initialValues}
-        validationSchema={validationSchema}
+    return <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100}
     >
-        {({
-            dirty,
-            values,
-            errors,
-            touched,
-            handleChange,
-            handleSubmit,
-            setFieldValue,
-            setFieldTouched
-        }) => {
-            const addressErrors = errors.addresses as FormikErrors<Address>[] | undefined;
-            return <View style={styles.flexGrow}>
-                <FieldArray name="addresses">
-                    {({ push, remove }) => {
-                        const addAddress = () => push(emptyAddress);
-                        return <>
-                            { (values?.addresses || []).length ? (<View style={styles.formArrayContainer}>
-                                <ScrollView showsVerticalScrollIndicator={false} style={styles.flexGrow}>
-                                    {values?.addresses.map((address, index) => {
-                                        return <AddressForm
-                                            key={index}
-                                            index={index}
-                                            address={address}
-                                            touched={touched}
-                                            onRemove={remove}
-                                            onChange={handleChange}
-                                            countryData={countryData}
-                                            addressErrors={addressErrors}
-                                            setFieldValue={setFieldValue}
-                                            setFieldTouched={setFieldTouched}
-                                        />;
-                                    })}
-                                </ScrollView>
+        <Formik
+            onSubmit={onSubmit}
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+        >
+            {({
+                dirty,
+                values,
+                errors,
+                touched,
+                handleChange,
+                handleSubmit,
+                setFieldValue,
+                setFieldTouched
+            }) => {
+                const addressErrors = errors.addresses as FormikErrors<Address>[] | undefined;
+                return <View style={styles.flexGrow}>
+                    <FieldArray name="addresses">
+                        {({ push, remove }) => {
+                            const addAddress = () => push(emptyAddress);
+                            return <>
+                                { (values?.addresses || []).length ? (<View style={styles.formArrayContainer}>
+                                    <ScrollView showsVerticalScrollIndicator={false} style={styles.flexGrow}>
+                                        {values?.addresses.map((address, index) => {
+                                            return <AddressForm
+                                                key={index}
+                                                index={index}
+                                                address={address}
+                                                touched={touched}
+                                                onRemove={remove}
+                                                onChange={handleChange}
+                                                countryData={countryData}
+                                                addressErrors={addressErrors}
+                                                setFieldValue={setFieldValue}
+                                                setFieldTouched={setFieldTouched}
+                                            />;
+                                        })}
+                                    </ScrollView>
 
-                                <View style={styles.buttonContainer}>
-                                    <Button
-                                        variant="outline"
-                                        style={styles.btn}
-                                        title="Add Address"
-                                        onPress={addAddress}
-                                    />
-                                    <Button
-                                        title="Update"
-                                        variant="outline"
-                                        disabled={!dirty}
-                                        style={styles.btn}
-                                        onPress={handleSubmit}
-                                    />
-                                </View>
-                            </View>)
-                                : (
-                                    <View style={styles.emptyScreenContainer}>
-                                        <View style={styles.emptyScreenWrapper}>
-                                            <EvilIcon size={100} name="location" color={theme.colors.grey} />
-                                            <Text variant="h4" textAlign="center" style={{ marginBottom: OFFSET.VERTICAL }}>No address added yet!</Text>
-                                            <Text variant="h5" textAlign="center" color={theme.colors.grey} style={{ marginBottom: OFFSET.VERTICAL }}>
-                                                Through your address information, we can provide a better service in purchases
-                                            </Text>
-                                        </View>
+                                    <View style={styles.buttonContainer}>
                                         <Button
                                             variant="outline"
+                                            style={styles.btn}
                                             title="Add Address"
                                             onPress={addAddress}
-                                            style={styles.addAddressBtn}
+                                        />
+                                        <Button
+                                            title="Update"
+                                            variant="outline"
+                                            disabled={!dirty}
+                                            style={styles.btn}
+                                            onPress={handleSubmit}
                                         />
                                     </View>
-                                )}
-                        </>;
-                    }}
-                </FieldArray>
-            </View>;
-        }}
-    </Formik>;
+                                </View>)
+                                    : (
+                                        <View style={styles.emptyScreenContainer}>
+                                            <View style={styles.emptyScreenWrapper}>
+                                                <EvilIcon size={100} name="location" color={theme.colors.grey} />
+                                                <Text variant="h4" textAlign="center" style={{ marginBottom: OFFSET.VERTICAL }}>No address added yet!</Text>
+                                                <Text variant="h5" textAlign="center" color={theme.colors.grey} style={{ marginBottom: OFFSET.VERTICAL }}>
+                                                Through your address information, we can provide a better service in purchases
+                                                </Text>
+                                            </View>
+                                            <Button
+                                                variant="outline"
+                                                title="Add Address"
+                                                onPress={addAddress}
+                                                style={styles.addAddressBtn}
+                                            />
+                                        </View>
+                                    )}
+                            </>;
+                        }}
+                    </FieldArray>
+                </View>;
+            }}
+        </Formik>
+    </KeyboardAvoidingView>;
 };
 
 const styles = StyleSheet.create({
     flexGrow: {
         flexGrow: 1,
+    },
+    flex: {
+        flex: 1,
     },
     formArrayContainer: {
         flex: 1,
@@ -212,7 +221,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         gap: OFFSET.POINT * 4,
         paddingTop: OFFSET.POINT * 2,
-        paddingBottom: OFFSET.POINT * 8,
+        paddingBottom: OFFSET.POINT * 4,
         marginHorizontal: OFFSET.POINT * 2,
     },
     btn: {
