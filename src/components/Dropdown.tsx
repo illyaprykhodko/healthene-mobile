@@ -8,23 +8,35 @@ import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 
-type Item = {
-    value: string, label: string
-}
-interface DropdownProps {
-    data: Item[];
+interface DropdownProps<T> {
+    data: T[];
     label: string;
-    value?: string;
     touched?: boolean;
+    value?: string | T;
+    isSearch?: boolean;
     errorText?: string;
-    onSelect: (value: string) => void;
+    labelField: keyof T;
+    valueField: keyof T;
+    position?: 'top' | 'auto';
+    onSelect: (item: T) => void;
 }
 
-export const Dropdown = ({ data, label, value, onSelect, touched, errorText }: DropdownProps) => {
+export const Dropdown = <T extends Record<string, any>>({
+    data,
+    label,
+    value,
+    touched,
+    onSelect,
+    position,
+    errorText,
+    valueField,
+    labelField,
+    isSearch = false
+}: DropdownProps<T>) => {
     const theme = useTheme();
+    const showError = touched && errorText;
 
-
-    return <View style={{ }}>
+    return <View>
         <Text color={touched && errorText ? theme.colors.error : theme.colors.black} variant="caption">
             {label}
         </Text>
@@ -32,25 +44,27 @@ export const Dropdown = ({ data, label, value, onSelect, touched, errorText }: D
             data={data}
             value={value}
             maxHeight={300}
-            labelField="label"
-            valueField="value"
+            search={isSearch}
             placeholder="Select item"
-            onChange={item => onSelect(item.value)}
+            onChange={item => onSelect(item)}
+            labelField={labelField ?? 'label'}
+            valueField={valueField ?? 'value'}
+            dropdownPosition={position ?? 'auto'}
             selectedTextStyle={styles.selectedTextStyle}
             placeholderStyle={[styles.placeholderStyle, { color: theme.colors.grey }]}
             style={[styles.dropdown, { borderBottomColor: touched && errorText ? theme.colors.error : theme.colors.grey }]}
         />
-        <Text
+        {showError ? <Text
             style={StyleSheet.flatten([styles.errorText, { color: theme.colors.error, opacity: errorText ? 1 : 0 }])}
         >
             {errorText}
-        </Text>
+        </Text> : null}
     </View>;
 };
 
 const styles = StyleSheet.create({
     dropdown: {
-        height: 50,
+        height: 40,
         borderBottomWidth: 0.5,
     },
     placeholderStyle: {

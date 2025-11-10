@@ -159,15 +159,19 @@ export const PersonalInformationScreen = () => {
                                 <Dropdown
                                     label="Prefix"
                                     data={PREFIXES}
+                                    labelField="label"
+                                    valueField="value"
                                     value={values.prefix}
-                                    onSelect={value => handleChange('prefix')(value)}
+                                    onSelect={data => handleChange('suffix')(data?.value)}
                                 />
                                 <View style={styles.paddingVertical}>
                                     <Dropdown
                                         label="Suffix"
                                         data={SUFFIXES}
+                                        labelField="label"
+                                        valueField="value"
                                         value={values.suffix}
-                                        onSelect={value => handleChange('suffix')(value)}
+                                        onSelect={data => handleChange('suffix')(data?.value)}
                                     />
                                 </View>
                                 <View style={styles.paddingVertical}>
@@ -201,10 +205,12 @@ export const PersonalInformationScreen = () => {
                                     <Dropdown
                                         label="Gender"
                                         data={GENDERS}
+                                        labelField="label"
+                                        valueField="value"
                                         value={values.gender}
                                         touched={touched?.gender}
                                         errorText={errors?.gender}
-                                        onSelect={value => handleChange('gender')(value)}
+                                        onSelect={data => handleChange('suffix')(data?.value)}
                                     />
                                 </View>
                             </ScrollView>
@@ -279,7 +285,7 @@ const styles = StyleSheet.create({
         paddingBottom: OFFSET.POINT * 4,
     },
     paddingVertical: {
-        paddingTop: OFFSET.POINT * 4,
+        paddingTop: OFFSET.POINT,
     },
     updateBtn: {
         marginTop: 'auto'

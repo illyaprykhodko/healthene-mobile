@@ -1,6 +1,6 @@
+// local dependencies
+import { Country, Url, State } from './common';
 import { BaseEntity, NamedEntity, TimestampedEntity } from './common/interfaces';
-import { Url } from './common';
-
 /**
  * Represents additional contact information
  * @interface AdditionalContacts
@@ -32,10 +32,10 @@ export interface AdditionalContacts {
  */
 export interface Address extends BaseEntity {
   city: string;
-  state: string;
+  state: State;
   zipCode: string;
-  country: string;
   address1: string;
+  country: Country;
   address2?: string;
   description: string;
 }
