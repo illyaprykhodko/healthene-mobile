@@ -71,8 +71,6 @@ const TextInput: React.FC<TextInputProps> = ({
                         borderBottomColor: isShowError ? theme.colors.error : theme.colors.grey
                     }
                 ]}
-                // color={isShowError ? theme.colors.error : resolvedPrimary}
-                // inputStyle={isShowError ? { ...resolvedInputStyle, color: theme.colors.error } : resolvedInputStyle}
                 {...input}
             />
             <Text
