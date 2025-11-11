@@ -73,7 +73,7 @@ export const PersonalInformationScreen = () => {
 
 
     return <>
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
             <Formik
                 onSubmit={handleSubmit}
                 validationSchema={validationSchema}
@@ -131,29 +131,32 @@ export const PersonalInformationScreen = () => {
                                 <TextInput
                                     name="firstName"
                                     disabled={false}
+                                    textAlign="left"
                                     touched={touched}
                                     label="First Name"
                                     value={values.firstName}
+                                    color={theme.colors.black}
                                     onChangeText={handleChange('firstName')}
-                                    inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
                                     error={touched.firstName && errors.firstName ? { firstName: errors.firstName } : undefined}
                                 />
                                 <TextInput
                                     name="middleName"
                                     disabled={false}
+                                    textAlign="left"
                                     label="Middle Name"
                                     value={values.middleName}
+                                    color={theme.colors.black}
                                     onChangeText={handleChange('middleName')}
-                                    inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
                                 />
                                 <TextInput
                                     name="lastName"
                                     disabled={false}
+                                    textAlign="left"
                                     label="Last Name"
                                     touched={touched}
                                     value={values.lastName}
+                                    color={theme.colors.black}
                                     onChangeText={handleChange('lastName')}
-                                    inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
                                     error={touched.lastName && errors.lastName ? { lastName: errors.lastName } : undefined}
                                 />
                                 <Dropdown
@@ -261,7 +264,7 @@ const styles = StyleSheet.create({
         paddingVertical: OFFSET.VERTICAL,
     },
     flex: {
-        flex: 1
+        flex: 1,
     },
     flexShrink: {
         flexShrink: 1
@@ -275,9 +278,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 65/2,
         overflow: 'hidden',
-    },
-    inputStyle: {
-        textAlign: 'left',
     },
     currentItem: {
         borderBottomWidth: 1,

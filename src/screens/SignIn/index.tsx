@@ -128,7 +128,6 @@ export const SignIn: React.FC = (): React.ReactElement => {
                         label="Email"
                         disabled={false}
                         autoComplete="email"
-                        style={styles.input}
                         autoCapitalize="none"
                         value={formData.username}
                         keyboardType="email-address"
@@ -142,7 +141,6 @@ export const SignIn: React.FC = (): React.ReactElement => {
                         name="password"
                         label="Password"
                         disabled={false}
-                        style={styles.input}
                         autoComplete="password"
                         value={formData.password}
                         secureTextEntry={securePassword}
@@ -209,9 +207,6 @@ const styles = StyleSheet.create({
     },
     formContainer: {
         margin: OFFSET.HORIZONTAL,
-    },
-    input: {
-        marginBottom: OFFSET.VERTICAL - 4,
     },
     button: {
         marginTop: OFFSET.VERTICAL * 1.5,
