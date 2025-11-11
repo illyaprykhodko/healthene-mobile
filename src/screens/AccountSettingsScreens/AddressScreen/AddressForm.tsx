@@ -2,7 +2,7 @@
 import { View, StyleSheet } from 'react-native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { FormikErrors, FieldArrayRenderProps } from 'formik';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { FormikHandlers, FormikTouched, FormikHelpers } from 'formik/dist/types';
 
 // local dependencies
@@ -14,7 +14,6 @@ import TextInput from 'components/TextInput.tsx';
 import { MessageService } from 'services/messages';
 import { Dropdown } from 'components/Dropdown.tsx';
 import { useFilterStateMutation } from 'store/api/settingsApi.ts';
-
 
 interface AddressFormProps {
     index: number,
@@ -28,7 +27,7 @@ interface AddressFormProps {
     setFieldTouched: FormikHelpers<{ addresses: Address[] }>['setFieldTouched'];
 }
 
-export const AddressForm = ({
+export const AddressForm = memo(({
     index,
     address,
     touched,
@@ -62,12 +61,6 @@ export const AddressForm = ({
     const [filterState] = useFilterStateMutation();
     const [states, setStates] = useState<State[] | []>([]);
 
-    useEffect(() => {
-        if (address.country.id) {
-            handleGetStates(address.country?.id);
-        }
-    }, [address.country]);
-
     const handleGetStates = useCallback(async (countryId: number) => {
         try {
             const result = await filterState({ country: countryId }).unwrap();
@@ -86,6 +79,23 @@ export const AddressForm = ({
         }
     }, [setFieldTouched, setFieldValue, index]);
 
+    const handleCountry = useCallback((country: Country) => {
+        handleGetStates(country.id);
+        setFieldTouched(`addresses[${index}].country`, true);
+        setFieldValue(`addresses[${index}].country`, country);
+    }, [setFieldValue, setFieldTouched, handleGetStates]);
+
+    const handleState = useCallback((state: State) => {
+        setFieldValue(`addresses[${index}].state`, state);
+        setFieldTouched(`addresses[${index}].state.id`, false);
+    }, [setFieldValue, setFieldTouched]);
+
+    useEffect(() => {
+        if (address.country.id) {
+            handleGetStates(address.country?.id);
+        }
+    }, [address.country, handleGetStates]);
+
     const removeAddress = useCallback(() => {
         MessageService.confirmation(
             {
@@ -96,7 +106,7 @@ export const AddressForm = ({
         ).then(({ value }) => {
             if (value) { onRemove(index); }
         });
-    }, []);
+    }, [onRemove, index]);
 
     return <View style={{ ...styles.container, borderRadius: theme.borderRadius.md, borderColor: theme.colors.grey }}>
         <View style={[styles.wrapper, styles.addressHeader]}>
@@ -186,16 +196,12 @@ export const AddressForm = ({
                     position="top"
                     label="Country"
                     labelField="name"
-                    valueField="code"
-                    value={address.country}
+                    valueField="name"
                     data={countryData ?? []}
+                    onSelect={handleCountry}
                     errorText={countryError}
+                    value={address.country.name}
                     touched={touched?.addresses?.[index]?.country?.id}
-                    onSelect={(country: Country) => {
-                        handleGetStates(country.id);
-                        setFieldTouched(`addresses[${index}].country`, true);
-                        setFieldValue(`addresses[${index}].country`, country);
-                    }}
                 />
             </View>
             {states.length
@@ -206,22 +212,18 @@ export const AddressForm = ({
                         data={states}
                         position="top"
                         labelField="name"
-                        valueField="code"
-                        value={address.state}
+                        valueField="name"
                         errorText={stateError}
+                        onSelect={handleState}
+                        value={address.state.name}
                         touched={touched?.addresses?.[index]?.state?.id}
-                        onSelect={(state: State) => {
-                            setFieldValue(`addresses[${index}].state`, state);
-                            setFieldTouched(`addresses[${index}].state.id`, false);
-                        }}
                     />
                 </View>
                 : null
             }
         </View>
     </View>;
-};
-
+});
 
 const styles = StyleSheet.create({
     container: {

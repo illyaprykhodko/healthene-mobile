@@ -11,12 +11,12 @@ import { OFFSET } from 'constants/offset.ts';
 interface DropdownProps<T> {
     data: T[];
     label: string;
+    value?: string;
     touched?: boolean;
-    value?: string | T;
     isSearch?: boolean;
     errorText?: string;
-    labelField: keyof T;
-    valueField: keyof T;
+    labelField: string;
+    valueField: string;
     position?: 'top' | 'auto';
     onSelect: (item: T) => void;
 }
@@ -35,7 +35,6 @@ export const Dropdown = <T extends Record<string, any>>({
 }: DropdownProps<T>) => {
     const theme = useTheme();
     const showError = touched && errorText;
-
     return <View>
         <Text color={touched && errorText ? theme.colors.error : theme.colors.black} variant="caption">
             {label}

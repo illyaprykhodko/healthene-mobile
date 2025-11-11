@@ -7,8 +7,8 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { ROUTES } from 'constants/routes.ts';
 import BackButton from 'components/BackButton.tsx';
-import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
 import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
+import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
 import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
 
 const Stack = createStackNavigator();

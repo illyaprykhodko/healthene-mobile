@@ -84,7 +84,7 @@ export const AddressScreen = () => {
     const [filterCountry, { data: countryData }] = useFilterCountryMutation();
     useEffect(() => {
         filterCountry({});
-    }, []);
+    }, [filterCountry]);
 
     const initialValues = useMemo(() => ({ addresses: user?.addresses ?? [] }), [user]);
     const onSubmit = async (data: Partial<User>) => {
