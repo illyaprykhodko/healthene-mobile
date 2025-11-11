@@ -3,6 +3,7 @@ import _ from 'lodash';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 // local dependencies
 import ListItem from './ListItem';
@@ -11,12 +12,16 @@ import { useAppSelector } from 'store';
 import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
+import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import SwipeList from 'components/SwipeList';
+import { RootStackParamList } from 'services/navigation';
+import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import { selectDayOverview } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS } from 'constants/spec';
 import { useGetDayOverviewQuery, useGetPhaseItemsQuery, useUpdatePhaseItemMutation,
-    useDeletePhaseItemMutation, useAddPhaseItemMutation, useUpdatePhaseMutation, useReplacePhaseItemMutation } from 'store/api/dayOverviewApi';
+    useDeletePhaseItemMutation, useAddPhaseItemMutation, useUpdatePhaseMutation, useReplacePhaseItemMutation,
+    useUpdateIncludeRescueFoodsMutation } from 'store/api/dayOverviewApi';
 
 // Temporary types until full migration
 interface PhaseItem {
@@ -60,15 +65,14 @@ const convertTypeToTitle = (type: string, capitalize = false) => {
 
 export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const theme = useTheme();
-    const navigation = useNavigation();
     const route = useRoute<any>();
     const { date: currentDate } = useAppSelector(selectDayOverview);
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   
     const [scrollEnabled, setScrollEnabled] = useState(true);
-    // const [initialized, setInitialized] = useState(false);
-
     const [localItems, setLocalItems] = useState<PhaseItem[]>([]);
-  
+    const [showRescueFoodsModal, setShowRescueFoodsModal] = useState(false);
+    const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
   
@@ -85,11 +89,12 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         // refetchOnMountOrArgChange: true,
     });
     // mutations
+    const [updatePhase] = useUpdatePhaseMutation();
+    const [addPhaseItem] = useAddPhaseItemMutation();
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
-    const [addPhaseItem] = useAddPhaseItemMutation();
-    const [updatePhase] = useUpdatePhaseMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
+    const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
 
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
   
@@ -172,7 +177,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         const excludeIds = computeExcludeIds();
         const entityType = mapPhaseTypeToEntityType();
     
-        (navigation as any).navigate('AddReplaceItem', {
+        navigation.navigate(ROUTES.ADD_REPLACE_ITEM, {
             excludeIds,
             entityType,
             onApply: async (selectedItem: any) => {
@@ -322,7 +327,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     const handleNoReplaceItem = (item: PhaseItem) => {
         // return true if item should not be replaced
-        return !item.recipe || item.recipe?.surrogateRecipe || item.section !== SECTION.ADDED_BY_HEALTHENE;
+        // return !item.recipe || item.recipe?.surrogateRecipe || item.section !== SECTION.ADDED_BY_HEALTHENE;
+        return item?.recipe && item.section === SECTION.ADDED_BY_HEALTHENE;
+
     };
 
     const handleScrollEnabled = () => setScrollEnabled(true);
@@ -358,7 +365,16 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 </View>
                 {currentPhase?.type === OVERVIEW_TYPE.MEAL && !isPastDate && (
                     <View style={styles.titleButtons}>
-                        <TouchableOpacity onPress={() => { /* Change meal */ }}>
+                        <TouchableOpacity onPress={() => {
+                            if (includeRescueFoodsInShoppingList) {
+                                (navigation as any).navigate('Replacement', {
+                                    phaseId: targetPhaseId,
+                                    date: targetDate,
+                                });
+                            } else {
+                                setShowRescueFoodsModal(true);
+                            }
+                        }}>
                             <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
                 Change Meal
                             </Text>
@@ -467,6 +483,25 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         />
                     )} */}
             </View>
+
+            {/* Rescue Foods Modal */}
+            <ReplaceItemModal
+                visible={showRescueFoodsModal}
+                onClose={() => setShowRescueFoodsModal(false)}
+                onApply={async () => {
+                    try {
+                        await updateIncludeRescueFoods({ includeRescueFoodsInShoppingList: true }).unwrap();
+                        navigation.navigate(ROUTES.REPLACEMENT, {
+                            list: [],
+                            date: targetDate,
+                            phaseId: targetPhaseId,
+                            isRestaurantMode: false,
+                        });
+                    } catch (error) {
+                        console.error('Change Meal error:', error);
+                    }
+                }}
+            />
         </Screen>
     );
 };

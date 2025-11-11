@@ -7,6 +7,7 @@ export const ROUTES = {
 
     // Private routes - Drawer Navigator
     MAIN: 'Main',
+    EDIT: 'Edit',
     INFO: 'Info',
     LIBRARY: 'Library',
     SHOPPING: 'Shopping',
@@ -14,9 +15,12 @@ export const ROUTES = {
     MY_RESULTS: 'MyResults',
     ABOUT_PLAN: 'AboutPlan',
     SMART_SCALE: 'SmartScale',
+    REPLACEMENT: 'Replacement',
     DAY_OVERVIEW: 'DayOverview',
+    REPLACE_ITEMS: 'ReplaceItems',
     COMMUNICATION: 'Communication',
     HEALTH_PROFILE: 'HealthProfile',
+    ADD_REPLACE_ITEM: 'AddReplaceItem',
     MEAL_PREFERENCES: 'MealPreferences',
     ALL_RECORDED_DATA: 'AllRecordedData',
     MEASUREMENT_CHART: 'MeasurementChart',

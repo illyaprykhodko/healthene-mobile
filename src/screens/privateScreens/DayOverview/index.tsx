@@ -23,6 +23,7 @@ import { RootStackParamList } from 'services/navigation';
 import AllRecordedDataScreen from '../AllRecordedDataScreen';
 import MeasurementChartScreen from '../MeasurementChartScreen';
 import WeightMeasurementScreen from '../WeightMeasurementScreen';
+import { ReplacementScreen, ReplaceItemsScreen } from './Replacement';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
 import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
 
@@ -228,6 +229,23 @@ const DayOverviewStack: React.FC = () => {
                     title: 'Smart Scale',
                     headerTitleStyle: { fontSize: 18 },
                 }}
+            />
+            <Stack.Screen
+                name="Replacement"
+                component={ReplacementScreen}
+                options={{
+                    title: 'Select Replacement',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
+            />
+            
+            <Stack.Screen
+                name="ReplaceItems"
+                component={ReplaceItemsScreen}
+                options={({ route }) => ({
+                    title: (route.params as any)?.title || 'Replacement Options',
+                    headerTitleStyle: { fontSize: 18 },
+                })}
             />
         </Stack.Navigator>
     );

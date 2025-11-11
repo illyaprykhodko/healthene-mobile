@@ -25,11 +25,21 @@ export type RootStackParamList = {
 
   // Private screens
   [ROUTES.HOME]: undefined;
+  [ROUTES.INFO]: undefined;
   [ROUTES.PROFILE]: undefined;
+  [ROUTES.LIBRARY]: undefined;
   [ROUTES.SETTINGS]: undefined;
+  [ROUTES.SHOPPING]: undefined;
+  [ROUTES.DAILY_PLAN]: undefined;
+  [ROUTES.MY_RESULTS]: undefined;
+  [ROUTES.ABOUT_PLAN]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
+  [ROUTES.COMMUNICATION]: undefined;
+  [ROUTES.HEALTH_PROFILE]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
+  [ROUTES.MEAL_PREFERENCES]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
+  [ROUTES.CUISINE_DISTRIBUTION]: undefined;
 
   // Example of a screen that requires params
   [ROUTES.SMART_SCALE]: {
@@ -43,6 +53,27 @@ export type RootStackParamList = {
     measurementType: string;
     measurementName: string;
     date: string;
+  };
+  [ROUTES.EDIT]: {
+    phaseId: number;
+    isToast: boolean;
+  };
+  [ROUTES.REPLACEMENT]: {
+    list: any[];
+    date?: string;
+    phaseId: number;
+    isRestaurantMode: boolean;
+  };
+  [ROUTES.REPLACE_ITEMS]: {
+    title: string;
+    phaseId: number;
+    catalogId: number;
+    isRestaurantMode: boolean;
+  };
+  [ROUTES.ADD_REPLACE_ITEM]: {
+    excludeIds: string[];
+    entityType: string;
+    onApply: (selectedItem: any) => void;
   };
 };
 
