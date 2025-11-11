@@ -23,6 +23,7 @@ export const ROUTES = {
     CUISINE_DISTRIBUTION: 'CuisineDistribution',
 
     // Account Settings
+    ADDRESS: 'Address',
     ACCOUNT_SETTINGS: 'AccountSettings',
     PERSONAL_INFORMATION: 'PersonalInformation',
 

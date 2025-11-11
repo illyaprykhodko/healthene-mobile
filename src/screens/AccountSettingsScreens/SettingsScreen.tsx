@@ -26,7 +26,7 @@ const SettingsScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const settingItem = [
         { title: ITEM.PERSONAL_INFORMATION, navigate: () => navigation.navigate(ROUTES.PERSONAL_INFORMATION) },
-        { title: ITEM.ADDRESS },
+        { title: ITEM.ADDRESS, navigate: () => navigation.navigate(ROUTES.ADDRESS) },
         { title: ITEM.SETTINGS },
         { title: ITEM.FOOD_PREFERENCES },
         { title: ITEM.FOOD_ALLERGIES },

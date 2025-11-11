@@ -1,4 +1,4 @@
-import { Url, IdName, Country, State } from './common';
+import { Url, IdName, Country } from './common';
 import { AdditionalContacts, Address } from './contact';
 import { FileAttachment, PatientMedicalProblem } from './medical';
 import { Gender, OnboardingStatus, OnboardingStep } from './common/enums';
@@ -137,6 +137,7 @@ export interface User {
   gender: string;
   title?: string;
   avatar?: Url;
+  country: Country;
   coverImage: {
     url: string;
   },
@@ -154,7 +155,7 @@ export interface User {
       activityVisible: boolean;
     };
   };
-  address?: Address;
+  addresses?: Address[];
   health?: {
     bloodType?: string;
     allergies?: string[];

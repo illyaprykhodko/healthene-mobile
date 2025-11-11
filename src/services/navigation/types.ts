@@ -26,6 +26,7 @@ export type RootStackParamList = {
   // Private screens
   [ROUTES.HOME]: undefined;
   [ROUTES.PROFILE]: undefined;
+  [ROUTES.ADDRESS]: undefined;
   [ROUTES.SETTINGS]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
