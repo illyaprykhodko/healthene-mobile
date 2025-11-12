@@ -1,19 +1,21 @@
 // outsource dependencies
 import moment from 'moment';
-import React, { useEffect, useMemo } from 'react';
 import Svg, { Line, Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 // local dependencies
-import Text from '../../../components/Text';
-import Screen from '../../../components/Screen';
-import { useTheme } from '../../../hooks/useTheme';
-import { OFFSET } from '../../../constants/offset';
-import { AnytimeMenu } from '../../../components/AnytimeMenu';
-import { useAppDispatch, useAppSelector } from '../../../store';
-import { useGetDayOverviewQuery, Phase } from '../../../store/api/dayOverviewApi';
-import { selectDayOverview, meta, setDateEntry } from '../../../store/slices/dayOverviewSlice';
+import Text from 'components/Text';
+import Screen from 'components/Screen';
+import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
+import { AnytimeMenu } from 'components/AnytimeMenu';
+import { useAppDispatch, useAppSelector } from 'store';
+import type { AnytimeMeasurementItem } from 'types/anytime';
+import { useGetDayOverviewQuery, Phase } from 'store/api/dayOverviewApi';
+import { MeasurementInputModal } from 'components/AnytimeMenu/MeasurementInputModal';
+import { selectDayOverview, meta, setDateEntry } from 'store/slices/dayOverviewSlice';
 
 // Temporary types
 export type PhaseType =
@@ -294,50 +296,56 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    paddingHorizontal: OFFSET.HORIZONTAL,
-    paddingVertical: OFFSET.POINT * 3,
-    backgroundColor: '#156F93',
-  },
-  content: {
-    flex: 1,
-    paddingBottom: OFFSET.VERTICAL,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: OFFSET.VERTICAL,
-    position: 'relative',
-    height: ROW_HEIGHT,
-  },
-  iconWrapper: {
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-    borderRadius: ICON_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN,
-  },
-  rightContent: {
-    flex: 1,
-    paddingLeft: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#7B7B7B',
-    marginVertical: OFFSET.VERTICAL,
-    paddingHorizontal: OFFSET.HORIZONTAL,
-  },
-  timelineContainer: {
-    position: 'relative',
-    minHeight: 0,
-  },
-  birdOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 2,
-  },
+    container: { flex: 1 },
+    header: {
+        paddingHorizontal: OFFSET.HORIZONTAL,
+        paddingVertical: OFFSET.POINT * 3,
+        backgroundColor: '#156F93',
+    },
+    content: {
+        flex: 1,
+        paddingBottom: OFFSET.VERTICAL,
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: OFFSET.VERTICAL,
+        position: 'relative',
+        height: ROW_HEIGHT,
+    },
+    iconWrapper: {
+        width: ICON_SIZE,
+        height: ICON_SIZE,
+        borderRadius: ICON_SIZE / 2,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN,
+    },
+    rightContent: {
+        flex: 1,
+        paddingLeft: 12,
+    },
+    graphIconContainer: {
+        paddingRight: 16,
+        paddingLeft: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#7B7B7B',
+        marginVertical: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL,
+    },
+    timelineContainer: {
+        position: 'relative',
+        minHeight: 0,
+    },
+    birdOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 2,
+    },
 });
 
 const getIconColorByType = (type: PhaseType) => {
@@ -363,11 +371,12 @@ const getIconColorByType = (type: PhaseType) => {
 };
 
 export const Overview: React.FC = () => {
-  const theme = useTheme();
-  const navigation = useNavigation();
-  const dispatch = useAppDispatch();
-  const { date, expectAnswer } = useAppSelector(selectDayOverview);
-  const currentDate = date || moment().format('YYYY-MM-DD');
+    const theme = useTheme();
+    const navigation = useNavigation();
+    const dispatch = useAppDispatch();
+    const { date, expectAnswer } = useAppSelector(selectDayOverview);
+    const currentDate = date || moment().format('YYYY-MM-DD');
+    const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
 
   const { data, isLoading, isFetching } = useGetDayOverviewQuery(currentDate, {
     skip: !currentDate,
@@ -441,35 +450,65 @@ export const Overview: React.FC = () => {
 
   const isMealPhase = (type: PhaseType) => type === 'MEAL';
 
-  const handlePhasePress = (phase: PhaseItem) => {
-    if ((phase.type === 'MEASUREMENT' || phase.type === 'ANYTIME') && phase.phaseId) {
-      (navigation as any).navigate('Edit', { phaseId: phase.phaseId, date: currentDate });
-    } else if (phase.type === 'PHYSICAL_ACTIVITY') {
-      // Find the physical activity phase for status tracking
-      const physicalActivityPhase = data?.phases?.find(p => p.type === 'PHYSICAL_ACTIVITY');
+    const handlePhasePress = (phase: PhaseItem) => {
+        if (phase.type === 'MEASUREMENT') {
+            const measurementPhase = data?.phases?.find(p => p.type === 'MEASUREMENT');
+            const measurementItem = measurementPhase?.items?.find((item: any) => item.id === phase.id);
 
-      (navigation as any).navigate('ExerciseCategories', {
-        list: [],
-        deepCounter: 0,
-        date: currentDate,
-        parentNavigation: navigation,
-        onClose: () => navigation.goBack(),
-        deepPhaseId: physicalActivityPhase?.id,
-        exercisePhaseStatus: physicalActivityPhase?.status,
-        onRefresh: () => {
-          // Refetch day overview data to update UI
-          dispatch(setDateEntry({
-            date: currentDate,
-            entry: { needsRefresh: true },
-          }));
-        },
-      });
-    } else {
-      (navigation as any).navigate(
-        'Edit',
-        { phaseId: phase.id, date: currentDate });
-    }
-  };
+            if (measurementItem) {
+                const measurementType = measurementItem.measurement?.type;
+                if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
+                    (navigation as any).navigate('WeightMeasurement', {
+                        measurementPhaseItem: measurementItem,
+                        date: currentDate,
+                    });
+                    return;
+                }
+                if (phase.status === 'DONE') {
+                    (navigation as any).navigate('SaveValue', {
+                        measurementType: measurementItem.measurement?.type,
+                        measurementName: measurementItem.measurement?.name,
+                        measurementPhaseItem: measurementItem,
+                        date: currentDate,
+                    });
+                    return;
+                }
+                const anytimeMeasurement: AnytimeMeasurementItem = {
+                    type: 'MEASUREMENT',
+                    id: measurementItem.id,
+                    phaseId: measurementPhase!.id,
+                    measurement: measurementItem.measurement,
+                    status: measurementItem.status || 'PENDING',
+                };
+                setSelectedMeasurement(anytimeMeasurement);
+            }
+            return;
+        }
+
+        if (phase.type === 'ANYTIME' && phase.phaseId) {
+            (navigation as any).navigate('Edit', { phaseId: phase.phaseId, date: currentDate });
+        } else if (phase.type === 'PHYSICAL_ACTIVITY') {
+            const physicalActivityPhase = data?.phases?.find(p => p.type === 'PHYSICAL_ACTIVITY');
+
+            (navigation as any).navigate('ExerciseCategories', {
+                list: [],
+                deepCounter: 0,
+                date: currentDate,
+                parentNavigation: navigation,
+                onClose: () => navigation.goBack(),
+                deepPhaseId: physicalActivityPhase?.id,
+                exercisePhaseStatus: physicalActivityPhase?.status,
+                onRefresh: () => {
+                    dispatch(setDateEntry({
+                        date: currentDate,
+                        entry: { needsRefresh: true }
+                    }));
+                }
+            });
+        } else {
+            (navigation as any).navigate('Edit', { phaseId: phase.id, date: currentDate });
+        }
+    };
 
   if (isLoading) {
     return (
@@ -488,17 +527,18 @@ export const Overview: React.FC = () => {
       <View style={ styles.content }>
         <Text style={ styles.title }>My Daily Plan!</Text>
 
-        <View style={ styles.timelineContainer }>
-          <FlatList
-            data={ phases }
-            keyExtractor={ item => String(item.id) }
-            ListHeaderComponent={ <TimelineSVG phases={ phases } /> }
-            renderItem={ ({ item }) => {
-              const { bg, fg, name } = getIconColorByType(item.type);
-              const isMeal = isMealPhase(item.type);
-              const iconMarginLeft = isMeal
-                ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
-                : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
+                <View style={styles.timelineContainer}>
+                    <FlatList
+                        data={phases}
+                        style={{ marginBottom: 35 }}
+                        keyExtractor={item => String(item.id)}
+                        ListHeaderComponent={<TimelineSVG phases={phases} />}
+                        renderItem={({ item }) => {
+                            const { bg, fg, name } = getIconColorByType(item.type);
+                            const isMeal = isMealPhase(item.type);
+                            const iconMarginLeft = isMeal
+                                ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
+                                : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
 
               return (
                 <TouchableOpacity key={ String(item.id) } style={ styles.row } onPress={ () => handlePhasePress(item) }>
@@ -511,22 +551,35 @@ export const Overview: React.FC = () => {
                     </Text>
                     <Text style={ { color: theme.colors.text, fontSize: 12, marginTop: 4 } }>
                       Status: {item.status || 'Unknown'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            } }
-          />
-        </View>
-      </View>
+                                        </Text>
+                                    </View>
+                                    {/* {item.type === 'MEASUREMENT' && item.status === 'DONE' && (
+                                        <View style={styles.graphIconContainer}>
+                                            <Icon name="chart-line" color="#2978A0" size={20} />
+                                        </View>
+                                    )} */}
+                                </TouchableOpacity>
+                            );
+                        }}
+                    />
+                </View>
+            </View>
 
-      {/* Anytime Menu */}
-      <AnytimeMenu
-        date={ currentDate }
-        disabled={ Boolean(expectAnswer) || isLoading }
-      />
-    </Screen>
-  );
+            <AnytimeMenu
+                date={currentDate}
+                disabled={Boolean(expectAnswer) || isLoading}
+            />
+
+            {selectedMeasurement && (
+                <MeasurementInputModal
+                    item={selectedMeasurement}
+                    visible={!!selectedMeasurement}
+                    disabled={Boolean(expectAnswer)}
+                    onClose={() => setSelectedMeasurement(null)}
+                />
+            )}
+        </Screen>
+    );
 };
 
 export default Overview;

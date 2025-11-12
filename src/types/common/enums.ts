@@ -234,3 +234,14 @@ export enum MedicationFrequency {
   AS_NEEDED = 'AS_NEEDED',
   OTHER = 'OTHER'
 }
+
+/**
+ * Represents business document properties available in the system
+ * @enum {string}
+ * @property {string} AGREEMENT - User or patient agreement document
+ * @property {string} TERMS_AND_CONDITIONS - Terms and conditions document
+ */
+export enum BUSINESS_PROPERTIES {
+  AGREEMENT = 'AGREEMENT',
+  TERMS_AND_CONDITIONS = 'TERMS_AND_CONDITIONS',
+}

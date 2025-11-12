@@ -443,51 +443,55 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
           )}
         </ScrollView>
 
-        {(currentPhase?.type === OVERVIEW_TYPE.MEAL
-                  || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? (
-                    <View style={ styles.buttonContainer }>
-              <Button
+                {/* {(currentPhase?.type === OVERVIEW_TYPE.MEAL
+                  || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? ( */}
+                <View style={styles.buttonContainer}>
+                    <Button
                         icon="plus"
                         title="Add"
                         variant="primary"
-                        onPress={ handleAddItem }
-                        textStyle={ styles.textAddButton }
-                        style={ {
-                  ...styles.button,
-                  ...styles.addButtonActive,
-                  width: isFutureDate ? '100%' : '45%',
-                  backgroundColor: theme.colors.transparent,
-                } }
-              />
-              {!isFutureDate && (
-                      <Button
-                  title="Meal Done"
-                  variant="secondary"
-                  onPress={ handlePhaseDone }
-                  textStyle={ styles.textMealDoneButton }
-                  style={ {
-                    ...styles.button,
-                    ...styles.mealDoneButton,
-                  } }
-                />
-              )}
+                        onPress={handleAddItem}
+                        textStyle={styles.textAddButton}
+                        style={{
+                            ...styles.button,
+                            ...styles.addButtonActive,
+                            width: isFutureDate ? '100%' : '45%',
+                            backgroundColor: theme.colors.transparent,
+                        }}
+                    />
+                    {!isFutureDate && (
+                        <Button
+                            title="Meal Done"
+                            variant="secondary"
+                            onPress={handlePhaseDone}
+                            textStyle={styles.textMealDoneButton}
+                            style={{
+                                ...styles.button,
+                                ...styles.mealDoneButton,
+                            }}
+                        />
+                    )}
+                </View>
+                {/* ) : (
+                        <Button
+                            icon="plus"
+                            title="Add"
+                            variant="primary"
+                            onPress={handleAddItem}
+                            textStyle={{ color: '#7BAAC2' }}
+                            style={{
+                                // ...styles.button,
+                                // ...styles.addButton,
+                                ...styles.button,
+                                ...styles.addButtonActive,
+                                // width: isFutureDate ? '100%' : '45%',
+                                backgroundColor: theme.colors.transparent,
+                            }}
+                        />
+                    )} */}
             </View>
-          ) : (
-            <Button
-              icon="plus"
-              title="Add"
-              variant="primary"
-              onPress={ handleAddItem }
-              textStyle={ { color: '#7BAAC2' } }
-              style={ {
-                ...styles.button,
-                ...styles.addButton,
-              } }
-            />
-          )}
-      </View>
-    </Screen>
-  );
+        </Screen>
+    );
 };
 
 export default Edit;

@@ -1,6 +1,6 @@
+// local dependencies
+import { Country, Url, State } from './common';
 import { BaseEntity, NamedEntity, TimestampedEntity } from './common/interfaces';
-import { Url } from './common';
-
 /**
  * Represents additional contact information
  * @interface AdditionalContacts
@@ -22,33 +22,22 @@ export interface AdditionalContacts {
  * Represents a physical address
  * @interface Address
  * @property {number} id - Unique identifier of the address
- * @property {string} street - Street address
- * @property {string} [unit] - Optional unit/apartment number
  * @property {string} city - City name
- * @property {string} state - State/province name
- * @property {string} postalCode - Postal/ZIP code
+ * @property {string} state - State/province name (appears only if the selected country is the USA)
  * @property {string} country - Country name
- * @property {Object} [coordinates] - Optional geographical coordinates
- * @property {number} coordinates.latitude - Latitude value
- * @property {number} coordinates.longitude - Longitude value
- * @property {string} [notes] - Optional additional address notes
- * @property {boolean} isActive - Whether the address is currently active
- * @property {string} createdDate - ISO date string when the address was created
- * @property {string} updatedDate - ISO date string when the address was last updated
+ * @property {string} address1 - The first line of the address
+ * @property {string} [address2] - Optional second address line for additional details such as apartment, suite, or building number
+ * @property {string} zipCode - Postal code or ZIP code
+ * @property {string} description - Description of the address
  */
-export interface Address extends BaseEntity, TimestampedEntity {
-  street: string;
-  unit?: string;
+export interface Address extends BaseEntity {
   city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-  notes?: string;
-  isActive: boolean;
+  state: State;
+  zipCode: string;
+  address1: string;
+  country: Country;
+  address2?: string;
+  description: string;
 }
 
 /**

@@ -38,9 +38,11 @@ export interface PhaseItem {
     amount?: number;
     section?: string;
     measurement?: any;
+    modified?: boolean;
     id: string | number;
     initialAmount?: number;
-    modified?: boolean;
+    /** Amount that has been consumed so far (client + server contract) */
+    consumedAmount?: number;
     weight?: {
         unit: {
             name: string;
@@ -122,152 +124,163 @@ export interface RecipePrototypeFilter {
 }
 
 export interface FoodFilter {
+    upc?: string;
     name?: string;
-    nameFragment?: string;
-    categoryNodeId?: number;
+    tagIds?: number[];
     isEnabled?: boolean;
+    prefixName?: string;
+    treeTypeId?: number;
+    onlyNodeId?: number;
+    foodPlanFilter?: any;
     excludeIds?: number[];
     includeIds?: number[];
-    prefixName?: string;
-    tagIds?: number[];
-    treeTypeId?: number;
-    treeTypeViewLabel?: 'PATIENT_NAVIGATION';
-    upc?: string;
-    onlyNodeId?: number;
+    nameFragment?: string;
+    categoryNodeId?: number;
     foodPatientPlanFilter?: any;
-    foodPlanFilter?: any;
+    treeTypeViewLabel?: 'PATIENT_NAVIGATION';
 }
 
 export const dayOverviewApi = createApi({
-  reducerPath: 'dayOverviewApi',
-  baseQuery,
-  tagTypes: ['DayOverview', 'Questions', 'Anytime', 'PhaseItems', 'PhaseItem', 'AvailableItems'],
-  endpoints: builder => ({
-    getQuestions: builder.query<Question, string>({
-      query: date => `/patient-service/patient/me/disease-questions/${date}`,
-      providesTags: ['Questions'],
-    }),
+    reducerPath: 'dayOverviewApi',
+    baseQuery,
+    tagTypes: ['DayOverview', 'Questions', 'Anytime', 'PhaseItems', 'PhaseItem', 'AvailableItems'],
+    endpoints: builder => ({
+        // Create measurement record (manual or third-party)
+        addMeasurementRecord: builder.mutation<any, {
+            type: string; // e.g. WEIGHT, BLOOD_GLUCOSE, BLOOD_PRESSURE
+            payload: any; // formatted payload per backend contract
+        }>({
+            query: ({ payload }) => ({
+                body: payload,
+                method: 'POST',
+                url: '/patient-service/patients/me/measurement/third-party',
+            }),
+            invalidatesTags: ['DayOverview'],
+        }),
+        getQuestions: builder.query<Question, string>({
+            query: date => `/patient-service/patient/me/disease-questions/${date}`,
+            providesTags: ['Questions'],
+        }),
 
-    getDayOverview: builder.query<DayOverviewResponse, string>({
-      query: date => `/patient-service/patients/me/day-overview/${date}`,
-      providesTags: (result, error, date) => [{ type: 'DayOverview', id: date }],
-      transformResponse: (success: any): DayOverviewResponse => {
-        const anytimePhase = (success?.phases || []).find((i: Phase) => i.type === 'ANYTIME');
-        return {
-          ...success,
-          phases: (success?.phases || [])
-            .filter((item: Phase) =>
-              [
-                'MEAL',
-                'ANYTIME',
-                'QUESTION',
-                'MEDICATION',
-                'SUPPLEMENT',
-                'MEASUREMENT',
-                'ADDED_BY_PATIENT',
-                'PHYSICAL_ACTIVITY',
-              ].includes(item.type)
-            )
-            .sort((a: Phase, b: Phase) => (a.order ?? 0) - (b.order ?? 0)),
-          anytime: anytimePhase,
-          patient: (success?.phases || []).find((i: Phase) => i.type === 'ADDED_BY_PATIENT'),
-          anytimePhaseId: anytimePhase?.id,
-        };
-      },
-    }),
+        getDayOverview: builder.query<DayOverviewResponse, string>({
+            query: date => `/patient-service/patients/me/day-overview/${date}`,
+            providesTags: (result, error, date) => [{ type: 'DayOverview', id: date }],
+            transformResponse: (success: any): DayOverviewResponse => {
+                const anytimePhase = (success?.phases || []).find((i: Phase) => i.type === 'ANYTIME');
+                return {
+                    ...success,
+                    phases: (success?.phases || [])
+                        .filter((item: Phase) =>
+                            [
+                                'MEAL',
+                                'ANYTIME',
+                                'QUESTION',
+                                'MEDICATION',
+                                'SUPPLEMENT',
+                                'MEASUREMENT',
+                                'ADDED_BY_PATIENT',
+                                'PHYSICAL_ACTIVITY',
+                            ].includes(item.type)
+                        )
+                        .sort((a: Phase, b: Phase) => (a.order ?? 0) - (b.order ?? 0)),
+                    anytime: anytimePhase,
+                    patient: (success?.phases || []).find((i: Phase) => i.type === 'ADDED_BY_PATIENT'),
+                    anytimePhaseId: anytimePhase?.id,
+                };
+            },
+        }),
 
-    getPhaseItems: builder.query<Record<string, any[]>, number | string>({
-      query: id => `/patient-service/patients/day-overview/phase/${id}/items`,
-      providesTags: (result, error, phaseId) => [
-        { type: 'PhaseItems', id: phaseId },
-        ...(result
-          ? Object.values(result).flat().map((i: any) => ({ type: 'PhaseItem' as const, id: i.id }))
-          : []),
-      ],
-      transformResponse: (success: any[]) => {
-        const grouped: Record<string, any[]> = {};
-        (success || []).forEach(item => {
-          const key = item.type || 'UNKNOWN';
+        getPhaseItems: builder.query<Record<string, any[]>, number | string>({
+            query: id => `/patient-service/patients/day-overview/phase/${id}/items`,
+            providesTags: (result, error, phaseId) => [
+                { type: 'PhaseItems', id: phaseId },
+                ...(result
+                    ? Object.values(result).flat().map((i: any) => ({ type: 'PhaseItem' as const, id: i.id }))
+                    : []),
+            ],
+            transformResponse: (success: any[]) => {
+                const grouped: Record<string, any[]> = {};
+                (success || []).forEach(item => {
+                    const key = item.type || 'UNKNOWN';
+                    if (!grouped[key]) { grouped[key] = []; }
+                    grouped[key].push(item);
+                });
+                return grouped;
+            },
+        }),
 
-          if (!grouped[key]) { grouped[key] = []; }
-          grouped[key].push(item);
-        });
-        return grouped;
-      },
-    }),
+        getCategoryTreeNodes: builder.query<any, { filter: CategoryNodeFilter; page?: number; size?: number; sort?: string }>({
+            query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+                body: filter,
+                method: 'POST',
+                params: { page, size /* sort */ },
+                url: '/patient-service/category-tree/nodes/filter',
+            }),
+            providesTags: ['AvailableItems'],
+        }),
 
-    getCategoryTreeNodes: builder.query<any, { filter: CategoryNodeFilter; page?: number; size?: number; sort?: string }>({
-      query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
-        url: '/patient-service/category-tree/nodes/filter',
-        method: 'POST',
-        body: filter,
-        params: { page, size /* sort */ },
-      }),
-      providesTags: ['AvailableItems'],
-    }),
+        getCatalogPrototypeTreeNodes: builder.query<any, { filter: RecipePrototypeCatalogFilter; page?: number; size?: number; sort?: string }>({
+            query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+                body: filter,
+                method: 'POST',
+                params: { page, size, sort },
+                url: '/patient-service/catalog-prototype-tree/nodes/filter',
+            }),
+            providesTags: ['AvailableItems'],
+        }),
 
-    getCatalogPrototypeTreeNodes: builder.query<any, { filter: RecipePrototypeCatalogFilter; page?: number; size?: number; sort?: string }>({
-      query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
-        url: '/patient-service/catalog-prototype-tree/nodes/filter',
-        method: 'POST',
-        body: filter,
-        params: { page, size, sort },
-      }),
-      providesTags: ['AvailableItems'],
-    }),
+        getRecipePrototypes: builder.query<any, { filter: RecipePrototypeFilter; page?: number; size?: number; sort?: string }>({
+            query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+                url: '/patient-service/recipe-prototypes/filter',
+                method: 'POST',
+                body: filter,
+                params: { page, size, sort },
+            }),
+            providesTags: ['AvailableItems'],
+        }),
 
-    getRecipePrototypes: builder.query<any, { filter: RecipePrototypeFilter; page?: number; size?: number; sort?: string }>({
-      query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
-        url: '/patient-service/recipe-prototypes/filter',
-        method: 'POST',
-        body: filter,
-        params: { page, size, sort },
-      }),
-      providesTags: ['AvailableItems'],
-    }),
+        getFoods: builder.query<any, { filter: FoodFilter; page?: number; size?: number; sort?: string }>({
+            query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
+                url: '/patient-service/foods/filter',
+                method: 'POST',
+                body: filter,
+                params: { page, size, sort },
+            }),
+            providesTags: ['AvailableItems'],
+        }),
 
-    getFoods: builder.query<any, { filter: FoodFilter; page?: number; size?: number; sort?: string }>({
-      query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
-        url: '/patient-service/foods/filter',
-        method: 'POST',
-        body: filter,
-        params: { page, size, sort },
-      }),
-      providesTags: ['AvailableItems'],
-    }),
+        getPhaseItem: builder.query<PhaseItem, number | string>({
+            query: id => `/patient-service/patients/day-overview/phase/item/${id}`,
+            providesTags: (result, error, id) => [{ type: 'PhaseItem', id }],
+        }),
 
-    getPhaseItem: builder.query<PhaseItem, number | string>({
-      query: id => `/patient-service/patients/day-overview/phase/item/${id}`,
-      providesTags: (result, error, id) => [{ type: 'PhaseItem', id }],
-    }),
-
-    updatePhaseItem: builder.mutation<
+        updatePhaseItem: builder.mutation<
         PhaseItem,
         { id: number | string; phaseId: number | string; data: Partial<PhaseItem>; date?: string }
       >({
-        query: ({ id, data }) => ({
-          url: `/patient-service/patients/day-overview/phase/item/${id}`,
-          method: 'PUT',
-          body: data,
-        }),
-        invalidatesTags: (result, error, { id, phaseId }) => [
-          { type: 'PhaseItem', id },
-          { type: 'PhaseItems', id: phaseId },
-          'DayOverview',
-        ],
-        async onQueryStarted ({ id, phaseId, data, date }, { dispatch, queryFulfilled }) {
-          const patch = dispatch(
-            dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
-              for (const arr of Object.values(draft) as any[][]) {
-                const found = arr.find(x => x.id === id);
-                if (found) {
-                  Object.assign(found, data);
-                  arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-                  break;
-                }
-              }
-            })
-          );
+          query: ({ id, data }) => ({
+              url: `/patient-service/patients/day-overview/phase/item/${id}`,
+              method: 'PUT',
+              body: data, // Pass the entire data object like in original
+          }),
+          invalidatesTags: (result, error, { id, phaseId }) => [
+              { type: 'PhaseItem', id },
+              { type: 'PhaseItems', id: phaseId },
+              'DayOverview',
+          ],
+          async onQueryStarted ({ id, phaseId, data, date }, { dispatch, queryFulfilled }) {
+              const patch = dispatch(
+                  dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
+                      for (const arr of Object.values(draft) as any[][]) {
+                          const found = arr.find(x => x.id === id);
+                          if (found) {
+                              Object.assign(found, data);
+                              arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                              break;
+                          }
+                      }
+                  })
+              );
 
           // Optimistically update DayOverview cache if we know the date
           let dayOverviewPatched: any | null = null;
@@ -300,132 +313,188 @@ export const dayOverviewApi = createApi({
         },
       }),
 
-    deletePhaseItem: builder.mutation<void, { id: number | string; phaseId: number | string }>({
-      query: ({ id }) => ({
-        url: `/patient-service/patients/day-overview/phase/item/${id}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: (result, error, { id, phaseId }) => [
-        { type: 'PhaseItem', id },
-        { type: 'PhaseItems', id: phaseId },
-      ],
-      async onQueryStarted ({ id, phaseId }, { dispatch, queryFulfilled }) {
-        const patch = dispatch(
-          dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
-            for (const key of Object.keys(draft)) {
-              const arr = draft[key];
-              const idx = arr.findIndex(x => x.id === id);
-              if (idx >= 0) {
-                arr.splice(idx, 1);
-                break;
-              }
-            }
-          })
-        );
-        try {
-          await queryFulfilled;
-        } catch {
-          patch.undo();
-        }
-      },
-    }),
-    addPhaseItem: builder.mutation<PhaseItem, { phaseId: number | string; data: any }>({
-      query: ({ phaseId, data }) => ({
-        url: `/patient-service/patients/day-overview/phase/${phaseId}/items`,
-        method: 'POST',
-        body: data,
-      }),
-      invalidatesTags: (result, error, { phaseId }) => [{ type: 'PhaseItems', id: phaseId }],
-      async onQueryStarted ({ phaseId }, { dispatch, queryFulfilled }) {
-        try {
-          const { data: created } = await queryFulfilled;
-          dispatch(
-            dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
-              const key = created?.type || 'UNKNOWN';
-              if (!draft[key]) { draft[key] = []; }
-              draft[key].push(created);
-              draft[key].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-            })
-          );
-        } catch (error) {
-          console.error('error', error);
-        }
-      },
-    }),
-    replacePhaseItem: builder.mutation<PhaseItem, ReplaceItemRequest>({
-      query: ({ itemId, replacementItem }) => ({
-        url: `/patient-service/patients/day-overview/phase/item/${itemId}/replace`,
-        method: 'PUT',
-        body: replacementItem,
-      }),
-      invalidatesTags: (result, error, { itemId, phaseId }) => [
-        { type: 'PhaseItem', id: itemId },
-        { type: 'PhaseItems', id: phaseId },
-      ],
-      async onQueryStarted ({ itemId, phaseId }, { dispatch, queryFulfilled }) {
-        try {
-          const { data: replaced } = await queryFulfilled;
-          dispatch(
-            dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
-              let oldTypeKey: string | undefined;
-              for (const key of Object.keys(draft)) {
-                const arr = draft[key];
-                const idx = arr.findIndex(x => x.id === itemId);
-                if (idx >= 0) {
-                  arr.splice(idx, 1);
-                  oldTypeKey = key;
-                  break;
+        deletePhaseItem: builder.mutation<void, { id: number | string; phaseId: number | string }>({
+            query: ({ id }) => ({
+                url: `/patient-service/patients/day-overview/phase/item/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: (result, error, { id, phaseId }) => [
+                { type: 'PhaseItem', id },
+                { type: 'PhaseItems', id: phaseId },
+            ],
+            async onQueryStarted ({ id, phaseId }, { dispatch, queryFulfilled }) {
+                const patch = dispatch(
+                    dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
+                        for (const key of Object.keys(draft)) {
+                            const arr = draft[key];
+                            const idx = arr.findIndex(x => x.id === id);
+                            if (idx >= 0) {
+                                arr.splice(idx, 1);
+                                break;
+                            }
+                        }
+                    })
+                );
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patch.undo();
                 }
-              }
-              const newKey = replaced?.type || oldTypeKey || 'UNKNOWN';
-              if (!draft[newKey]) { draft[newKey] = []; }
-              draft[newKey].push(replaced);
-              draft[newKey].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-            })
-          );
-        } catch {
-          /* ignore */
-        }
-      },
-    }),
+            },
+        }),
+        addPhaseItem: builder.mutation<PhaseItem, { phaseId: number | string; data: any }>({
+            query: ({ phaseId, data }) => ({
+                url: `/patient-service/patients/day-overview/phase/${phaseId}/items`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { phaseId }) => [{ type: 'PhaseItems', id: phaseId }],
+            async onQueryStarted ({ phaseId }, { dispatch, queryFulfilled }) {
+                try {
+                    const { data: created } = await queryFulfilled;
+                    dispatch(
+                        dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
+                            const key = created?.type || 'UNKNOWN';
+                            if (!draft[key]) { draft[key] = []; }
+                            draft[key].push(created);
+                            draft[key].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                        })
+                    );
+                } catch (error) {
+                    // console.error('error', error);
+                }
+            },
+        }),
+        replacePhaseItem: builder.mutation<PhaseItem, ReplaceItemRequest>({
+            query: ({ itemId, replacementItem }) => ({
+                url: `/patient-service/patients/day-overview/phase/item/${itemId}/replace`,
+                method: 'PUT',
+                body: replacementItem,
+            }),
+            invalidatesTags: (result, error, { itemId, phaseId }) => [
+                { type: 'PhaseItem', id: itemId },
+                { type: 'PhaseItems', id: phaseId },
+            ],
+            async onQueryStarted ({ itemId, phaseId }, { dispatch, queryFulfilled }) {
+                try {
+                    const { data: replaced } = await queryFulfilled;
+                    dispatch(
+                        dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
+                            let oldTypeKey: string | undefined;
+                            for (const key of Object.keys(draft)) {
+                                const arr = draft[key];
+                                const idx = arr.findIndex(x => x.id === itemId);
+                                if (idx >= 0) {
+                                    arr.splice(idx, 1);
+                                    oldTypeKey = key;
+                                    break;
+                                }
+                            }
+                            const newKey = replaced?.type || oldTypeKey || 'UNKNOWN';
+                            if (!draft[newKey]) { draft[newKey] = []; }
+                            draft[newKey].push(replaced);
+                            draft[newKey].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                        })
+                    );
+                } catch {
+                    /* ignore */
+                }
+            },
+        }),
 
-    updatePhase: builder.mutation<Phase, { id: number | string; data: any }>({
-      query: ({ id, data }) => ({
-        url: `/patient-service/patients/day-overview/phase/${id}`,
-        method: 'PUT',
-        body: data,
-      }),
-      invalidatesTags: (result, error, { id }) => [
-        { type: 'PhaseItems', id },
-        'DayOverview',
-      ],
-    }),
+        updatePhase: builder.mutation<Phase, { id: number | string; data: any }>({
+            query: ({ id, data }) => ({
+                url: `/patient-service/patients/day-overview/phase/${id}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { id }) => [
+                { type: 'PhaseItems', id },
+                'DayOverview',
+            ],
+        }),
 
     // Physical Activity detail for a phase item
     getPhysicalActivityItem: builder.query<any, number | string>({
       query: id => `/patient-service/patients/day-overview/phase/item/${id}`,
     }),
 
-    // Exercise data by type
-    getStretchingExercise: builder.query<ExerciseDataResponse, number | string>({
-      query: id => `/patient-service/day-overview-stretching-exercises/${id}`,
+        // Exercise data by type
+        getStretchingExercise: builder.query<ExerciseDataResponse, number | string>({
+            query: id => `/patient-service/day-overview-stretching-exercises/${id}`,
+        }),
+        updateStretchingSteps: builder.mutation<any, ExerciseStepsUpdate>({
+            query: body => ({ url: '/patient-service/day-overview-stretching-exercises/steps', method: 'PUT', body }),
+        }),
+        getAerobicExercise: builder.query<ExerciseDataResponse, number | string>({
+            query: id => `/patient-service/day-overview-aerobic-exercises/${id}`,
+        }),
+        updateAerobicSteps: builder.mutation<any, ExerciseStepsUpdate>({
+            query: body => ({ url: '/patient-service/day-overview-aerobic-exercises/steps', method: 'PUT', body }),
+        }),
+        getResistanceExercise: builder.query<ExerciseDataResponse, number | string>({
+            query: id => `/patient-service/day-overview-resistance-exercises/${id}`,
+        }),
+        updateResistanceSteps: builder.mutation<any, ExerciseStepsUpdate>({
+            query: body => ({ url: '/patient-service/day-overview-resistance-exercises/steps', method: 'PUT', body }),
+        }),
+
+        // Measurement Chart Data
+        getAggregateMeasurementData: builder.query<any, {
+            type: string; // WEIGHT, BLOOD_GLUCOSE, BLOOD_PRESSURE, etc.
+            date: string; // YYYY-MM-DD
+            period: string; // 1-day, 1-week, 1-month, 6-month, 1-year
+            offset: number; // timezone offset in hours
+        }>({
+            query: ({ type, period, date, offset }) => ({
+                url: `/patient-service/patients/me/measurement/aggregate-fixed/${type}/${period}/${date}`,
+                params: { offset },
+            }),
+            providesTags: (result, error, { type }) => [{ type: 'PhaseItems', id: `measurement-${type}` }],
+        }),
+
+        getLoggedMeasurementData: builder.mutation<any, {
+            type: string;
+            page?: number;
+            size?: number;
+            sort?: string;
+        }>({
+            query: ({ type, page = 0, size = 15, sort = 'timestamp,DESC' }) => ({
+                method: 'POST',
+                body: { type },
+                params: { page, size, sort },
+                url: '/patient-service/patients/me/measurement/logged',
+            }),
+        }),
+
+        getMeasurementTypes: builder.query<any, {
+            dateTime: string;
+            period: string;
+        }>({
+            query: ({ dateTime, period }) => ({
+                url: '/patient-service/patients/me/measurement/types',
+                params: { dateTime, period },
+            }),
+            transformResponse: (response: any) => {
+                return response;
+            },
+            providesTags: (result, error, { dateTime, period }) => [{ type: 'PhaseItems', id: `measurement-types-${dateTime}-${period}` }],
+        }),
+
+        getLastMeasurement: builder.query<any, string>({
+            query: type => `/patient-service/patients/me/measurement/${type}/last`,
+            providesTags: (result, error, type) => [{ type: 'PhaseItems', id: `measurement-last-${type}` }],
+        }),
+
+        deleteMeasurements: builder.mutation<void, number[]>({
+            query: measurementIds => ({
+                method: 'DELETE',
+                body: measurementIds,
+                url: '/patient-service/patients/me/measurement',
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
     }),
-    updateStretchingSteps: builder.mutation<any, ExerciseStepsUpdate>({
-      query: body => ({ url: '/patient-service/day-overview-stretching-exercises/steps', method: 'PUT', body }),
-    }),
-    getAerobicExercise: builder.query<ExerciseDataResponse, number | string>({
-      query: id => `/patient-service/day-overview-aerobic-exercises/${id}`,
-    }),
-    updateAerobicSteps: builder.mutation<any, ExerciseStepsUpdate>({
-      query: body => ({ url: '/patient-service/day-overview-aerobic-exercises/steps', method: 'PUT', body }),
-    }),
-    getResistanceExercise: builder.query<ExerciseDataResponse, number | string>({
-      query: id => `/patient-service/day-overview-resistance-exercises/${id}`,
-    }),
-    updateResistanceSteps: builder.mutation<any, ExerciseStepsUpdate>({
-      query: body => ({ url: '/patient-service/day-overview-resistance-exercises/steps', method: 'PUT', body }),
-    }),
-  }),
 });
 
 // export const dayOverviewApi = createApi({
@@ -725,25 +794,32 @@ export const dayOverviewApi = createApi({
 // });
 
 export const {
-  useGetPhaseItemQuery,
-  useGetQuestionsQuery,
-  useGetPhaseItemsQuery,
-  useGetDayOverviewQuery,
-  useUpdatePhaseMutation,
-  useAddPhaseItemMutation,
-  // useGetAvailableItemsQuery,
-  useUpdatePhaseItemMutation,
-  useDeletePhaseItemMutation,
-  useReplacePhaseItemMutation,
-  useGetCategoryTreeNodesQuery,
-  useGetCatalogPrototypeTreeNodesQuery,
-  useGetRecipePrototypesQuery,
-  useGetFoodsQuery,
-  useGetPhysicalActivityItemQuery,
-  useGetStretchingExerciseQuery,
-  useUpdateStretchingStepsMutation,
-  useGetAerobicExerciseQuery,
-  useUpdateAerobicStepsMutation,
-  useGetResistanceExerciseQuery,
-  useUpdateResistanceStepsMutation,
+    useGetPhaseItemQuery,
+    useGetQuestionsQuery,
+    useGetPhaseItemsQuery,
+    useGetDayOverviewQuery,
+    useUpdatePhaseMutation,
+    useAddPhaseItemMutation,
+    // useGetAvailableItemsQuery,
+    useUpdatePhaseItemMutation,
+    useDeletePhaseItemMutation,
+    useReplacePhaseItemMutation,
+    useGetCategoryTreeNodesQuery,
+    useGetCatalogPrototypeTreeNodesQuery,
+    useGetRecipePrototypesQuery,
+    useGetFoodsQuery,
+    useGetPhysicalActivityItemQuery,
+    useGetStretchingExerciseQuery,
+    useUpdateStretchingStepsMutation,
+    useGetAerobicExerciseQuery,
+    useUpdateAerobicStepsMutation,
+    useGetResistanceExerciseQuery,
+    useUpdateResistanceStepsMutation,
+    useAddMeasurementRecordMutation,
+    // Measurement Chart
+    useGetAggregateMeasurementDataQuery,
+    useGetLoggedMeasurementDataMutation,
+    useGetMeasurementTypesQuery,
+    useGetLastMeasurementQuery,
+    useDeleteMeasurementsMutation,
 } = dayOverviewApi;

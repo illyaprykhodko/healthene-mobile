@@ -26,9 +26,14 @@ const baseColors = {
     black: '#000000',
     blue: '#2978A0',
     darkBlue: '#156F93',
+    brandTeal: '#156F93',
+    brandInfo: '#2978A0',
+    brandFinishBg: '#FFE58A',
+    brandFinishText: '#4E733C',
     brown: '#8B3030',
     transparent: 'transparent',
     cerulean300: '#7BAAC2',
+    aqua: '#8EF9F3',
 };
 
 export const lightTheme: Theme = {
@@ -38,6 +43,8 @@ export const lightTheme: Theme = {
         secondary: '#319FCB',
         background: baseColors.white,
         surface: baseColors.white,
+        surfaceAlt: '#E0EBF7',
+        aqua: baseColors.aqua,
         text: baseColors.black,
         textSecondary: baseColors.darkGrey,
         border: baseColors.lighterGrey,
@@ -50,6 +57,22 @@ export const lightTheme: Theme = {
         muted: '#EEEEEE',
         textMuted: '#888888',
         successAltText: '#4E733C',
+        finishPillBg: baseColors.brandFinishBg,
+        finishPillText: '#573B00',
+        // Anytime icons
+        anytimeFoodBg: '#FFE0B3',
+        anytimeFoodFg: '#C56A00',
+        anytimeDrinkBg: '#E3F2FD',
+        anytimeDrinkFg: '#1976D2',
+        anytimeSupplementBg: '#F3E5F5',
+        anytimeSupplementFg: '#7B1FA2',
+        anytimeMeasurementBg: '#E8F5E8',
+        anytimeMeasurementFg: '#388E3C',
+        anytimeActivityBg: '#FFF3E0',
+        anytimeActivityFg: '#F57C00',
+        // Monochrome variant for footer icons
+        anytimeMonoBg: '#E5EEF5',
+        anytimeMonoFg: '#5F7E91',
     },
     typography: {
         fontFamily: {

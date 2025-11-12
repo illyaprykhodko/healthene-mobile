@@ -3,7 +3,8 @@ export const ROUTES = {
     SIGN_IN: 'SignIn',
     SIGN_UP: 'SignUp',
     FORGOT_PASSWORD: 'ForgotPassword',
-  
+    TERMS_AND_CONDITIONS: 'TermsAndConditions',
+
     // Private routes - Drawer Navigator
     MAIN: 'Main',
     INFO: 'Info',
@@ -12,11 +13,20 @@ export const ROUTES = {
     DAILY_PLAN: 'DailyPlan',
     MY_RESULTS: 'MyResults',
     ABOUT_PLAN: 'AboutPlan',
+    SMART_SCALE: 'SmartScale',
+    DAY_OVERVIEW: 'DayOverview',
     COMMUNICATION: 'Communication',
     HEALTH_PROFILE: 'HealthProfile',
     MEAL_PREFERENCES: 'MealPreferences',
+    ALL_RECORDED_DATA: 'AllRecordedData',
+    MEASUREMENT_CHART: 'MeasurementChart',
     CUISINE_DISTRIBUTION: 'CuisineDistribution',
-    
+
+    // Account Settings
+    ADDRESS: 'Address',
+    ACCOUNT_SETTINGS: 'AccountSettings',
+    PERSONAL_INFORMATION: 'PersonalInformation',
+
     // Legacy routes (for compatibility)
     HOME: 'Home',
     PROFILE: 'Profile',

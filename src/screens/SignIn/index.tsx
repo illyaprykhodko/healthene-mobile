@@ -1,10 +1,8 @@
-//
-
 // outsource dependencies
 import { Text } from '@react-native-material/core';
 import Icon from 'react-native-vector-icons/Ionicons';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, TouchableWithoutFeedback } from 'react-native';
+import { View, StyleSheet, Animated, TouchableWithoutFeedback, Pressable } from 'react-native';
 // local dependencies
 import { LoginData } from 'types';
 import Screen from 'components/Screen';
@@ -32,7 +30,7 @@ const validateEmail = (email: string): boolean => {
 export const SignIn: React.FC = (): React.ReactElement => {
     const { signIn, isLoading } = useAuth();
     const theme = useTheme();
-    
+
     const [formData, setFormData] = useState<LoginData>({
         username: '',
         password: '',
@@ -139,7 +137,7 @@ export const SignIn: React.FC = (): React.ReactElement => {
                         onChangeText={value => handleChange('username', value)}
                         leading={(props: any) => <Icon name="mail-outline" {...props} />}
                     />
-          
+
                     <TextInput
                         name="password"
                         label="Password"
@@ -158,7 +156,7 @@ export const SignIn: React.FC = (): React.ReactElement => {
                                 CustomIcon={ <Icon size={22} name={securePassword ? 'eye-outline' : 'eye-off-outline'} />}
                             />}
                     />
-          
+
                     <Button
                         title="Sign In"
                         onPress={handleSubmit}
@@ -174,7 +172,7 @@ export const SignIn: React.FC = (): React.ReactElement => {
                         // style={{ marginTop: 30 }}
                         color={theme.colors.primary}
                     />
-          
+
                     <View style={styles.linksContainer}>
                         <TouchableWithoutFeedback onPress={() => navigate(ROUTES.FORGOT_PASSWORD)}>
                             <View style={styles.link}>
@@ -191,11 +189,11 @@ export const SignIn: React.FC = (): React.ReactElement => {
                         <TouchableWithoutFeedback
                             // onPress={() => navigate(ROUTES.TERMS_AND_CONDITIONS)}
                         >
-                            <View style={styles.link}>
+                            <Pressable onPress={() => navigate(ROUTES.TERMS_AND_CONDITIONS)} style={styles.link}>
                                 <Text variant="caption" color={theme.colors.textSecondary}>
-                  Terms and conditions
+                                    Terms and conditions
                                 </Text>
-                            </View>
+                            </Pressable>
                         </TouchableWithoutFeedback>
                     </View>
                 </Animated.View>

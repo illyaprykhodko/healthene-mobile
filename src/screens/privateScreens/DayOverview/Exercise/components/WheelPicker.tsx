@@ -10,40 +10,37 @@ import {
     InteractionManager,
     ListRenderItemInfo,
     NativeSyntheticEvent,
-    FlatListProps,
 } from 'react-native';
 
 export const ITEM_HEIGHT = 50;
 
-// Generate arrays [0..100] once
-const makeRange = (n: number) => Array.from({ length: n + 1 }, (_, i) => i);
-const dataReps: number[] = makeRange(100);
-const dataSeconds: number[] = makeRange(100);
+// Generate arrays helper (kept for reference)
+// const makeRange = (n: number) => Array.from({ length: n + 1 }, (_, i) => i);
+// prebuilt ranges kept for potential reuse
 
 // ---- WheelPicker
 type WheelPickerProps = {
   data: number[];
-  selectedIndex: number; // index corresponds to the value in data
-  onSelect: (index: number) => void;
+  selectedIndex: number;
   selectedItemStyle: ViewStyle;
+  onSelect: (index: number) => void;
 };
 
 export const WheelPicker: React.FC<WheelPickerProps> = ({
     data,
-    selectedIndex,
     onSelect,
+    selectedIndex,
     selectedItemStyle,
 }) => {
     const flatListRef = useRef<FlatList<number>>(null);
 
-    // Scroll to `selectedIndex` after interactions settle
     useEffect(() => {
         if (flatListRef.current != null && selectedIndex != null) {
             InteractionManager.runAfterInteractions(() => {
                 try {
                     flatListRef.current?.scrollToIndex({ index: selectedIndex, animated: true });
                 } catch {
-                    // ignore out-of-range errors (RN may throw if not yet measured)
+                    // ignore out-of-range errors
                 }
             });
         }
@@ -128,7 +125,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
     },
     selectedText: {
-        // optional: add emphasis for selected item text
         fontWeight: '700',
     },
 });
