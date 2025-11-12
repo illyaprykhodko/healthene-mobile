@@ -164,10 +164,13 @@ export const BirdAnimation = ({startAnimation = false}: BirdAnimationProps) => {
                             changePhase(${BirdAnimationStep.SITTING});
                           }
                         } 
+                        log('PHASE', window.phase.valu)
                         else if(window.phase.value === ${BirdAnimationStep.FLY}) {
                             x -= 2;
                             y += 4;
+                            log('Y-axis', y, screenHeight)
                           if (x <= 0 && y >= screenHeight / 2) {
+                              log('HELLO')
                             x = 0;
                             y = screenHeight - 120;
                             if (
