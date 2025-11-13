@@ -20,7 +20,11 @@
 		58EE5A5728574B648FC8D6E1 /* NunitoSans-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C58CBEA71F1C4A63A23B5847 /* NunitoSans-Light.ttf */; };
 		63507697A9D14AD4A042FAD4 /* NunitoSans-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C87833C5F8D49ED9D3F168D /* NunitoSans-Black.ttf */; };
 		67B4FE943FD14474B4FF58CB /* NunitoSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 465EED1DBCB847ADBEDA9675 /* NunitoSans-Bold.ttf */; };
-		6A68E58E2E9F782800F745AD /* default_behaviour.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6A68E58D2E9F782800F745AD /* default_behaviour.mov */; };
+		6AB4EB3C2EC4BBDE00005A6F /* sitting.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB4EB392EC4BBDE00005A6F /* sitting.mov */; };
+		6AB4EB3D2EC4BBDE00005A6F /* pecking.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB4EB382EC4BBDE00005A6F /* pecking.mov */; };
+		6AB4EB3E2EC4BBDE00005A6F /* walking.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB4EB3A2EC4BBDE00005A6F /* walking.mov */; };
+		6AB4EB3F2EC4BBDE00005A6F /* flying.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB4EB372EC4BBDE00005A6F /* flying.mov */; };
+		6AB4EB402EC4BBDE00005A6F /* walks_out.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB4EB3B2EC4BBDE00005A6F /* walks_out.mov */; };
 		6C0AC7EDF48546859601243E /* NunitoSans-LightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8628FE74FBF74E148EB947F5 /* NunitoSans-LightItalic.ttf */; };
 		6C8A4E8528284AA5B1FC0850 /* NunitoSans-SemiBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4A33CA98310A4ABBA7F1E38F /* NunitoSans-SemiBoldItalic.ttf */; };
 		6CD51BC470CF416F930471C1 /* Outfit-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0024D639C6AC42E29DE74308 /* Outfit-Light.ttf */; };
@@ -65,7 +69,11 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-intelliceed_patientapp_mobile_v2.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-intelliceed_patientapp_mobile_v2.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5FD25C3A52834B2AA91DDC95 /* Outfit-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-ExtraBold.ttf"; path = "../assets/fonts/Outfit-ExtraBold.ttf"; sourceTree = "<group>"; };
 		61BEC2FDFDD14C89A5D4F5A3 /* Outfit-Thin.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-Thin.ttf"; path = "../assets/fonts/Outfit-Thin.ttf"; sourceTree = "<group>"; };
-		6A68E58D2E9F782800F745AD /* default_behaviour.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = default_behaviour.mov; sourceTree = "<group>"; };
+		6AB4EB372EC4BBDE00005A6F /* flying.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = flying.mov; sourceTree = "<group>"; };
+		6AB4EB382EC4BBDE00005A6F /* pecking.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = pecking.mov; sourceTree = "<group>"; };
+		6AB4EB392EC4BBDE00005A6F /* sitting.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = sitting.mov; sourceTree = "<group>"; };
+		6AB4EB3A2EC4BBDE00005A6F /* walking.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = walking.mov; sourceTree = "<group>"; };
+		6AB4EB3B2EC4BBDE00005A6F /* walks_out.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = walks_out.mov; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = intelliceed_patientapp_mobile_v2/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = intelliceed_patientapp_mobile_v2/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8628FE74FBF74E148EB947F5 /* NunitoSans-LightItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "NunitoSans-LightItalic.ttf"; path = "../assets/fonts/NunitoSans-LightItalic.ttf"; sourceTree = "<group>"; };
@@ -120,14 +128,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		6A68E58C2E9F77DC00F745AD /* Bird-Animations */ = {
-			isa = PBXGroup;
-			children = (
-				6A68E58D2E9F782800F745AD /* default_behaviour.mov */,
-			);
-			path = "Bird-Animations";
-			sourceTree = "<group>";
-		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -161,7 +161,6 @@
 		8B8DBEFD42404722A07E4B22 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				6A68E58C2E9F77DC00F745AD /* Bird-Animations */,
 				2C87833C5F8D49ED9D3F168D /* NunitoSans-Black.ttf */,
 				DDE8D75F4E29491EB5A19E0D /* NunitoSans-BlackItalic.ttf */,
 				465EED1DBCB847ADBEDA9675 /* NunitoSans-Bold.ttf */,
@@ -191,6 +190,11 @@
 				F7E0DDAB33F3407F8137D738 /* icomoon.eot */,
 				8E9CE330C5584C06B9A13F50 /* icomoon.svg */,
 				FA1ED7F0EA5640B3A8435D71 /* icomoon.woff */,
+				6AB4EB372EC4BBDE00005A6F /* flying.mov */,
+				6AB4EB382EC4BBDE00005A6F /* pecking.mov */,
+				6AB4EB392EC4BBDE00005A6F /* sitting.mov */,
+				6AB4EB3A2EC4BBDE00005A6F /* walking.mov */,
+				6AB4EB3B2EC4BBDE00005A6F /* walks_out.mov */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -268,6 +272,11 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				82971B106F7EBC737841CF29 /* PrivacyInfo.xcprivacy in Resources */,
 				63507697A9D14AD4A042FAD4 /* NunitoSans-Black.ttf in Resources */,
+				6AB4EB3C2EC4BBDE00005A6F /* sitting.mov in Resources */,
+				6AB4EB3D2EC4BBDE00005A6F /* pecking.mov in Resources */,
+				6AB4EB3E2EC4BBDE00005A6F /* walking.mov in Resources */,
+				6AB4EB3F2EC4BBDE00005A6F /* flying.mov in Resources */,
+				6AB4EB402EC4BBDE00005A6F /* walks_out.mov in Resources */,
 				E59E07D726914468A3931687 /* NunitoSans-BlackItalic.ttf in Resources */,
 				67B4FE943FD14474B4FF58CB /* NunitoSans-Bold.ttf in Resources */,
 				21B9FED8C2DC45F59EDC6A40 /* NunitoSans-BoldItalic.ttf in Resources */,
@@ -278,7 +287,6 @@
 				E0D77524F52748ED8A095E0F /* NunitoSans-Italic.ttf in Resources */,
 				58EE5A5728574B648FC8D6E1 /* NunitoSans-Light.ttf in Resources */,
 				6C0AC7EDF48546859601243E /* NunitoSans-LightItalic.ttf in Resources */,
-				6A68E58E2E9F782800F745AD /* default_behaviour.mov in Resources */,
 				AAB311E0ABBA47F5827B08D0 /* NunitoSans-Regular.ttf in Resources */,
 				45A3C23683E34A418A5A6661 /* NunitoSans-SemiBold.ttf in Resources */,
 				6C8A4E8528284AA5B1FC0850 /* NunitoSans-SemiBoldItalic.ttf in Resources */,
@@ -514,10 +522,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -586,10 +591,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
