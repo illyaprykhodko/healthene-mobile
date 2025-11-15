@@ -1,14 +1,14 @@
 // outsource dependencies
 import { WebView } from 'react-native-webview';
-import Animated from 'react-native-reanimated';
 import RNBlobUtil from 'react-native-blob-util';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { SCREEN_WIDTH } from '@gorhom/bottom-sheet';
 
 // local dependencies
-import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
-import log from 'eslint-plugin-react/lib/util/log';
-import setTimeout = jest.setTimeout;
+
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 export const WEBVIEW_MESSAGES = {
@@ -20,7 +20,7 @@ export enum BirdAnimationStep {
   WALKS_OUT = 0,
   SITTING = 1,
   FLY = 2,
-  LANDING = 4
+  WALKING = 4
 }
 
 interface BirdAnimationProps {
@@ -70,6 +70,8 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
             readFile(sittingBird, BirdAnimationStep.WALKS_OUT);
             handleAnimations(sittingBird);
             const flyingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/flying.mov`;
+            handleAnimations(flyingBird);
+            const walkingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/flying.mov`;
             handleAnimations(flyingBird);
         };
         (async () => {
@@ -130,9 +132,31 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
         }
     }, [phase]);
 
+    // Animation
+    const birdX = useSharedValue(0);
+    const birdY = useSharedValue(0);
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [
+            { translateX: birdX.value },
+            { translateY: birdY.value },
+        ],
+    }));
+    useEffect(() => {
+        if (phase === BirdAnimationStep.SITTING) {
+            birdX.value = 0;
+            birdY.value = 0;
+        } else if (phase === BirdAnimationStep.FLY) {
+            const targetX = -SCREEN_WIDTH + getAnimationSize().webview.width;
+            const targetY = SCREEN_HEIGHT - (getAnimationSize().html.height);
+
+            birdX.value = withTiming(targetX, { duration: 3200 });
+            birdY.value = withTiming(targetY, { duration: 3200 });
+        }
+    }, [phase, getAnimationSize]);
+
     return (
         <View style={styles.container}>
-            <Animated.View style={{ position: 'absolute', right: 0 }}>
+            <Animated.View style={[{ position: 'absolute', right: 0 }, animatedStyle]}>
                 <WebView
                     ref={webViewRef}
                     onMessage={handleMessage}
