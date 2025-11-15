@@ -4,23 +4,22 @@ import RNBlobUtil from 'react-native-blob-util';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { SCREEN_WIDTH } from '@gorhom/bottom-sheet';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
 
 // local dependencies
 
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 export const WEBVIEW_MESSAGES = {
     VIDEO_LOADED: 'VIDEO_LOADED',
     VIDEO_FAILED: 'VIDEO_FAILED',
 };
 
 export enum BirdAnimationStep {
-  WALKS_OUT = 0,
-  SITTING = 1,
-  FLY = 2,
-  WALKING = 4
+  // WALKS_OUT = 0,
+  SITTING = 0,
+  FLY = 1,
+  WALKING = 2
 }
 
 interface BirdAnimationProps {
@@ -30,27 +29,32 @@ interface BirdAnimationProps {
 export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) => {
     const webViewRef = useRef<WebView>(null);
     const [base64, setBase64] = useState<string | null>(null);
-    const [phase, setPhase] = useState<BirdAnimationStep>(BirdAnimationStep.WALKS_OUT);
+    const [phase, setPhase] = useState<BirdAnimationStep>(BirdAnimationStep.SITTING);
 
     const [DOMReady, setDOMReady] = useState<boolean>(false);
     const readFile = useCallback(async (path: string | null, birdStep: BirdAnimationStep) => {
-        console.log('Path', path);
-        console.log('birdStep', birdStep);
-
         if (path) {
             try {
                 const base64 = await RNBlobUtil.fs.readFile(path, 'base64');
-                setPhase(birdStep);
-                setBase64(base64);
-                webViewRef.current?.injectJavaScript(`
-                  const source = document.getElementById('source');
-                  const video = document.getElementById('video');
-                  if(${phase === BirdAnimationStep.WALKS_OUT}){
-                    video.loop = false
-                  }else {
-                    video.loop = true
-                  }
-                `);
+                if (webViewRef?.current) {
+                    webViewRef.current.injectJavaScript(`
+                        (function() {
+                            try {
+                                if (!window.__VIDEO__) window.__VIDEO__ = document.getElementById("video");
+                                if (!window.__SOURCE__) window.__SOURCE__ = document.getElementById("source");
+                    
+                                window.__VIDEO__.pause();
+                                window.__SOURCE__.src = "data:video/quicktime;base64,${base64}";
+                                window.__VIDEO__.load();
+                                window.__VIDEO__.play();
+                            } catch (e) { 
+                                console.log("Inject error", e);
+                            }
+                            true;
+                        })();
+                    `);
+                }
+
             } catch (error) {
                 console.error('Error read file: ', error);
                 return null;
@@ -59,49 +63,44 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
     }, [phase, webViewRef.current]);
 
     const [animations, setAnimations] = useState<string[]>([]);
-
+    const [block, setBlock] = useState(true);
     const handleAnimations = (path: string) => setAnimations(prev => [...prev, path]);
     useEffect(() => {
         const loadVideo = async () => {
-            const path = `${RNBlobUtil.fs.dirs.MainBundleDir}/walks_out.mov`;
-            // readFile(path, BirdAnimationStep.WALKS_OUT);
-            handleAnimations(path);
+            // const path = `${RNBlobUtil.fs.dirs.MainBundleDir}/walks_out.mov`;
+            // handleAnimations(path);
             const sittingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/sitting.mov`;
-            readFile(sittingBird, BirdAnimationStep.WALKS_OUT);
             handleAnimations(sittingBird);
             const flyingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/flying.mov`;
             handleAnimations(flyingBird);
-            const walkingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/flying.mov`;
-            handleAnimations(flyingBird);
+            const walkingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/walking.mov`;
+            handleAnimations(walkingBird);
         };
+
         (async () => {
-            if (DOMReady) {
+            if (DOMReady && block) {
+                setBlock(false);
                 await loadVideo();
             }
         })();
-    }, [readFile, DOMReady]);
+    }, [DOMReady, block]);
 
     useEffect(() => {
-        if (startAnimation) {
-            setPhase(BirdAnimationStep.FLY);
-            readFile(animations[BirdAnimationStep.FLY], BirdAnimationStep.FLY)
-                .catch(() => {
-                    console.error('Failed to load flying bird video');
-                });
-        } else {
-            setPhase(BirdAnimationStep.SITTING);
-            readFile(animations[BirdAnimationStep.SITTING], BirdAnimationStep.SITTING)
-                .catch(() => {
-                    console.error('Failed to load sitting bird video');
-                });
+        if (animations.length) {
+            readFile(animations[phase], phase);
         }
-    }, [startAnimation, animations, readFile]);
+
+    }, [phase, animations]);
+
+    useEffect(() => {
+        if (startAnimation && phase === BirdAnimationStep.SITTING) {
+            setPhase(BirdAnimationStep.FLY);
+        }
+    }, [startAnimation, animations]);
 
     const handleMessage = useCallback((event: WebViewMessageEvent) => {
         const message = event.nativeEvent.data;
-        console.log('MEssage', message);
         if (message.startsWith('[WEBVIEW LOG]')) {
-            console.log(message);
             return;
         }
         if (!message.startsWith('{')) {
@@ -109,18 +108,17 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
         }
         const data = JSON.parse(message);
         if (data?.reachedPhase !== phase) {
-            console.log('reachedPhase', data?.reachedPhase);
 
-            try {
-                switch (data?.reachedPhase) {
-                    case BirdAnimationStep.SITTING:
-                        readFile(animations[data.reachedPhase], BirdAnimationStep.SITTING);
-                        break;
-                }
-
-            } catch (e) {
-                console.log('Invalid message from WebView:', message);
-            }
+            // try {
+            //     switch (data?.reachedPhase) {
+            //         case BirdAnimationStep.SITTING:
+            //             readFile(animations[data.reachedPhase], BirdAnimationStep.SITTING);
+            //             break;
+            //     }
+            //
+            // } catch (e) {
+            //     console.log('Invalid message from WebView:', message);
+            // }
         }
     }, [readFile, animations]);
 
@@ -141,6 +139,10 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
             { translateY: birdY.value },
         ],
     }));
+    const handleFlyFinished = useCallback(() => {
+        setPhase(BirdAnimationStep.WALKING);
+    }, [animations, readFile]);
+
     useEffect(() => {
         if (phase === BirdAnimationStep.SITTING) {
             birdX.value = 0;
@@ -150,10 +152,14 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
             const targetY = SCREEN_HEIGHT - (getAnimationSize().html.height);
 
             birdX.value = withTiming(targetX, { duration: 3200 });
-            birdY.value = withTiming(targetY, { duration: 3200 });
+            birdY.value = withTiming(targetY, { duration: 3200 }, finished => {
+                if (finished) {
+                    runOnJS(handleFlyFinished)();
+                }
+            });
         }
-    }, [phase, getAnimationSize]);
-
+    }, [phase, getAnimationSize, animations]);
+    console.log('PHASE!', phase);
     return (
         <View style={styles.container}>
             <Animated.View style={[{ position: 'absolute', right: 0 }, animatedStyle]}>
@@ -202,7 +208,7 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
                                       onerror="window.ReactNativeWebView.postMessage('${WEBVIEW_MESSAGES.VIDEO_FAILED}')"
                                       onloadeddata="window.ReactNativeWebView.postMessage({'${WEBVIEW_MESSAGES.VIDEO_LOADED}'})"
                                     >
-                                      <source src="data:video/quicktime;base64,${base64}" id="source" type="video/quicktime" />
+                                      <source id="source" type="video/quicktime" />
                                     </video>
                                 </div>
                           </body>
