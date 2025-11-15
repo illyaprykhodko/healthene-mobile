@@ -8,7 +8,6 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming, runOnJS } from 
 
 // local dependencies
 
-
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 export const WEBVIEW_MESSAGES = {
     VIDEO_LOADED: 'VIDEO_LOADED',
@@ -28,16 +27,18 @@ interface BirdAnimationProps {
 
 export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) => {
     const webViewRef = useRef<WebView>(null);
-    const [base64, setBase64] = useState<string | null>(null);
     const [phase, setPhase] = useState<BirdAnimationStep>(BirdAnimationStep.SITTING);
 
     const [DOMReady, setDOMReady] = useState<boolean>(false);
-    const readFile = useCallback(async (path: string | null, birdStep: BirdAnimationStep) => {
-        if (path) {
-            try {
-                const base64 = await RNBlobUtil.fs.readFile(path, 'base64');
-                if (webViewRef?.current) {
-                    webViewRef.current.injectJavaScript(`
+    const [animations, setAnimations] = useState<string[]>([]);
+    useEffect(() => {
+        const getAnimation = async () => {
+            const path = animations[phase];
+            if (animations.length && path) {
+                try {
+                    const base64 = await RNBlobUtil.fs.readFile(path, 'base64');
+                    if (webViewRef?.current) {
+                        webViewRef.current.injectJavaScript(`
                         (function() {
                             try {
                                 if (!window.__VIDEO__) window.__VIDEO__ = document.getElementById("video");
@@ -53,16 +54,17 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
                             true;
                         })();
                     `);
+                    }
+
+                } catch (error) {
+                    console.error('Error read file: ', error);
+                    return null;
                 }
-
-            } catch (error) {
-                console.error('Error read file: ', error);
-                return null;
             }
-        }
-    }, [phase, webViewRef.current]);
+        };
+        getAnimation().catch(() => console.error('Error read file: '));
+    }, [phase, animations]);
 
-    const [animations, setAnimations] = useState<string[]>([]);
     const [block, setBlock] = useState(true);
     const handleAnimations = (path: string) => setAnimations(prev => [...prev, path]);
     useEffect(() => {
@@ -85,12 +87,6 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
         })();
     }, [DOMReady, block]);
 
-    useEffect(() => {
-        if (animations.length) {
-            readFile(animations[phase], phase);
-        }
-
-    }, [phase, animations]);
 
     useEffect(() => {
         if (startAnimation && phase === BirdAnimationStep.SITTING) {
@@ -120,7 +116,7 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
             //     console.log('Invalid message from WebView:', message);
             // }
         }
-    }, [readFile, animations]);
+    }, [animations]);
 
     // Styles
     const getAnimationSize = useCallback(() => {
@@ -141,7 +137,7 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
     }));
     const handleFlyFinished = useCallback(() => {
         setPhase(BirdAnimationStep.WALKING);
-    }, [animations, readFile]);
+    }, [animations]);
 
     useEffect(() => {
         if (phase === BirdAnimationStep.SITTING) {
@@ -159,7 +155,7 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
             });
         }
     }, [phase, getAnimationSize, animations]);
-    console.log('PHASE!', phase);
+
     return (
         <View style={styles.container}>
             <Animated.View style={[{ position: 'absolute', right: 0 }, animatedStyle]}>
@@ -219,7 +215,6 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
                     onError={e => console.log('Video error', e)}
                     allowsInlineMediaPlayback={true}
                     mediaPlaybackRequiresUserAction={false}
-                    useWebKit={true}
                     javaScriptEnabled={true}
                     originWhitelist={['*']}
                 />
