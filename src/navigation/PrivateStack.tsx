@@ -6,7 +6,7 @@ import { PrivateDrawer } from './PrivateDrawer';
 import { AccountSettingsStack } from 'navigation/AccountSettingsStack.tsx';
 
 const Stack = createStackNavigator();
-console.log('PrivateDrawer', PrivateDrawer)
+
 export const PrivateStack = () => {
     return (
         <Stack.Navigator

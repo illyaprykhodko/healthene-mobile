@@ -25,6 +25,7 @@ import MeasurementChartScreen from '../MeasurementChartScreen';
 import WeightMeasurementScreen from '../WeightMeasurementScreen';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
 import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
+import { useHeaderHeight } from 'react-native-screens/native-stack';
 
 const Stack = createNativeStackNavigator();
 
@@ -46,6 +47,7 @@ const DayOverviewStack: React.FC = () => {
             headerTitleStyle: {
                 fontWeight: '600',
             },
+            headerShown: true,
             headerRight: () => (
                 <Hamburger onPress={() => (navigation as any).openDrawer?.()} style={styles.menuButton} />
             ),
@@ -220,7 +222,7 @@ const DayOverviewStack: React.FC = () => {
                     headerTitleStyle: { fontSize: 18 },
                 }}
             />
-            
+
             <Stack.Screen
                 name="SmartScale"
                 component={SmartScaleScreen}

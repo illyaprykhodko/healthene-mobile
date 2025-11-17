@@ -1,7 +1,7 @@
 // outsource dependencies
 import React, { memo, useCallback } from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import { StyleSheet, TouchableOpacity, ViewStyle, StyleProp } from 'react-native';
+import { StyleSheet, TouchableOpacity, ViewStyle, StyleProp, GestureResponderEvent } from 'react-native';
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
 
@@ -14,8 +14,9 @@ export interface CheckboxProps {
     editable?: boolean;
     isDayOverview?: boolean;
     status?: PhaseItemStatus;
+    applyClickableZone?: boolean;
     style?: StyleProp<ViewStyle>;
-    onChange: (next: boolean) => void;
+    onChange: (next: boolean, event: GestureResponderEvent) => void;
 }
 
 const clickableZone = { bottom: 25, left: 25, right: 25, top: 25 } as const;
@@ -37,11 +38,12 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
     editable = true,
     status = 'PENDING',
     isDayOverview = false,
+    applyClickableZone = true,
 }) => {
     const theme = useTheme();
-    const handlePress = useCallback(() => {
+    const handlePress = useCallback((event: GestureResponderEvent) => {
         if (!editable) { return; }
-        onChange(!value);
+        onChange(!value, event);
     }, [editable, onChange, value]);
 
     const renderGeneralIcon = () => (value
@@ -62,8 +64,8 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
 
     return (
         <TouchableOpacity
-            hitSlop={clickableZone}
             onPress={handlePress}
+            hitSlop={applyClickableZone ? clickableZone : undefined}
             style={StyleSheet.flatten([styles.container, style, {
                 paddingVertical: 0.5,
                 paddingHorizontal: status === 'DONE' ? 0 : 2.7,

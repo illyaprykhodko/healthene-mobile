@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import { StyleSheet, View, Image } from 'react-native';
+import { StyleSheet, View, Image, GestureResponderEvent } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { filters } from 'services/filter';
@@ -18,7 +18,7 @@ interface ListItemProps {
   disabled?: boolean;
   nextSection?: string;
   updateData?: (item: any) => void;
-  handleCheckboxStatus?: (item: any) => void;
+  handleCheckboxStatus?: (item: any, event?: GestureResponderEvent) => void;
 }
 
 export const ListItem: React.FC<ListItemProps> = ({
@@ -36,9 +36,9 @@ export const ListItem: React.FC<ListItemProps> = ({
     const isCustomRecipe = item.type === ENTITY_TYPE.CUSTOM_RECIPE;
     const isDidNotEat = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
 
-    const handleCheckboxPress = (next: boolean) => {
+    const handleCheckboxPress = (next: boolean, event: GestureResponderEvent) => {
         if (handleCheckboxStatus && !disabled) {
-            handleCheckboxStatus({ ...item, status: isDone ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
+            handleCheckboxStatus({ ...item, status: isDone ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE }, event);
             // handleCheckboxStatus(item);
         }
     };
@@ -49,6 +49,7 @@ export const ListItem: React.FC<ListItemProps> = ({
             isDayOverview
             status={item.status}
             editable={!disabled}
+            applyClickableZone={false}
             onChange={handleCheckboxPress}
             style={styles.checkboxContainer}
             value={item.status === PHASE_ITEM_STATUS.DONE}
@@ -79,7 +80,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     //     let result = '';
     //     let unitSingularName,
     //     unitPluralName;
-        
+
     //     if (useServing && serving) {
     //         result += `${serving} serving`;
     //     } else {

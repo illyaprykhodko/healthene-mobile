@@ -2,9 +2,10 @@
 import _ from 'lodash';
 import moment from 'moment';
 import { useAppSelector } from 'store';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GestureResponderEvent, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 // local dependencies
 import {
@@ -23,8 +24,9 @@ import { OFFSET } from 'constants/offset';
 import { useTheme } from 'hooks/useTheme';
 import { Button } from 'components/Button';
 import SwipeList from 'components/SwipeList';
+import { BirdAnimation } from 'animation/BirdAnimation';
+import { SeedAnimation } from 'animation/SeedAnimation.tsx';
 import { selectDayOverview } from 'store/slices/dayOverviewSlice';
-import { BirdAnimation, BirdAnimationStep } from 'animation/BirdAnimation';
 import { ENTITY_TYPE, OVERVIEW_TYPE, PHASE_ITEM_STATUS, SECTION } from 'constants/spec';
 
 // Temporary types until full migration
@@ -60,6 +62,14 @@ interface EditProps {
     phaseId?: string | number;
 }
 
+interface Location {
+    x: number;
+    y: number;
+}
+
+// configure
+export const SEED_SIZE = 16;
+
 // PHASE_ITEM_STATUS, ENTITY_TYPE, SECTION centralized in constants/spec
 
 const convertTypeToTitle = (type: string, capitalize = false) => {
@@ -69,10 +79,10 @@ const convertTypeToTitle = (type: string, capitalize = false) => {
 
 export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const theme = useTheme();
-    const navigation = useNavigation();
     const route = useRoute<any>();
+    const navigation = useNavigation();
+    const insets = useSafeAreaInsets();
     const { date: currentDate } = useAppSelector(selectDayOverview);
-
     const [scrollEnabled, setScrollEnabled] = useState(true);
     // const [initialized, setInitialized] = useState(false);
 
@@ -217,7 +227,17 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         }
     };
 
-    const handleCheckboxStatus = async (item: PhaseItem) => {
+
+    // Seeds animation
+
+    const [seeds, setSeeds] = useState<Location[]>([]);
+    const addSeed = useCallback((seed: Location) => {
+        setSeeds(prev => [...prev, seed]);
+    }, []);
+    const handleCheckboxStatus = async (item: PhaseItem, event?: GestureResponderEvent) => {
+        if (item.status === PHASE_ITEM_STATUS.DONE && event?.nativeEvent) {
+            addSeed({ x: event.nativeEvent.pageX, y: event.nativeEvent.pageY });
+        }
         try {
             // let newStatus: string;
             // const status = isDidNotEatItem
@@ -373,6 +393,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 ? <BirdAnimation startAnimation={ birdAnimationStep } />
                 : null
             }
+            {seeds.length > 0 && seeds.map((location, index) => <SeedAnimation key={index} seedIndex={index} x={location.x} y={location.y} />)}
             <View style={ [styles.title, isFutureDate && styles.opacity] }>
                 <View>
                     <Text style={ styles.titleText }>
@@ -500,6 +521,8 @@ const styles = StyleSheet.create({
     container: {
         paddingLeft: 0,
         paddingRight: 0,
+        borderColor: 'gold',
+        borderWidth: 3
     },
     title: {
         paddingHorizontal: 16,
