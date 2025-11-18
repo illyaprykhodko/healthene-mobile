@@ -2488,7 +2488,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNGestureHandler (2.29.0):
+  - RNGestureHandler (2.29.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2577,7 +2577,7 @@ PODS:
     - SocketRocket
     - TOCropViewController (~> 2.8.0)
     - Yoga
-  - RNPermissions (5.4.3):
+  - RNPermissions (5.4.4):
     - boost
     - DoubleConversion
     - fast_float
@@ -3288,9 +3288,9 @@ SPEC CHECKSUMS:
   ReactCommon: 00df7b9f859c9d02181844255bb89a8bca544374
   RNAppleHealthKit: 60a6beefdd89a75811e9a8873a5e24f351dee681
   RNCAsyncStorage: a9e087b68308fd829e66f5e932976f23c4e1005b
-  RNGestureHandler: 26f87adea5239bdbc4e428b4badf074e8654c590
+  RNGestureHandler: 606b85298c19d681ca076ca523dc23396120adab
   RNImageCropPicker: c456a5d12cfc902ec8865c79af97f6df137250ba
-  RNPermissions: 7ab6bff156bb08ff53566390403369a1bb7ad2b2
+  RNPermissions: ff3bee717e3df88d22727cc9ee672d9401c8108e
   RNReanimated: 5f5ea9ba506ef48182d76070eaf96b032deefb1a
   RNScreens: 3693ec4bbc0065151b843269e50e9807644e9918
   RNSVG: 4a4f7d4897abbfdc6dfe30be5d6cc5ffee23ea43
