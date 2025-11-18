@@ -1,13 +1,9 @@
-// import Reactotron from "reactotron-react-native";
-
-// Reactotron.configure() // controls connection & communication settings
-//     .useReactNative() // add all built-in react native plugins
-//     .connect(); // let's connect!
-
+// outsource dependencies
 import Reactotron from "reactotron-react-native";
+import { reactotronRedux } from "reactotron-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-Reactotron.setAsyncStorageHandler(AsyncStorage)
+const reactotron = Reactotron.setAsyncStorageHandler(AsyncStorage)
     .configure({
         name: "React Native Demo",
     })
@@ -21,4 +17,7 @@ Reactotron.setAsyncStorageHandler(AsyncStorage)
         errors: { veto: (stackFrame) => false }, // or turn it off with false
         overlay: false, // just turning off overlay
     })
+    .use(reactotronRedux())
     .connect();
+
+export default reactotron

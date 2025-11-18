@@ -58,7 +58,11 @@ const TextInput: React.FC<TextInputProps> = ({
                 </Text>
                 : null
             }
-            <View style={styles.inputWrapper}>
+            <View style={[
+                styles.inputWrapper,
+                {
+                    borderBottomColor: isShowError ? theme.colors.error : theme.colors.grey
+                }]}>
                 <RNInput
                     value={value}
                     editable={!disabled}
@@ -72,7 +76,6 @@ const TextInput: React.FC<TextInputProps> = ({
                         {
                             textAlign,
                             color: isShowError ? theme.colors.error : resolvedPrimary,
-                            borderBottomColor: isShowError ? theme.colors.error : theme.colors.grey
                         }
                     ]}
                     {...input}
