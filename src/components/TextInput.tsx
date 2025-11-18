@@ -1,5 +1,6 @@
 // outsource dependencies
 import React, { useState } from 'react';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { StyleSheet, View, TextInput as RNInput } from 'react-native';
 
 // local dependencies
@@ -44,6 +45,8 @@ const TextInput: React.FC<TextInputProps> = ({
     const [isBlur, setIsBlur] = useState(false);
     const isShowError = touchedField && errorText;
     const resolvedPrimary = color || theme.colors.primary;
+    const [isSecureText, setIsSecureText] = useState(secureTextEntry);
+    const toggleSecureIcon = () => setIsSecureText(currentValue => !currentValue);
     return (
         <View style={styles.container}>
             {label
@@ -55,24 +58,32 @@ const TextInput: React.FC<TextInputProps> = ({
                 </Text>
                 : null
             }
-            <RNInput
-                value={value}
-                editable={!disabled}
-                autoCapitalize="none"
-                onChangeText={onChangeText}
-                secureTextEntry={secureTextEntry}
-                selectionColor={theme.colors.info}
-                onBlur={() => value && setIsBlur(true)}
-                style={[
-                    styles.inputStyle,
-                    {
-                        textAlign,
-                        color: isShowError ? theme.colors.error : resolvedPrimary,
-                        borderBottomColor: isShowError ? theme.colors.error : theme.colors.grey
-                    }
-                ]}
-                {...input}
-            />
+            <View style={styles.inputWrapper}>
+                <RNInput
+                    value={value}
+                    editable={!disabled}
+                    autoCapitalize="none"
+                    onChangeText={onChangeText}
+                    secureTextEntry={isSecureText}
+                    selectionColor={theme.colors.info}
+                    onBlur={() => value && setIsBlur(true)}
+                    style={[
+                        styles.inputStyle,
+                        {
+                            textAlign,
+                            color: isShowError ? theme.colors.error : resolvedPrimary,
+                            borderBottomColor: isShowError ? theme.colors.error : theme.colors.grey
+                        }
+                    ]}
+                    {...input}
+                />
+                {secureTextEntry
+                    ? isSecureText
+                        ? <Ionicons onPress={toggleSecureIcon} color={theme.colors.primary} name="eye" size={24}/>
+                        : <Ionicons onPress={toggleSecureIcon} color={theme.colors.primary} size={24} name="eye-off" />
+                    : null
+                }
+            </View>
             <Text
                 style={StyleSheet.flatten([styles.errorText, { color: theme.colors.error, opacity: errorText ? 1 : 0 }])}
             >
@@ -88,11 +99,19 @@ const styles = StyleSheet.create({
     container: {
         marginBottom: OFFSET.POINT
     },
-    errorText: {
-        fontSize: 12,
-    },
-    inputStyle: {
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
         paddingVertical: OFFSET.POINT * 2,
         borderBottomWidth: 1
+    },
+    inputStyle: {
+        width: '100%',
+        flexShrink: 1,
+        marginRight: OFFSET.POINT * 2,
+    },
+    errorText: {
+        fontSize: 12,
     }
 });
