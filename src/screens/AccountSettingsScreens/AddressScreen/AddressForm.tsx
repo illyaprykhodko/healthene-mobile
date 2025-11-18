@@ -115,12 +115,13 @@ export const AddressForm = memo(({
         </View>
         <TextInput
             disabled={false}
+            textAlign="left"
             label="Description"
             name={descriptionName}
+            color={theme.colors.black}
             value={address.description}
             onChangeText={onChange(descriptionName)}
             onBlur={() => setFieldTouched(descriptionName, true)}
-            inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
             touched={{ [descriptionName]: touched?.addresses?.[index]?.description ?? false }}
             error={descriptionError
                 ? { [descriptionName]: descriptionError }
@@ -130,12 +131,13 @@ export const AddressForm = memo(({
         <View style={styles.wrapper}>
             <TextInput
                 disabled={false}
+                textAlign="left"
                 name={address1Name}
                 label="Address Line"
                 value={address.address1}
+                color={theme.colors.black}
                 onChangeText={onChange(address1Name)}
                 onBlur={() => setFieldTouched(address1Name, true)}
-                inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
                 touched={{ [address1Name]: touched?.addresses?.[index]?.address1 ?? false }}
                 error={address1Error
                     ? { [address1Name]: address1Error }
@@ -145,12 +147,13 @@ export const AddressForm = memo(({
             <View style={styles.wrapper}>
                 <TextInput
                     disabled={false}
+                    textAlign="left"
                     name={address2Name}
                     label="Address Line 2"
                     value={address.address2}
+                    color={theme.colors.black}
                     onChangeText={onChange(address2Name)}
                     onBlur={() => setFieldTouched(address2Name, true)}
-                    inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
                     touched={{ [address2Name]: touched?.addresses?.[index]?.address2 ?? false }}
                     error={address2Error
                         ? { [address2Name]: address2Error }
@@ -161,12 +164,13 @@ export const AddressForm = memo(({
             <View style={styles.wrapper}>
                 <TextInput
                     label="City"
-                    disabled={false}
                     name={cityName}
+                    disabled={false}
+                    textAlign="left"
                     value={address.city}
+                    color={theme.colors.black}
                     onChangeText={onChange(cityName)}
                     onBlur={() => setFieldTouched(cityName, true)}
-                    inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
                     touched={{ [cityName]: touched?.addresses?.[index]?.city ?? false }}
                     error={cityError
                         ? { [cityName]: cityError }
@@ -178,11 +182,12 @@ export const AddressForm = memo(({
                 <TextInput
                     label="ZIP Code"
                     disabled={false}
+                    textAlign="left"
                     name={zipCodeName}
                     value={address.zipCode}
+                    color={theme.colors.black}
                     onChangeText={onChange(zipCodeName)}
                     onBlur={() => setFieldTouched(zipCodeName, true)}
-                    inputStyle={{ ...styles.inputStyle, color: theme.colors.black }}
                     touched={{ [zipCodeName]: touched?.addresses?.[index]?.zipCode ?? false }}
                     error={zipCodeError
                         ? { [zipCodeName]: zipCodeError }
@@ -240,8 +245,5 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: OFFSET.VERTICAL,
-    },
-    inputStyle: {
-        textAlign: 'left',
-    },
+    }
 });

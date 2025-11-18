@@ -1,45 +1,40 @@
 // outsource dependencies
 import React, { useState } from 'react';
-import { StyleSheet, View, TextStyle } from 'react-native';
-import { TextInput as MInput, Text } from '@react-native-material/core';
+import { StyleSheet, View, TextInput as RNInput } from 'react-native';
+
 // local dependencies
+import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset.ts';
 
 interface TextInputProps {
-  name: string;
-  value?: string;
-  label?: string;
-  color?: string;
-  disabled: boolean;
-  [key: string]: any;
-  inputStyle?: TextStyle;
-  secureTextEntry?: boolean;
-  trailing?: React.ReactNode;
-  accessibilityHint?: string;
-  accessibilityLabel?: string;
-  error?: Record<string, string>;
-  touched?: Record<string, boolean>;
-  onChangeText?: (text: string) => void;
-  leading?: (props: any) => React.ReactNode;
-  variant?: 'filled' | 'outlined' | 'standard';
+    name: string;
+    value?: string;
+    label?: string;
+    color?: string;
+    disabled: boolean;
+    [key: string]: any;
+    secureTextEntry?: boolean;
+    trailing?: React.ReactNode;
+    accessibilityHint?: string;
+    accessibilityLabel?: string;
+    textAlign?: 'left' | 'right';
+    error?: Record<string, string>;
+    touched?: Record<string, boolean>;
+    onChangeText?: (text: string) => void;
+    leading?: (props: any) => React.ReactNode;
 }
-
-const styles = StyleSheet.create({
-    errorText: {
-        fontSize: 12,
-    },
-});
 
 const TextInput: React.FC<TextInputProps> = ({
     name,
     value,
     color,
+    label,
     disabled,
-    inputStyle,
     error = {},
     touched = {},
     onChangeText,
-    variant = 'standard',
+    textAlign = 'right',
     secureTextEntry = false,
     ...input
 }) => {
@@ -49,24 +44,33 @@ const TextInput: React.FC<TextInputProps> = ({
     const [isBlur, setIsBlur] = useState(false);
     const isShowError = touchedField && errorText;
     const resolvedPrimary = color || theme.colors.primary;
-    const resolvedInputStyle: TextStyle = StyleSheet.flatten([
-        { textAlign: 'right', color: resolvedPrimary },
-        inputStyle,
-    ]);
     return (
-        <View>
-            <MInput
+        <View style={styles.container}>
+            {label
+                ? <Text
+                    variant="caption"
+                    color={isShowError ? theme.colors.error : theme.colors.black}
+                >
+                    {label}
+                </Text>
+                : null
+            }
+            <RNInput
                 value={value}
-                variant={variant}
                 editable={!disabled}
                 autoCapitalize="none"
                 onChangeText={onChangeText}
                 secureTextEntry={secureTextEntry}
                 selectionColor={theme.colors.info}
                 onBlur={() => value && setIsBlur(true)}
-                style={{ backgroundColor: 'transparent' }}
-                color={isShowError ? theme.colors.error : resolvedPrimary}
-                inputStyle={isShowError ? { ...resolvedInputStyle, color: theme.colors.error } : resolvedInputStyle}
+                style={[
+                    styles.inputStyle,
+                    {
+                        textAlign,
+                        color: isShowError ? theme.colors.error : resolvedPrimary,
+                        borderBottomColor: isShowError ? theme.colors.error : theme.colors.grey
+                    }
+                ]}
                 {...input}
             />
             <Text
@@ -79,3 +83,16 @@ const TextInput: React.FC<TextInputProps> = ({
 };
 
 export default React.memo(TextInput);
+
+const styles = StyleSheet.create({
+    container: {
+        marginBottom: OFFSET.POINT
+    },
+    errorText: {
+        fontSize: 12,
+    },
+    inputStyle: {
+        paddingVertical: OFFSET.POINT * 2,
+        borderBottomWidth: 1
+    }
+});
