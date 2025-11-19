@@ -8,6 +8,7 @@ import { OFFSET } from 'constants/offset.ts';
 import { ROUTES } from 'constants/routes.ts';
 import BackButton from 'components/BackButton.tsx';
 import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
+import FoodPreferences from 'screens/AccountSettingsScreens/FoodPreferences';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
 import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
 
@@ -48,6 +49,11 @@ export const AccountSettingsStack = () => {
                 name={ROUTES.PERSONAL_INFORMATION}
                 component={PersonalInformationScreen}
                 options={{ title: 'Personal Information' }}
+            />
+            <Stack.Screen
+                component={FoodPreferences}
+                name={ROUTES.FOOD_PREFERENCES}
+                options={{ title: 'Food Preferences' }}
             />
         </Stack.Navigator>
     );

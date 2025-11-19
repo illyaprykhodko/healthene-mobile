@@ -25,6 +25,7 @@ export const ROUTES = {
     // Account Settings
     ADDRESS: 'Address',
     ACCOUNT_SETTINGS: 'AccountSettings',
+    FOOD_PREFERENCES: 'FoodPreferences',
     PERSONAL_INFORMATION: 'PersonalInformation',
 
     // Legacy routes (for compatibility)
