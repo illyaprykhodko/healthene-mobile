@@ -547,6 +547,35 @@ export const dayOverviewApi = createApi({
             }),
             invalidatesTags: ['DayOverview', 'PhaseItems'],
         }),
+
+        // Get recipe category tree for replacement
+        getRecipeCategoryTree: builder.query<any, number | string>({
+            query: recipeId => `/patient-service/patient/day-overview/rescue/recipe/${recipeId}/category-tree`,
+        }),
+
+        // Get items in a specific category for recipe replacement
+        getRecipeCategoryItems: builder.query<any, { recipeId: number | string; categoryId: number | string }>({
+            query: ({ recipeId, categoryId }) => `/patient-service/patient/day-overview/rescue/recipe/${recipeId}/category/${categoryId}`,
+        }),
+
+        // Replace recipe item
+        replaceRecipeItem: builder.mutation<any, { phaseItemId: number | string; data: { id: number | string; replacement: { id: number | string } } }>({
+            query: ({ phaseItemId, data }) => ({
+                url: `/patient-service/patient/day-overview/rescue/phase-item/${phaseItemId}/recipe-replacement`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
+        // revert phase item (debug only)
+        revertPhaseItem: builder.mutation<any, { phaseItemId: number | string; }>({
+            query: ({ phaseItemId }) => ({
+                url: `/patient-service/day-overview-phase-item/${phaseItemId}/initial-recipe`,
+                method: 'PUT',
+                data: []
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
     }),
 });
 
@@ -881,5 +910,10 @@ export const {
     useGetRescueCatalogQuery,
     useGetRestaurantCatalogQuery,
     useGetRescueMealsQuery,
+    useRevertPhaseItemMutation,
     useUpdatePhaseWithRescueMutation,
+    // Recipe replacement
+    useGetRecipeCategoryTreeQuery,
+    useGetRecipeCategoryItemsQuery,
+    useReplaceRecipeItemMutation,
 } = dayOverviewApi;

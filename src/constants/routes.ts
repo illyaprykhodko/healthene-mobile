@@ -24,6 +24,8 @@ export const ROUTES = {
     MEAL_PREFERENCES: 'MealPreferences',
     ALL_RECORDED_DATA: 'AllRecordedData',
     MEASUREMENT_CHART: 'MeasurementChart',
+    ADD_REPLACE_RECIPE: 'AddReplaceRecipe',
+    TREE_ADD_REPLACE_ITEM: 'TreeAddReplaceItem',
     CUISINE_DISTRIBUTION: 'CuisineDistribution',
 
     // Account Settings

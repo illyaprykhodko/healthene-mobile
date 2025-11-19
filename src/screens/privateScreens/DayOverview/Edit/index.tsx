@@ -36,10 +36,11 @@ interface PhaseItem {
     measurement?: any;
     medication?: any;
     supplement?: any;
+    modified?: boolean;
     id: string | number;
     physicalActivity?: any;
     initialAmount?: number;
-    modified?: boolean;
+    substanceType?: string;
     weight?: {
         unit: {
             name: string;
@@ -91,10 +92,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     // mutations
     const [updatePhase] = useUpdatePhaseMutation();
     const [addPhaseItem] = useAddPhaseItemMutation();
-    const [updatePhaseItem] = useUpdatePhaseItemMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
+    const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
 
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
   
@@ -178,6 +179,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         const entityType = mapPhaseTypeToEntityType();
     
         navigation.navigate(ROUTES.ADD_REPLACE_ITEM, {
+            date: targetDate,
+            prevItem: null,
             excludeIds,
             entityType,
             onApply: async (selectedItem: any) => {
@@ -287,42 +290,119 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         }
     };
 
-    const handleReplaceItem = async (item: PhaseItem) => {
-        if (!item.recipe || item.recipe?.surrogateRecipe) {
-            return; // cannot replace surrogate recipes or items without recipes
+    const handleReplaceItem = async (prevItem: PhaseItem) => {
+        if (!includeRescueFoodsInShoppingList) {
+            setShowRescueFoodsModal(true);
+            return;
         }
 
-        const excludeIds = items.map(item => String(item.id));
-    
-        (navigation as any).navigate('AddReplaceItem', {
-            excludeIds,
-            entityType: ENTITY_TYPE.RECIPE,
-            replaceMode: true,
-            itemToReplace: item,
-            onApply: async (selectedItem: any) => {
-                try {
-                    // await replacePhaseItem({
-                    //     itemId: item.id,
-                    //     replacementItem: {
-                    //         id: selectedItem.id,
-                    //         type: selectedItem.type,
-                    //         name: selectedItem.name,
-                    //     }
-                    // });
-                    await replacePhaseItem({
-                        itemId: item.id,
-                        phaseId: targetPhaseId,
-                        replacementItem: {
-                            id: selectedItem.id,
-                            type: selectedItem.type,
-                            name: selectedItem.name,
-                        }
-                    });
-                } catch (error) {
-                    console.error('Error replacing item:', error);
-                }
+        const prevItemWithoutRating = { ...prevItem, rating: null };
+
+        switch (prevItem.type) {
+            case ENTITY_TYPE.FOOD: {
+                navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
+                    date: targetDate,
+                    entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
+                    substanceType: prevItem.substanceType || 'FOOD',
+                    prevItem: prevItemWithoutRating,
+                    onApply: (data: any) => {
+                        handleConfirmReplaceFood(prevItemWithoutRating, data.item);
+                    },
+                });
+                break;
             }
-        });
+            case ENTITY_TYPE.RECIPE: {
+                if (prevItem.recipe?.surrogateRecipe) {
+                    navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
+                        date: targetDate,
+                        entityType: 'SURROGATE_RECIPE',
+                        title: currentPhase?.meal?.name || 'Meal',
+                        prevItem: prevItemWithoutRating,
+                        phaseId: targetPhaseId,
+                    });
+                } else {
+                    navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
+                        date: targetDate,
+                        entityType: 'RECIPE',
+                        title: currentPhase?.meal?.name || 'Meal',
+                        prevItem: prevItemWithoutRating,
+                        phaseId: targetPhaseId,
+                    });
+                }
+                break;
+            }
+            case ENTITY_TYPE.MEASUREMENT:
+            case ENTITY_TYPE.SUPPLEMENT:
+            case ENTITY_TYPE.MEDICATION:
+            case ENTITY_TYPE.PHYSICAL_ACTIVITY: {
+                // Navigate to simple list-based selection
+                const excludeIds = items.map(item => String(item.id));
+                
+                navigation.navigate(ROUTES.ADD_REPLACE_ITEM, {
+                    date: targetDate,
+                    prevItem: prevItemWithoutRating,
+                    entityType: prevItem.type,
+                    excludeIds,
+                    onApply: (data: any) => {
+                        handleConfirmReplaceItem(prevItemWithoutRating, data.item, getFieldForType(prevItem.type));
+                    },
+                });
+                break;
+            }
+            default:
+                console.warn('Unknown item type for replacement:', prevItem.type);
+        }
+    };
+
+    const getFieldForType = (type: string): string => {
+        switch (type) {
+            case ENTITY_TYPE.FOOD:
+                return 'food';
+            case ENTITY_TYPE.RECIPE:
+                return 'recipe';
+            case ENTITY_TYPE.MEASUREMENT:
+                return 'measurement';
+            case ENTITY_TYPE.SUPPLEMENT:
+                return 'supplement';
+            case ENTITY_TYPE.MEDICATION:
+                return 'medication';
+            case ENTITY_TYPE.PHYSICAL_ACTIVITY:
+                return 'physicalActivity';
+            default:
+                return 'food';
+        }
+    };
+
+    const handleConfirmReplaceFood = async (prevItem: PhaseItem, nextItem: any) => {
+        try {
+            await replacePhaseItem({
+                itemId: prevItem.id,
+                phaseId: targetPhaseId,
+                replacementItem: {
+                    id: nextItem.id,
+                    type: nextItem.type,
+                    name: nextItem.name,
+                },
+            });
+        } catch (error) {
+            console.error('Error replacing food item:', error);
+        }
+    };
+
+    const handleConfirmReplaceItem = async (prevItem: PhaseItem, nextItem: any, field: string) => {
+        try {
+            await replacePhaseItem({
+                itemId: prevItem.id,
+                phaseId: targetPhaseId,
+                replacementItem: {
+                    id: nextItem.id,
+                    type: nextItem.type,
+                    name: nextItem.name,
+                },
+            });
+        } catch (error) {
+            console.error('Error replacing item:', error);
+        }
     };
 
     const handleNoReplaceItem = (item: PhaseItem) => {
@@ -337,16 +417,15 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     const isLoading = isDayOverviewLoading || isPhaseItemsLoading;
   
-    // if (isLoading) {
-    //     return (
-    //         <Screen initialized={false} style={styles.container}>
-    //             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    //                 <Text>Loading...</Text>
-    //             </View>
-    //         </Screen>
-    //     );
-    // }
-
+    if (isLoading) {
+        return (
+            <Screen initialized={false} style={styles.container}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text>Loading...</Text>
+                </View>
+            </Screen>
+        );
+    }
     const groupedBySection = _.groupBy(localItems, 'section');
     const title = currentPhase?.meal?.name
                   || (currentPhase?.type === 'QUESTION' ? 'Health Question'
@@ -367,9 +446,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     <View style={styles.titleButtons}>
                         <TouchableOpacity onPress={() => {
                             if (includeRescueFoodsInShoppingList) {
-                                (navigation as any).navigate('Replacement', {
-                                    phaseId: targetPhaseId,
+                                navigation.navigate(ROUTES.REPLACEMENT, {
+                                    list: [],
                                     date: targetDate,
+                                    phaseId: targetPhaseId,
+                                    isRestaurantMode: false,
                                 });
                             } else {
                                 setShowRescueFoodsModal(true);

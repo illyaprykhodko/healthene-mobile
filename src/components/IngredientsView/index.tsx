@@ -1,0 +1,93 @@
+// outsource dependencies
+import React, { memo, useState } from 'react';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+import { StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native';
+// local dependencies
+import Text from 'components/Text';
+
+interface Ingredient {
+    id: number | string;
+    nameWithUnit: string;
+}
+
+interface IngredientsViewProps {
+    ingredients: Ingredient[];
+    style?: object;
+    expandTrigger?: boolean;
+}
+
+const IngredientsView: React.FC<IngredientsViewProps> = ({ ingredients, style, expandTrigger }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const handleToggle = () => {
+        setIsExpanded(prev => !prev);
+    };
+
+    if (!ingredients || ingredients.length === 0) {
+        return null;
+    }
+
+    return (
+        <View>
+            <View style={styles.chevronWrapper}>
+                <TouchableOpacity onPress={handleToggle} style={styles.rowCenter}>
+                    <Text style={styles.chevronText} color="#2978A0">
+                        View Ingredients:{' '}
+                    </Text>
+                    <Icon
+                        name={(isExpanded || expandTrigger) ? 'chevron-up' : 'chevron-down'}
+                        color="#2978A0"
+                        size={12}
+                    />
+                </TouchableOpacity>
+            </View>
+            <ScrollView style={style} nestedScrollEnabled>
+                {(isExpanded || expandTrigger)
+                    && ingredients.map(item => (
+                        <View key={item.id} style={styles.unitButton}>
+                            <View style={styles.rowCenter}>
+                                <Text style={styles.bullet}>{'\u2022'}</Text>
+                                <Text textAlign="left" style={styles.unitName}>
+                                    {item?.nameWithUnit}
+                                </Text>
+                            </View>
+                        </View>
+                    ))}
+            </ScrollView>
+        </View>
+    );
+};
+
+export default memo(IngredientsView);
+
+const styles = StyleSheet.create({
+    center: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    unitName: {
+        textTransform: 'capitalize',
+        fontSize: 12,
+        fontWeight: '400',
+    },
+    unitButton: {
+        paddingVertical: 3,
+    },
+    bullet: {
+        fontSize: 14,
+        color: 'black',
+        marginRight: 5,
+    },
+    chevronWrapper: {
+        width: '100%',
+        marginLeft: 69,
+    },
+    chevronText: {
+        fontSize: 12,
+        fontWeight: '400',
+    },
+    rowCenter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+});

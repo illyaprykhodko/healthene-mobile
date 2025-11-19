@@ -13,6 +13,7 @@ export interface AppState {
   initialized: boolean;
   accessToken: string | null;
   refreshToken: string | null;
+  includeRescueFoodsInShoppingList: boolean;
   // session: {
   //   token: string;
   //   refreshToken: string;

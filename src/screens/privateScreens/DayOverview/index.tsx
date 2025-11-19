@@ -16,8 +16,10 @@ import AddReplaceItem from './AddReplaceItem';
 import BackButton from 'components/BackButton';
 import { Hamburger } from 'components/Hamburger';
 import SaveValueScreen from '../SaveValueScreen';
+import AddReplaceRecipe from './AddReplaceRecipe';
 import SmartScaleScreen from '../SmartScaleScreen';
 import TimeSwitcher from 'components/TimeSwitcher';
+import TreeAddReplaceItem from './TreeAddReplaceItem';
 import { useAppDispatch, useAppSelector } from 'store';
 import { RootStackParamList } from 'services/navigation';
 import AllRecordedDataScreen from '../AllRecordedDataScreen';
@@ -119,6 +121,36 @@ const DayOverviewStack: React.FC = () => {
             <Stack.Screen
                 name="AddReplaceItem"
                 component={AddReplaceItem}
+                options={({ route, navigation }) => ({
+                    title: 'Select Item',
+                    headerTitle: () =>
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
+                })}
+            />
+            <Stack.Screen
+                name="AddReplaceRecipe"
+                component={AddReplaceRecipe}
+                options={({ route, navigation }) => ({
+                    title: 'Select Recipe',
+                    headerTitle: () =>
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
+                })}
+            />
+            <Stack.Screen
+                name="TreeAddReplaceItem"
+                component={TreeAddReplaceItem}
                 options={({ route, navigation }) => ({
                     title: 'Select Item',
                     headerTitle: () =>

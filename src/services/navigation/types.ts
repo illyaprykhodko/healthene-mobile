@@ -71,9 +71,28 @@ export type RootStackParamList = {
     isRestaurantMode: boolean;
   };
   [ROUTES.ADD_REPLACE_ITEM]: {
+    date: string;
+    prevItem: any;
     excludeIds: string[];
     entityType: string;
     onApply: (selectedItem: any) => void;
+  };
+  [ROUTES.ADD_REPLACE_RECIPE]: {
+    date: string;
+    title: string;
+    prevItem: any;
+    entityType: string;
+    categoryList?: any[];
+    categoryName?: string;
+    phaseId?: number | string;
+    categoryId?: number | string;
+  };
+  [ROUTES.TREE_ADD_REPLACE_ITEM]: {
+    date: string;
+    prevItem: any;
+    entityType: string;
+    substanceType: string;
+    onApply?: (data: any) => void;
   };
 };
 

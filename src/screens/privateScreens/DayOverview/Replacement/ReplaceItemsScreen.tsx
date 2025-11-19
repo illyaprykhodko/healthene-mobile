@@ -53,15 +53,14 @@ const ReplaceItemsScreen: React.FC = () => {
     );
     const [updatePhase, { isLoading: isUpdating }] = useUpdatePhaseWithRescueMutation();
     // Transform data to options format
-    const options= (mealsData || []).map((meal: [Meal[]], idx: number) => ({
+    const options = (mealsData || []).map((meals: [Meal[]], idx: number) => ({
+        meals,
         id: idx,
-        meal: meal[0],
         title: `Option ${idx + 1}`,
     }));
 
     const handleReplace = useCallback(async () => {
         if (selectedIndex === null) { return; }
-
         Alert.alert(
             'Meal Replacement',
             'Do you really want to replace original meal set to this one?',
@@ -83,7 +82,7 @@ const ReplaceItemsScreen: React.FC = () => {
                             navigation.navigate(ROUTES.EDIT, {
                                 phaseId,
                                 isToast: true,
-                            });
+                            }, { pop: true });
                         } catch (error) {
                             console.error('Replace error:', error);
                         }
@@ -108,10 +107,9 @@ const ReplaceItemsScreen: React.FC = () => {
                 </Text>
             </View>
             <ScrollView style={styles.optionsWrapper}>
-                {options.map((option: { id: number; title: string; meal: Meal }, idx: number) => {
+                {options.map((option: { id: number; title: string; meals: [Meal] }, idx: number) => {
                     const isSelected = selectedIndex === idx;
                     const isDisabled = selectedIndex !== null && !isSelected;
-
                     return (
                         <View
                             key={option.id}
@@ -133,17 +131,19 @@ const ReplaceItemsScreen: React.FC = () => {
                                 />
                             </View>
                             <View style={styles.optionContent}>
-                                <View key={option.meal.id} style={styles.mealContainer}>
-                                    <Image source={{ uri: option.meal.recipe.coverImage?.url }} width={48} height={48} />
-                                    <View style={styles.mealInfo}>
-                                        <Text style={[styles.mealName, { color: theme.colors.text }]}>
-                                            {option.meal.recipe?.name || 'Unknown Recipe'}
-                                        </Text>
-                                        <Text style={[styles.mealServing, { color: theme.colors.textSecondary }]}>
-                                            {option.meal.servingData?.serving.name || '1 serving'}
-                                        </Text>
+                                {(option?.meals || []).map((meal: Meal) => (
+                                    <View key={meal.id} style={styles.mealContainer}>
+                                        <Image source={{ uri: meal.recipe.coverImage?.url }} width={48} height={48} />
+                                        <View style={styles.mealInfo}>
+                                            <Text style={[styles.mealName, { color: theme.colors.text }]}>
+                                                {meal.recipe?.name || 'Unknown Recipe'}
+                                            </Text>
+                                            <Text style={[styles.mealServing, { color: theme.colors.textSecondary }]}>
+                                                {meal.servingData?.serving.name || '1 serving'}
+                                            </Text>
+                                        </View>
                                     </View>
-                                </View>
+                                ))}
                                 {/* {option.meals.map((meal: any) => (
                                     <View key={meal.id} style={styles.mealContainer}>
                                         <Text style={[styles.mealName, { color: theme.colors.text }]}>
@@ -164,12 +164,12 @@ const ReplaceItemsScreen: React.FC = () => {
                 })}
             </ScrollView>
             <TouchableOpacity
+                onPress={handleReplace}
+                disabled={selectedIndex === null || isUpdating}
                 style={[
                     styles.replaceBtn,
                     selectedIndex !== null ? styles.replaceBtnActive : styles.replaceBtnDisabled,
                 ]}
-                disabled={selectedIndex === null || isUpdating}
-                onPress={handleReplace}
             >
                 {isUpdating ? (
                     <ActivityIndicator color="#4E733C" />
@@ -294,4 +294,3 @@ const styles = StyleSheet.create({
         marginLeft: 16,
     },
 });
-

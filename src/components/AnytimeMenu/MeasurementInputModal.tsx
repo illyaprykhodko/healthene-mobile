@@ -72,7 +72,6 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
         },
     });
 
-    // Check if user has last measurements (for Graph button)
     const { data: lastMeasurement } = useGetLastMeasurementQuery(measurementType);
     
     useEffect(() => {
@@ -416,7 +415,6 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         width: '100%',
         alignItems: 'center',
-        // marginTop: 150,
     },
     saveButtonDisabled: {
         backgroundColor: '#EEEEEE',
@@ -447,7 +445,7 @@ const styles = StyleSheet.create({
         paddingVertical: 20,
         paddingHorizontal: 25,
         marginHorizontal: 25,
-        marginBottom: 24,
+        // marginBottom: 24,
         borderWidth: 2,
         borderColor: '#2978A0',
         borderRadius: 25,
