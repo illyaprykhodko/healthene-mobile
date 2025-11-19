@@ -5,14 +5,14 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 
 // local dependencies
-import { ROUTES } from '../constants/routes';
-import { useTheme } from '../hooks/useTheme';
-import DayOverview from '../screens/privateScreens/DayOverview';
-import { MainScreen } from '../screens/privateScreens/MainScreen';
-import { CustomDrawerContent } from '../components/CustomDrawerContent';
-import { PlaceholderScreen } from '../screens/privateScreens/PlaceholderScreen';
-import BackButton from 'components/BackButton.tsx';
+import { ROUTES } from 'constants/routes';
+import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset.ts';
+import BackButton from 'components/BackButton.tsx';
+import DayOverview from 'screens/privateScreens/DayOverview';
+import { MainScreen } from 'screens/privateScreens/MainScreen';
+import { CustomDrawerContent } from 'components/CustomDrawerContent';
+import { PlaceholderScreen } from 'screens/privateScreens/PlaceholderScreen';
 
 const Drawer = createDrawerNavigator();
 const { width } = Dimensions.get('window');
@@ -88,12 +88,12 @@ export const PrivateDrawer: React.FC = () => {
             <Drawer.Screen
                 name={ROUTES.COMMUNICATION}
                 component={PlaceholderScreen}
-                options={({ navigation }) => ({
+                options={{
                     title: 'Messages',
                     drawerIcon: ({ color }) => (
                         <Icon name="comments" size={24} color={color} />
                     ),
-                })}
+                }}
             />
 
             <Drawer.Screen
