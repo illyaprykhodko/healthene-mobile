@@ -5,12 +5,14 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 
 // local dependencies
-import { ROUTES } from '../constants/routes';
-import { useTheme } from '../hooks/useTheme';
-import DayOverview from '../screens/privateScreens/DayOverview';
-import { MainScreen } from '../screens/privateScreens/MainScreen';
-import { CustomDrawerContent } from '../components/CustomDrawerContent';
-import { PlaceholderScreen } from '../screens/privateScreens/PlaceholderScreen';
+import { ROUTES } from 'constants/routes';
+import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset.ts';
+import BackButton from 'components/BackButton.tsx';
+import DayOverview from 'screens/privateScreens/DayOverview';
+import { MainScreen } from 'screens/privateScreens/MainScreen';
+import { CustomDrawerContent } from 'components/CustomDrawerContent';
+import { PlaceholderScreen } from 'screens/privateScreens/PlaceholderScreen';
 
 const Drawer = createDrawerNavigator();
 const { width } = Dimensions.get('window');
@@ -24,16 +26,21 @@ export const PrivateDrawer: React.FC = () => {
             initialRouteName={ROUTES.MAIN}
             drawerContent={props => <CustomDrawerContent {...props} />}
             screenOptions={({ navigation }) => ({
+                headerShown: true,
                 drawerPosition: 'right',
                 gestureDirection: 'horizontal-inverted',
-                // headerShown: true,
-                headerShown: false,
+                headerLeft: () => (
+                    <BackButton navigation={navigation} theme={theme} />
+                ),
                 headerStyle: {
-                    backgroundColor: theme.colors.background,
+                    backgroundColor: theme.colors.primary,
                 },
-                headerTintColor: theme.colors.text,
+                headerTintColor: theme.colors.white,
+                headerLeftContainerStyle: {
+                    paddingLeft: OFFSET.HORIZONTAL,
+                },
                 headerTitleStyle: {
-                    fontWeight: '600',
+                    fontWeight: '600'
                 },
                 drawerActiveBackgroundColor: 'transparent',
                 drawerLabelStyle: {
@@ -54,21 +61,22 @@ export const PrivateDrawer: React.FC = () => {
                     drawerItemStyle: { display: 'none' },
                 }}
             />
-            
+
             <Drawer.Screen
                 component={DayOverview}
                 name={ROUTES.DAILY_PLAN}
                 options={{
+                    headerShown: false,
                     title: 'My Daily Plan',
                     drawerIcon: ({ color }) => (
                         <Icon name="file" size={24} color={color} />
                     ),
                 }}
             />
-            
+
             <Drawer.Screen
                 name={ROUTES.SHOPPING}
-                component={() => <PlaceholderScreen title="Shopping List" />}
+                component={PlaceholderScreen}
                 options={{
                     title: 'Shopping List',
                     drawerIcon: ({ color }) => (
@@ -76,10 +84,10 @@ export const PrivateDrawer: React.FC = () => {
                     ),
                 }}
             />
-            
+
             <Drawer.Screen
                 name={ROUTES.COMMUNICATION}
-                component={() => <PlaceholderScreen title="Messages" />}
+                component={PlaceholderScreen}
                 options={{
                     title: 'Messages',
                     drawerIcon: ({ color }) => (
@@ -87,10 +95,10 @@ export const PrivateDrawer: React.FC = () => {
                     ),
                 }}
             />
-            
+
             <Drawer.Screen
                 name={ROUTES.MY_RESULTS}
-                component={() => <PlaceholderScreen title="My Results" />}
+                component={PlaceholderScreen}
                 options={{
                     title: 'My Results',
                     drawerIcon: ({ color }) => (
@@ -98,10 +106,10 @@ export const PrivateDrawer: React.FC = () => {
                     ),
                 }}
             />
-            
+
             <Drawer.Screen
                 name={ROUTES.ABOUT_PLAN}
-                component={() => <PlaceholderScreen title="About Plan" />}
+                component={PlaceholderScreen}
                 options={{
                     title: 'About Plan',
                     drawerIcon: ({ color }) => (
@@ -109,10 +117,10 @@ export const PrivateDrawer: React.FC = () => {
                     ),
                 }}
             />
-            
+
             <Drawer.Screen
                 name={ROUTES.HEALTH_PROFILE}
-                component={() => <PlaceholderScreen title="My Health Profile" />}
+                component={PlaceholderScreen}
                 options={{
                     title: 'My Health Profile',
                     drawerIcon: ({ color }) => (
@@ -120,10 +128,10 @@ export const PrivateDrawer: React.FC = () => {
                     ),
                 }}
             />
-            
+
             <Drawer.Screen
                 name={ROUTES.LIBRARY}
-                component={() => <PlaceholderScreen title="Library" />}
+                component={PlaceholderScreen}
                 options={{
                     title: 'Library',
                     drawerIcon: ({ color }) => (
@@ -131,10 +139,10 @@ export const PrivateDrawer: React.FC = () => {
                     ),
                 }}
             />
-            
+
             <Drawer.Screen
                 name={ROUTES.INFO}
-                component={() => <PlaceholderScreen title="Info" />}
+                component={PlaceholderScreen}
                 options={{
                     title: 'Info',
                     drawerIcon: ({ color }) => (
@@ -142,10 +150,10 @@ export const PrivateDrawer: React.FC = () => {
                     ),
                 }}
             />
-            
+
             <Drawer.Screen
                 name={ROUTES.MEAL_PREFERENCES}
-                component={() => <PlaceholderScreen title="Meal Preferences" />}
+                component={PlaceholderScreen}
                 options={{
                     title: 'Meal Preferences',
                     drawerIcon: ({ color }) => (
@@ -153,10 +161,10 @@ export const PrivateDrawer: React.FC = () => {
                     ),
                 }}
             />
-            
+
             <Drawer.Screen
                 name={ROUTES.CUISINE_DISTRIBUTION}
-                component={() => <PlaceholderScreen title="Cuisine Distribution" />}
+                component={PlaceholderScreen}
                 options={{
                     title: 'Cuisine Distribution',
                     drawerIcon: ({ color }) => (
