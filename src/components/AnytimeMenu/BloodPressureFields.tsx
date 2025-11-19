@@ -62,7 +62,7 @@ export const BloodPressureFields: React.FC<BloodPressureFieldsProps> = ({
                         value={systolicValue}
                         onBlur={onSystolicBlur}
                         keyboardType="number-pad"
-                        placeholder={systolicField.placeholder}
+                        // placeholder={systolicField.placeholder}
                         placeholderTextColor={theme.colors.textSecondary}
                         onChangeText={text => handleTextChange(onSystolicChange, text)}
                         style={[
@@ -89,13 +89,13 @@ export const BloodPressureFields: React.FC<BloodPressureFieldsProps> = ({
             <View style={styles.fieldWrapper}>
                 <View style={[styles.inputContainer, diastolicError && { borderColor: theme.colors.error }]}>
                     <TextInput
-                        value={diastolicValue}
-                        editable={!disabled}
                         maxLength={3}
-                        placeholder={diastolicField.placeholder}
+                        editable={!disabled}
+                        value={diastolicValue}
+                        onBlur={onDiastolicBlur}
                         keyboardType="number-pad"
                         onChangeText={text => handleTextChange(onDiastolicChange, text)}
-                        onBlur={onDiastolicBlur}
+                        // placeholder={diastolicField.placeholder}
                         style={[
                             styles.input,
                             { color: theme.colors.text },
@@ -125,13 +125,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     inputContainer: {
-        width: '80%',
+        width: '50%',
         borderWidth: 3,
         borderColor: '#6A92BB',
         borderRadius: 10,
         backgroundColor: '#E0EBF7',
         paddingHorizontal: 16,
-        marginBottom: 8,
+        // marginBottom: 8,
     },
     input: {
         height: 100,
@@ -141,10 +141,10 @@ const styles = StyleSheet.create({
         ...(Platform.OS === 'ios' && { paddingVertical: 0 }),
     },
     separatorContainer: {
+        width: '50%',
         flexDirection: 'row',
         alignItems: 'center',
-        position: 'relative',
-        marginVertical: 12,
+        justifyContent: 'flex-start',
     },
     separatorLine: {
         height: 3,
@@ -152,8 +152,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#2978A0',
     },
     separatorUnit: {
-        position: 'absolute',
-        right: -75,
+        marginLeft: 15,
         fontSize: 32,
         fontWeight: '500',
     },
