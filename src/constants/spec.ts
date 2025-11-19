@@ -80,3 +80,10 @@ export const SUFFIXES = [
     { label: 'V', value: 'V' },
     { label: 'VI', value: 'VI' },
 ];
+
+export const TREE_TYPE = {
+    ALLERGY: 'ALLERGY',
+    DISLIKE: 'DISLIKE',
+    NAVIGATION: 'NAVIGATION',
+    PATIENT_NAVIGATION: 'PATIENT_NAVIGATION'
+} as const;

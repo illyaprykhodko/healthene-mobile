@@ -77,7 +77,11 @@ export interface EntityReference {
   /** Optional name of the referenced entity */
   name?: string;
 }
-
+export interface PaginatedParams {
+  page: number;
+  size?: number;
+  sort?: string;
+}
 /**
  * Represents a paginated response with metadata
  * @interface PaginatedResponse
@@ -92,17 +96,17 @@ export interface EntityReference {
  */
 export interface PaginatedResponse<T> {
   /** Array of items in the current page */
-  items: T[];
+  content: T[];
   /** Total number of items across all pages */
-  total: number;
+  totalElements: number;
   /** Current page number (1-based) */
-  page: number;
+  pageNumber: number;
   /** Number of items per page */
   size: number;
   /** Total number of pages */
   totalPages: number;
   /** Whether there is a next page */
-  hasNext: boolean;
+  offset: boolean;
   /** Whether there is a previous page */
   hasPrevious: boolean;
 }
