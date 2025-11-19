@@ -8,9 +8,9 @@ import { PaginatedParams, PaginatedResponse } from 'types/common/interfaces.ts';
 
 export type TreeType = keyof typeof TREE_TYPE;
 export interface CategoryListBody {
-    parentId?: number;
     hasParent?: boolean;
     treeTypeViewLabel: TreeType
+    parentId: number | undefined;
 }
 export interface CategoryItem {
     id: number;
@@ -25,6 +25,7 @@ export interface RequestData {
 
 export interface TransformData {
     page: number;
+    totalPages: number;
     data: CategoryItem[];
 }
 
@@ -41,15 +42,31 @@ export const categoryTreeApi = createApi({
                     params: { ...params, size: 20, sort: 'category.name,ASC' },
                 };
             },
-            serializeQueryArgs: ({ endpointName, queryArgs }) => ({
-                key: `${endpointName}-${queryArgs.params.page}`,
-            }),
-            transformResponse (response: PaginatedResponse<CategoryItem>, _, args:RequestData) {
+            serializeQueryArgs: ({ endpointName, queryArgs }) => {
+                const typeView = queryArgs.body.treeTypeViewLabel;
+                const parent = queryArgs.body.parentId ?? 0; // root = 0
+                return `${endpointName}-${typeView}-${parent}`;
+            },
+            transformResponse (response: PaginatedResponse<CategoryItem>) {
                 return {
                     data: response.content,
-                    page: args.params.page,
+                    page: response.pageNumber,
+                    totalPages: response.totalPages,
                 };
-            }
+            },
+            merge: (currentCache, newResponse) => {
+                if (newResponse.page === 0) {
+                    currentCache.data = newResponse.data;
+                } else {
+                    currentCache.data = [...currentCache.data, ...newResponse.data];
+                }
+
+                currentCache.page = newResponse.page;
+                currentCache.totalPages = newResponse.totalPages;
+            },
+            forceRefetch ({ currentArg, previousArg }) {
+                return currentArg?.params.page !== previousArg?.params.page;
+            },
         }),
     })
 });
