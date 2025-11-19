@@ -2,7 +2,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
 // local dependencies
-import { User } from 'types';
+import { Country, User, State } from 'types';
 import { baseQuery } from 'store/api/baseApi.ts';
 
 export const settingsApi = createApi({
@@ -16,7 +16,25 @@ export const settingsApi = createApi({
                 body,
             }),
         }),
+        filterCountry: builder.mutation<Country[], any >({
+            query: body => {
+                return {
+                    method: 'POST',
+                    body: { ...body },
+                    url: '/patient-service/country/filter',
+                };
+            },
+        }),
+        filterState: builder.mutation<State[], {country: number} >({
+            query: body => {
+                return {
+                    method: 'POST',
+                    body: { ...body },
+                    url: '/patient-service/country/state/filter',
+                };
+            },
+        }),
     })
 });
 
-export const { useUpdateUserDataMutation } = settingsApi;
+export const { useUpdateUserDataMutation, useFilterCountryMutation, useFilterStateMutation } = settingsApi;

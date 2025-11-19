@@ -6,17 +6,17 @@ import { View, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
+import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import TextInput from 'components/TextInput';
 import { IconButton } from 'components/IconButton';
 import BackgroundImage from 'components/BackgroundImage';
-
-import { useTheme } from 'hooks/useTheme';
-import { OFFSET } from 'constants/offset';
 import { useForgotPassword } from 'hooks/useForgotPassword';
 import { useForgotPasswordMutation } from 'store/api/authApi';
 import { RootStackParamList } from 'services/navigation/types';
@@ -50,14 +50,14 @@ export const ForgotPasswordScreen: React.FC = () => {
                 style={styles.title}
                 color={theme.colors.primary}
             >
-        Forgot your password?
+                Forgot your password?
             </Text>
             <Text
                 textAlign="center"
                 color={theme.colors.primary}
             >
-        Please enter your email address below
-        to receive your password reset instructions
+                Please enter your email address below
+                to receive your password reset instructions
             </Text>
             <Formik
                 initialValues={{ email: '' }}
@@ -109,7 +109,6 @@ export const ForgotPasswordScreen: React.FC = () => {
             </View>
             <Text
                 textAlign="center"
-                style={styles.text}
                 color={theme.colors.primary}
             >
         We have sent you email with instructions, please go to
@@ -127,16 +126,18 @@ export const ForgotPasswordScreen: React.FC = () => {
 
     return (
         <Screen initialized={true} style={{ ...styles.container, backgroundColor: theme.colors.background }}>
-            <BackgroundImage style={styles.backgroundImage}>
-                <IconButton
-                    size={20}
-                    icon="arrow-left"
-                    onPress={goToSignIn}
-                    style={styles.backIcon}
-                    color={theme.colors.white}
-                />
-                {success ? renderSuccess() : renderForm()}
-            </BackgroundImage>
+            <View>
+                <BackgroundImage>
+                    <IconButton
+                        size={20}
+                        icon="arrow-left"
+                        onPress={goToSignIn}
+                        style={styles.backIcon}
+                        color={theme.colors.white}
+                    />
+                </BackgroundImage>
+            </View>
+            {success ? renderSuccess() : renderForm()}
         </Screen>
     );
 };
@@ -145,33 +146,25 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    backgroundImage: {
-        flex: 1,
-    },
     backIcon: {
         maxWidth: 70,
         marginTop: 25,
         padding: 16,
         marginRight: 'auto',
+        marginBottom: 'auto',
     },
-    //   backIcon: {
-    //     // position: 'absolute',
-    //     top: 25,
-    //     left: 16,
-    //     zIndex: 1,
-    //   },
     formContainer: {
         flex: 1,
-        padding: OFFSET.VERTICAL * 1.6,
-        justifyContent: 'center',
+        paddingVertical: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL,
     },
     title: {
         marginBottom: OFFSET.POINT * 3,
     },
-    inputWrapper: {
+    text: {
         marginTop: OFFSET.VERTICAL * 1.6,
     },
-    text: {
+    inputWrapper: {
         marginTop: OFFSET.VERTICAL * 1.6,
     },
     row: {

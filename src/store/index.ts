@@ -4,6 +4,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 // local dependencies
 import { authApi } from './api/authApi';
 import appReducer from './slices/appSlice';
+import reactotron from '../../ReactotronConfig';
 import signInReducer from './slices/signInSlice';
 import { publicApi } from 'store/api/publicApi.ts';
 import exerciseReducer from './slices/exerciseSlice';
@@ -35,6 +36,8 @@ export const store = configureStore({
                 s3ServiceApi.middleware,
                 dayOverviewApi.middleware,
             ),
+    enhancers: getDefaultEnhancers =>
+        getDefaultEnhancers().concat(reactotron.createEnhancer()),
 });
 
 // Types

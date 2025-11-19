@@ -28,6 +28,7 @@ export type RootStackParamList = {
   [ROUTES.INFO]: undefined;
   [ROUTES.PROFILE]: undefined;
   [ROUTES.LIBRARY]: undefined;
+  [ROUTES.ADDRESS]: undefined;
   [ROUTES.SETTINGS]: undefined;
   [ROUTES.SHOPPING]: undefined;
   [ROUTES.DAILY_PLAN]: undefined;
