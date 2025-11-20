@@ -12,6 +12,7 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppDispatch, useAppSelector } from 'store';
+import { DayOverviewSkeleton } from 'components/Skeleton';
 import type { AnytimeMeasurementItem } from 'types/anytime';
 import { useGetDayOverviewQuery, Phase } from 'store/api/dayOverviewApi';
 import { MeasurementInputModal } from 'components/AnytimeMenu/MeasurementInputModal';
@@ -513,11 +514,12 @@ export const Overview: React.FC = () => {
     if (isLoading) {
         return (
             <Screen initialized style={styles.container}>
-                <View style={styles.content}>
+                <DayOverviewSkeleton />
+                {/* <View style={styles.content}>
                     <Text variant="h3" style={{ marginTop: 12, marginBottom: 8, color: theme.colors.text }}>
             Loading...
                     </Text>
-                </View>
+                </View> */}
             </Screen>
         );
     }
