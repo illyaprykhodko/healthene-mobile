@@ -1,8 +1,6 @@
 // outsource dependencies
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 // local dependencies
-import { AppState } from '../types';
-import { UserSession, User } from 'types';
 import { PatientCategories } from 'store/api/categoryTreeApi.ts';
 
 interface FoodPreferencesSlice {
