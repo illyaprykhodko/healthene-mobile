@@ -113,3 +113,11 @@ export const SUFFIXES = [
     { label: 'V', value: 'V' },
     { label: 'VI', value: 'VI' },
 ];
+
+export const ATTACHMENT_STATUS = {
+    PENDING: 'PENDING',
+    COMPLETED: 'COMPLETED',
+    ERROR: 'ERROR',
+} as const;
+
+export type AttachmentStatus = typeof ATTACHMENT_STATUS[keyof typeof ATTACHMENT_STATUS];

@@ -473,9 +473,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                         <View style={[
                                             styles.separatorWrapper,
                                             {
-                                                borderTopColor: theme.colors.black,
-                                                borderTopWidth: section === 'Added' ? 0 : 1,
-                                                backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}80`
+                                                // borderTopColor: theme.colors.black,
+                                                // borderTopWidth: section === 'Added' ? 0 : 1,
+                                                backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}`
                                             }
                                         ]}>
                                             <Text variant="h3" style={styles.offset}>
@@ -594,10 +594,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#F3F3F380', // 50% opacity
         paddingTop: 10,
         paddingBottom: 10,
-        marginBottom: 10,
+        // marginBottom: 10,
     },
     offset: {
-        color: '#7B7B7B',
+        // color: '#7B7B7B',
         marginLeft: 16,
     },
     buttonContainer: {

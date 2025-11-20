@@ -11,8 +11,9 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 // local dependencies
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
-import { Button } from 'components/Button';
 import { OFFSET } from 'constants/offset';
+import { Button } from 'components/Button';
+import DefImage from 'components/DefImage';
 
 interface ConfirmationReplaceModalProps {
     prevItem: any;
@@ -60,8 +61,8 @@ const ConfirmationReplaceModal: React.FC<ConfirmationReplaceModalProps> = ({
                     <View style={styles.logoWrap}>
                         {nextImage ? (
                             <View style={styles.logo}>
-                                {/* TODO: Replace with DefImage component */}
-                                <View style={[styles.imagePlaceholder, { backgroundColor: theme.colors.lightGrey }]} />
+                                <DefImage src={nextImage} style={styles.imagePlaceholder} />
+                                {/* <View style={[styles.imagePlaceholder, { backgroundColor: theme.colors.lightGrey }]} /> */}
                             </View>
                         ) : null}
                         {nextName ? (
@@ -70,7 +71,7 @@ const ConfirmationReplaceModal: React.FC<ConfirmationReplaceModalProps> = ({
                             </Text>
                         ) : null}
                     </View>
-                    <View style={{ flexGrow: 2, justifyContent: 'space-between' }}>
+                    <View style={{ flexGrow: 2, justifyContent: 'space-between', width: '100%' }}>
                         <Text style={[styles.title, { color: theme.colors.text }]} textAlign="center">
                             Replace
                             {' '}
@@ -168,6 +169,7 @@ const styles = StyleSheet.create({
     },
     buttonsRow: {
         width: '100%',
+        alignSelf: 'center',
     },
     replaceBtn: {
         width: '100%',

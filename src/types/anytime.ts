@@ -80,8 +80,9 @@ export interface AnytimeMeasurementItem extends AnytimeBaseItem {
       url?: string;
     };
     video?: {
-      url?: string;
+      id: string | number;
       embedUrl?: string;
+      status?: string;
     };
     units?: Array<{
       id: number;

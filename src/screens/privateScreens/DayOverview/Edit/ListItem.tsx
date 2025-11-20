@@ -132,7 +132,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, { color: theme.colors.darkGrey }, isOpacity || {}]}>
+                        <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Recipe'}`}
                         </Text>
                         <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
@@ -140,7 +140,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         </Text>
                         {item.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                edited by me
+                                added by me
                             </Text>
                         )}
                     </View>
@@ -156,12 +156,12 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, { fontSize: 18, color: theme.colors.darkGrey }, isOpacity || {}]}>
+                        <Text style={[styles.title, { fontSize: 18, color: theme.colors.black }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Ingredient'}`}
                         </Text>
                         {item.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                edited by me
+                                added by me
                             </Text>
                         )}
                     </View>
@@ -176,7 +176,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, { color: theme.colors.darkGrey }, isOpacity || {}]}>
+                        <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
                             {item.recipe?.name || 'Recipe'}
                         </Text>
                         {amount && (
@@ -187,7 +187,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         )}
                         {item.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                edited by me
+                                added by me
                             </Text>
                         )}
                     </View>
@@ -202,7 +202,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, { color: theme.colors.darkGrey }, isOpacity || {}]}>
+                        <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
                             {item.food?.name || 'Food'}
                         </Text>
                         {amount && (
@@ -212,7 +212,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         )}
                         {item.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                edited by me
+                                added by me
                             </Text>
                         )}
                     </View>
@@ -234,7 +234,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                     )}
                     {item.modified && (
                         <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                            edited by me
+                            added by me
                         </Text>
                     )}
                 </View>
@@ -244,7 +244,7 @@ export const ListItem: React.FC<ListItemProps> = ({
 
     return (
         <View style={[styles.wrapper, { backgroundColor: theme.colors.surface },
-            nextSection && [styles.divider, { borderBottomColor: theme.colors.black }]]}>
+            nextSection && [styles.divider, { borderBottomColor: theme.colors.lightGrey }]]}>
             <View style={styles.listItem}>
                 <TouchableOpacity
                     style={styles.listItemLink}
@@ -338,9 +338,9 @@ const styles = StyleSheet.create({
     },
     title: {
         paddingTop: OFFSET.VERTICAL,
-        marginBottom: OFFSET.VERTICAL,
+        // marginBottom: OFFSET.VERTICAL,
         fontSize: 16,
-        fontWeight: '500',
+        fontWeight: '600',
     },
     subtitle: {
         fontSize: 14,
