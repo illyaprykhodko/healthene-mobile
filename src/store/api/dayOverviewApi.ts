@@ -2,6 +2,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from './baseApi';
+import { PhaseItem, PatientFoodCategoryQuestion } from 'types/overview';
 
 export interface Phase {
     type: string;
@@ -24,35 +25,35 @@ export interface DayOverviewResponse {
     currentWeekIncompleteDays?: Array<{ date: string }>;
 }
 
-export interface Question {
-    questions: any[];
-    id: string | number;
-}
+// export interface Question {
+//     questions: any[];
+//     id: string | number;
+// }
 
-export interface PhaseItem {
-    food?: any;
-    type: string;
-    recipe?: any;
-    order?: number;
-    status?: string;
-    amount?: number;
-    section?: string;
-    measurement?: any;
-    modified?: boolean;
-    id: string | number;
-    initialAmount?: number;
-    /** Amount that has been consumed so far (client + server contract) */
-    consumedAmount?: number;
-    weight?: {
-        unit: {
-            name: string;
-        };
-    };
-    serving?: any;
-    useServing?: boolean;
-    patientFoodCategoryAttachment?: any;
-    patientFoodCategoryQuestion?: any;
-}
+// export interface PhaseItem {
+//     food?: any;
+//     type: string;
+//     recipe?: any;
+//     order?: number;
+//     status?: string;
+//     amount?: number;
+//     section?: string;
+//     measurement?: any;
+//     modified?: boolean;
+//     id: string | number;
+//     initialAmount?: number;
+//     /** Amount that has been consumed so far (client + server contract) */
+//     consumedAmount?: number;
+//     weight?: {
+//         unit: {
+//             name: string;
+//         };
+//     };
+//     serving?: any;
+//     useServing?: boolean;
+//     patientFoodCategoryAttachment?: any;
+//     patientFoodCategoryQuestion?: any;
+// }
 
 // Exercise
 export type ExerciseStepsUpdate = ExerciseDataResponse[];
@@ -157,7 +158,7 @@ export const dayOverviewApi = createApi({
             }),
             invalidatesTags: ['DayOverview'],
         }),
-        getQuestions: builder.query<Question, string>({
+        getQuestions: builder.query<PatientFoodCategoryQuestion, string>({
             query: date => `/patient-service/patient/me/disease-questions/${date}`,
             providesTags: ['Questions'],
         }),
