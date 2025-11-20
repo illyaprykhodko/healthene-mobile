@@ -14,6 +14,7 @@ import { s3ServiceApi } from 'store/api/s3ServiceApi.ts';
 import { dayOverviewReducer } from './slices/dayOverviewSlice';
 import { categoryTreeApi } from 'store/api/categoryTreeApi.ts';
 import forgotPasswordReducer from './slices/forgotPasswordSlice';
+import foodPreferencesSlice from 'store/slices/foodPreferrencesSlice.ts';
 
 export const store = configureStore({
     reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
         exercise: exerciseReducer,
         dayOverview: dayOverviewReducer,
         forgotPassword: forgotPasswordReducer,
+        foodPreferences: foodPreferencesSlice,
         [authApi.reducerPath]: authApi.reducer,
         [publicApi.reducerPath]: publicApi.reducer,
         [settingsApi.reducerPath]: settingsApi.reducer,

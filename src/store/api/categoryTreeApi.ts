@@ -2,11 +2,12 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
 // local dependencies
-import { TREE_TYPE } from 'constants/spec.ts';
 import { baseQuery } from 'store/api/baseApi.ts';
+import { CATEGORY_STATUS, TREE_TYPE } from 'constants/spec.ts';
 import { PaginatedParams, PaginatedResponse } from 'types/common/interfaces.ts';
 
 export type TreeType = keyof typeof TREE_TYPE;
+export type CategoryStatusType = keyof typeof CATEGORY_STATUS;
 export interface CategoryListBody {
     hasParent?: boolean;
     treeTypeViewLabel: TreeType
@@ -29,6 +30,22 @@ export interface TransformData {
     data: CategoryItem[];
 }
 
+export interface PatientCategory {
+    patientId: number;
+    treeTypeViewLabel: TreeType
+}
+
+export interface PatientCategories {
+    id: number;
+    foodCategory: {
+        id: number
+        name: string
+    }
+    visit: {id: number}
+    patient: {id: number},
+    categoryStatus: CategoryStatusType,
+}
+
 export const categoryTreeApi = createApi({
     baseQuery,
     reducerPath: 'categoryTreeApi',
@@ -47,10 +64,10 @@ export const categoryTreeApi = createApi({
                 const parent = queryArgs.body.parentId ?? 0; // root = 0
                 return `${endpointName}-${typeView}-${parent}`;
             },
-            transformResponse (response: PaginatedResponse<CategoryItem>) {
+            transformResponse (response: PaginatedResponse<CategoryItem>, _, args) {
                 return {
                     data: response.content,
-                    page: response.pageNumber,
+                    page: args.params.page,
                     totalPages: response.totalPages,
                 };
             },
@@ -68,7 +85,16 @@ export const categoryTreeApi = createApi({
                 return currentArg?.params.page !== previousArg?.params.page;
             },
         }),
+        getPatientCategories: builder.query<PatientCategories[], { body: PatientCategory }>({
+            query: ({ body }) => {
+                return {
+                    method: 'POST',
+                    body: { ...body },
+                    url: '/patient-service/patient/food-categories/filter',
+                };
+            },
+        })
     })
 });
 
-export const { useGetAllCategoriesQuery } = categoryTreeApi;
+export const { useGetAllCategoriesQuery, useGetPatientCategoriesQuery } = categoryTreeApi;

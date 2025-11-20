@@ -87,3 +87,9 @@ export const TREE_TYPE = {
     NAVIGATION: 'NAVIGATION',
     PATIENT_NAVIGATION: 'PATIENT_NAVIGATION'
 } as const;
+
+export const CATEGORY_STATUS = {
+    INCLUDE: 'INCLUDE',
+    EXCLUDE: 'EXCLUDE',
+    I_LOVE_IT: 'I_LOVE_IT'
+} as const;

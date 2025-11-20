@@ -1,18 +1,43 @@
 // outsource dependencies
-import React, { useCallback, useState } from 'react';
+import { skipToken } from '@reduxjs/toolkit/query';
+import { useSelector, useDispatch } from 'react-redux';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
 
 // local dependencies
+import { RootState } from 'store';
 import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { TREE_TYPE } from 'constants/spec.ts';
+import { setCategories } from 'store/slices/foodPreferrencesSlice.ts';
 import { BreadcrumbItem, Breadcrumbs } from 'components/Breadcrumbs.tsx';
-import { CategoryItem, useGetAllCategoriesQuery } from 'store/api/categoryTreeApi.ts';
+import { StatusEdit } from 'screens/AccountSettingsScreens/FoodPreferences/StatusEdit.tsx';
+import { CategoryItem, useGetAllCategoriesQuery, useGetPatientCategoriesQuery } from 'store/api/categoryTreeApi.ts';
+
 
 const FoodPreferences = () => {
     const theme = useTheme();
-    // Request
+    const dispatch = useDispatch();
+    // Get patient categories
+    const user = useSelector((state: RootState) => state.app.user);
+    const { data: categoryData } = useGetPatientCategoriesQuery(
+        user?.id
+            ? {
+                body: {
+                    patientId: user.id,
+                    treeTypeViewLabel: TREE_TYPE.DISLIKE,
+                }
+            }
+            : skipToken
+    );
+    useEffect(() => {
+        if (categoryData) {
+            dispatch(setCategories(categoryData));
+        }
+    }, [categoryData]);
+
+    // Get list categories
     const [page, setPage] = useState<number>(0);
     const [parentId, setParentId] = useState<number | undefined>();
     const { data: treeList } = useGetAllCategoriesQuery({
@@ -44,7 +69,7 @@ const FoodPreferences = () => {
     const onClickItem = useCallback((item: CategoryItem) => {
         setBreadcrumbs(prev => [...prev, { name: item.name, id: item.id }]);
         handleTreeResponse(item.id);
-    }, []);
+    }, [categoryData, breadcrumbs]);
 
     return <FlatList<CategoryItem>
         bounces={false}
@@ -61,8 +86,9 @@ const FoodPreferences = () => {
                 <Image source={ item?.coverImage ? { uri: item.coverImage } : require('../../../../assets/def-image.png') } style={styles.image} />
             </View>
             <Text style={styles.flexShrink}>
-                {`${item.name }`}
+                {item.name}
             </Text>
+            <StatusEdit {...item} />
         </Pressable>}
     />;
 };
