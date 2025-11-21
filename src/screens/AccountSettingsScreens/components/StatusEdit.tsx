@@ -15,7 +15,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { RootState } from 'store';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
-import { CATEGORY_STATUS } from 'constants/spec.ts';
+import { CATEGORY_STATUS, TREE_TYPE } from 'constants/spec.ts';
 import { useUpdatePatientCategoriesMutation } from 'store/api/categoryTreeApi.ts';
 import { CategoryItem, CategoryStatusType, PatientCategories, TreeType } from 'types/categoryTree.ts';
 
@@ -27,7 +27,6 @@ const STATUS_SIZE = 36.5;
 export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => {
     const theme = useTheme();
     const [updateCategory] = useUpdatePatientCategoriesMutation();
-
     const user = useSelector((state: RootState) => state.app.user);
     const categories = useSelector((state: RootState) => state.foodPreferences.categories);
 
@@ -66,18 +65,30 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
         }
     };
 
-    const getStatusIcon = (status: CategoryStatusType) => {
-        switch (status) {
-            default: return <Icon name="question" color={theme.colors.red} size={22} />;
-            case CATEGORY_STATUS.I_LOVE_IT: return <Icon name="heart" color={theme.colors.red} size={22} />;
-            case CATEGORY_STATUS.INCLUDE: return <Icon name="thumbs-up" color={theme.colors.green} size={22} />;
-            case CATEGORY_STATUS.EXCLUDE: return <Icon name="thumbs-down" color={theme.colors.orange} size={22} />;
+    const getStatusIcon = useCallback((status: CategoryStatusType) => {
+        if (treeTypeViewLabel === TREE_TYPE.DISLIKE) {
+            switch (status) {
+                default: return <Icon name="question" color={theme.colors.red} size={22} />;
+                case CATEGORY_STATUS.I_LOVE_IT: return <Icon name="heart" color={theme.colors.red} size={22} />;
+                case CATEGORY_STATUS.INCLUDE: return <Icon name="thumbs-up" color={theme.colors.green} size={22} />;
+                case CATEGORY_STATUS.EXCLUDE: return <Icon name="thumbs-down" color={theme.colors.orange} size={22} />;
+            }
+        } else {
+            switch (status) {
+                default: return <Icon name="question-circle" color={theme.colors.green} size={22} />;
+                case CATEGORY_STATUS.EXCLUDE: return <Icon name="check-square" color={theme.colors.red} size={22} />;
+                case CATEGORY_STATUS.INCLUDE: return <Icon name="square" color={theme.colors.grey} size={22} />;
+            }
         }
-    };
+    }, [treeTypeViewLabel]);
 
-    const handleEdit = useCallback((categoryStatus: CategoryStatusType) => {
+    const handleEdit = useCallback((status: CategoryStatusType) => {
         const userId = user?.id;
         const visitId = user?.activeVisit?.id;
+        const categoryStatus = treeTypeViewLabel === TREE_TYPE.DISLIKE
+            ? status
+            : status === CATEGORY_STATUS.EXCLUDE ? CATEGORY_STATUS.INCLUDE : CATEGORY_STATUS.EXCLUDE;
+
         if (visitId && userId) {
             if (category) {
                 updateCategory({
@@ -94,13 +105,14 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
                 });
             }
         }
-    }, [category, id, name, user?.id, user?.activeVisit?.id, updateCategory]);
+    }, [category, id, name, user?.id, user?.activeVisit?.id, updateCategory, treeTypeViewLabel]);
 
-    return <Animated.View
+    return treeTypeViewLabel === TREE_TYPE.DISLIKE ? <Animated.View
         onTouchEnd={onTouch}
         pointerEvents="box-none"
         style={[
             animatedStyle,
+            styles.dislike,
             styles.container,
             {
                 borderColor: theme.colors.darkGrey,
@@ -111,7 +123,9 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
         {statusTypes.map(status => <Pressable onPress={() => handleEdit(status)} key={status} style={[styles.icon, { borderColor: theme.colors.lighterGrey }]}>
             {getStatusIcon(status)}
         </Pressable>)}
-    </Animated.View>;
+    </Animated.View> : <Pressable onPress={() => handleEdit(category?.categoryStatus ?? CATEGORY_STATUS.INCLUDE)} style={styles.container}>
+        {getStatusIcon(category?.categoryStatus ?? CATEGORY_STATUS.INCLUDE)}
+    </Pressable>;
 };
 
 const styles = StyleSheet.create({
@@ -119,6 +133,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginLeft: 'auto',
+    },
+    dislike: {
         borderWidth: 0.6,
         borderRadius: 50,
         overflow: 'hidden',

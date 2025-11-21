@@ -39,6 +39,7 @@ export const FoodCategory = ({ treeTypeViewLabel }: FoodCategoryProps) => {
             tree={treeList}
             setPage={setPage}
             setParentId={setParentId}
+            treeTypeViewLabel={treeTypeViewLabel}
             component={item => <StatusEdit {...item} treeTypeViewLabel={treeTypeViewLabel} />}
         />
     </Screen>;

@@ -10,15 +10,16 @@ import Text from 'components/Text.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { TREE_TYPE } from 'constants/spec.ts';
-import { CategoryItem, TransformData } from 'types/categoryTree.ts';
+import { CategoryItem, TransformData, TreeType } from 'types/categoryTree.ts';
 import { setCategories } from 'store/slices/foodPreferrencesSlice.ts';
 import { BreadcrumbItem, Breadcrumbs } from 'components/Breadcrumbs.tsx';
 import { useGetPatientCategoriesQuery } from 'store/api/categoryTreeApi.ts';
 
 interface TreeProps {
+    treeTypeViewLabel: TreeType;
     tree: TransformData | undefined;
     setPage: (page: number) => void;
-    setParentId: (id: number) => void;
+    setParentId: (id: number | undefined) => void;
     component: (
         item: CategoryItem,
     ) => React.ReactElement;
@@ -26,7 +27,7 @@ interface TreeProps {
 
 const defaultImage = require('../../../../assets/def-image.png');
 
-export const Tree = ({ tree, setPage, setParentId, component }: TreeProps) => {
+export const Tree = ({ tree, setPage, setParentId, component, treeTypeViewLabel }: TreeProps) => {
     const theme = useTheme();
     const dispatch = useDispatch();
 
@@ -36,8 +37,8 @@ export const Tree = ({ tree, setPage, setParentId, component }: TreeProps) => {
         user?.id
             ? {
                 body: {
-                    patientId: user.id,
-                    treeTypeViewLabel: TREE_TYPE.DISLIKE,
+                    treeTypeViewLabel,
+                    patientId: user.id
                 }
             }
             : skipToken
@@ -55,10 +56,8 @@ export const Tree = ({ tree, setPage, setParentId, component }: TreeProps) => {
         }
     }, [tree, setPage]);
     const handleTreeResponse = useCallback((id: number | undefined) => {
-        if (id) {
-            setPage(0);
-            setParentId(id);
-        }
+        setPage(0);
+        setParentId(id);
     }, [setPage, setParentId]);
 
     // Manage breadcrumbs
@@ -67,8 +66,8 @@ export const Tree = ({ tree, setPage, setParentId, component }: TreeProps) => {
     ]);
     const handleBreadcrumbs = useCallback((item: BreadcrumbItem, index: number) => {
         setBreadcrumbs(prev => prev.slice(0, index + 1));
-        handleTreeResponse(item.id);
-    }, []);
+        handleTreeResponse(item?.id ?? undefined);
+    }, [handleTreeResponse]);
     const onClickItem = useCallback((item: CategoryItem) => {
         setBreadcrumbs(prev => [...prev, { name: item.name, id: item.id }]);
         handleTreeResponse(item.id);
