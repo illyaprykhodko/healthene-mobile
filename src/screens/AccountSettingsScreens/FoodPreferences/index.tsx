@@ -7,14 +7,15 @@ import { FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
 // local dependencies
 import { RootState } from 'store';
 import Text from 'components/Text.tsx';
+import Screen from 'components/Screen.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { TREE_TYPE } from 'constants/spec.ts';
+import { CategoryItem } from 'types/categoryTree.ts';
 import { setCategories } from 'store/slices/foodPreferrencesSlice.ts';
 import { BreadcrumbItem, Breadcrumbs } from 'components/Breadcrumbs.tsx';
 import { StatusEdit } from 'screens/AccountSettingsScreens/FoodPreferences/StatusEdit.tsx';
-import { CategoryItem, useGetAllCategoriesQuery, useGetPatientCategoriesQuery } from 'store/api/categoryTreeApi.ts';
-import Screen from 'components/Screen.tsx';
+import { useGetAllCategoriesQuery, useGetPatientCategoriesQuery } from 'store/api/categoryTreeApi.ts';
 
 
 const FoodPreferences = () => {

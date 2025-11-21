@@ -3,48 +3,9 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 
 // local dependencies
 import { baseQuery } from 'store/api/baseApi.ts';
-import { CATEGORY_STATUS, TREE_TYPE } from 'constants/spec.ts';
-import { PaginatedParams, PaginatedResponse } from 'types/common/interfaces.ts';
+import { PaginatedResponse } from 'types/common/interfaces.ts';
+import { CategoryItem, PatientCategories, PatientCategory, RequestData, TransformData } from 'types/categoryTree.ts';
 
-export type TreeType = keyof typeof TREE_TYPE;
-export type CategoryStatusType = keyof typeof CATEGORY_STATUS;
-export interface CategoryListBody {
-    hasParent?: boolean;
-    treeTypeViewLabel: TreeType
-    parentId: number | undefined;
-}
-export interface CategoryItem {
-    id: number;
-    name: string;
-    coverImage: string | null;
-}
-
-export interface RequestData {
-    body: CategoryListBody,
-    params: PaginatedParams
-}
-
-export interface TransformData {
-    page: number;
-    totalPages: number;
-    data: CategoryItem[];
-}
-
-export interface PatientCategory {
-    patientId: number;
-    treeTypeViewLabel: TreeType
-}
-
-export interface PatientCategories {
-    id?: number;
-    foodCategory: {
-        id: number
-        name: string
-    }
-    visit: {id: number}
-    patient: {id: number},
-    categoryStatus: CategoryStatusType,
-}
 
 export const categoryTreeApi = createApi({
     baseQuery,

@@ -16,14 +16,13 @@ import { RootState } from 'store';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { CATEGORY_STATUS } from 'constants/spec.ts';
-import { CategoryItem, CategoryStatusType, PatientCategories, useUpdatePatientCategoriesMutation } from 'store/api/categoryTreeApi.ts';
+import { useUpdatePatientCategoriesMutation } from 'store/api/categoryTreeApi.ts';
+import { CategoryItem, CategoryStatusType, PatientCategories } from 'types/categoryTree.ts';
 
-interface StatusEditProps extends CategoryItem {
-    disabled?: boolean;
-}
+
 const STATUS_SIZE = 36.5;
 
-export const StatusEdit = ({ id, name }: StatusEditProps) => {
+export const StatusEdit = ({ id, name }: CategoryItem) => {
     const theme = useTheme();
     const [updateCategory] = useUpdatePatientCategoriesMutation();
 
