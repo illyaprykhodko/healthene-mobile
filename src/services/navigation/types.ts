@@ -9,7 +9,7 @@ import { PhaseItem } from 'store/api/dayOverviewApi';
 //   [ROUTES.SIGN_IN]: undefined;
 //   [ROUTES.SIGN_UP]: undefined;
 //   [ROUTES.FORGOT_PASSWORD]: undefined;
-  
+
 //   // Private screens
 //   [ROUTES.HOME]: undefined;
 //   [ROUTES.PROFILE]: undefined;
@@ -39,6 +39,7 @@ export type RootStackParamList = {
   [ROUTES.HEALTH_PROFILE]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;
+  [ROUTES.FOOD_PREFERENCES]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
 

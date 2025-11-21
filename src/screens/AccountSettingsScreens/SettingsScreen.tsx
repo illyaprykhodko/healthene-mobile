@@ -28,7 +28,7 @@ const SettingsScreen = () => {
         { title: ITEM.PERSONAL_INFORMATION, navigate: () => navigation.navigate(ROUTES.PERSONAL_INFORMATION) },
         { title: ITEM.ADDRESS, navigate: () => navigation.navigate(ROUTES.ADDRESS) },
         { title: ITEM.SETTINGS },
-        { title: ITEM.FOOD_PREFERENCES },
+        { title: ITEM.FOOD_PREFERENCES, navigate: () => navigation.navigate(ROUTES.FOOD_PREFERENCES) },
         { title: ITEM.FOOD_ALLERGIES },
         { title: ITEM.NOTIFICATIONS },
     ];
