@@ -36,7 +36,7 @@ export interface PatientCategory {
 }
 
 export interface PatientCategories {
-    id: number;
+    id?: number;
     foodCategory: {
         id: number
         name: string
@@ -49,6 +49,7 @@ export interface PatientCategories {
 export const categoryTreeApi = createApi({
     baseQuery,
     reducerPath: 'categoryTreeApi',
+    tagTypes: ['PatientCategories'],
     endpoints: builder => ({
         getAllCategories: builder.query<TransformData, RequestData >({
             query: ({ body, params }) => {
@@ -93,8 +94,19 @@ export const categoryTreeApi = createApi({
                     url: '/patient-service/patient/food-categories/filter',
                 };
             },
-        })
+            providesTags: ['PatientCategories'],
+        }),
+        updatePatientCategories: builder.mutation<any, PatientCategories>({
+            query: body => {
+                return {
+                    body,
+                    method: 'POST',
+                    url: '/patient-service/patient/food-categories',
+                };
+            },
+            invalidatesTags: ['PatientCategories'],
+        }),
     })
 });
 
-export const { useGetAllCategoriesQuery, useGetPatientCategoriesQuery } = categoryTreeApi;
+export const { useGetAllCategoriesQuery, useGetPatientCategoriesQuery, useUpdatePatientCategoriesMutation } = categoryTreeApi;

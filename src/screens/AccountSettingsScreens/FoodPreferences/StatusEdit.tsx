@@ -7,34 +7,36 @@ import Animated, {
     useAnimatedStyle,
 } from 'react-native-reanimated';
 import { useSelector } from 'react-redux';
-import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import React, { useCallback, useEffect, useState } from 'react';
 
 // local dependencies
 import { RootState } from 'store';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { CATEGORY_STATUS } from 'constants/spec.ts';
-import { CategoryStatusType } from 'store/api/categoryTreeApi.ts';
+import { CategoryItem, CategoryStatusType, PatientCategories, useUpdatePatientCategoriesMutation } from 'store/api/categoryTreeApi.ts';
 
-interface StatusEditProps {
-    id: number;
-    style?: any;
+interface StatusEditProps extends CategoryItem {
     disabled?: boolean;
 }
 const STATUS_SIZE = 36.5;
 
-export const StatusEdit = ({ id }: StatusEditProps) => {
+export const StatusEdit = ({ id, name }: StatusEditProps) => {
     const theme = useTheme();
+    const [updateCategory] = useUpdatePatientCategoriesMutation();
+
+    const user = useSelector((state: RootState) => state.app.user);
     const categories = useSelector((state: RootState) => state.foodPreferences.categories);
-    const [status, setStatus] = useState<CategoryStatusType>();
+
+    const [category, setCategory] = useState<PatientCategories | null>(null);
     const [statusTypes, setStatusTypesStatus] = useState<CategoryStatusType[]>([]);
     useEffect(() => {
         const category = (categories || []).find(
             c => c.foodCategory?.id === id
         );
-        setStatus(category?.categoryStatus || CATEGORY_STATUS.INCLUDE);
+        setCategory(category ?? null);
         const statuses = Array.from(
             new Set([
                 category?.categoryStatus ?? CATEGORY_STATUS.INCLUDE,
@@ -72,6 +74,27 @@ export const StatusEdit = ({ id }: StatusEditProps) => {
         }
     };
 
+    const handleEdit = useCallback((categoryStatus: CategoryStatusType) => {
+        const userId = user?.id;
+        const visitId = user?.activeVisit?.id;
+        if (visitId && userId) {
+            if (category) {
+                updateCategory({
+                    ...category,
+                    categoryStatus,
+                    visit: { id: visitId }
+                });
+            } else {
+                updateCategory({
+                    categoryStatus,
+                    visit: { id: visitId },
+                    patient: { id: userId },
+                    foodCategory: { id, name }
+                });
+            }
+        }
+    }, [category, id, name, user?.id, user?.activeVisit?.id, updateCategory]);
+
     return <Animated.View
         onTouchEnd={onTouch}
         pointerEvents="box-none"
@@ -84,7 +107,7 @@ export const StatusEdit = ({ id }: StatusEditProps) => {
             }
         ]}
     >
-        {statusTypes.map(status => <Pressable key={status} style={[styles.icon, { borderColor: theme.colors.lighterGrey }]}>
+        {statusTypes.map(status => <Pressable onPress={() => handleEdit(status)} key={status} style={[styles.icon, { borderColor: theme.colors.lighterGrey }]}>
             {getStatusIcon(status)}
         </Pressable>)}
     </Animated.View>;
