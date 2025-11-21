@@ -29,7 +29,7 @@ const SettingsScreen = () => {
         { title: ITEM.ADDRESS, navigate: () => navigation.navigate(ROUTES.ADDRESS) },
         { title: ITEM.SETTINGS },
         { title: ITEM.FOOD_PREFERENCES, navigate: () => navigation.navigate(ROUTES.FOOD_PREFERENCES) },
-        { title: ITEM.FOOD_ALLERGIES },
+        { title: ITEM.FOOD_ALLERGIES, navigate: () => navigation.navigate(ROUTES.FOOD_ALLERGIES) },
         { title: ITEM.NOTIFICATIONS },
     ];
     return <View style={styles.container}>

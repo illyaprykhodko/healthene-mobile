@@ -19,6 +19,7 @@ export const ROUTES = {
     DAY_OVERVIEW: 'DayOverview',
     REPLACE_ITEMS: 'ReplaceItems',
     COMMUNICATION: 'Communication',
+    FOOD_ALLERGIES: 'FoodAllergies',
     HEALTH_PROFILE: 'HealthProfile',
     ADD_REPLACE_ITEM: 'AddReplaceItem',
     MEAL_PREFERENCES: 'MealPreferences',
