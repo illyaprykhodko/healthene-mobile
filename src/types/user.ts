@@ -177,6 +177,7 @@ export interface User {
   createdDate: string;
   updatedDate: string;
   preferenceTemplatesExist: boolean;
+  includeRescueFoodsInShoppingList: boolean;
 }
 
 /**

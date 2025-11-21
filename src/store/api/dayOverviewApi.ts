@@ -148,7 +148,7 @@ export const dayOverviewApi = createApi({
         // Create measurement record (manual or third-party)
         addMeasurementRecord: builder.mutation<any, {
             type: string; // e.g. WEIGHT, BLOOD_GLUCOSE, BLOOD_PRESSURE
-            payload: any; // formatted payload per backend contract
+            payload: any;
         }>({
             query: ({ payload }) => ({
                 body: payload,
@@ -494,6 +494,88 @@ export const dayOverviewApi = createApi({
             }),
             invalidatesTags: ['DayOverview', 'PhaseItems'],
         }),
+
+        // Change Meal - Rescue Foods Setting
+        updateIncludeRescueFoods: builder.mutation<void, { includeRescueFoodsInShoppingList: boolean }>({
+            query: body => ({
+                url: '/patient-service/patients/me/include-rescue-foods-in-shopping-list',
+                method: 'PUT',
+                body,
+            }),
+            invalidatesTags: ['DayOverview'],
+        }),
+
+        // Replace Phase with Rescue Food
+        replacePhase: builder.mutation<any, number | string>({
+            query: phaseId => ({
+                url: `/patient-service/patient/day-overview/rescue/phase/${phaseId}/replacement`,
+                method: 'POST',
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
+
+        // Get rescue shopping items videos
+        getRescueVideos: builder.query<any[], void>({
+            query: () => '/patient-service/patients/me/rescue-shopping-items-videos',
+        }),
+
+        // Get rescue catalog list (categories)
+        getRescueCatalog: builder.query<any, number | string>({
+            query: phaseId => `/patient-service/patient/day-overview/rescue/phase/${phaseId}/rescue-catalog`,
+        }),
+
+        // Get restaurant rescue catalog
+        getRestaurantCatalog: builder.query<any, number | string>({
+            query: phaseId => `/patient-service/patient/day-overview/rescue/restaurant/phase/${phaseId}/rescue-catalog`,
+        }),
+
+        // Get meals for specific catalog
+        getRescueMeals: builder.query<any, { phaseId: number | string; catalogId: number | string; isRestaurant?: boolean }>({
+            query: ({ phaseId, catalogId, isRestaurant }) => (
+                isRestaurant
+                    ? `/patient-service/patient/day-overview/rescue/restaurant/phase/${phaseId}/rescue-catalog/${catalogId}`
+                    : `/patient-service/patient/day-overview/rescue/phase/${phaseId}/rescue-catalog/${catalogId}`
+            ),
+        }),
+
+        // Update phase with selected rescue items
+        updatePhaseWithRescue: builder.mutation<any, { phaseId: number | string; items: any[] }>({
+            query: ({ phaseId, items }) => ({
+                url: `/patient-service/patient/day-overview/rescue/phase/${phaseId}`,
+                method: 'PUT',
+                body: items,
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
+
+        // Get recipe category tree for replacement
+        getRecipeCategoryTree: builder.query<any, number | string>({
+            query: recipeId => `/patient-service/patient/day-overview/rescue/recipe/${recipeId}/category-tree`,
+        }),
+
+        // Get items in a specific category for recipe replacement
+        getRecipeCategoryItems: builder.query<any, { recipeId: number | string; categoryId: number | string }>({
+            query: ({ recipeId, categoryId }) => `/patient-service/patient/day-overview/rescue/recipe/${recipeId}/category/${categoryId}`,
+        }),
+
+        // Replace recipe item
+        replaceRecipeItem: builder.mutation<any, { phaseItemId: number | string; data: { id: number | string; replacement: { id: number | string } } }>({
+            query: ({ phaseItemId, data }) => ({
+                url: `/patient-service/patient/day-overview/rescue/phase-item/${phaseItemId}/recipe-replacement`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
+        // revert phase item (debug only)
+        revertPhaseItem: builder.mutation<any, { phaseItemId: number | string; }>({
+            query: ({ phaseItemId }) => ({
+                url: `/patient-service/day-overview-phase-item/${phaseItemId}/initial-recipe`,
+                method: 'PUT',
+                data: []
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
     }),
 });
 
@@ -822,4 +904,16 @@ export const {
     useGetMeasurementTypesQuery,
     useGetLastMeasurementQuery,
     useDeleteMeasurementsMutation,
+    useUpdateIncludeRescueFoodsMutation,
+    useReplacePhaseMutation,
+    useGetRescueVideosQuery,
+    useGetRescueCatalogQuery,
+    useGetRestaurantCatalogQuery,
+    useGetRescueMealsQuery,
+    useRevertPhaseItemMutation,
+    useUpdatePhaseWithRescueMutation,
+    // Recipe replacement
+    useGetRecipeCategoryTreeQuery,
+    useGetRecipeCategoryItemsQuery,
+    useReplaceRecipeItemMutation,
 } = dayOverviewApi;

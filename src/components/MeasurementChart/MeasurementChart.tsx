@@ -18,7 +18,7 @@ interface MeasurementChartProps {
     data: any[];
     restData?: any[]; // For blood pressure diastolic
     totalChange?: number;
-    initialDate?: string; // Date from parent component
+    currentDate?: string; // Date from parent component
     showSummary?: boolean;
     startingValue?: number;
     measurementType: string;
@@ -33,7 +33,7 @@ interface MeasurementChartProps {
         diastolic?: number;
         isBloodPressure?: boolean;
     };
-    onDateChange: (date: string, tab: MeasurementTab) => void;
+    onDateChange: (date: string, period: MeasurementTab['name']) => void;
     // BP-specific props
     startingSystolic?: number;
     startingDiastolic?: number;
@@ -54,7 +54,7 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
     startingValue = 0,
     showSummary = true,
     isBloodPressure = false,
-    initialDate = moment().format('YYYY-MM-DD'),
+    currentDate = moment().format('YYYY-MM-DD'),
     // BP-specific
     startingSystolic,
     startingDiastolic,
@@ -62,12 +62,12 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
     totalChangeDiastolic,
 }) => {
     const [tooltip, setTooltip] = useState<any | null>(null);
-    const [date, setDate] = useState(initialDate);
-
+    const currentStart = activeTab.options.startDate;
+    const currentEnd = activeTab.options.endDate;
     // Sync internal date state with prop
-    useEffect(() => {
-        setDate(initialDate);
-    }, [initialDate]);
+    // useEffect(() => {
+    //     setDate(initialDate);
+    // }, [initialDate]);
 
     // Handle swipe gesture
     const onPanGesture = useCallback(
@@ -77,25 +77,37 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
 
             if (Math.abs(translationX) > 50 && Math.abs(translationX) < 300 && state === State.END) {
                 setTooltip(null);
-                let newDate: string | undefined;
-
+                // let newDate: string | undefined;
+                let newStart = currentStart;
+                let newEnd = currentEnd;
+                let newDate = currentDate;
                 if (translationX > 0) {
                     // Swipe right - go back in time
                     switch (activeTab.name) {
                         case DATE_PERIOD.DAY:
-                            newDate = moment(date).subtract(1, 'day').format('YYYY-MM-DD');
+                            newDate = moment(currentDate).subtract(1, 'day').format('YYYY-MM-DD');
+                            newStart = moment(currentStart).subtract(1, 'day').format('YYYY-MM-DD');
+                            newEnd = moment(currentEnd).subtract(1, 'day').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.WEEK:
-                            newDate = moment(date).subtract(1, 'week').format('YYYY-MM-DD');
+                            newDate = moment(currentDate).subtract(1, 'week').format('YYYY-MM-DD');
+                            newStart = moment(currentStart).subtract(1, 'week').format('YYYY-MM-DD');
+                            newEnd = moment(currentEnd).subtract(1, 'week').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.MONTH:
-                            newDate = moment(date).subtract(1, 'month').format('YYYY-MM-DD');
+                            newDate = moment(currentDate).subtract(1, 'month').format('YYYY-MM-DD');
+                            newStart = moment(currentStart).subtract(1, 'month').format('YYYY-MM-DD');
+                            newEnd = moment(currentEnd).subtract(1, 'month').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.SIX_MONTH:
-                            newDate = moment(date).subtract(6, 'months').format('YYYY-MM-DD');
+                            newDate = moment(currentDate).subtract(6, 'months').format('YYYY-MM-DD');
+                            newStart = moment(currentStart).subtract(6, 'months').format('YYYY-MM-DD');
+                            newEnd = moment(currentEnd).subtract(6, 'months').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.YEAR:
-                            newDate = moment(date).subtract(1, 'year').format('YYYY-MM-DD');
+                            newDate = moment(currentDate).subtract(1, 'year').format('YYYY-MM-DD');
+                            newStart = moment(currentStart).subtract(1, 'year').format('YYYY-MM-DD');
+                            newEnd = moment(currentEnd).subtract(1, 'year').format('YYYY-MM-DD');
                             break;
                         default:
                             console.error(`Unknown tab: ${activeTab.name}`);
@@ -105,19 +117,29 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
                     // Swipe left - go forward in time
                     switch (activeTab.name) {
                         case DATE_PERIOD.DAY:
-                            newDate = moment(date).add(1, 'day').format('YYYY-MM-DD');
+                            newDate = moment(currentDate).add(1, 'day').format('YYYY-MM-DD');
+                            newStart = moment(currentStart).add(1, 'day').format('YYYY-MM-DD');
+                            newEnd = moment(currentEnd).add(1, 'day').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.WEEK:
-                            newDate = moment(date).add(1, 'week').format('YYYY-MM-DD');
+                            newDate = moment(currentDate).add(1, 'week').format('YYYY-MM-DD');
+                            newStart = moment(currentStart).add(1, 'week').format('YYYY-MM-DD');
+                            newEnd = moment(currentEnd).add(1, 'week').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.MONTH:
-                            newDate = moment(date).add(1, 'month').format('YYYY-MM-DD');
+                            newDate = moment(currentDate).add(1, 'month').format('YYYY-MM-DD');
+                            newStart = moment(currentStart).add(1, 'month').format('YYYY-MM-DD');
+                            newEnd = moment(currentEnd).add(1, 'month').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.SIX_MONTH:
-                            newDate = moment(date).add(6, 'months').format('YYYY-MM-DD');
+                            newDate = moment(currentDate).add(6, 'months').format('YYYY-MM-DD');
+                            newStart = moment(currentStart).add(6, 'months').format('YYYY-MM-DD');
+                            newEnd = moment(currentEnd).add(6, 'months').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.YEAR:
-                            newDate = moment(date).add(1, 'year').format('YYYY-MM-DD');
+                            newDate = moment(currentDate).add(1, 'year').format('YYYY-MM-DD');
+                            newStart = moment(currentStart).add(1, 'year').format('YYYY-MM-DD');
+                            newEnd = moment(currentEnd).add(1, 'year').format('YYYY-MM-DD');
                             break;
                         default:
                             console.error(`Unknown tab: ${activeTab.name}`);
@@ -125,13 +147,12 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
                     }
                 }
 
-                if (newDate && newDate !== date) {
-                    setDate(newDate);
-                    onDateChange(newDate, activeTab);
+                if (newStart && newStart !== currentStart) {
+                    onDateChange(newDate, activeTab.name);
                 }
             }
         },
-        [activeTab, date, onDateChange]
+        [activeTab, currentStart, currentEnd, onDateChange, currentDate]
     );
 
     const handleTabChange = useCallback(
@@ -148,14 +169,14 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
             const points = prepareChartData(
                 data,
                 activeTab.name,
-                date,
+                currentDate,
                 activeTab.count,
                 isBloodPressure,
                 restData
             );
             return points;
         },
-        [data, activeTab, date, isBloodPressure, restData]
+        [data, activeTab, isBloodPressure, restData, currentDate]
     );
 
     const chartRestPoints = useMemo(
@@ -164,19 +185,19 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
                 ? prepareChartData(
                     restData,
                     activeTab.name,
-                    date,
+                    currentDate,
                     activeTab.count,
                     false
                 )
                 : []),
-        [restData, activeTab, date, isBloodPressure]
+        [restData, activeTab, isBloodPressure, currentDate]
     );
     return (
         <PanGestureHandler onHandlerStateChange={onPanGesture}>
             <View style={styles.container}>
                 <Text style={styles.title}>{filters.humanize(measurementType)}</Text>
                 <DateTabs
-                    date={date}
+                    date={currentDate}
                     activeTab={activeTab}
                     onTabChange={handleTabChange}
                 />

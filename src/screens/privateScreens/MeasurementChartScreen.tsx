@@ -26,11 +26,24 @@ const MeasurementChartScreen: React.FC = () => {
     const measurementType = (route.params as any)?.measurementType || 'WEIGHT';
     const measurementName = (route.params as any)?.measurementName || measurementType;
     
-    const [activeTab, setActiveTab] = useState<MeasurementTab>(getMeasurementTabs()[1]); // Week by default
-    const [date, setDate] = useState(moment().format('YYYY-MM-DD'));
+    const [currentDate, setCurrentDate] = useState(() => moment().format('YYYY-MM-DD'));
+    const [selectedPeriod, setSelectedPeriod] = useState<MeasurementTab['name']>(() => {
+        const tabs = getMeasurementTabs();
+        return tabs[1]?.name ?? tabs[0].name;
+    });
+
+    const tabs = useMemo(
+        () => getMeasurementTabs(currentDate),
+        [currentDate]
+    );
+
+    const activeTab = useMemo(
+        () => tabs.find(tab => tab.name === selectedPeriod) ?? tabs[0],
+        [tabs, selectedPeriod]
+    );
 
     const { data: aggregateData, isLoading: isLoadingAggregate } = useGetAggregateMeasurementDataQuery({
-        date,
+        date: currentDate,
         type: measurementType,
         period: activeTab.request,
         offset: moment().utcOffset() / 60,
@@ -67,19 +80,24 @@ const MeasurementChartScreen: React.FC = () => {
     
     // Process data with averageDate (keep as Moment object!)
     const processData = (data: any[]) => {
-        const processed = data.map(item => {
-            const fromDate = moment(item?.fromDate);
-            const toDate = moment(item?.toDate);
-            const diff = toDate.diff(fromDate) / 2;
-            return {
-                ...item,
-                toDate: moment(item?.toDate).utcOffset(offset).format('MMMDD, h:mm A -'), // YYYY-MM-DD HH:mm:ss
-                fromDate: moment(item?.fromDate).utcOffset(offset).format('MMMDD, h:mm A -'),
-                // Keep averageDate as Moment object for calculateXCoordinate
-                averageDate: moment(fromDate).add(diff, 'ms'),
-                units: isBloodPressure ? [{ ...item?.units?.[0], name: 'mmHg' }] : item?.units,
-            };
-        });
+        const processed = data
+            .map(item => {
+                const fromDate = moment(item?.fromDate);
+                const toDate = moment(item?.toDate);
+                if (!fromDate.isValid() || !toDate.isValid()) {
+                    return null;
+                }
+                const diff = toDate.diff(fromDate) / 2;
+                return {
+                    ...item,
+                    displayFromDate: fromDate.clone().utcOffset(offset).format('MMM DD, h:mm A'),
+                    displayToDate: toDate.clone().utcOffset(offset).format('MMM DD, h:mm A'),
+                    // Keep averageDate as Moment object for calculateXCoordinate
+                    averageDate: moment(fromDate).add(diff, 'ms'),
+                    units: isBloodPressure ? [{ ...item?.units?.[0], name: 'mmHg' }] : item?.units,
+                };
+            })
+            .filter(Boolean) as any[];
 
         const filtered = processed.filter(item => item.units?.[0]);
 
@@ -164,14 +182,13 @@ const MeasurementChartScreen: React.FC = () => {
     const totalChange = currentValue ? currentValue.value - startingValue : 0;
 
     const handleTabChange = useCallback((tab: MeasurementTab) => {
-        setActiveTab(tab);
+        setSelectedPeriod(tab.name);
     }, []);
 
-    // Handle date change (from swipe)
-    const handleDateChange = useCallback((newDate: string, tab: MeasurementTab) => {
-        setDate(newDate);
-        setActiveTab(tab);
-    }, [date, activeTab]);
+    const handleDateChange = useCallback((newDate: string, period: MeasurementTab['name']) => {
+        setCurrentDate(newDate);
+        setSelectedPeriod(period);
+    }, []);
 
     // Navigate to All Recorded Data
     const handleShowAllData = useCallback(() => {
@@ -198,10 +215,10 @@ const MeasurementChartScreen: React.FC = () => {
             <View style={{ height: '90%' }}>
                 <MeasurementChart
                     data={chartData}
-                    initialDate={date}
                     showSummary={false}
                     restData={restData}
                     activeTab={activeTab}
+                    currentDate={currentDate}
                     totalChange={totalChange}
                     currentValue={currentValue}
                     onTabChange={handleTabChange}

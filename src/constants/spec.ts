@@ -58,6 +58,39 @@ export const SEARCH_TYPE = {
 
 export type SearchType = typeof SEARCH_TYPE[keyof typeof SEARCH_TYPE];
 
+export const SUBSTANCE_TYPE = {
+    FOOD: 'FOOD',
+    DRINK: 'DRINK',
+} as const;
+
+export type SubstanceType = typeof SUBSTANCE_TYPE[keyof typeof SUBSTANCE_TYPE];
+
+export const REPLACEMENT_TYPE = {
+    RECIPE: 'RECIPE',
+    INGREDIENT: 'INGREDIENT',
+    SURROGATE_RECIPE: 'SURROGATE_RECIPE',
+} as const;
+
+export type ReplacementType = typeof REPLACEMENT_TYPE[keyof typeof REPLACEMENT_TYPE];
+
+export const TAG_TYPE = {
+    MEAL: 'MEAL',
+    RESTAURANT: 'RESTAURANT',
+    PATIENT_FOOD: 'PATIENT_FOOD',
+    PATIENT_DRINK: 'PATIENT_DRINK',
+    PATIENT_RECIPES: 'PATIENT_RECIPES',
+} as const;
+
+export type TagType = typeof TAG_TYPE[keyof typeof TAG_TYPE];
+
+export const CONTENT_TYPE = {
+    FROZEN: 'FROZEN',
+    ANOTHER: 'ANOTHER',
+    RESTAURANT: 'RESTAURANT',
+} as const;
+
+export type ContentType = typeof CONTENT_TYPE[keyof typeof CONTENT_TYPE];
+
 export const GENDERS = [
     { label: 'Male', value: 'MALE' },
     { label: 'Female', value: 'FEMALE' },

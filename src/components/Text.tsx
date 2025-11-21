@@ -21,6 +21,7 @@ export type TextVariant =
 interface TextProps {
     color?: string;
     variant?: TextVariant;
+    numberOfLines?: number;
     children?: React.ReactNode;
     style?: TextStyle | TextStyle[];
     textAlign?: 'auto' | 'left' | 'right' | 'center' | 'justify';
@@ -33,6 +34,7 @@ const Text: React.FC<TextProps> = ({
     color,
     children,
     textAlign,
+    numberOfLines,
     variant = 'common',
     ...attr
 }) => {
@@ -46,7 +48,7 @@ const Text: React.FC<TextProps> = ({
         if (Array.isArray(style)) { allStyles.push(...style); } else { allStyles.push(style); }
     }
     return (
-        <UIText style={StyleSheet.flatten(allStyles)} {...attr}>
+        <UIText style={StyleSheet.flatten(allStyles)} numberOfLines={numberOfLines} {...attr}>
             {children}
         </UIText>
     );

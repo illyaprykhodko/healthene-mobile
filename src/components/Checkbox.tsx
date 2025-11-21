@@ -62,8 +62,8 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
 
     return (
         <TouchableOpacity
-            hitSlop={clickableZone}
             onPress={handlePress}
+            hitSlop={clickableZone}
             style={StyleSheet.flatten([styles.container, style, {
                 paddingVertical: 0.5,
                 paddingHorizontal: status === 'DONE' ? 0 : 2.7,
