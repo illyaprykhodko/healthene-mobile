@@ -14,6 +14,7 @@ import { setCategories } from 'store/slices/foodPreferrencesSlice.ts';
 import { BreadcrumbItem, Breadcrumbs } from 'components/Breadcrumbs.tsx';
 import { StatusEdit } from 'screens/AccountSettingsScreens/FoodPreferences/StatusEdit.tsx';
 import { CategoryItem, useGetAllCategoriesQuery, useGetPatientCategoriesQuery } from 'store/api/categoryTreeApi.ts';
+import Screen from 'components/Screen.tsx';
 
 
 const FoodPreferences = () => {
@@ -58,6 +59,14 @@ const FoodPreferences = () => {
         setParentId(id);
     }, []);
 
+    // Handle preloader
+    const [initialized, setInitialized] = useState(false);
+    useEffect(() => {
+        if (treeList) {
+            setInitialized(true);
+        }
+    }, [treeList]);
+
     // Manage breadcrumbs
     const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([
         { name: 'All', id: undefined },
@@ -70,27 +79,46 @@ const FoodPreferences = () => {
         setBreadcrumbs(prev => [...prev, { name: item.name, id: item.id }]);
         handleTreeResponse(item.id);
     }, [categoryData, breadcrumbs]);
+    const returnBack = useCallback(() => {
+        const prevIndex = breadcrumbs.length - 2;
+        const prevItem = breadcrumbs[prevIndex];
+        handleBreadcrumbs(prevItem, prevIndex);
+    }, [breadcrumbs, handleBreadcrumbs]);
 
-    return <FlatList<CategoryItem>
-        bounces={false}
-        onEndReached={loadMore}
-        style={styles.container}
-        onEndReachedThreshold={0.6}
-        data={treeList?.data ?? []}
-        showsVerticalScrollIndicator={false}
-        keyExtractor={item => item.id.toString()}
-        ListHeaderComponent={<Breadcrumbs onPress={handleBreadcrumbs} data={breadcrumbs} />}
-        ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.lighterGrey }]} />}
-        renderItem={({ item }: {item: CategoryItem}) => <Pressable onPress={() => onClickItem(item)} style={styles.itemContainer}>
-            <View style={styles.imageContainer}>
-                <Image source={ item?.coverImage ? { uri: item.coverImage } : require('../../../../assets/def-image.png') } style={styles.image} />
-            </View>
-            <Text style={styles.flexShrink}>
-                {item.name}
-            </Text>
-            <StatusEdit {...item} />
-        </Pressable>}
-    />;
+    return <Screen initialized={initialized}>
+        <FlatList<CategoryItem>
+            bounces={false}
+            onEndReached={loadMore}
+            style={styles.container}
+            onEndReachedThreshold={0.6}
+            data={treeList?.data ?? []}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.minHeight}
+            keyExtractor={item => item.id.toString()}
+            ListFooterComponent={() => <View style={styles.height} />}
+            ListHeaderComponent={<Breadcrumbs onPress={handleBreadcrumbs} data={breadcrumbs} />}
+            ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.lighterGrey }]} />}
+            ListEmptyComponent={() => <View style={styles.emptyComponent}>
+                <Pressable onPress={returnBack}>
+                    <Text variant="h2">
+                    No nested items found ...
+                    </Text>
+                    <Text textAlign="center" variant="h4" color={theme.colors.primary}>
+                    Press to go back
+                    </Text>
+                </Pressable>
+            </View>}
+            renderItem={({ item }: {item: CategoryItem}) => <Pressable onPress={() => onClickItem(item)} style={styles.itemContainer}>
+                <View style={styles.imageContainer}>
+                    <Image source={ item?.coverImage ? { uri: item.coverImage } : require('../../../../assets/def-image.png') } style={styles.image} />
+                </View>
+                <Text style={styles.flexShrink}>
+                    {item.name}
+                </Text>
+                <StatusEdit {...item} />
+            </Pressable>}
+        />
+    </Screen>;
 };
 
 export default FoodPreferences;
@@ -117,7 +145,18 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%'
     },
+    emptyComponent: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     flexShrink: {
         flexShrink: 1
+    },
+    minHeight: {
+        minHeight: '100%'
+    },
+    height: {
+        height: OFFSET.POINT * 4
     }
 });
