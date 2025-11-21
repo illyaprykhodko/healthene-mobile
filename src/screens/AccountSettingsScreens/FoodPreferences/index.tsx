@@ -40,6 +40,7 @@ const FoodPreferences = () => {
     }, [categoryData]);
 
     // Get list categories
+    const defaultImage = require('../../../../assets/def-image.png');
     const [page, setPage] = useState<number>(0);
     const [parentId, setParentId] = useState<number | undefined>();
     const { data: treeList } = useGetAllCategoriesQuery({
@@ -111,7 +112,7 @@ const FoodPreferences = () => {
             </View>}
             renderItem={({ item }: {item: CategoryItem}) => <Pressable onPress={() => onClickItem(item)} style={styles.itemContainer}>
                 <View style={styles.imageContainer}>
-                    <Image source={ item?.coverImage ? { uri: item.coverImage } : require('../../../../assets/def-image.png') } style={styles.image} />
+                    <Image source={ item?.coverImage ? { uri: item.coverImage } : defaultImage } style={styles.image} />
                 </View>
                 <Text style={styles.flexShrink}>
                     {item.name}
