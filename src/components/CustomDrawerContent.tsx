@@ -91,7 +91,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         {
             icon: 'comments',
             title: 'Messages',
-            route: ROUTES.COMMUNICATION,
+            route: ROUTES.MESSENGER,
         },
         {
             icon: 'chart-bar',

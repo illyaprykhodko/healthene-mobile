@@ -11,7 +11,7 @@ import { OFFSET } from 'constants/offset.ts';
 import BackButton from 'components/BackButton.tsx';
 import DayOverview from 'screens/privateScreens/DayOverview';
 import { MainScreen } from 'screens/privateScreens/MainScreen';
-import CommunicationStack from 'navigation/CommunicationStack.tsx';
+import MessengerStack from 'navigation/MessengerStack.tsx';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
 import { PlaceholderScreen } from 'screens/privateScreens/PlaceholderScreen';
 
@@ -87,8 +87,8 @@ export const PrivateDrawer: React.FC = () => {
             />
 
             <Drawer.Screen
-                name={ROUTES.COMMUNICATION}
-                component={CommunicationStack}
+                name={ROUTES.MESSENGER}
+                component={MessengerStack}
                 options={{
                     title: 'Messages',
                     drawerIcon: ({ color }) => (

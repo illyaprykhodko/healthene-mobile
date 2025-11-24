@@ -22,10 +22,10 @@ type DrawerParamList = {
     [ROUTES.INFO]: undefined;
     [ROUTES.LIBRARY]: undefined;
     [ROUTES.SHOPPING]: undefined;
+    [ROUTES.MESSENGER]: undefined;
     [ROUTES.DAILY_PLAN]: undefined;
     [ROUTES.ABOUT_PLAN]: undefined;
     [ROUTES.MY_RESULTS]: undefined;
-    [ROUTES.COMMUNICATION]: undefined;
     [ROUTES.HEALTH_PROFILE]: undefined;
     [ROUTES.MEAL_PREFERENCES]: undefined;
     [ROUTES.CUISINE_DISTRIBUTION]: undefined;
@@ -38,7 +38,7 @@ export const MainScreen: React.FC = () => {
     const timeGreeting = () => {
         const hour = new Date().getHours();
         const name = user?.firstName || '';
-        
+
         if (hour < 12) { return `Good Morning ${name}`; }
         if (hour < 18) { return `Good Afternoon ${name}`; }
         return `Good Evening ${name}`;
@@ -67,7 +67,7 @@ export const MainScreen: React.FC = () => {
                         {timeGreeting()}
                     </Text>
                 </View>
-                
+
                 <View style={styles.imageWrapper}>
                     <Image
                         resizeMode="contain"
@@ -75,7 +75,7 @@ export const MainScreen: React.FC = () => {
                         source={{ uri: 'https://via.placeholder.com/400x300/007AFF/FFFFFF?text=Welcome+Image' }}
                     />
                 </View>
-                
+
                 <Button
                     title="GET STARTED"
                     style={styles.button}
