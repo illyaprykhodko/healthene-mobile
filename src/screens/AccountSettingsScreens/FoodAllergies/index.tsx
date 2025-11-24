@@ -5,7 +5,6 @@ import React from 'react';
 import { TREE_TYPE } from 'constants/spec.ts';
 import { FoodCategory } from 'screens/AccountSettingsScreens/components/FoodCategory.tsx';
 
-const FoodPreferences = () => <FoodCategory treeTypeViewLabel={TREE_TYPE.DISLIKE} />;
+const FoodAllergies = () => <FoodCategory treeTypeViewLabel={TREE_TYPE.ALLERGY} />;
 
-export default FoodPreferences;
-
+export default FoodAllergies;

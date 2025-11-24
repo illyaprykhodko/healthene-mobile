@@ -6,7 +6,6 @@ import { baseQuery } from 'store/api/baseApi.ts';
 import { PaginatedResponse } from 'types/common/interfaces.ts';
 import { CategoryItem, PatientCategories, PatientCategory, RequestData, TransformData } from 'types/categoryTree.ts';
 
-
 export const categoryTreeApi = createApi({
     baseQuery,
     reducerPath: 'categoryTreeApi',
@@ -23,7 +22,7 @@ export const categoryTreeApi = createApi({
             },
             serializeQueryArgs: ({ endpointName, queryArgs }) => {
                 const typeView = queryArgs.body.treeTypeViewLabel;
-                const parent = queryArgs.body.parentId ?? 0; // root = 0
+                const parent = queryArgs.body?.parentId ?? 0; // root = 0
                 return `${endpointName}-${typeView}-${parent}`;
             },
             transformResponse (response: PaginatedResponse<CategoryItem>, _, args) {
@@ -44,7 +43,9 @@ export const categoryTreeApi = createApi({
                 currentCache.totalPages = newResponse.totalPages;
             },
             forceRefetch ({ currentArg, previousArg }) {
-                return currentArg?.params.page !== previousArg?.params.page;
+                const currentPage = currentArg?.params?.page ?? 0;
+                const previousPage = previousArg?.params?.page ?? 0;
+                return currentPage !== previousPage;
             },
         }),
         getPatientCategories: builder.query<PatientCategories[], { body: PatientCategory }>({
@@ -57,7 +58,7 @@ export const categoryTreeApi = createApi({
             },
             providesTags: ['PatientCategories'],
         }),
-        updatePatientCategories: builder.mutation<any, PatientCategories>({
+        updatePatientCategories: builder.mutation<void, PatientCategories>({
             query: body => {
                 return {
                     body,

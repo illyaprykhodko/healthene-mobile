@@ -7,6 +7,7 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { ROUTES } from 'constants/routes.ts';
 import BackButton from 'components/BackButton.tsx';
+import FoodAllergies from 'screens/AccountSettingsScreens/FoodAllergies';
 import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
 import FoodPreferences from 'screens/AccountSettingsScreens/FoodPreferences';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
@@ -54,6 +55,11 @@ export const AccountSettingsStack = () => {
                 component={FoodPreferences}
                 name={ROUTES.FOOD_PREFERENCES}
                 options={{ title: 'Food Preferences' }}
+            />
+            <Stack.Screen
+                component={FoodAllergies}
+                name={ROUTES.FOOD_ALLERGIES}
+                options={{ title: 'Food Allergies' }}
             />
         </Stack.Navigator>
     );
