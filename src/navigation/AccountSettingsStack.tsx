@@ -9,6 +9,7 @@ import { ROUTES } from 'constants/routes.ts';
 import BackButton from 'components/BackButton.tsx';
 import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
+import { BiometricSettingsScreen } from 'screens/AccountSettingsScreens/BiometricSettingsScreen';
 import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
 
 const Stack = createStackNavigator();
@@ -48,6 +49,11 @@ export const AccountSettingsStack = () => {
                 name={ROUTES.PERSONAL_INFORMATION}
                 component={PersonalInformationScreen}
                 options={{ title: 'Personal Information' }}
+            />
+            <Stack.Screen
+                name={ROUTES.BIOMETRIC_SETTINGS}
+                component={BiometricSettingsScreen}
+                options={{ title: 'Biometric Authentication' }}
             />
         </Stack.Navigator>
     );

@@ -1,7 +1,3 @@
-/**
- * Measurement Payload Builder
- * Converts form values to backend API format
- */
 // outsource dependencies
 import moment from 'moment';
 // local dependencies
@@ -11,20 +7,14 @@ import type {
     MeasurementSource,
     MeasurementPayload,
 } from 'types/health';
-import { getMeasurementConfig, getUnitId, MEASUREMENT_UNIT_IDS } from './measurement-config';
+import { MEASUREMENT_UNIT_IDS } from './measurement-config';
 
-/**
- * Build payload for manual measurement input
- */
 export const buildManualPayload = (
     type: MeasurementType,
     values: Record<string, any>,
-    unitName?: string
+    unitId?: number,
 ): MeasurementPayload => {
-    const config = getMeasurementConfig(type);
     const now = moment().format();
-
-    // Special handling for Blood Pressure (multiple values)
     if (type === 'BLOOD_PRESSURE') {
         return {
             type,
@@ -48,9 +38,6 @@ export const buildManualPayload = (
         };
     }
 
-    // Single value measurements (Weight, Blood Glucose, etc.)
-    const selectedUnitName = unitName || config.defaultUnit;
-    const unitId = getUnitId(type, selectedUnitName);
     const value = parseFloat(String(values.value).replace(',', '.'));
 
     return {
@@ -61,7 +48,7 @@ export const buildManualPayload = (
                 values: [
                     {
                         value,
-                        measurementUnit: { id: unitId },
+                        measurementUnit: { id: unitId || 0 },
                     },
                 ],
                 endDate: now,
@@ -71,18 +58,12 @@ export const buildManualPayload = (
     };
 };
 
-/**
- * Build payload from health app samples (Apple Health / Google Fit)
- */
 export const buildHealthAppPayload = (
     type: MeasurementType,
     samples: HealthSample[],
     source: 'APPLE_HEALTH' | 'GOOGLE_FIT',
-    unitName?: string
+    unitId?: number,
 ): MeasurementPayload => {
-    const config = getMeasurementConfig(type);
-
-    // Special handling for Blood Pressure
     if (type === 'BLOOD_PRESSURE') {
         return {
             type,
@@ -107,10 +88,6 @@ export const buildHealthAppPayload = (
         };
     }
 
-    // Single value measurements
-    const selectedUnitName = unitName || config.defaultUnit;
-    const unitId = getUnitId(type, selectedUnitName);
-
     return {
         type,
         source,
@@ -118,7 +95,7 @@ export const buildHealthAppPayload = (
             values: [
                 {
                     value: sample.value as number,
-                    measurementUnit: { id: unitId },
+                    measurementUnit: { id: unitId || 0 },
                 },
             ],
             endDate: sample.endDate,
@@ -135,16 +112,16 @@ export const buildMeasurementPayload = (
     type: MeasurementType,
     data: Record<string, any> | HealthSample[],
     source: MeasurementSource,
-    unitName?: string
+    unitId?: number,
 ): MeasurementPayload => {
     if (source === 'HEALTHENE_MANUAL_INPUT') {
-        return buildManualPayload(type, data as Record<string, any>, unitName);
+        return buildManualPayload(type, data as Record<string, any>, unitId);
     }
     return buildHealthAppPayload(
         type,
       data as HealthSample[],
       source as 'APPLE_HEALTH' | 'GOOGLE_FIT',
-      unitName
+      unitId,
     );
   
 };

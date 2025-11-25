@@ -19,6 +19,7 @@ const ITEM = {
     FOOD_ALLERGIES: 'Food Allergies',
     FOOD_PREFERENCES: 'Food Preferences',
     PERSONAL_INFORMATION: 'Personal Information',
+    BIOMETRIC_AUTHENTICATION: 'Biometric Authentication',
 };
 
 const SettingsScreen = () => {
@@ -26,6 +27,7 @@ const SettingsScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const settingItem = [
         { title: ITEM.PERSONAL_INFORMATION, navigate: () => navigation.navigate(ROUTES.PERSONAL_INFORMATION) },
+        { title: ITEM.BIOMETRIC_AUTHENTICATION, navigate: () => navigation.navigate(ROUTES.BIOMETRIC_SETTINGS) },
         { title: ITEM.ADDRESS, navigate: () => navigation.navigate(ROUTES.ADDRESS) },
         { title: ITEM.SETTINGS },
         { title: ITEM.FOOD_PREFERENCES },

@@ -1,22 +1,14 @@
-/**
- * useMeasurementSubmit Hook
- * Handles measurement submission logic:
- * 1. Build payload
- * 2. Submit to backend
- * 3. Update phase item status to DONE
- * 4. Handle optimistic updates and errors
- */
 // outsource dependencies
 import { useCallback, useState } from 'react';
 // local dependencies
 import { MessageService } from 'services/messages/service';
-import type { AnytimeMeasurementItem } from 'types/anytime';
 import { buildMeasurementPayload } from 'utils/measurement';
 import type { MeasurementType, MeasurementSource, HealthSample } from 'types/health';
 import {
     useAddMeasurementRecordMutation,
     useUpdatePhaseItemMutation,
 } from 'store/api/dayOverviewApi';
+import { PhaseItem } from 'types/overview';
 
 export interface UseMeasurementSubmitOptions {
   onSuccess?: () => void;
@@ -33,11 +25,8 @@ export interface UseMeasurementSubmitReturn {
   error: string | null;
 }
 
-/**
- * Hook for submitting measurements
- */
 export const useMeasurementSubmit = (
-    item: AnytimeMeasurementItem,
+    item: PhaseItem,
     options?: UseMeasurementSubmitOptions
 ): UseMeasurementSubmitReturn => {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,36 +46,29 @@ export const useMeasurementSubmit = (
 
             try {
                 const measurementType = item.measurement?.type as MeasurementType;
-
+                const unitId = item.measurement?.units?.[0]?.id;
                 if (!measurementType) {
                     throw new Error('Measurement type is required');
                 }
-
-                // Step 1: Build payload
                 const payload = buildMeasurementPayload(
                     measurementType,
                     values,
                     source,
-                    unitName
+                    unitId,
                 );
-                // Step 2: Submit measurement to backend
                 await addMeasurementRecord({
                     type: measurementType,
                     payload,
                 }).unwrap();
-                // Step 3: Update phase item status to DONE
                 await updatePhaseItem({
                     id: item.id,
-                    phaseId: item.phaseId!,
+                    phaseId: item.phase.id,
                     data: {
                         ...item,
                         status: 'DONE',
                     },
                 }).unwrap();
-                // Show success message
                 MessageService.toastSuccess('Measurement successfully saved');
-
-                // Success callback
                 if (options?.onSuccess) {
                     options.onSuccess();
                 }
@@ -94,20 +76,16 @@ export const useMeasurementSubmit = (
                 const errorMessage = error?.message || 'Failed to submit measurement';
                 console.error('[useMeasurementSubmit] Error:', error);
                 setError(errorMessage);
-
-                // Show error message
                 MessageService.error({
                     message: errorMessage,
                     title: 'Measurement Error',
                     uid: 'measurement-submit-error',
                 });
-
-                // Error callback
                 if (options?.onError) {
                     options.onError(error);
                 }
 
-                throw error; // Re-throw for Formik error handling
+                throw error;
             } finally {
                 setIsSubmitting(false);
             }

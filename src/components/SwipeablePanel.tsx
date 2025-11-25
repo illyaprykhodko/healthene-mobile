@@ -109,7 +109,10 @@ export const SwipeablePanel = forwardRef<SwipeablePanelRef, SwipeablePanelProps>
                 ref={bottomSheetRef}
                 snapPoints={snapPoints}
                 onChange={handleSheetChanges}
+                keyboardBehavior="interactive"
+                keyboardBlurBehavior="restore"
                 backdropComponent={renderBackdrop}
+                android_keyboardInputMode="adjustResize"
                 enablePanDownToClose={enablePanDownToClose}
                 backgroundStyle={[
                     styles.bottomSheetBackground,

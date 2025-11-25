@@ -31,6 +31,7 @@ export const ROUTES = {
     // Account Settings
     ADDRESS: 'Address',
     ACCOUNT_SETTINGS: 'AccountSettings',
+    BIOMETRIC_SETTINGS: 'BiometricSettings',
     PERSONAL_INFORMATION: 'PersonalInformation',
 
     // Legacy routes (for compatibility)
