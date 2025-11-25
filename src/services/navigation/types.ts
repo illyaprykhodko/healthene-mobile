@@ -2,7 +2,7 @@
 // import { ParamListBase } from '@react-navigation/native';
 // // local dependencies
 import { ROUTES } from 'constants/routes';
-import { PhaseItem } from 'store/api/dayOverviewApi';
+// import { PhaseItem } from 'store/api/dayOverviewApi';
 
 // export type RootStackParamList = {
 //   // Public screens
@@ -40,6 +40,7 @@ export type RootStackParamList = {
   [ROUTES.FOOD_ALLERGIES]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;
+  [ROUTES.BIOMETRIC_SETTINGS]: undefined;
   [ROUTES.FOOD_PREFERENCES]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;

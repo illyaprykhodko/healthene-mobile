@@ -4,19 +4,18 @@ import { useCallback } from 'react';
 import { LoginData } from 'types';
 import { useAppDispatch } from '../store';
 import { MessageService } from '../services/messages';
-import { setSession, clearSession, setUser, setAuth } from '../store/slices/appSlice';
-import { useGetSelfQuery, useLoginMutation, useLogoutMutation } from '../store/api/authApi';
+import { clearSession, setUser, setAuth } from '../store/slices/appSlice';
+import { authApi, useGetSelfQuery, useLoginMutation, useLogoutMutation } from '../store/api/authApi';
 
 export const useAuth = () => {
     const dispatch = useAppDispatch();
     const [login, { isLoading }] = useLoginMutation();
     const [logout, { isLoading: isLogoutLoading }] = useLogoutMutation();
-    const { data: user, isLoading: isUserLoading } = useGetSelfQuery();
+    const { isLoading: isUserLoading } = useGetSelfQuery();
+    
     const signIn = useCallback(async (credentials: LoginData) => {
         try {
             const session = await login(credentials).unwrap();
-            dispatch(setSession(session));
-            dispatch(setUser(user || null));
             return session;
         } catch (error) {
             MessageService.error({
@@ -26,13 +25,20 @@ export const useAuth = () => {
             });
             throw error;
         }
-    }, [login, dispatch, user]);
-
+    }, [login]);
     const signOut = useCallback(async () => {
-        await logout().unwrap();
-        dispatch(clearSession());
-        dispatch(setUser(null));
-        dispatch(setAuth(false));
+        try {
+            await logout().unwrap();
+        } catch (error) {
+            console.error('Logout API error:', error);
+        } finally {
+            dispatch(clearSession());
+            dispatch(setUser(null));
+            dispatch(setAuth(false));
+            
+            // Reset all cache
+            dispatch(authApi.util.resetApiState());
+        }
     }, [logout, dispatch]);
 
     return {

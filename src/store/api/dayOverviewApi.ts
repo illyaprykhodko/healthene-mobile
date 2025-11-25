@@ -2,6 +2,8 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from './baseApi';
+import { MeasurementType } from 'types';
+import { PhaseItem, PatientFoodCategoryQuestion } from 'types/overview';
 
 export interface Phase {
     type: string;
@@ -24,35 +26,35 @@ export interface DayOverviewResponse {
     currentWeekIncompleteDays?: Array<{ date: string }>;
 }
 
-export interface Question {
-    questions: any[];
-    id: string | number;
-}
+// export interface Question {
+//     questions: any[];
+//     id: string | number;
+// }
 
-export interface PhaseItem {
-    food?: any;
-    type: string;
-    recipe?: any;
-    order?: number;
-    status?: string;
-    amount?: number;
-    section?: string;
-    measurement?: any;
-    modified?: boolean;
-    id: string | number;
-    initialAmount?: number;
-    /** Amount that has been consumed so far (client + server contract) */
-    consumedAmount?: number;
-    weight?: {
-        unit: {
-            name: string;
-        };
-    };
-    serving?: any;
-    useServing?: boolean;
-    patientFoodCategoryAttachment?: any;
-    patientFoodCategoryQuestion?: any;
-}
+// export interface PhaseItem {
+//     food?: any;
+//     type: string;
+//     recipe?: any;
+//     order?: number;
+//     status?: string;
+//     amount?: number;
+//     section?: string;
+//     measurement?: any;
+//     modified?: boolean;
+//     id: string | number;
+//     initialAmount?: number;
+//     /** Amount that has been consumed so far (client + server contract) */
+//     consumedAmount?: number;
+//     weight?: {
+//         unit: {
+//             name: string;
+//         };
+//     };
+//     serving?: any;
+//     useServing?: boolean;
+//     patientFoodCategoryAttachment?: any;
+//     patientFoodCategoryQuestion?: any;
+// }
 
 // Exercise
 export type ExerciseStepsUpdate = ExerciseDataResponse[];
@@ -147,7 +149,7 @@ export const dayOverviewApi = createApi({
     endpoints: builder => ({
         // Create measurement record (manual or third-party)
         addMeasurementRecord: builder.mutation<any, {
-            type: string; // e.g. WEIGHT, BLOOD_GLUCOSE, BLOOD_PRESSURE
+            type: MeasurementType;
             payload: any;
         }>({
             query: ({ payload }) => ({
@@ -157,7 +159,7 @@ export const dayOverviewApi = createApi({
             }),
             invalidatesTags: ['DayOverview'],
         }),
-        getQuestions: builder.query<Question, string>({
+        getQuestions: builder.query<PatientFoodCategoryQuestion, string>({
             query: date => `/patient-service/patient/me/disease-questions/${date}`,
             providesTags: ['Questions'],
         }),
@@ -261,7 +263,7 @@ export const dayOverviewApi = createApi({
           query: ({ id, data }) => ({
               url: `/patient-service/patients/day-overview/phase/item/${id}`,
               method: 'PUT',
-              body: data, // Pass the entire data object like in original
+              body: data,
           }),
           invalidatesTags: (result, error, { id, phaseId }) => [
               { type: 'PhaseItem', id },

@@ -114,6 +114,13 @@ export const SUFFIXES = [
     { label: 'VI', value: 'VI' },
 ];
 
+export const ATTACHMENT_STATUS = {
+    PENDING: 'PENDING',
+    COMPLETED: 'COMPLETED',
+    ERROR: 'ERROR',
+} as const;
+
+export type AttachmentStatus = typeof ATTACHMENT_STATUS[keyof typeof ATTACHMENT_STATUS];
 export const TREE_TYPE = {
     ALLERGY: 'ALLERGY',
     DISLIKE: 'DISLIKE',

@@ -16,8 +16,8 @@ import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
 import type { SmartScaleReading } from 'types/health';
-import SmartScaleService from 'services/health/smart-scale.service';
 import { useMeasurementSubmit } from 'hooks/useMeasurementSubmit';
+import SmartScaleService from 'services/health/smart-scale.service';
 
 const SmartScaleScreen: React.FC = () => {
     const navigation = useNavigation();
@@ -34,7 +34,6 @@ const SmartScaleScreen: React.FC = () => {
 
     const measurementPhaseItem = (route.params as any)?.measurementPhaseItem;
     const item = measurementPhaseItem || {};
-
     const { submit, isSubmitting } = useMeasurementSubmit(item, {
         onSuccess: () => {
             SmartScaleService.reset();
@@ -45,7 +44,6 @@ const SmartScaleScreen: React.FC = () => {
         },
     });
 
-    // Animate "Please step on scale" text
     useEffect(() => {
         Animated.timing(animation, {
             duration: 500,
@@ -59,13 +57,14 @@ const SmartScaleScreen: React.FC = () => {
         outputRange: [1, 0],
     });
 
-    // Check Bluetooth status
     useEffect(() => {
-        const checkBluetooth = async () => {
-            const status = await SmartScaleService.getStatus();
-            setBluetoothStatus(status);
+        const subscription = SmartScaleService.onStateChange(state => {
+            setBluetoothStatus(state);
+        });
+
+        return () => {
+            subscription.remove();
         };
-        checkBluetooth();
     }, []);
 
     useEffect(() => {
@@ -83,25 +82,18 @@ const SmartScaleScreen: React.FC = () => {
     useEffect(() => {
         if (bluetoothStatus === State.PoweredOn && locationStatus === RESULTS.GRANTED) {
             setIsScanning(true);
-
-            // Set up callbacks
             SmartScaleService.setOnWeightUpdate((reading: SmartScaleReading) => {
-                // console.log('[SmartScaleScreen] Weight update:', reading);
                 setWeightData(reading);
             });
-
             SmartScaleService.setOnDeviceFound(device => {
-                // console.log('[SmartScaleScreen] Device found:', device);
                 setDeviceFound(true);
             });
-
-            // Start scanning
             SmartScaleService.startScan()
                 .then(() => {
                     // console.log('[SmartScaleScreen] Scan completed');
                 })
                 .catch(error => {
-                    // console.error('[SmartScaleScreen] Scan error:', error);
+                    console.error('[SmartScaleScreen] Scan error:', error);
                     setIsScanning(false);
                 });
 
@@ -115,6 +107,11 @@ const SmartScaleScreen: React.FC = () => {
 
     const openSettings = useCallback(async () => {
         await Linking.openSettings();
+    }, []);
+
+    const recheckBluetooth = useCallback(async () => {
+        const status = await SmartScaleService.getStatus();
+        setBluetoothStatus(status);
     }, []);
 
     const handleSave = useCallback(async () => {
@@ -133,9 +130,20 @@ const SmartScaleScreen: React.FC = () => {
                 return (
                     <View style={styles.messageContainer}>
                         <Text style={[styles.messageText, { color: theme.colors.primary }]}>
-                            It seems that Bluetooth is turned off. Please enable it in your device's
-                            settings to continue.
+                        It seems that Bluetooth is turned off. Please enable it in your device&apos;s settings to continue.
                         </Text>
+                        <TouchableOpacity
+                            onPress={openSettings}
+                            style={[styles.settingsButton, { backgroundColor: theme.colors.warning }]}
+                        >
+                            <Text style={styles.settingsButtonText}>Open Settings</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={recheckBluetooth}
+                            style={[styles.settingsButton, { backgroundColor: theme.colors.primary, marginTop: 10 }]}
+                        >
+                            <Text style={styles.settingsButtonText}>Recheck Status</Text>
+                        </TouchableOpacity>
                     </View>
                 );
             case State.Unsupported:
@@ -162,12 +170,30 @@ const SmartScaleScreen: React.FC = () => {
                         </TouchableOpacity>
                     </View>
                 );
+            case State.Unknown:
+                return (
+                    <View style={styles.messageContainer}>
+                        <Text style={[styles.messageText, { color: theme.colors.primary }]}>
+                            Checking Bluetooth status...
+                        </Text>
+                        <ActivityIndicator
+                            size="large"
+                            style={styles.loader}
+                            color={theme.colors.primary}
+                        />
+                        <TouchableOpacity
+                            style={[styles.settingsButton, { backgroundColor: theme.colors.primary, marginTop: 10 }]}
+                            onPress={recheckBluetooth}
+                        >
+                            <Text style={styles.settingsButtonText}>Recheck Status</Text>
+                        </TouchableOpacity>
+                    </View>
+                );
             default:
                 return null;
         }
     };
 
-    // Check if ready to scan
     const isReadyToScan = bluetoothStatus === State.PoweredOn && locationStatus === RESULTS.GRANTED;
 
     return (

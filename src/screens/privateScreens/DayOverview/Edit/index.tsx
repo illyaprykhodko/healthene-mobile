@@ -1,5 +1,4 @@
 // outsource dependencies
-import _ from 'lodash';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -14,7 +13,9 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
+import { PhaseItem } from 'types/overview';
 import SwipeList from 'components/SwipeList';
+import { groupBy, isEmpty } from 'utils/general';
 import { RootStackParamList } from 'services/navigation';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import { selectDayOverview } from 'store/slices/dayOverviewSlice';
@@ -23,41 +24,11 @@ import { useGetDayOverviewQuery, useGetPhaseItemsQuery, useUpdatePhaseItemMutati
     useDeletePhaseItemMutation, useAddPhaseItemMutation, useUpdatePhaseMutation, useReplacePhaseItemMutation,
     useUpdateIncludeRescueFoodsMutation } from 'store/api/dayOverviewApi';
 
-// Temporary types until full migration
-interface PhaseItem {
-    food?: any;
-    recipe?: any;
-    type: string;
-    title: string;
-    order?: number;
-    amount?: number;
-    status?: string;
-    section?: string;
-    measurement?: any;
-    medication?: any;
-    supplement?: any;
-    modified?: boolean;
-    id: string | number;
-    physicalActivity?: any;
-    initialAmount?: number;
-    substanceType?: string;
-    weight?: {
-        unit: {
-            name: string;
-        };
-    };
-    serving?: any;
-    useServing?: boolean;
-    patientFoodCategoryAttachment?: any;
-    patientFoodCategoryQuestion?: any;
-}
 
 interface EditProps {
     date?: string;
     phaseId?: string | number;
 }
-
-// PHASE_ITEM_STATUS, ENTITY_TYPE, SECTION centralized in constants/spec
 
 const convertTypeToTitle = (type: string, capitalize = false) => {
     const title = type.replace(/_/g, ' ').toLowerCase();
@@ -110,10 +81,12 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     type: item.type,
                     food: item.food,
                     order: item.order,
+                    phase: item.phase,
                     recipe: item.recipe,
                     status: item.status,
                     amount: item.amount,
                     weight: item.weight,
+                    rating: item.rating,
                     serving: item.serving,
                     section: item.section,
                     modified: item.modified,
@@ -123,7 +96,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     measurement: item.measurement,
                     initialAmount: item.initialAmount,
                     physicalActivity: item.physicalActivity,
+                    peopleEatingNumber: item.peopleEatingNumber,
                     patientFoodCategoryQuestion: item.patientFoodCategoryQuestion,
+                    recipeOilyFishProteinReplaced: item.recipeOilyFishProteinReplaced,
                     patientFoodCategoryAttachment: item.patientFoodCategoryAttachment,
                     title: item.food?.name || item.recipe?.name || item.measurement?.name || item.medication?.name || item.supplement?.name || item.physicalActivity?.name || 'Item',
                 });
@@ -426,7 +401,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             </Screen>
         );
     }
-    const groupedBySection = _.groupBy(localItems, 'section');
+    const groupedBySection = groupBy(localItems, 'section');
     const title = currentPhase?.meal?.name
                   || (currentPhase?.type === 'QUESTION' ? 'Health Question'
                       : currentPhase?.type === 'ANYTIME' ? 'Anytime'
@@ -466,7 +441,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
             <View style={styles.list}>
                 <ScrollView style={isFutureDate && styles.opacity} scrollEnabled={scrollEnabled}>
-                    {!_.isEmpty(localItems) ? (
+                    {!isEmpty(localItems) ? (
                         Object.entries(groupedBySection).map(([section, sectionItems]) => (
                             <SwipeList
                                 key={section}
@@ -487,8 +462,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                     <ListItem
                                         item={item}
                                         disabled={false}
+                                        date={targetDate}
                                         updateData={updatePhaseItem}
-                                        nextSection={_.get(item, 'section')}
+                                        nextSection={item?.section || ''}
                                         handleCheckboxStatus={handleCheckboxStatus}
                                     />
                                 )}
@@ -497,9 +473,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                         <View style={[
                                             styles.separatorWrapper,
                                             {
-                                                borderTopColor: theme.colors.black,
-                                                borderTopWidth: section === 'Added' ? 0 : 1,
-                                                backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}80`
+                                                // borderTopColor: theme.colors.black,
+                                                // borderTopWidth: section === 'Added' ? 0 : 1,
+                                                backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}`
                                             }
                                         ]}>
                                             <Text variant="h3" style={styles.offset}>
@@ -618,10 +594,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#F3F3F380', // 50% opacity
         paddingTop: 10,
         paddingBottom: 10,
-        marginBottom: 10,
+        // marginBottom: 10,
     },
     offset: {
-        color: '#7B7B7B',
+        // color: '#7B7B7B',
         marginLeft: 16,
     },
     buttonContainer: {

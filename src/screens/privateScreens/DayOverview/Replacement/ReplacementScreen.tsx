@@ -10,6 +10,7 @@ import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import {
     useGetRescueCatalogQuery,
+    // useRevertPhaseItemMutation, // for debugging
     useGetRestaurantCatalogQuery,
 } from 'store/api/dayOverviewApi';
 import { ROUTES } from 'constants/routes';
@@ -45,6 +46,7 @@ const ReplacementScreen: React.FC = () => {
         skip: !phaseId,
     });
 
+    // const [revertPhaseItem] = useRevertPhaseItemMutation();
     // Fetch restaurant catalog
     const { data: restaurantCatalog, isLoading: isLoadingRestaurant } = useGetRestaurantCatalogQuery(phaseId, {
         skip: !phaseId,
@@ -91,14 +93,23 @@ const ReplacementScreen: React.FC = () => {
                 <Text color={theme.colors.textSecondary} style={styles.emptyText} textAlign="center">
                     No replacement options available
                 </Text>
+
+                {/* <TouchableOpacity
+                    onPress={() => revertPhaseItem({ phaseItemId: 52981701 })}
+                >
+                    <Text
+                    >
+                        REVERT
+                    </Text>
+                </TouchableOpacity> */}
             </Screen>
         );
     }
 
     return (
         <Screen initialized style={styles.container}>
-            <View style={[styles.header, { backgroundColor: '#E0EBF7' }]}>
-                <Text style={[styles.headerText, { color: theme.colors.text }]}>
+            <View style={[styles.header]}>
+                <Text variant="h3" style={[styles.headerText, { color: theme.colors.text }]}>
                     Main Entrée
                 </Text>
             </View>
@@ -149,12 +160,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     header: {
-        paddingHorizontal: 24,
+        paddingHorizontal: 8,
         paddingVertical: 16,
+        borderBottomWidth: 1
     },
     headerText: {
-        fontSize: 15,
         fontWeight: '500',
+        marginLeft: 16,
     },
     list: {
         flex: 1,
