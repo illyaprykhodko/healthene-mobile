@@ -1,5 +1,6 @@
 // outsource dependencies
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { StyleSheet, View, FlatList, Pressable } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,7 +10,6 @@ import Text from 'components/Text.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { ROUTES } from 'constants/routes.ts';
-import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from 'services/navigation';
 
 const ITEM = {
@@ -30,8 +30,8 @@ const SettingsScreen = () => {
         { title: ITEM.BIOMETRIC_AUTHENTICATION, navigate: () => navigation.navigate(ROUTES.BIOMETRIC_SETTINGS) },
         { title: ITEM.ADDRESS, navigate: () => navigation.navigate(ROUTES.ADDRESS) },
         { title: ITEM.SETTINGS },
-        { title: ITEM.FOOD_PREFERENCES },
-        { title: ITEM.FOOD_ALLERGIES },
+        { title: ITEM.FOOD_PREFERENCES, navigate: () => navigation.navigate(ROUTES.FOOD_PREFERENCES) },
+        { title: ITEM.FOOD_ALLERGIES, navigate: () => navigation.navigate(ROUTES.FOOD_ALLERGIES) },
         { title: ITEM.NOTIFICATIONS },
     ];
     return <View style={styles.container}>

@@ -174,7 +174,7 @@ export default defineConfig([
             "no-unsafe-negation": ["warn"],
             "no-unused-vars": ["warn", { "vars": "local", "args": "none", "ignoreRestSiblings": true }],
             "no-tabs": ["warn"],
-            "global-require": ["warn"],
+            "global-require": "off",
             "no-else-return": ["warn"],
             "no-multi-assign": ["warn"],
             "no-useless-escape": ["warn"],

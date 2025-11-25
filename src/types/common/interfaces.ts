@@ -77,33 +77,45 @@ export interface EntityReference {
   /** Optional name of the referenced entity */
   name?: string;
 }
-
 /**
- * Represents a paginated response with metadata
+ * Represents pagination query parameters
+ * @interface PaginatedParams
+ * @property {number} page - Page number to request
+ * @property {number} [size] - Optional number of items per page
+ * @property {string} [sort] - Optional sorting field, e.g. "name,asc"
+ */
+export interface PaginatedParams {
+  page: number;
+  size?: number;
+  sort?: string;
+}
+/**
+ * Represents a standard paginated API response following Spring-style pagination.
  * @interface PaginatedResponse
- * @template T - Type of items in the response
- * @property {T[]} items - Array of items in the current page
- * @property {number} total - Total number of items across all pages
- * @property {number} page - Current page number (1-based)
- * @property {number} size - Number of items per page
- * @property {number} totalPages - Total number of pages
- * @property {boolean} hasNext - Whether there is a next page
- * @property {boolean} hasPrevious - Whether there is a previous page
+ * @template T - Type of items contained in the paginated result.
+ *
+ * @property {T[]} content - Array of items in the current page.
+ * @property {number} totalElements - Total number of items across all pages.
+ * @property {number} pageNumber - Current page number (0-based by backend, can be mapped to 1-based in UI).
+ * @property {number} size - Number of items per page.
+ * @property {number} totalPages - Total number of available pages.
+ * @property {number} offset - Numeric offset representing the index of the first item in the current page.
+ * @property {boolean} hasPrevious - Whether a previous page exists.
  */
 export interface PaginatedResponse<T> {
   /** Array of items in the current page */
-  items: T[];
+  content: T[];
   /** Total number of items across all pages */
-  total: number;
-  /** Current page number (1-based) */
-  page: number;
+  totalElements: number;
+  /** Current page number (0-based by backend, can be mapped to 1-based in UI) */
+  pageNumber: number;
   /** Number of items per page */
   size: number;
   /** Total number of pages */
   totalPages: number;
-  /** Whether there is a next page */
-  hasNext: boolean;
-  /** Whether there is a previous page */
+  /** Numeric offset representing the index of the first item in the current page */
+  offset: number;
+  /** Whether a previous page exists */
   hasPrevious: boolean;
 }
 

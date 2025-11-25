@@ -141,6 +141,9 @@ export interface User {
   coverImage: {
     url: string;
   },
+  activeVisit: {
+    id: number;
+  },
   preferences?: {
     language?: string;
     timezone?: string;

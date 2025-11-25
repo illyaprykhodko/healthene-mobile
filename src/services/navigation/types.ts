@@ -9,7 +9,7 @@ import { ROUTES } from 'constants/routes';
 //   [ROUTES.SIGN_IN]: undefined;
 //   [ROUTES.SIGN_UP]: undefined;
 //   [ROUTES.FORGOT_PASSWORD]: undefined;
-  
+
 //   // Private screens
 //   [ROUTES.HOME]: undefined;
 //   [ROUTES.PROFILE]: undefined;
@@ -37,9 +37,11 @@ export type RootStackParamList = {
   [ROUTES.DAY_OVERVIEW]: undefined;
   [ROUTES.COMMUNICATION]: undefined;
   [ROUTES.HEALTH_PROFILE]: undefined;
+  [ROUTES.FOOD_ALLERGIES]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;
   [ROUTES.BIOMETRIC_SETTINGS]: undefined;
+  [ROUTES.FOOD_PREFERENCES]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
 

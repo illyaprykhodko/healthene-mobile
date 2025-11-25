@@ -19,6 +19,7 @@ export const ROUTES = {
     DAY_OVERVIEW: 'DayOverview',
     REPLACE_ITEMS: 'ReplaceItems',
     COMMUNICATION: 'Communication',
+    FOOD_ALLERGIES: 'FoodAllergies',
     HEALTH_PROFILE: 'HealthProfile',
     ADD_REPLACE_ITEM: 'AddReplaceItem',
     MEAL_PREFERENCES: 'MealPreferences',
@@ -32,6 +33,7 @@ export const ROUTES = {
     ADDRESS: 'Address',
     ACCOUNT_SETTINGS: 'AccountSettings',
     BIOMETRIC_SETTINGS: 'BiometricSettings',
+    FOOD_PREFERENCES: 'FoodPreferences',
     PERSONAL_INFORMATION: 'PersonalInformation',
 
     // Legacy routes (for compatibility)

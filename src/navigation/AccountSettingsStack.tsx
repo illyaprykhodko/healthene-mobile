@@ -7,7 +7,9 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { ROUTES } from 'constants/routes.ts';
 import BackButton from 'components/BackButton.tsx';
+import FoodAllergies from 'screens/AccountSettingsScreens/FoodAllergies';
 import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
+import FoodPreferences from 'screens/AccountSettingsScreens/FoodPreferences';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
 import { BiometricSettingsScreen } from 'screens/AccountSettingsScreens/BiometricSettingsScreen';
 import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
@@ -54,6 +56,14 @@ export const AccountSettingsStack = () => {
                 name={ROUTES.BIOMETRIC_SETTINGS}
                 component={BiometricSettingsScreen}
                 options={{ title: 'Biometric Authentication' }}
+                component={FoodPreferences}
+                name={ROUTES.FOOD_PREFERENCES}
+                options={{ title: 'Food Preferences' }}
+            />
+            <Stack.Screen
+                component={FoodAllergies}
+                name={ROUTES.FOOD_ALLERGIES}
+                options={{ title: 'Food Allergies' }}
             />
         </Stack.Navigator>
     );
