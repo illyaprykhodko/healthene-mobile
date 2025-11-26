@@ -1,6 +1,6 @@
 // outsource dependencies
 import Toast from 'react-native-toast-message';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Pressable, StyleSheet, View, RefreshControl } from 'react-native';
@@ -14,7 +14,7 @@ import { Button } from 'components/Button.tsx';
 import { MessageItem } from 'types/messenger.ts';
 import { MessageService } from 'services/messages';
 import { Message } from 'screens/privateScreens/Messenger/components/MessageItem.tsx';
-import { useGetChainMessagesQuery, useDeleteChainsMutation } from 'store/api/messengerServiceApi.ts';
+import { useGetChainMessagesQuery, useDeleteChainsMutation } from 'store/api/messengerApi.ts';
 
 interface RowMap {
     [key: string]: { closeRow: () => void } | undefined;
@@ -74,7 +74,7 @@ const MessengerList = () => {
 
     const renderHiddenItem = ({ item }: {item: MessageItem}) => <Pressable
         onPress={() => handleDelete([{ id: item.id }])}
-        style={[styles.button, { backgroundColor: 'red' }]}
+        style={[styles.button, { backgroundColor: theme.colors.red }]}
     >
         <Icon name="trash-alt" color={theme.colors.white} size={18} />
         <Text style={styles.listHiddenItemText} color={theme.colors.white}>Delete</Text>
@@ -98,6 +98,13 @@ const MessengerList = () => {
         }
     };
 
+    // Lazy load handle
+    const loadMore = useCallback(() => {
+        if (messages && messages.page < messages.totalPages) {
+            setPage(messages.page + 1);
+        }
+    }, [messages, setPage]);
+
     return (
         <Screen initialized={initialized}>
             <SwipeListView
@@ -105,6 +112,8 @@ const MessengerList = () => {
                 disableRightSwipe
                 onRowOpen={onRowOpen}
                 initialNumToRender={10}
+                onEndReached={loadMore}
+                onEndReachedThreshold={0.6}
                 data={messages?.data ?? []}
                 rightOpenValue={-ITEM_HIDDEN_SIZE}
                 renderHiddenItem={renderHiddenItem}
@@ -113,7 +122,6 @@ const MessengerList = () => {
                 renderItem={({ item }) => <Message {...item } />}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
                 ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.lighterGrey }]} />}
-                ListFooterComponent={() => <View style={[styles.separator, { borderColor: theme.colors.lighterGrey }]} />}
             />
             <Button
                 variant="outline"

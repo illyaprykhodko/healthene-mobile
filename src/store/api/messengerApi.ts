@@ -21,6 +21,7 @@ export const messengerApi = createApi({
                     params: { ...params, sort: 'id,ASC', size: 10 },
                 };
             },
+            serializeQueryArgs: ({ endpointName }) => endpointName,
             transformResponse (response: PaginatedResponse<MessageItem>, _, args) {
                 return {
                     data: response.content,

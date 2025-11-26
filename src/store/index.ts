@@ -13,7 +13,7 @@ import { settingsApi } from 'store/api/settingsApi.ts';
 import { s3ServiceApi } from 'store/api/s3ServiceApi.ts';
 import { dayOverviewReducer } from './slices/dayOverviewSlice';
 import { categoryTreeApi } from 'store/api/categoryTreeApi.ts';
-import { messengerApi } from 'store/api/messengerServiceApi.ts';
+import { messengerApi } from 'store/api/messengerApi.ts';
 import forgotPasswordReducer from './slices/forgotPasswordSlice';
 import foodPreferencesSlice from 'store/slices/foodPreferrencesSlice.ts';
 
