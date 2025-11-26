@@ -1,8 +1,8 @@
 // outsource dependencies
 import React from 'react';
 import { Formik } from 'formik';
-import { RouteProp } from '@react-navigation/native';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { RouteProp, useRoute } from '@react-navigation/native';
 
 // local dependencies
 import Text from 'components/Text.tsx';
@@ -14,12 +14,11 @@ import { RootState, useAppSelector } from 'store';
 import ProfileImage from 'components/ProfileImage.tsx';
 import { RootStackParamList } from 'services/navigation';
 
-interface MessageScreenProps {
-  route: RouteProp<RootStackParamList, 'MessageScreen'>
-}
+type WriteMessageRouteProp = RouteProp<RootStackParamList, 'WriteMessageScreen'>;
 
-const MessageScreen = ({ route }: MessageScreenProps) => {
+const WriteMessageScreen = () => {
     const theme = useTheme();
+    const route = useRoute<WriteMessageRouteProp>();
     const user = useAppSelector((state: RootState) => state.app.user);
     const handleSubmit = () => {
         console.log('DAta');
@@ -42,7 +41,7 @@ const MessageScreen = ({ route }: MessageScreenProps) => {
                 // validationSchema={validationSchema}
                 initialValues={{
                     text: '',
-                    subject: route.params.subject ?? ''
+                    subject: route?.params?.subject ?? ''
                 }}
             >
                 {({ values, errors, touched, handleChange, handleSubmit, dirty }) => {
@@ -73,7 +72,7 @@ const MessageScreen = ({ route }: MessageScreenProps) => {
     </Screen>;
 };
 
-export default MessageScreen;
+export default WriteMessageScreen;
 
 const styles = StyleSheet.create({
     container: {

@@ -8,7 +8,7 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import BackButton from 'components/BackButton.tsx';
 import MessengerList from 'screens/privateScreens/Messenger';
-import MessageScreen from 'screens/privateScreens/Messenger/MessageScreen.tsx';
+import WriteMessageScreen from 'screens/privateScreens/Messenger/WriteMessageScreen.tsx';
 
 const Stack = createStackNavigator();
 const MessengerStack = () => {
@@ -35,7 +35,7 @@ const MessengerStack = () => {
             })}
         >
             <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.MESSAGE_LIST} component={MessengerList} />
-            <Stack.Screen options={{ title: 'Message' }} name={ROUTES.MESSAGE_SCREEN} component={MessageScreen} />
+            <Stack.Screen options={{ title: 'Message' }} name={ROUTES.WRITE_MESSAGE_SCREEN} component={WriteMessageScreen} />
         </Stack.Navigator>
     );
 };

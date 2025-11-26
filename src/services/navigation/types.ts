@@ -42,11 +42,12 @@ export type RootStackParamList = {
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;
   [ROUTES.FOOD_PREFERENCES]: undefined;
+  [ROUTES.READ_MESSAGE_SCREEN]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
 
   // Example of a screen that requires params
-  [ROUTES.MESSAGE_SCREEN]: MessageEntity;
+  [ROUTES.WRITE_MESSAGE_SCREEN]: MessageEntity;
   [ROUTES.SMART_SCALE]: {
     measurementPhaseItem: object;
   };

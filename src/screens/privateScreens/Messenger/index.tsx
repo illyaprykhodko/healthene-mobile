@@ -30,7 +30,7 @@ const ITEM_HIDDEN_SIZE = 100;
 const MessengerList = () => {
     const theme = useTheme();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const goToMessage = (message: MessageEntity) => navigation.navigate(ROUTES.MESSAGE_SCREEN, message);
+    const goToMessage = (message: MessageEntity) => navigation.navigate(ROUTES.WRITE_MESSAGE_SCREEN, message);
 
     const [page, setPage] = useState(0);
     const { data: messages, refetch } = useGetChainMessagesQuery({ params: { page } });

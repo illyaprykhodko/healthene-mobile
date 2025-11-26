@@ -37,7 +37,8 @@ export const ROUTES = {
 
     // Messanger
     MESSAGE_LIST: 'MessengerList',
-    MESSAGE_SCREEN: 'MessageScreen',
+    READ_MESSAGE_SCREEN: 'ReadMessagesScreen',
+    WRITE_MESSAGE_SCREEN: 'WriteMessageScreen',
 
     // Legacy routes (for compatibility)
     HOME: 'Home',
