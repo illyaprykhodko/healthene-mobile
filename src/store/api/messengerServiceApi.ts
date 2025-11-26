@@ -9,8 +9,10 @@ import { PaginatedParams, PaginatedResponse } from 'types/common/interfaces.ts';
 export const messengerApi = createApi({
     baseQuery,
     reducerPath: 'messenger',
+    tagTypes: ['ChanMessages'],
     endpoints: builder => ({
         getChainMessages: builder.query<TransformData, { params : PaginatedParams } >({
+            providesTags: ['ChanMessages'],
             query: ({ params }) => {
                 return {
                     body: {},
@@ -42,7 +44,17 @@ export const messengerApi = createApi({
                 return currentPage !== previousPage;
             },
         }),
+        deleteChains: builder.mutation<void, [{ id: number }]>({
+            invalidatesTags: ['ChanMessages'],
+            query: body => {
+                return {
+                    body,
+                    method: 'DELETE',
+                    url: '/messenger-service/chain',
+                };
+            }
+        })
     })
 });
 
-export const { useGetChainMessagesQuery } = messengerApi;
+export const { useGetChainMessagesQuery, useDeleteChainsMutation } = messengerApi;

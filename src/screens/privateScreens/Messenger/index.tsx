@@ -12,8 +12,9 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import { MessageItem } from 'types/messenger.ts';
-import { useGetChainMessagesQuery } from 'store/api/messengerServiceApi.ts';
+import { MessageService } from 'services/messages';
 import { Message } from 'screens/privateScreens/Messenger/components/MessageItem.tsx';
+import { useGetChainMessagesQuery, useDeleteChainsMutation } from 'store/api/messengerServiceApi.ts';
 
 interface RowMap {
     [key: string]: { closeRow: () => void } | undefined;
@@ -28,6 +29,34 @@ const MessengerList = () => {
         params: { page },
     });
 
+    // Handle delete chain messages
+    const [deleteChain] = useDeleteChainsMutation();
+    const handleDelete = async (item: [{id: number}]) => {
+        const { value } = await MessageService.confirmation({
+            uid: 'Address',
+            title: 'Delete address',
+            message: 'Are you sure you want to delete this address?',
+        });
+
+        if (!value) { return; }
+
+        try {
+            await deleteChain(item).unwrap();
+
+            Toast.show({
+                type: 'success',
+                text1: 'Message deleted',
+                text2: 'The message was successfully removed.',
+            });
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Couldn’t delete message',
+                text2: 'Please try again later.',
+            });
+        }
+    };
+
     // Handle preloader
     const [initialized, setInitialized] = useState(false);
     useEffect(() => {
@@ -39,13 +68,12 @@ const MessengerList = () => {
     // SwipeList handle
     const onRowOpen = (rowKey: string, rowMap: RowMap) => {
         setTimeout(() => {
-            // NOTE Need check to fix redirect issue
             rowMap[rowKey] && rowMap[rowKey].closeRow();
         }, 3 * 1000);
     };
 
     const renderHiddenItem = ({ item }: {item: MessageItem}) => <Pressable
-        // onPress={() => this.props.deleteItem([{ id: item.id }])}
+        onPress={() => handleDelete([{ id: item.id }])}
         style={[styles.button, { backgroundColor: 'red' }]}
     >
         <Icon name="trash-alt" color={theme.colors.white} size={18} />
@@ -62,8 +90,8 @@ const MessengerList = () => {
         } catch (error) {
             Toast.show({
                 type: 'error',
-                text1: 'Update failed',
-                text2: 'Something went wrong while updating your information. Please try again later.',
+                text1: 'Couldn’t refresh messages',
+                text2: 'Something went wrong while updating messages. Please try again later.',
             });
         } finally {
             setRefreshing(false);
