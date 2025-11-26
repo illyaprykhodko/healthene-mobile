@@ -1,9 +1,11 @@
 // outsource dependencies
 import Toast from 'react-native-toast-message';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View, RefreshControl } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // local dependencies
 import Text from 'components/Text.tsx';
@@ -13,8 +15,10 @@ import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import { MessageItem } from 'types/messenger.ts';
 import { MessageService } from 'services/messages';
+import { RootStackParamList } from 'services/navigation';
 import { Message } from 'screens/privateScreens/Messenger/components/MessageItem.tsx';
 import { useGetChainMessagesQuery, useDeleteChainsMutation } from 'store/api/messengerApi.ts';
+import { ROUTES } from 'constants/routes.ts';
 
 interface RowMap {
     [key: string]: { closeRow: () => void } | undefined;
@@ -24,6 +28,8 @@ const ITEM_HIDDEN_SIZE = 100;
 
 const MessengerList = () => {
     const theme = useTheme();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
     const [page, setPage] = useState(0);
     const { data: messages, refetch } = useGetChainMessagesQuery({
         params: { page },
@@ -126,8 +132,8 @@ const MessengerList = () => {
             <Button
                 variant="outline"
                 title="NEW MESSAGE"
-                // onPress={handleLogout}
                 style={styles.btn}
+                onPress={() => navigation.navigate(ROUTES.MESSAGE_SCREEN)}
             />
         </Screen>
     );

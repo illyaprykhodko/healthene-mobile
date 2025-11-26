@@ -35,6 +35,10 @@ export const ROUTES = {
     FOOD_PREFERENCES: 'FoodPreferences',
     PERSONAL_INFORMATION: 'PersonalInformation',
 
+    // Messanger
+    MESSAGE_LIST: 'MessengerList',
+    MESSAGE_SCREEN: 'MessageScreen',
+
     // Legacy routes (for compatibility)
     HOME: 'Home',
     PROFILE: 'Profile',

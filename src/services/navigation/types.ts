@@ -31,12 +31,14 @@ export type RootStackParamList = {
   [ROUTES.ADDRESS]: undefined;
   [ROUTES.SETTINGS]: undefined;
   [ROUTES.SHOPPING]: undefined;
+  [ROUTES.MESSENGER]: undefined;
   [ROUTES.DAILY_PLAN]: undefined;
   [ROUTES.MY_RESULTS]: undefined;
   [ROUTES.ABOUT_PLAN]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
-  [ROUTES.COMMUNICATION]: undefined;
+  [ROUTES.MESSAGE_LIST]: undefined;
   [ROUTES.HEALTH_PROFILE]: undefined;
+  [ROUTES.MESSAGE_SCREEN]: undefined;
   [ROUTES.FOOD_ALLERGIES]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;

@@ -90,7 +90,7 @@ export const PrivateDrawer: React.FC = () => {
                 name={ROUTES.MESSENGER}
                 component={MessengerStack}
                 options={{
-                    title: 'Messages',
+                    headerShown: false,
                     drawerIcon: ({ color }) => (
                         <Icon name="comments" size={24} color={color} />
                     ),
