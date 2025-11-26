@@ -17,6 +17,7 @@ import { Button } from 'components/Button.tsx';
 import { MessageItem } from 'types/messenger.ts';
 import { MessageService } from 'services/messages';
 import { RootStackParamList } from 'services/navigation';
+import { MessageEntity } from 'types/common/interfaces.ts';
 import { Message } from 'screens/privateScreens/Messenger/components/MessageItem.tsx';
 import { useGetChainMessagesQuery, useDeleteChainsMutation } from 'store/api/messengerApi.ts';
 
@@ -29,11 +30,10 @@ const ITEM_HIDDEN_SIZE = 100;
 const MessengerList = () => {
     const theme = useTheme();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const goToMessage = (message: MessageEntity) => navigation.navigate(ROUTES.MESSAGE_SCREEN, message);
 
     const [page, setPage] = useState(0);
-    const { data: messages, refetch } = useGetChainMessagesQuery({
-        params: { page },
-    });
+    const { data: messages, refetch } = useGetChainMessagesQuery({ params: { page } });
 
     // Handle delete chain messages
     const [deleteChain] = useDeleteChainsMutation();
@@ -125,7 +125,7 @@ const MessengerList = () => {
                 renderHiddenItem={renderHiddenItem}
                 contentContainerStyle={styles.flexGrow}
                 keyExtractor={({ id }) => id.toString()}
-                renderItem={({ item }) => <Message {...item } />}
+                renderItem={({ item }) => <Message {...item } goToMessage={goToMessage} />}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
                 ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.grey }]} />}
             />
@@ -133,7 +133,7 @@ const MessengerList = () => {
                 variant="outline"
                 title="NEW MESSAGE"
                 style={styles.btn}
-                onPress={() => navigation.navigate(ROUTES.MESSAGE_SCREEN, { id: null, message: null })}
+                onPress={() => goToMessage({ id: null, subject: null })}
             />
         </Screen>
     );

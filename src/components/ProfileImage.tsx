@@ -25,5 +25,6 @@ export default ProfileImage;
 const styles = StyleSheet.create({
     container: {
         overflow: 'hidden',
+        alignSelf: 'flex-start'
     },
 });

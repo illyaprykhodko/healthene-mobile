@@ -2,7 +2,7 @@
 import React from 'react';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
 // local dependencies
@@ -12,19 +12,21 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { MessageItem } from 'types/messenger.ts';
 import ProfileImage from 'components/ProfileImage.tsx';
+import { MessageEntity } from 'types/common/interfaces.ts';
 
 // configure
-interface MessageProps extends MessageItem{
-     // props here
+interface MessageProps extends MessageItem {
+  goToMessage: (message: MessageEntity) => void;
 }
 
-export const Message = ({ owner, collocutor, date, subject, messagesCount, lastMessage, attachmentCount }: MessageProps) => {
+export const Message = ({ owner, collocutor, date, subject, messagesCount, lastMessage, attachmentCount, goToMessage, id, ...props }: MessageProps) => {
     const theme = useTheme();
     const user = useSelector((state: RootState) => state.app.user);
     const isIncoming = user?.id !== owner?.id;
     const companion = isIncoming ? owner : collocutor;
+    const handlePress = () => goToMessage({ id, subject });
 
-    return <View style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
+    return <Pressable onPress={handlePress} style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
         <View style={[styles.row, styles.alignItems]}>
             <View style={[styles.unreadDot, { backgroundColor: lastMessage?.isRead ? 'transparent' : theme.colors.primary }]} />
             <ProfileImage uri={owner?.coverImage?.url} />
@@ -75,7 +77,7 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
             </Text>
             { attachmentCount ? <Icon name="paperclip" size={16} color={theme.colors.grey} /> : null }
         </View>
-    </View>;
+    </Pressable>;
 };
 
 const styles = StyleSheet.create({
@@ -119,4 +121,3 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     }
 });
-

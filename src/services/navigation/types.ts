@@ -2,7 +2,7 @@
 // import { ParamListBase } from '@react-navigation/native';
 // // local dependencies
 import { ROUTES } from 'constants/routes';
-import { PhaseItem } from 'store/api/dayOverviewApi';
+import { MessageEntity } from 'types/common/interfaces.ts';
 
 // export type RootStackParamList = {
 //   // Public screens
@@ -46,10 +46,7 @@ export type RootStackParamList = {
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
 
   // Example of a screen that requires params
-  [ROUTES.MESSAGE_SCREEN]: {
-    id: number | null,
-    message: string | null,
-  };
+  [ROUTES.MESSAGE_SCREEN]: MessageEntity;
   [ROUTES.SMART_SCALE]: {
     measurementPhaseItem: object;
   };
