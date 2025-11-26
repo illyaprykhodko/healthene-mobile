@@ -25,13 +25,16 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
     const isIncoming = user?.id !== owner?.id;
     const companion = isIncoming ? owner : collocutor;
 
-    return <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
-        {owner?.coverImage?.url
-            ? <View style={styles.imageContainer}>
-                <Image source={{ uri: owner?.coverImage.url }} style={styles.image} />
-            </View>
-            : <FeatherIcon size={48} name="user" />
-        }
+    return <View style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
+        <View style={[styles.row, styles.alignItems]}>
+            <View style={[styles.unreadDot, { backgroundColor: lastMessage?.isRead ? 'transparent' : theme.colors.primary }]} />
+            {owner?.coverImage?.url
+                ? <View style={styles.imageContainer}>
+                    <Image source={{ uri: owner?.coverImage.url }} style={styles.image} />
+                </View>
+                : <FeatherIcon size={48} name="user" />
+            }
+        </View>
         <View style={styles.messageInfoContainer}>
             <View style={styles.row}>
                 <View style={styles.shrink}>
@@ -70,13 +73,13 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
                         {lastMessage?.text.replace(/<\/?[^>]+(>|$)/g, '')}
                     </Text>
                 </View>
-                <View style={styles.additionalInfoWrapper}>
-                    <Text color={theme.colors.grey}>
-                        { moment(date).format('DD MMM') }
-                    </Text>
-                    { attachmentCount ? <Icon name="paperclip" size={16} color={theme.colors.grey} /> : null }
-                </View>
             </View>
+        </View>
+        <View style={styles.additionalInfoWrapper}>
+            <Text color={theme.colors.grey}>
+                { moment(date).format('DD MMM') }
+            </Text>
+            { attachmentCount ? <Icon name="paperclip" size={16} color={theme.colors.grey} /> : null }
         </View>
     </View>;
 };
@@ -101,22 +104,31 @@ const styles = StyleSheet.create({
         flex: 1,
         marginLeft: OFFSET.POINT * 2
     },
-    row: {
-        flexDirection: 'row',
-    },
     badge: {
         borderWidth: 0.3,
         paddingHorizontal: OFFSET.POINT,
         paddingVertical: OFFSET.POINT / 2,
         marginRight: OFFSET.POINT
     },
-    shrink: {
-        flexShrink: 1
-    },
     additionalInfoWrapper: {
         marginHorizontal: OFFSET.POINT,
         justifyContent: 'space-between',
         alignItems: 'flex-end',
+    },
+    unreadDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        marginRight: OFFSET.POINT,
+    },
+    row: {
+        flexDirection: 'row',
+    },
+    shrink: {
+        flexShrink: 1
+    },
+    alignItems: {
+        alignItems: 'center',
     }
 });
 

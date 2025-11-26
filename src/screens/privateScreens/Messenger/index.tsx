@@ -12,13 +12,13 @@ import Text from 'components/Text.tsx';
 import Screen from 'components/Screen.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
+import { ROUTES } from 'constants/routes.ts';
 import { Button } from 'components/Button.tsx';
 import { MessageItem } from 'types/messenger.ts';
 import { MessageService } from 'services/messages';
 import { RootStackParamList } from 'services/navigation';
 import { Message } from 'screens/privateScreens/Messenger/components/MessageItem.tsx';
 import { useGetChainMessagesQuery, useDeleteChainsMutation } from 'store/api/messengerApi.ts';
-import { ROUTES } from 'constants/routes.ts';
 
 interface RowMap {
     [key: string]: { closeRow: () => void } | undefined;
@@ -127,7 +127,7 @@ const MessengerList = () => {
                 keyExtractor={({ id }) => id.toString()}
                 renderItem={({ item }) => <Message {...item } />}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
-                ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.lighterGrey }]} />}
+                ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.grey }]} />}
             />
             <Button
                 variant="outline"
