@@ -57,6 +57,7 @@ const MessageScreen = ({ route }: MessageScreenProps) => {
                             onChangeText={handleChange('subject')}
                         />
                         <TextInput
+                            multiline
                             name="text"
                             label="Text"
                             disabled={false}

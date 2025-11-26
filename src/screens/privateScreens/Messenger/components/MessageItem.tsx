@@ -19,14 +19,14 @@ interface MessageProps extends MessageItem {
   goToMessage: (message: MessageEntity) => void;
 }
 
-export const Message = ({ owner, collocutor, date, subject, messagesCount, lastMessage, attachmentCount, goToMessage, id, ...props }: MessageProps) => {
+export const Message = ({ owner, collocutor, date, subject, messagesCount, lastMessage, attachmentCount, goToMessage, id }: MessageProps) => {
     const theme = useTheme();
     const user = useSelector((state: RootState) => state.app.user);
     const isIncoming = user?.id !== owner?.id;
     const companion = isIncoming ? owner : collocutor;
     const handlePress = () => goToMessage({ id, subject });
 
-    return <Pressable onPress={handlePress} style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
+    return <Pressable style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
         <View style={[styles.row, styles.alignItems]}>
             <View style={[styles.unreadDot, { backgroundColor: lastMessage?.isRead ? 'transparent' : theme.colors.primary }]} />
             <ProfileImage uri={owner?.coverImage?.url} />

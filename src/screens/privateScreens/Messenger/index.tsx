@@ -124,8 +124,8 @@ const MessengerList = () => {
                 rightOpenValue={-ITEM_HIDDEN_SIZE}
                 renderHiddenItem={renderHiddenItem}
                 contentContainerStyle={styles.flexGrow}
-                keyExtractor={({ id }) => id.toString()}
-                renderItem={({ item }) => <Message {...item } goToMessage={goToMessage} />}
+                keyExtractor={({ id }, index) => `${id}-${index}`}
+                renderItem={({ item }) => <Message key={item.id} {...item } goToMessage={goToMessage} />}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
                 ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.grey }]} />}
             />

@@ -15,6 +15,7 @@ interface TextInputProps {
     color?: string;
     disabled: boolean;
     [key: string]: any;
+    multiline?: boolean;
     secureTextEntry?: boolean;
     trailing?: React.ReactNode;
     accessibilityHint?: string;
@@ -35,6 +36,7 @@ const TextInput: React.FC<TextInputProps> = ({
     error = {},
     touched = {},
     onChangeText,
+    multiline = false,
     textAlign = 'right',
     secureTextEntry = false,
     ...input
@@ -67,14 +69,18 @@ const TextInput: React.FC<TextInputProps> = ({
                     value={value}
                     editable={!disabled}
                     autoCapitalize="none"
+                    multiline={multiline}
                     onChangeText={onChangeText}
                     secureTextEntry={isSecureText}
                     selectionColor={theme.colors.info}
+                    numberOfLines={multiline ? 6 : 1}
                     onBlur={() => value && setIsBlur(true)}
+                    textAlignVertical={multiline ? 'top' : 'center'}
                     style={[
                         styles.inputStyle,
                         {
                             textAlign,
+                            minHeight: multiline ? 120 : 'auto',
                             color: isShowError ? theme.colors.error : resolvedPrimary,
                         }
                     ]}
