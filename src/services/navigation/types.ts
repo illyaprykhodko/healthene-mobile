@@ -38,7 +38,6 @@ export type RootStackParamList = {
   [ROUTES.DAY_OVERVIEW]: undefined;
   [ROUTES.MESSAGE_LIST]: undefined;
   [ROUTES.HEALTH_PROFILE]: undefined;
-  [ROUTES.MESSAGE_SCREEN]: undefined;
   [ROUTES.FOOD_ALLERGIES]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;
@@ -47,6 +46,10 @@ export type RootStackParamList = {
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
 
   // Example of a screen that requires params
+  [ROUTES.MESSAGE_SCREEN]: {
+    id: number | null,
+    message: string | null,
+  };
   [ROUTES.SMART_SCALE]: {
     measurementPhaseItem: object;
   };

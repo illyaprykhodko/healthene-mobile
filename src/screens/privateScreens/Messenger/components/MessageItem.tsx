@@ -2,9 +2,8 @@
 import React from 'react';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
-import { Image, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // local dependencies
 import { RootState } from 'store';
@@ -12,9 +11,9 @@ import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { MessageItem } from 'types/messenger.ts';
+import ProfileImage from 'components/ProfileImage.tsx';
 
 // configure
-const IMAGE_SIZE = 48;
 interface MessageProps extends MessageItem{
      // props here
 }
@@ -28,12 +27,7 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
     return <View style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
         <View style={[styles.row, styles.alignItems]}>
             <View style={[styles.unreadDot, { backgroundColor: lastMessage?.isRead ? 'transparent' : theme.colors.primary }]} />
-            {owner?.coverImage?.url
-                ? <View style={styles.imageContainer}>
-                    <Image source={{ uri: owner?.coverImage.url }} style={styles.image} />
-                </View>
-                : <FeatherIcon size={48} name="user" />
-            }
+            <ProfileImage uri={owner?.coverImage?.url} />
         </View>
         <View style={styles.messageInfoContainer}>
             <View style={styles.row}>
@@ -89,12 +83,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingVertical: OFFSET.VERTICAL,
         paddingHorizontal: OFFSET.POINT * 2
-    },
-    imageContainer: {
-        width: IMAGE_SIZE,
-        height: IMAGE_SIZE,
-        borderRadius: IMAGE_SIZE / 2,
-        overflow: 'hidden',
     },
     image: {
         width: '100%',

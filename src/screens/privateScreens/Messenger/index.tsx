@@ -133,7 +133,7 @@ const MessengerList = () => {
                 variant="outline"
                 title="NEW MESSAGE"
                 style={styles.btn}
-                onPress={() => navigation.navigate(ROUTES.MESSAGE_SCREEN)}
+                onPress={() => navigation.navigate(ROUTES.MESSAGE_SCREEN, { id: null, message: null })}
             />
         </Screen>
     );
@@ -163,6 +163,7 @@ const styles = StyleSheet.create({
     btn: {
         marginHorizontal: OFFSET.HORIZONTAL,
         marginBottom: OFFSET.VERTICAL,
+        marginTop: OFFSET.POINT * 2,
     },
     flexGrow: {
         flexGrow: 1

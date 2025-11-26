@@ -7,9 +7,8 @@ import Toast from 'react-native-toast-message';
 import React, { useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
-import FeatherIcon from 'react-native-vector-icons/Feather';
 import { BottomSheetBackdrop, BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Image, Pressable, ScrollView, StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
 
 // local dependencies
 import { User } from 'types';
@@ -21,6 +20,7 @@ import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
 import { Dropdown } from 'components/Dropdown.tsx';
 import { setUser } from 'store/slices/appSlice.ts';
+import ProfileImage from 'components/ProfileImage.tsx';
 import DatePickerSelector from 'components/DatePicker.tsx';
 import { getPicture, takePicture } from 'services/image-picker';
 import { PREFIXES, SUFFIXES, GENDERS } from 'constants/spec.ts';
@@ -116,10 +116,7 @@ export const PersonalInformationScreen = () => {
                             <ScrollView style={styles.flex}>
                                 <View style={styles.imageContainer}>
                                     <Pressable style={styles.userImg} onPress={openUserImgBottomSheet}>
-                                        {values?.coverImage?.url
-                                            ? <Image source={{ uri: values?.coverImage.url }} width={65} height={65} />
-                                            : <FeatherIcon size={65} name="user"/>
-                                        }
+                                        <ProfileImage uri={values?.coverImage?.url} width={65} height={65} />
                                     </Pressable>
                                     <View style={styles.flexShrink}>
                                         <Text color={theme.colors.primary}>Profile Picture</Text>
