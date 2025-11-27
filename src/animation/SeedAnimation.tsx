@@ -29,8 +29,8 @@ export const SeedAnimation = memo(({ x, y, seedIndex }: SeedAnimationProps) => {
             require('../../assets/seeds/seed3.png'),
             require('../../assets/seeds/seed4.png'),
         ];
+        let delay = 0;
         let offsetX = -30;
-        let delay = 20;
         return Array.from({ length: 7 }).map((_, i) => {
             const index = Math.floor(Math.random() * images.length);
             const BASE_SPREAD_X = 40;
@@ -38,7 +38,7 @@ export const SeedAnimation = memo(({ x, y, seedIndex }: SeedAnimationProps) => {
 
             const item = {
                 delay,
-                duration: 500,
+                duration: 1500,
                 translateYValue: 0,
                 source: images[index],
                 id: Math.random().toString(),
@@ -76,7 +76,7 @@ export const SeedAnimation = memo(({ x, y, seedIndex }: SeedAnimationProps) => {
         <>
             {seeds.map(seed => {
                 const animatedStyle = useAnimatedStyle(() => ({
-                    transform: [{ translateY: seed.translateY.value - seedIndex }],
+                    transform: [{ translateY: seed.translateY.value }],
                 }));
 
                 return (
@@ -92,8 +92,8 @@ export const SeedAnimation = memo(({ x, y, seedIndex }: SeedAnimationProps) => {
                         ]}
                     >
                         <Image
-                            style={{ width: '100%', height: '100%' }}
                             source={seed.source}
+                            style={{ width: '100%', height: '100%' }}
                         />
                     </Animated.View>
                 );

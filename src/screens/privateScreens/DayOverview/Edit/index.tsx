@@ -68,7 +68,7 @@ interface Location {
 }
 
 // configure
-export const SEED_SIZE = 16;
+export const SEED_SIZE = 6;
 
 // PHASE_ITEM_STATUS, ENTITY_TYPE, SECTION centralized in constants/spec
 

@@ -5,6 +5,7 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
+import { OFFSET } from 'constants/offset.ts';
 
 // local dependencies
 
@@ -145,7 +146,7 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
             birdY.value = 0;
         } else if (phase === BirdAnimationStep.FLY) {
             const targetX = -SCREEN_WIDTH + getAnimationSize().webview.width;
-            const targetY = SCREEN_HEIGHT - (getAnimationSize().html.height);
+            const targetY = SCREEN_HEIGHT - (getAnimationSize().html.height) - OFFSET.VERTICAL;
 
             birdX.value = withTiming(targetX, { duration: 3200 });
             birdY.value = withTiming(targetY, { duration: 3200 }, finished => {
@@ -153,6 +154,9 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
                     runOnJS(handleFlyFinished)();
                 }
             });
+        } else if (phase === BirdAnimationStep.WALKING) {
+            const targetX = -50;
+            birdX.value = withTiming(targetX, { duration: 2000 });
         }
     }, [phase, getAnimationSize, animations]);
 
