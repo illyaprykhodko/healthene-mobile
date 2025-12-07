@@ -1,11 +1,9 @@
 // outsource dependencies
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { FlatList, StyleSheet } from 'react-native';
+import Toast from 'react-native-toast-message';
+import React, { useCallback, useState } from 'react';
+import { FlatList, RefreshControl, StyleSheet } from 'react-native';
 
 // local dependencies
-import { RootState } from 'store';
-import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { useGetMessagesChainQuery } from 'store/api/messengerApi.ts';
 import MessageChainItem from 'screens/privateScreens/Messenger/components/MessageChainItem.tsx';
@@ -15,19 +13,43 @@ interface MessageChainProps {
 }
 
 const MessageChain = ({ id }: MessageChainProps) => {
-    const theme = useTheme();
-    const user = useSelector((state: RootState) => state.app.user);
-
     // Handle message chain
     const [page, setPage] = useState<number>(0);
-    const { data: messageChain } = useGetMessagesChainQuery({ chainId: id, params: { page: 0, size: 10 } });
+    const { data: messageChain, refetch } = useGetMessagesChainQuery({ chainId: id, params: { page, size: 10 } });
 
-    console.log('DATA', messageChain);
+    // Lazy load handle
+    const loadMore = useCallback(() => {
+        if (messageChain && messageChain.page < messageChain.totalPages) {
+            setPage(messageChain.page + 1);
+        }
+    }, [messageChain, setPage]);
+
+    // Refresh control
+    const [refreshing, setRefreshing] = useState(false);
+    const handleRefreshControl = async () => {
+        try {
+            setRefreshing(true);
+            await refetch();
+            setPage(0);
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Couldn’t refresh messages',
+                text2: 'Something went wrong while updating messages. Please try again later.',
+            });
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
     return <FlatList
+        onEndReached={loadMore}
         style={styles.container}
+        onEndReachedThreshold={0.6}
         data={messageChain?.data ?? []}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => <MessageChainItem key={item.id} {...item} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
     />;
 };
 
