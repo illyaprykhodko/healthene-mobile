@@ -8,15 +8,17 @@ export interface MessageItem {
     messagesCount: number
     attachmentCount: number;
     collocutor: Participant;
-    lastMessage: {
+    lastMessage: LastMessage
+}
+
+export interface LastMessage {
+    id: string;
+    reply: null;
+    text: string;
+    isRead: boolean;
+    sender: Participant;
+    chain: {
         id: string;
-        reply: null;
-        text: string;
-        isRead: boolean;
-        sender: Participant;
-        chain: {
-            id: string;
-        }
     }
 }
 
@@ -31,8 +33,29 @@ export interface Participant {
     }
 }
 
-export interface TransformData {
+export interface TransformData<T> {
+    data: T[];
     page: number;
     totalPages: number;
-    data: MessageItem[];
+}
+
+export interface Message {
+    id: number;
+    subject: number;
+    isStarred: boolean;
+    owner: Participant;
+    messagesCount: number;
+    attachmentCount: number;
+    collocutor: Participant;
+    lastMessage: LastMessage;
+}
+
+export interface MessageChain {
+    id: number;
+    date: string;
+    text: string;
+    attachments: []
+    isRead: boolean;
+    chain: {id: number};
+    sender: Participant;
 }

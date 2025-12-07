@@ -12,21 +12,20 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { MessageItem } from 'types/messenger.ts';
 import ProfileImage from 'components/ProfileImage.tsx';
-import { MessageEntity } from 'types/common/interfaces.ts';
 
 // configure
 interface MessageProps extends MessageItem {
-  goToMessage: (message: MessageEntity) => void;
+  goToReadMessage: (id: number) => void;
 }
 
-export const Message = ({ owner, collocutor, date, subject, messagesCount, lastMessage, attachmentCount, goToMessage, id }: MessageProps) => {
+export const Message = ({ owner, collocutor, date, subject, messagesCount, lastMessage, attachmentCount, goToReadMessage, id }: MessageProps) => {
     const theme = useTheme();
     const user = useSelector((state: RootState) => state.app.user);
     const isIncoming = user?.id !== owner?.id;
     const companion = isIncoming ? owner : collocutor;
-    const handlePress = () => goToMessage({ id, subject });
+    const handlePress = () => goToReadMessage(id);
 
-    return <Pressable style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
+    return <Pressable onPress={handlePress} style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
         <View style={[styles.row, styles.alignItems]}>
             <View style={[styles.unreadDot, { backgroundColor: lastMessage?.isRead ? 'transparent' : theme.colors.primary }]} />
             <ProfileImage uri={owner?.coverImage?.url} />

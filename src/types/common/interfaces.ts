@@ -102,22 +102,7 @@ export interface PaginatedParams {
  * @property {number} offset - Numeric offset representing the index of the first item in the current page.
  * @property {boolean} hasPrevious - Whether a previous page exists.
  */
-export interface PaginatedResponse<T> {
-  /** Array of items in the current page */
-  content: T[];
-  /** Total number of items across all pages */
-  totalElements: number;
-  /** Current page number (0-based by backend, can be mapped to 1-based in UI) */
-  pageNumber: number;
-  /** Number of items per page */
-  size: number;
-  /** Total number of pages */
-  totalPages: number;
-  /** Numeric offset representing the index of the first item in the current page */
-  offset: number;
-  /** Whether a previous page exists */
-  hasPrevious: boolean;
-}
+
 
 /**
  * Represents a response with metadata

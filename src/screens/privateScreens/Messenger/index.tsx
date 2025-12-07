@@ -30,7 +30,8 @@ const ITEM_HIDDEN_SIZE = 100;
 const MessengerList = () => {
     const theme = useTheme();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const goToMessage = (message: MessageEntity) => navigation.navigate(ROUTES.WRITE_MESSAGE_SCREEN, message);
+    const goToReadMessage = (id: number) => navigation.navigate(ROUTES.READ_MESSAGE_SCREEN, { id });
+    const goToWriteMessage = (message: MessageEntity) => navigation.navigate(ROUTES.WRITE_MESSAGE_SCREEN, message);
 
     const [page, setPage] = useState(0);
     const { data: messages, refetch } = useGetChainMessagesQuery({ params: { page } });
@@ -125,7 +126,7 @@ const MessengerList = () => {
                 renderHiddenItem={renderHiddenItem}
                 contentContainerStyle={styles.flexGrow}
                 keyExtractor={({ id }, index) => `${id}-${index}`}
-                renderItem={({ item }) => <Message key={item.id} {...item } goToMessage={goToMessage} />}
+                renderItem={({ item }) => <Message key={item.id} {...item } goToReadMessage={goToReadMessage} />}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
                 ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.grey }]} />}
             />
@@ -133,7 +134,7 @@ const MessengerList = () => {
                 variant="outline"
                 title="NEW MESSAGE"
                 style={styles.btn}
-                onPress={() => goToMessage({ id: null, subject: null })}
+                onPress={() => goToWriteMessage({ id: null, subject: null })}
             />
         </Screen>
     );
