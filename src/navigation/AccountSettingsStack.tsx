@@ -56,6 +56,8 @@ export const AccountSettingsStack = () => {
                 name={ROUTES.BIOMETRIC_SETTINGS}
                 component={BiometricSettingsScreen}
                 options={{ title: 'Biometric Authentication' }}
+            />
+            <Stack.Screen
                 component={FoodPreferences}
                 name={ROUTES.FOOD_PREFERENCES}
                 options={{ title: 'Food Preferences' }}

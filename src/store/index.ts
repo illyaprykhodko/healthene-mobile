@@ -1,6 +1,7 @@
 // outsource dependencies
 import { configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+
 // local dependencies
 import { authApi } from './api/authApi';
 import appReducer from './slices/appSlice';
@@ -11,6 +12,8 @@ import exerciseReducer from './slices/exerciseSlice';
 import { dayOverviewApi } from './api/dayOverviewApi';
 import { settingsApi } from 'store/api/settingsApi.ts';
 import { s3ServiceApi } from 'store/api/s3ServiceApi.ts';
+import { messengerApi } from 'store/api/messengerApi.ts';
+import messengerSlice from 'store/slices/messengerSlice.ts';
 import { dayOverviewReducer } from './slices/dayOverviewSlice';
 import { categoryTreeApi } from 'store/api/categoryTreeApi.ts';
 import forgotPasswordReducer from './slices/forgotPasswordSlice';
@@ -21,6 +24,7 @@ export const store = configureStore({
         app: appReducer,
         signIn: signInReducer,
         exercise: exerciseReducer,
+        messenger: messengerSlice,
         dayOverview: dayOverviewReducer,
         forgotPassword: forgotPasswordReducer,
         foodPreferences: foodPreferencesSlice,
@@ -28,6 +32,7 @@ export const store = configureStore({
         [publicApi.reducerPath]: publicApi.reducer,
         [settingsApi.reducerPath]: settingsApi.reducer,
         [s3ServiceApi.reducerPath]: s3ServiceApi.reducer,
+        [messengerApi.reducerPath]: messengerApi.reducer,
         [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
         [categoryTreeApi.reducerPath]: categoryTreeApi.reducer,
     },
@@ -37,6 +42,7 @@ export const store = configureStore({
                 authApi.middleware,
                 publicApi.middleware,
                 settingsApi.middleware,
+                messengerApi.middleware,
                 s3ServiceApi.middleware,
                 dayOverviewApi.middleware,
                 categoryTreeApi.middleware,

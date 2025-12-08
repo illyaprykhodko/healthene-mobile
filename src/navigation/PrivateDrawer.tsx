@@ -11,6 +11,7 @@ import { OFFSET } from 'constants/offset.ts';
 import BackButton from 'components/BackButton.tsx';
 import DayOverview from 'screens/privateScreens/DayOverview';
 import { MainScreen } from 'screens/privateScreens/MainScreen';
+import MessengerStack from 'navigation/MessengerStack.tsx';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
 import { PlaceholderScreen } from 'screens/privateScreens/PlaceholderScreen';
 
@@ -86,10 +87,10 @@ export const PrivateDrawer: React.FC = () => {
             />
 
             <Drawer.Screen
-                name={ROUTES.COMMUNICATION}
-                component={PlaceholderScreen}
+                name={ROUTES.MESSENGER}
+                component={MessengerStack}
                 options={{
-                    title: 'Messages',
+                    headerShown: false,
                     drawerIcon: ({ color }) => (
                         <Icon name="comments" size={24} color={color} />
                     ),

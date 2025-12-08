@@ -3,7 +3,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
-import { View, StyleSheet, TouchableOpacity, Pressable, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 
 // local dependencies
 import { RootState } from 'store';
@@ -14,6 +14,8 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import { navigate } from 'services/navigation';
+import { clearSession } from 'store/slices/appSlice';
+import ProfileImage from 'components/ProfileImage.tsx';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // const { width } = Dimensions.get('window');
@@ -91,7 +93,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         {
             icon: 'comments',
             title: 'Messages',
-            route: ROUTES.COMMUNICATION,
+            route: ROUTES.MESSENGER,
         },
         {
             icon: 'chart-bar',
@@ -135,12 +137,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
                 <Pressable onPress={goToAccountSettings} style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
-                    <View style={styles.userIcon}>
-                        {user?.coverImage?.url
-                            ? <Image source={{ uri: user?.coverImage.url }} width={48} height={48} />
-                            : <FeatherIcon size={48} name="user" />
-                        }
-                    </View>
+                    <ProfileImage style={styles.userIcon} uri={user?.coverImage?.url} />
                     <View>
                         <Text variant="h4" color={theme.colors.text}>
                             {user?.firstName} {user?.lastName}
@@ -203,9 +200,7 @@ const styles = StyleSheet.create({
     },
     userIcon: {
         marginRight: OFFSET.POINT * 2,
-        borderWidth: 1,
-        borderRadius: 48/2,
-        overflow: 'hidden',
+        borderWidth: 1
     },
     menuItem: {
         paddingVertical: OFFSET.VERTICAL - 5,

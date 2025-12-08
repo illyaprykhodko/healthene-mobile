@@ -2,7 +2,6 @@
 // import { ParamListBase } from '@react-navigation/native';
 // // local dependencies
 import { ROUTES } from 'constants/routes';
-// import { PhaseItem } from 'store/api/dayOverviewApi';
 
 // export type RootStackParamList = {
 //   // Public screens
@@ -31,19 +30,22 @@ export type RootStackParamList = {
   [ROUTES.ADDRESS]: undefined;
   [ROUTES.SETTINGS]: undefined;
   [ROUTES.SHOPPING]: undefined;
+  [ROUTES.MESSENGER]: undefined;
   [ROUTES.DAILY_PLAN]: undefined;
   [ROUTES.MY_RESULTS]: undefined;
   [ROUTES.ABOUT_PLAN]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
-  [ROUTES.COMMUNICATION]: undefined;
+  [ROUTES.MESSAGE_LIST]: undefined;
   [ROUTES.HEALTH_PROFILE]: undefined;
   [ROUTES.FOOD_ALLERGIES]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;
   [ROUTES.BIOMETRIC_SETTINGS]: undefined;
   [ROUTES.FOOD_PREFERENCES]: undefined;
+  [ROUTES.READ_MESSAGE_SCREEN]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
+  [ROUTES.WRITE_MESSAGE_SCREEN]: undefined;
 
   // Example of a screen that requires params
   [ROUTES.SMART_SCALE]: {
