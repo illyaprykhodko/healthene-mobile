@@ -1,4 +1,5 @@
 // outsource dependencies
+import { useDispatch } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -17,7 +18,7 @@ import { Button } from 'components/Button.tsx';
 import { MessageItem } from 'types/messenger.ts';
 import { MessageService } from 'services/messages';
 import { RootStackParamList } from 'services/navigation';
-import { MessageEntity } from 'types/common/interfaces.ts';
+import { clearReplyMessage, setReplyMessage } from 'store/slices/messengerSlice.ts';
 import { Message } from 'screens/privateScreens/Messenger/components/MessageItem.tsx';
 import { useGetChainMessagesQuery, useDeleteChainsMutation } from 'store/api/messengerApi.ts';
 
@@ -29,9 +30,14 @@ const ITEM_HIDDEN_SIZE = 100;
 
 const MessengerList = () => {
     const theme = useTheme();
+    const dispatch = useDispatch();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const goToReadMessage = (id: number) => navigation.navigate(ROUTES.READ_MESSAGE_SCREEN, { id });
-    const goToWriteMessage = (message: MessageEntity) => navigation.navigate(ROUTES.WRITE_MESSAGE_SCREEN, message);
+    const goToWriteMessage = () => navigation.navigate(ROUTES.WRITE_MESSAGE_SCREEN);
+    const goToReadMessage = useCallback((item: MessageItem) => {
+        dispatch(setReplyMessage(item));
+        navigation.navigate(ROUTES.READ_MESSAGE_SCREEN);
+    }, [dispatch, navigation]);
+    const init = useCallback(() => dispatch(clearReplyMessage()), [dispatch]);
 
     const [page, setPage] = useState(0);
     const { data: messages, refetch } = useGetChainMessagesQuery({ params: { page } });
@@ -113,7 +119,7 @@ const MessengerList = () => {
     }, [messages, setPage]);
 
     return (
-        <Screen initialized={initialized}>
+        <Screen initialized={initialized} init={init}>
             <SwipeListView
                 useFlatList
                 disableRightSwipe
@@ -126,15 +132,15 @@ const MessengerList = () => {
                 renderHiddenItem={renderHiddenItem}
                 contentContainerStyle={styles.flexGrow}
                 keyExtractor={({ id }, index) => `${id}-${index}`}
-                renderItem={({ item }) => <Message key={item.id} {...item } goToReadMessage={goToReadMessage} />}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
                 ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.grey }]} />}
+                renderItem={({ item }) => <Message key={item.id} {...item } goToReadMessage={() => goToReadMessage(item)} />}
             />
             <Button
                 variant="outline"
                 title="NEW MESSAGE"
                 style={styles.btn}
-                onPress={() => goToWriteMessage({ id: null, subject: null })}
+                onPress={goToWriteMessage}
             />
         </Screen>
     );

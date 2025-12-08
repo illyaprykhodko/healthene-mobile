@@ -7,7 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import moment from 'moment/moment';
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { Pressable, StyleSheet, View } from 'react-native';
 import HTMLView, { HTMLViewNode, HTMLViewNodeRenderer } from 'react-native-htmlview';

@@ -3,6 +3,7 @@
 // // local dependencies
 import { ROUTES } from 'constants/routes';
 import { MessageEntity } from 'types/common/interfaces.ts';
+import { Participant } from 'types/messenger.ts';
 
 // export type RootStackParamList = {
 //   // Public screens
@@ -42,12 +43,12 @@ export type RootStackParamList = {
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;
   [ROUTES.FOOD_PREFERENCES]: undefined;
+  [ROUTES.READ_MESSAGE_SCREEN]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
+  [ROUTES.WRITE_MESSAGE_SCREEN]: undefined;
 
   // Example of a screen that requires params
-  [ROUTES.READ_MESSAGE_SCREEN]: { id: number };
-  [ROUTES.WRITE_MESSAGE_SCREEN]: MessageEntity;
   [ROUTES.SMART_SCALE]: {
     measurementPhaseItem: object;
   };

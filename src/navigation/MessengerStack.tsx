@@ -7,6 +7,7 @@ import { ROUTES } from 'constants/routes.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import BackButton from 'components/BackButton.tsx';
+import { MessageEntity } from 'types/common/interfaces.ts';
 import MessengerList from 'screens/privateScreens/Messenger';
 import ReadMessageScreen from 'screens/privateScreens/Messenger/ReadMessageScreen.tsx';
 import WriteMessageScreen from 'screens/privateScreens/Messenger/WriteMessageScreen.tsx';
@@ -16,6 +17,7 @@ const MessengerStack = () => {
     const theme = useTheme();
     return (
         <Stack.Navigator
+            initialRouteName={ROUTES.MESSAGE_LIST}
             screenOptions={({ navigation }) => ({
                 headerShown: true,
                 drawerPosition: 'right',
@@ -37,7 +39,10 @@ const MessengerStack = () => {
         >
             <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.MESSAGE_LIST} component={MessengerList} />
             <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.READ_MESSAGE_SCREEN} component={ReadMessageScreen} />
-            <Stack.Screen options={{ title: 'Message' }} name={ROUTES.WRITE_MESSAGE_SCREEN} component={WriteMessageScreen} />
+            <Stack.Screen
+                name={ROUTES.WRITE_MESSAGE_SCREEN} component={WriteMessageScreen}
+                options={({ route }: {route: { params?: MessageEntity }}) => ({ title: route.params?.id ? 'Message' : 'New Message' })}
+            />
         </Stack.Navigator>
     );
 };

@@ -14,7 +14,7 @@ interface MessageChainProps {
 
 const MessageChain = ({ id }: MessageChainProps) => {
     // Handle message chain
-    const [page, setPage] = useState<number>(0);
+    const [page, setPage] = useState<number>(1);
     const { data: messageChain, refetch } = useGetMessagesChainQuery({ chainId: id, params: { page, size: 10 } });
 
     // Lazy load handle
@@ -48,6 +48,7 @@ const MessageChain = ({ id }: MessageChainProps) => {
         onEndReachedThreshold={0.6}
         data={messageChain?.data ?? []}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.flexGrow}
         renderItem={({ item }) => <MessageChainItem key={item.id} {...item} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
     />;
@@ -59,4 +60,7 @@ const styles = StyleSheet.create({
     container: {
         marginVertical: OFFSET.VERTICAL
     },
+    flexGrow: {
+        flexGrow: 1
+    }
 });

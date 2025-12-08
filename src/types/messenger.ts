@@ -12,7 +12,7 @@ export interface MessageItem {
 }
 
 export interface LastMessage {
-    id: string;
+    id: number;
     reply: null;
     text: string;
     isRead: boolean;
@@ -41,7 +41,7 @@ export interface TransformData<T> {
 
 export interface Message {
     id: number;
-    subject: number;
+    subject: string;
     isStarred: boolean;
     owner: Participant;
     messagesCount: number;
@@ -59,3 +59,8 @@ export interface MessageChain {
     chain: {id: number};
     sender: Participant;
 }
+
+export interface MessageForm {
+    subject: string,
+    text: string
+};

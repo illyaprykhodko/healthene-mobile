@@ -3,16 +3,16 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 
 // local dependencies
 import { baseQuery } from 'store/api/baseApi.ts';
-import { MessageChain, Message, MessageItem, TransformData } from 'types/messenger.ts';
 import { PaginatedParams, PaginatedResponse } from 'types/common/interfaces.ts';
+import { MessageChain, Message, MessageItem, TransformData, MessageForm } from 'types/messenger.ts';
 
 export const messengerApi = createApi({
     baseQuery,
-    reducerPath: 'messenger',
-    tagTypes: ['ChanMessages'],
+    reducerPath: 'messengerApi',
+    tagTypes: ['ChanMessages', 'ListOfChain'],
     endpoints: builder => ({
         getChainMessages: builder.query<TransformData<MessageItem>, { params : PaginatedParams } >({
-            providesTags: ['ChanMessages'],
+            providesTags: ['ListOfChain'],
             query: ({ params }) => {
                 return {
                     body: {},
@@ -46,7 +46,7 @@ export const messengerApi = createApi({
             },
         }),
         deleteChains: builder.mutation<void, [{ id: number }]>({
-            invalidatesTags: ['ChanMessages'],
+            invalidatesTags: ['ListOfChain'],
             query: body => {
                 return {
                     body,
@@ -66,7 +66,7 @@ export const messengerApi = createApi({
             query: ({ chainId, params }) => ({
                 url: `/messenger-service/chain/${chainId}/messages`,
                 method: 'GET',
-                params: { ...params, sort: 'id,ASC', size: 10 },
+                params: { ...params, sort: 'id,DESC', size: 10 },
             }),
             serializeQueryArgs: ({ endpointName }) => endpointName,
             transformResponse (response: PaginatedResponse<MessageChain>, _, args) {
@@ -92,7 +92,30 @@ export const messengerApi = createApi({
                 return currentPage !== previousPage;
             },
         }),
+        replyToChain: builder.mutation<void, { chain: MessageItem } & MessageForm>({
+            query: body => ({
+                body,
+                method: 'POST',
+                url: '/messenger-service/chain/message',
+            }),
+            invalidatesTags: ['ChanMessages', 'ListOfChain'],
+        }),
+        createChain: builder.mutation<void, MessageForm>({
+            query: body => ({
+                body,
+                method: 'POST',
+                url: '/messenger-service/chain',
+            }),
+            invalidatesTags: ['ListOfChain'],
+        }),
     })
 });
 
-export const { useGetChainMessagesQuery, useDeleteChainsMutation, useGetMessageQuery, useGetMessagesChainQuery } = messengerApi;
+export const {
+    useGetMessageQuery,
+    useCreateChainMutation,
+    useReplyToChainMutation,
+    useDeleteChainsMutation,
+    useGetChainMessagesQuery,
+    useGetMessagesChainQuery
+} = messengerApi;
