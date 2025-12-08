@@ -1,34 +1,19 @@
-/**
- * Smart Scale BLE Service
- * Modern functional wrapper for Bluetooth Low Energy smart scales
- */
-
+// outsource dependencies
 import { Buffer } from 'buffer';
 import { BleManager, State } from 'react-native-ble-plx';
-import type { SmartScaleReading, BLEDevice } from '../../types/health';
+// local dependencies
+import type { SmartScaleReading, BLEDevice } from 'types/health';
 
-/**
- * Callback types
- */
 type WeightUpdateHandler = (reading: SmartScaleReading) => void;
 type DeviceFoundHandler = (device: BLEDevice) => void;
 
-/**
- * Service state (module-level, singleton pattern)
- */
 let manager: BleManager | null = null;
 let onWeightUpdate: WeightUpdateHandler | null = null;
 let onDeviceFound: DeviceFoundHandler | null = null;
 let currentWeight: SmartScaleReading | null = null;
 
-/**
- * Supported device names (can be extended)
- */
 const SUPPORTED_DEVICES = ['ADV', 'Smart Scale'];
 
-/**
- * Convert weight from kg to lbs (legacy format compatibility)
- */
 const convertWeightToLbs = (weightKg: number): number => {
     let temp = Math.floor(weightKg * 2.2046 / 2);
     if ((weightKg * 2.2046) % 1 >= 0.5) {
@@ -48,12 +33,13 @@ const initManager = (): BleManager => {
     return manager;
 };
 
-/**
- * Get current BLE permission/power status
- */
 const getStatus = async (): Promise<State> => {
     try {
         const bleManager = initManager();
+        
+        // Wait a bit for BLE manager to initialize
+        await new Promise<void>(resolve => setTimeout(() => resolve(), 100));
+        
         const state = await bleManager.state();
         return state;
     } catch (error) {
@@ -63,29 +49,30 @@ const getStatus = async (): Promise<State> => {
 };
 
 /**
- * Set handler for weight updates
+ * Subscribe to Bluetooth state changes
+ * @param listener Function to call when state changes
+ * @returns Subscription object with remove() method
  */
+const onStateChange = (
+    listener: (state: State) => void
+): { remove: () => void } => {
+    const bleManager = initManager();
+    const subscription = bleManager.onStateChange(listener, true);
+    return subscription;
+};
+
 const setOnWeightUpdate = (updateHandler: WeightUpdateHandler): void => {
     onWeightUpdate = updateHandler;
 };
 
-/**
- * Set handler for device found
- */
 const setOnDeviceFound = (foundHandler: DeviceFoundHandler): void => {
     onDeviceFound = foundHandler;
 };
 
-/**
- * Get latest weight reading
- */
 const getCurrentWeight = (): SmartScaleReading | null => {
     return currentWeight;
 };
 
-/**
- * Process manufacturer data from BLE device
- */
 const processManufacturerData = (data: Buffer): SmartScaleReading | null => {
     if (!data || data.length !== 15) {
         console.warn('[SmartScale] Invalid manufacturer data length:', data?.length);
@@ -119,10 +106,6 @@ const updateWeight = (reading: SmartScaleReading): void => {
     }
 };
 
-/**
- * Start scanning for smart scale devices
- * @returns Promise that resolves when a device is found
- */
 const startScan = async (): Promise<BLEDevice> => {
     const bleManager = initManager();
 
@@ -135,12 +118,9 @@ const startScan = async (): Promise<BLEDevice> => {
                 reject(error);
                 return;
             }
-
             if (!device) {
                 return;
             }
-
-            // Check if device name matches supported devices
             const isSupported = device.name
                 && SUPPORTED_DEVICES.some(name => device.name?.includes(name));
 
@@ -159,13 +139,10 @@ const startScan = async (): Promise<BLEDevice> => {
                             manufacturerData: device.manufacturerData,
                         };
 
-                        // Notify device found handler
                         if (onDeviceFound) {
                             onDeviceFound(bleDevice);
                         }
 
-                        // Stop scanning on first valid device
-                        stopScan();
                         resolve(bleDevice);
                     }
                 } catch (processError: any) {
@@ -174,7 +151,6 @@ const startScan = async (): Promise<BLEDevice> => {
             }
         });
 
-        // Timeout after 30 seconds
         setTimeout(() => {
             stopScan();
             reject(new Error('Scan timeout: No smart scale found'));
@@ -182,9 +158,6 @@ const startScan = async (): Promise<BLEDevice> => {
     });
 };
 
-/**
- * Stop scanning for devices
- */
 const stopScan = (): void => {
     if (manager) {
         console.info('[SmartScale] Stopping device scan');
@@ -192,9 +165,6 @@ const stopScan = (): void => {
     }
 };
 
-/**
- * Reset service state
- */
 const reset = (): void => {
     currentWeight = null;
     onWeightUpdate = null;
@@ -202,14 +172,12 @@ const reset = (): void => {
     stopScan();
 };
 
-/**
- * Smart Scale Service (functional API)
- */
 const SmartScaleService = {
     reset,
     stopScan,
     getStatus,
     startScan,
+    onStateChange,
     setOnDeviceFound,
     getCurrentWeight,
     setOnWeightUpdate,

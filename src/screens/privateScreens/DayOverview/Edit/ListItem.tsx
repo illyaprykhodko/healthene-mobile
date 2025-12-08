@@ -1,6 +1,7 @@
 // outsource dependencies
 import React from 'react';
-import { StyleSheet, View, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { filters } from 'services/filter';
@@ -8,13 +9,9 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import Checkbox from 'components/Checkbox';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE } from 'constants/spec';
-
-// PHASE_ITEM_STATUS moved to constants/spec
-
-// ENTITY_TYPE centralized in constants/spec
-
 interface ListItemProps {
   item: any;
+  date?: string;
   disabled?: boolean;
   nextSection?: string;
   updateData?: (item: any) => void;
@@ -23,12 +20,14 @@ interface ListItemProps {
 
 export const ListItem: React.FC<ListItemProps> = ({
     item,
+    date,
     updateData,
     nextSection,
     disabled = false,
     handleCheckboxStatus,
 }) => {
     const theme = useTheme();
+    const navigation = useNavigation();
     const isFood = item.type === ENTITY_TYPE.FOOD;
     const isRecipe = item.type === ENTITY_TYPE.RECIPE;
     const isDone = item.status === PHASE_ITEM_STATUS.DONE;
@@ -40,6 +39,12 @@ export const ListItem: React.FC<ListItemProps> = ({
         if (handleCheckboxStatus && !disabled) {
             handleCheckboxStatus({ ...item, status: isDone ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
             // handleCheckboxStatus(item);
+        }
+    };
+
+    const handleItemPress = () => {
+        if (!disabled && item.id) {
+            (navigation as any).navigate('Item', { id: item.id, date });
         }
     };
 
@@ -127,7 +132,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, { color: theme.colors.darkGrey }, isOpacity || {}]}>
+                        <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Recipe'}`}
                         </Text>
                         <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
@@ -135,7 +140,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         </Text>
                         {item.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                edited by me
+                                added by me
                             </Text>
                         )}
                     </View>
@@ -151,12 +156,12 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, { fontSize: 18, color: theme.colors.darkGrey }, isOpacity || {}]}>
+                        <Text style={[styles.title, { fontSize: 18, color: theme.colors.black }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Ingredient'}`}
                         </Text>
                         {item.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                edited by me
+                                added by me
                             </Text>
                         )}
                     </View>
@@ -171,7 +176,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, { color: theme.colors.darkGrey }, isOpacity || {}]}>
+                        <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
                             {item.recipe?.name || 'Recipe'}
                         </Text>
                         {amount && (
@@ -182,7 +187,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         )}
                         {item.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                edited by me
+                                added by me
                             </Text>
                         )}
                     </View>
@@ -197,7 +202,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                     )}
                     <View style={styles.main}>
-                        <Text style={[styles.title, { color: theme.colors.darkGrey }, isOpacity || {}]}>
+                        <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
                             {item.food?.name || 'Food'}
                         </Text>
                         {amount && (
@@ -207,7 +212,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         )}
                         {item.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                edited by me
+                                added by me
                             </Text>
                         )}
                     </View>
@@ -229,7 +234,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                     )}
                     {item.modified && (
                         <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                            edited by me
+                            added by me
                         </Text>
                     )}
                 </View>
@@ -239,12 +244,17 @@ export const ListItem: React.FC<ListItemProps> = ({
 
     return (
         <View style={[styles.wrapper, { backgroundColor: theme.colors.surface },
-            nextSection && [styles.divider, { borderBottomColor: theme.colors.black }]]}>
+            nextSection && [styles.divider, { borderBottomColor: theme.colors.lightGrey }]]}>
             <View style={styles.listItem}>
-                <View style={styles.listItemLink}>
+                <TouchableOpacity
+                    style={styles.listItemLink}
+                    onPress={handleItemPress}
+                    disabled={disabled}
+                    activeOpacity={0.7}
+                >
                     {renderItemContent()}
                     {renderStatusText()}
-                </View>
+                </TouchableOpacity>
                 {renderCheckbox()}
             </View>
         </View>
@@ -328,9 +338,9 @@ const styles = StyleSheet.create({
     },
     title: {
         paddingTop: OFFSET.VERTICAL,
-        marginBottom: OFFSET.VERTICAL,
+        // marginBottom: OFFSET.VERTICAL,
         fontSize: 16,
-        fontWeight: '500',
+        fontWeight: '600',
     },
     subtitle: {
         fontSize: 14,
@@ -346,13 +356,12 @@ const styles = StyleSheet.create({
 
 export default ListItem;
 
-// Types — keep them minimal but safe
 type Maybe<T> = T | null | undefined;
 
 interface Unit {
-  name?: string;           // e.g. "g"
-  singularName?: string;   // e.g. "cup (8 oz)"
-  pluralName?: string;     // e.g. "cups (8 oz)"
+  name?: string;
+  pluralName?: string;
+  singularName?: string;
 }
 
 interface Weight {
@@ -360,9 +369,9 @@ interface Weight {
 }
 
 interface EntityNames {
-  name?: string;           // generic name
-  singularName?: string;
+  name?: string;
   pluralName?: string;
+  singularName?: string;
 }
 
 interface IngredientLike {
@@ -384,10 +393,10 @@ interface PrepareOptions {
 }
 
 interface PrepareArgs {
-    amount?: number;                 // base amount (default 1)
-    useServing?: boolean;            // if true — use recipe serving; else use ingredient.weight.unit
+    amount?: number;
+    useServing?: boolean;
     options?: PrepareOptions;
-    peopleEatingNumber?: number;     // multiplier (default 1)
+    peopleEatingNumber?: number;
     serving?: Maybe<ServingLike>;
     ingredient?: Maybe<IngredientLike>;
 }
@@ -398,13 +407,6 @@ const defaultOptions: Required<Omit<PrepareOptions, 'formatAmount'>> = {
     withoutName: false,
 };
 
-// Tiny, dependency-free amount formatter.
-const defaultFormatAmount = (n: number): string => {
-    // Simple formatter: keep up to 2 decimals; no fraction conversion
-    const rounded = Math.round(n * 100) / 100;
-    return Number.isInteger(rounded) ? String(rounded) : String(rounded);
-};
-
 // Utility: safely pick unit names with fallbacks
 function resolveUnitNames (
     useServing: boolean,
@@ -412,21 +414,17 @@ function resolveUnitNames (
     ingredient: Maybe<IngredientLike>
 ): { singular: string; plural: string } {
     if (useServing) {
-    // Use recipe serving
         const singular
       = serving?.singularName || serving?.name || 'serving';
         const plural
       = serving?.pluralName || serving?.name || 'servings';
         return { singular, plural };
     }
-    // Use ingredient unit (weight.unit.*)
     const u = ingredient?.weight?.unit;
     const singular = u?.singularName || u?.name || 'serving';
     const plural = u?.pluralName || u?.name || 'servings';
     return { singular, plural };
 }
-
-// Utility: choose singular/plural entity name (ingredient name)
 function resolveEntityName (
     ingredient: Maybe<IngredientLike>,
     isPlural: boolean
@@ -450,11 +448,11 @@ function stripOfIfNeeded (unitLabel: string): string {
  */
 export function prepareIngredientNameWithUnit ({
     serving,
+    options,
     amount = 1,
     ingredient,
     useServing = false,
     peopleEatingNumber = 1,
-    options,
 }: PrepareArgs): string {
     const opt: Required<PrepareOptions> = {
         ...defaultOptions,
@@ -464,32 +462,24 @@ export function prepareIngredientNameWithUnit ({
         withoutAmount: options?.withoutAmount ?? defaultOptions.withoutAmount,
     };
 
-    // Determine unit labels
     const { singular, plural } = resolveUnitNames(useServing, serving, ingredient);
 
-    // Decide pluralization by final (possibly multiplied) amount
     const calculatedAmount = peopleEatingNumber > 1 ? amount * peopleEatingNumber : amount;
     const isPlural = calculatedAmount > 1;
 
     let unitLabel = isPlural ? plural : singular;
 
-    // If we hide the ingredient name, we might want to remove " of"
     if (opt.withoutName) {
         unitLabel = stripOfIfNeeded(unitLabel);
     }
 
-    // Build the name part (ingredient entity name)
     let namePart = '';
     if (!opt.withoutName) {
         const entityName = resolveEntityName(ingredient, isPlural);
-        // If there is no entity name at all, we won't add extra space
         namePart = entityName ? ` ${entityName}` : '';
     }
-
-    // Assemble the result
     let result = `${unitLabel}${namePart}`.trim();
 
-    // Prepend amount unless suppressed
     if (!opt.withoutAmount) {
         result = `${opt.formatAmount(calculatedAmount)} ${result}`.trim();
     }
@@ -514,20 +504,18 @@ export function prepareIngredientNameWithUnitFromItem (
   },
     options?: PrepareOptions & { peopleEatingNumber?: number }
 ): string {
-    // Derive amount with fallback to initialAmount; default 1 if not present
     const baseAmount
     = (typeof item.amount === 'number' && item.amount > 0 ? item.amount : null)
     ?? (typeof item.initialAmount === 'number' && item.initialAmount > 0 ? item.initialAmount : null)
     ?? 1;
 
-    // Prefer first recipe ingredient if present
     const ingredient: IngredientLike | undefined
     = item?.recipe?.ingredients?.[0]
     // Fallback: build a pseudo-ingredient from item.weight if needed
     || (item.weight ? { weight: item.weight } : undefined);
 
     return prepareIngredientNameWithUnit({
-        options, // pass through withoutAmount/withoutName/formatAmount
+        options,
         ingredient,
         amount: baseAmount,
         serving: item.serving,

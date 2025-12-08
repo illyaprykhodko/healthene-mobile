@@ -32,6 +32,7 @@ export const ROUTES = {
     // Account Settings
     ADDRESS: 'Address',
     ACCOUNT_SETTINGS: 'AccountSettings',
+    BIOMETRIC_SETTINGS: 'BiometricSettings',
     FOOD_PREFERENCES: 'FoodPreferences',
     PERSONAL_INFORMATION: 'PersonalInformation',
 

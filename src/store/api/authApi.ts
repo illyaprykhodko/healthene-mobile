@@ -4,7 +4,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // import { LoginData, SignUpData, User, Session } from '../../types/user';
 import { LoginData, User, UserSession } from 'types';
 import { baseQuery, sessionManager } from './baseApi';
-import { clearSession, setSession } from 'store/slices/appSlice';
+import { clearSession, setSession, setUser } from 'store/slices/appSlice';
 
 export const authApi = createApi({
     baseQuery,
@@ -43,7 +43,7 @@ export const authApi = createApi({
             },
             async onQueryStarted (_, { queryFulfilled }) {
                 try {
-                    const { data: user } = await queryFulfilled;
+                    await queryFulfilled;
                 } catch {
                     // await sessionManager.update(null);
                 }
@@ -51,9 +51,6 @@ export const authApi = createApi({
             transformResponse: (response: User) => {
                 return {
                     ...response,
-                    // cellPhone: formatPhoneNumber(response.cellPhone),
-                    // workPhone: formatPhoneNumber(response.workPhone),
-                    // homePhone: formatPhoneNumber(response.homePhone),
                 };
             },
             providesTags: ['Auth'],
@@ -71,16 +68,17 @@ export const authApi = createApi({
                 try {
                     const { data: session } = await queryFulfilled;
                     dispatch(setSession(session));
-                    // update session
                     await sessionManager.update(session);
-                    
-                    // wait for AsyncStorage to update
                     await new Promise(resolve => setTimeout(resolve as () => void, 100));
-                    await dispatch(
+
+                    const userData = await dispatch(
                         authApi.endpoints.getSelf.initiate()
                     ).unwrap();
+                    
+                    dispatch(setUser(userData));
                 } catch (error) {
                     await sessionManager.update(null);
+                    dispatch(setUser(null));
                     throw error;
                 }
             },
@@ -101,11 +99,12 @@ export const authApi = createApi({
             async onQueryStarted (_, { queryFulfilled, dispatch }) {
                 try {
                     await queryFulfilled;
+                } catch (error) {
+                    console.error('Logout API error (continuing with local cleanup):', error);
+                } finally {
                     await sessionManager.update(null);
                     dispatch(clearSession());
-                } catch {
-                    // Even if logout fails, clear local session
-                    await sessionManager.update(null);
+                    dispatch(setUser(null));
                 }
             },
             invalidatesTags: ['Auth'],

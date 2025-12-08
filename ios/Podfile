@@ -16,15 +16,15 @@ prepare_react_native_project!
 
 setup_permissions([
   # 'AppTrackingTransparency',
-  # 'Bluetooth',
+  # 'Bluetooth', # Managed by react-native-ble-plx, not react-native-permissions
   # 'Calendars',
   # 'CalendarsWriteOnly',
   'Camera',
   # 'Contacts',
-  # 'FaceID',
+  'FaceID',
   # 'LocationAccuracy',
   # 'LocationAlways',
-  # 'LocationWhenInUse',
+  'LocationWhenInUse',
   # 'MediaLibrary',
   # 'Microphone',
   # 'Motion',

@@ -47,6 +47,8 @@
 	<string>We use Bluetooth to connect to devices for data transfer.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Allow "Healthene" to take pictures and record video</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Enable Face ID to quickly and securely log in to your account</string>
 	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
 	<string>Read and understand clinical health data.</string>
 	<key>NSHealthShareUsageDescription</key>
@@ -124,6 +126,7 @@
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>bluetooth-central</string>
 		<string>fetch</string>
 		<string>processing</string>
 		<string>remote-notification</string>

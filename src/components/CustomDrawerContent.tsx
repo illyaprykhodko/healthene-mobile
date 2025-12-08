@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { View, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
@@ -8,6 +8,7 @@ import { View, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 // local dependencies
 import { RootState } from 'store';
 import Text from 'components/Text';
+import { useAuth } from 'hooks/useAuth';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
@@ -15,6 +16,9 @@ import { Button } from 'components/Button';
 import { navigate } from 'services/navigation';
 import { clearSession } from 'store/slices/appSlice';
 import ProfileImage from 'components/ProfileImage.tsx';
+import FeatherIcon from 'react-native-vector-icons/Feather';
+
+// const { width } = Dimensions.get('window');
 
 interface DrawerItemProps {
     icon: string;
@@ -68,11 +72,11 @@ interface CustomDrawerContentProps {
 
 export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => {
     const theme = useTheme();
-    const dispatch = useDispatch();
+    const { signOut } = useAuth();
     const user = useSelector((state: RootState) => state.app.user);
 
-    const handleLogout = () => {
-        dispatch(clearSession());
+    const handleLogout = async () => {
+        await signOut();
     };
 
     const menuItems = [

@@ -19,7 +19,7 @@ import Screen from 'components/Screen';
 import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
 import { HTMLView } from 'components/HTMLView';
-import { YoutubeVideo } from 'components/YoutubeVideo';
+import YoutubeVideo from 'components/YoutubeVideo';
 import { PrivateVideo } from 'components/PrivateVideo';
 import { SwipeablePanel } from 'components/SwipeablePanel';
 
@@ -487,7 +487,7 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
             onClose={closePanel}
             isActive={isPanelOpen}
             onPressCloseButton={closePanel}
-            style={[styles.swipePanel, style]}
+            style={StyleSheet.flatten([styles.swipePanel, style])}
             closeIconStyle={{
                 borderWidth: 1.5,
                 borderColor: theme.colors.grey,

@@ -11,6 +11,7 @@ import FoodAllergies from 'screens/AccountSettingsScreens/FoodAllergies';
 import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
 import FoodPreferences from 'screens/AccountSettingsScreens/FoodPreferences';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
+import { BiometricSettingsScreen } from 'screens/AccountSettingsScreens/BiometricSettingsScreen';
 import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
 
 const Stack = createStackNavigator();
@@ -52,6 +53,9 @@ export const AccountSettingsStack = () => {
                 options={{ title: 'Personal Information' }}
             />
             <Stack.Screen
+                name={ROUTES.BIOMETRIC_SETTINGS}
+                component={BiometricSettingsScreen}
+                options={{ title: 'Biometric Authentication' }}
                 component={FoodPreferences}
                 name={ROUTES.FOOD_PREFERENCES}
                 options={{ title: 'Food Preferences' }}
