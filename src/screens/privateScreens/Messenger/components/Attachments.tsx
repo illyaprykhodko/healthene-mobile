@@ -2,10 +2,8 @@
 import React from 'react';
 import Toast from 'react-native-toast-message';
 import RNBlobUtil from 'react-native-blob-util';
-import { useNavigation } from '@react-navigation/native';
 import { viewDocument } from '@react-native-documents/viewer';
 import { Platform, Pressable, StyleSheet } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // local dependencies
 import { config } from 'constants';
@@ -13,7 +11,6 @@ import Text from 'components/Text.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { Attachment } from 'types/messenger.ts';
 import { sessionManager } from 'store/api/baseApi.ts';
-import { RootStackParamList } from 'services/navigation';
 
 // configure
 
@@ -23,12 +20,10 @@ interface AttachmentsProps extends Attachment{
 
 const Attachments = ({ title, mimeType, id, fileName, onPreloader }: AttachmentsProps) => {
     const attachmentType = mimeType.split('/')[0];
-    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     const openRemoteFile = async () => {
         try {
             onPreloader(true);
-            console.log('TRUE');
             const dir = Platform.OS === 'ios' ? RNBlobUtil.fs.dirs.DocumentDir : RNBlobUtil.fs.dirs.DCIMDir;
             const options = {
                 fileCache: true,
@@ -69,7 +64,6 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader }: Attachments
     const openFile = () => {
         switch (attachmentType) {
             default: return openRemoteFile();
-
         }
     };
 

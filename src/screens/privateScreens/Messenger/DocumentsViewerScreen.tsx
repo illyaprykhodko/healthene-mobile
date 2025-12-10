@@ -8,7 +8,6 @@ interface DocumentsViewerScreenProps {
 
 const DocumentsViewerScreen = (props: DocumentsViewerScreenProps) => {
     const route = useRoute();
-    console.log('route', route);
     return <View style={styles.container}>{/* Code here */}</View>;
 };
 

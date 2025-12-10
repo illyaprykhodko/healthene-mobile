@@ -63,7 +63,7 @@ export interface MessageChain {
 export interface MessageForm {
     subject: string,
     text: string
-};
+}
 
 export interface Attachment {
     id: number;

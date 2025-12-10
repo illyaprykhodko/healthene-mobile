@@ -15,7 +15,6 @@ interface MessageChainProps {
 
 const MessageChain = ({ id }: MessageChainProps) => {
     const [preloader, setPreloader] = useState<boolean>(false);
-    console.log('preloader', preloader);
     // Handle message chain
     const [page, setPage] = useState<number>(0);
     const { data: messageChain, refetch } = useGetMessagesChainQuery(
