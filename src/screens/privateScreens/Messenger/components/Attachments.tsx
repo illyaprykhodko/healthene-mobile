@@ -98,7 +98,7 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader }: Attachments
 
     const getIcon = () => {
         switch (attachmentType) {
-            default: return <Icon style={styles.iconMargin} name="file" size={14} color={theme.colors.darkGrey} />;
+            default: return <Icon style={styles.icon} name="file" size={14} color={theme.colors.darkGrey} />;
         }
     };
 
@@ -113,12 +113,12 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader }: Attachments
             onPress={openFile}
         >
             {getIcon()}
-            <Text>{title}</Text>
+            <Text style={styles.flexShrink} numberOfLines={1}>{title}</Text>
         </Pressable>
         <Pressable onPress={downloadFile}>
             {isDownload
-                ? <MaterialIndicator style={styles.iconMargin} color={theme.colors.darkGrey} size={14} />
-                : <Icon style={styles.iconMargin} name="download" size={14} color={theme.colors.darkGrey}/>
+                ? <MaterialIndicator style={styles.icon} color={theme.colors.darkGrey} size={14} />
+                : <Icon style={styles.icon} name="download" size={14} color={theme.colors.darkGrey}/>
             }
         </Pressable>
     </View>;
@@ -136,11 +136,15 @@ const styles = StyleSheet.create({
         marginTop: OFFSET.POINT * 2
     },
     row: {
+        flexGrow: 1,
+        flexShrink: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        flexGrow: 1,
     },
-    iconMargin: {
-        marginHorizontal: OFFSET.POINT * 2,
+    icon: {
+        paddingHorizontal: OFFSET.POINT * 2,
+    },
+    flexShrink: {
+        flexShrink: 1,
     }
 });
