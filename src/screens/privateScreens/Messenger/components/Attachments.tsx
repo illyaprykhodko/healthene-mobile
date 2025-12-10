@@ -115,7 +115,6 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader, isUploadFile 
         >
             {getIcon()}
             <Text style={styles.flexShrink} numberOfLines={1}>{title}</Text>
-            {isUploadFile ? <Icon style={styles.icon} name="eye" size={14} color={theme.colors.darkGrey}/> : null}
         </Pressable>
         {isUploadFile ? null : <Pressable onPress={downloadFile}>
             {isDownload

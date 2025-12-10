@@ -10,6 +10,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { pick, types } from '@react-native-documents/picker';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // local dependencies
 import Text from 'components/Text.tsx';
@@ -127,62 +128,69 @@ const WriteMessageScreen = () => {
         <LoadingOverlay init={preloader} />
         <Screen initialized={true} style={styles.container}>
             <ScrollView>
-                <View style={styles.row}>
-                    <ProfileImage style={{ ...styles.profileImg, borderColor: theme.colors.grey }} uri={user?.physician?.coverImage?.url} />
-                    <View>
-                        <Text>
+                <KeyboardAwareScrollView
+                    enableOnAndroid
+                    style={styles.flex}
+                    extraScrollHeight={80}
+                    contentContainerStyle={styles.flexGrow}
+                >
+                    <View style={styles.row}>
+                        <ProfileImage style={{ ...styles.profileImg, borderColor: theme.colors.grey }} uri={user?.physician?.coverImage?.url} />
+                        <View>
+                            <Text>
                         To:
                         &nbsp;
-                            {user?.physician?.name ?? '-'}
-                        </Text>
-                        <Text variant="caption" color={theme.colors.grey}>Physician</Text>
+                                {user?.physician?.name ?? '-'}
+                            </Text>
+                            <Text variant="caption" color={theme.colors.grey}>Physician</Text>
+                        </View>
                     </View>
-                </View>
-                <Formik<MessageForm>
-                    onSubmit={handleSubmit}
-                    validationSchema={validationSchema}
-                    initialValues={{
-                        text: '',
-                        attachments: [],
-                        subject: chain?.subject ?? ''
-                    }}
-                >
-                    {({ values, errors, touched, handleChange, handleSubmit, setFieldValue }) => {
-                        const setAttachmentsValue = (attachment: Attachment) => setFieldValue('attachments', [...values.attachments, attachment]);
-                        return <View style={styles.formContainer}>
-                            <TextInput
-                                name="subject"
-                                label="Subject"
-                                disabled={false}
-                                textAlign="left"
-                                value={values.subject}
-                                color={theme.colors.black}
-                                onChangeText={handleChange('subject')}
-                                error={touched.subject && errors.subject ? { subject: errors.subject } : undefined}
-                            />
-                            <TextInput
-                                multiline
-                                name="text"
-                                label="Text"
-                                disabled={false}
-                                textAlign="left"
-                                value={values.text}
-                                color={theme.colors.black}
-                                onChangeText={handleChange('text')}
-                                error={touched.text && errors.text ? { text: errors.text } : undefined}
-                            />
-                            {values.attachments.map(item => <Attachments isUploadFile onPreloader={setPreloader} key={item?.id} {...item}/>)}
-                            <View style={styles.attachmentsContainer}>
-                                {Object.values(ATTACHMENTS).map(item => getAttachment(item, setAttachmentsValue))}
-                            </View>
-                            <Button
-                                variant="outline"
-                                title="SEND MESSAGE"
-                                onPress={handleSubmit}
-                            />
-                        </View>;
-                    }}
-                </Formik>
+                    <Formik<MessageForm>
+                        onSubmit={handleSubmit}
+                        validationSchema={validationSchema}
+                        initialValues={{
+                            text: '',
+                            attachments: [],
+                            subject: chain?.subject ?? ''
+                        }}
+                    >
+                        {({ values, errors, touched, handleChange, handleSubmit, setFieldValue }) => {
+                            const setAttachmentsValue = (attachment: Attachment) => setFieldValue('attachments', [...values.attachments, attachment]);
+                            return <View style={styles.formContainer}>
+                                <TextInput
+                                    name="subject"
+                                    label="Subject"
+                                    disabled={false}
+                                    textAlign="left"
+                                    value={values.subject}
+                                    color={theme.colors.black}
+                                    onChangeText={handleChange('subject')}
+                                    error={touched.subject && errors.subject ? { subject: errors.subject } : undefined}
+                                />
+                                <TextInput
+                                    multiline
+                                    name="text"
+                                    label="Text"
+                                    disabled={false}
+                                    textAlign="left"
+                                    value={values.text}
+                                    color={theme.colors.black}
+                                    onChangeText={handleChange('text')}
+                                    error={touched.text && errors.text ? { text: errors.text } : undefined}
+                                />
+                                {values.attachments.map(item => <Attachments isUploadFile onPreloader={setPreloader} key={item?.id} {...item}/>)}
+                                <View style={styles.attachmentsContainer}>
+                                    {Object.values(ATTACHMENTS).map(item => getAttachment(item, setAttachmentsValue))}
+                                </View>
+                                <Button
+                                    variant="outline"
+                                    title="SEND MESSAGE"
+                                    onPress={handleSubmit}
+                                />
+                            </View>;
+                        }}
+                    </Formik>
+                </KeyboardAwareScrollView>
             </ScrollView>
         </Screen>
     </>;
@@ -224,5 +232,11 @@ const styles = StyleSheet.create({
     },
     row: {
         flexDirection: 'row'
+    },
+    flex: {
+        flex: 1,
+    },
+    flexGrow: {
+        flexGrow: 1
     }
 });
