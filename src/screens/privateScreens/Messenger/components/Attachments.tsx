@@ -2,45 +2,75 @@
 import React from 'react';
 import Toast from 'react-native-toast-message';
 import RNBlobUtil from 'react-native-blob-util';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+import { MaterialIndicator } from 'react-native-indicators';
 import { viewDocument } from '@react-native-documents/viewer';
-import { Platform, Pressable, StyleSheet } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 // local dependencies
 import { config } from 'constants';
 import Text from 'components/Text.tsx';
+import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Attachment } from 'types/messenger.ts';
 import { sessionManager } from 'store/api/baseApi.ts';
 
 // configure
-
 interface AttachmentsProps extends Attachment{
     onPreloader: (preloader: boolean) => void;
 }
 
 const Attachments = ({ title, mimeType, id, fileName, onPreloader }: AttachmentsProps) => {
+    const theme = useTheme();
     const attachmentType = mimeType.split('/')[0];
+    const [isDownload, setIsDownload] = React.useState(false);
+
+    const fetchFile = async (path: string, mimeType: string) => {
+        const options = {
+            path,
+            fileCache: true,
+            addAndroidDownloads: {
+                path,
+                notification: true,
+                mime: mimeType,
+                mediaScannable: true,
+                useDownloadManager: true,
+                title: 'Downloading file',
+            }
+        };
+        const session = await sessionManager.get();
+        return RNBlobUtil.config(options).fetch('GET', `${config.serviceUrl}/${config.apiPath}/s3-service/attachment/${id}`, {
+            Authorization: `Bearer${ session.accessToken}`,
+        });
+    };
+
+    const downloadFile = async () => {
+        setIsDownload(true);
+        try {
+            const dir = Platform.OS === 'ios' ? RNBlobUtil.fs.dirs.DocumentDir : 'android';
+            await fetchFile(`${dir }/${ fileName}`, mimeType).then(() => {
+                Toast.show({
+                    type: 'success',
+                    text1: 'Download complete',
+                });
+            });
+        } catch (error) {
+            const errObj = error as { error: string };
+            Toast.show({
+                type: 'error',
+                text1: 'Download failed',
+                text2: errObj?.error || 'Unknown error. Please try again later.',
+            });
+        } finally {
+            setIsDownload(false);
+        }
+    };
 
     const openRemoteFile = async () => {
         try {
             onPreloader(true);
             const dir = Platform.OS === 'ios' ? RNBlobUtil.fs.dirs.DocumentDir : RNBlobUtil.fs.dirs.DCIMDir;
-            const options = {
-                fileCache: true,
-                path: dir + fileName, // This is the path where your downloaded file will live in
-                addAndroidDownloads: {
-                    notification: true,
-                    mime: mimeType,
-                    mediaScannable: true,
-                    useDownloadManager: true, // Setting it to true will use the device's native download manager and will be shown in the notification bar.
-                    path: dir + fileName, // this is the path where your downloaded file will live in
-                    title: 'Downloading file',
-                }
-            };
-            const session = await sessionManager.get();
-            RNBlobUtil.config(options).fetch('GET', `${config.serviceUrl}/${config.apiPath}/s3-service/attachment/${id}`, {
-                Authorization: `Bearer${ session.accessToken}`,
-            }).then(async result => {
+            await fetchFile(`${dir }/${ fileName}`, mimeType).then(async result => {
                 await viewDocument({
                     mimeType,
                     headerTitle: title,
@@ -48,7 +78,6 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader }: Attachments
                     presentationStyle: 'pageSheet'
                 });
             });
-
         } catch (error) {
             const errObj = error as { error: string };
             Toast.show({
@@ -67,17 +96,51 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader }: Attachments
         }
     };
 
-    return <Pressable style={styles.container} onPress={openFile}>
-        <Text>{title}</Text>
-    </Pressable>;
+    const getIcon = () => {
+        switch (attachmentType) {
+            default: return <Icon style={styles.iconMargin} name="file" size={14} color={theme.colors.darkGrey} />;
+        }
+    };
+
+    return <View
+        style={[
+            styles.container,
+            { borderColor: theme.colors.border, borderRadius: theme.borderRadius.md },
+        ]}
+    >
+        <Pressable
+            style={styles.row}
+            onPress={openFile}
+        >
+            {getIcon()}
+            <Text>{title}</Text>
+        </Pressable>
+        <Pressable onPress={downloadFile}>
+            {isDownload
+                ? <MaterialIndicator style={styles.iconMargin} color={theme.colors.darkGrey} size={14} />
+                : <Icon style={styles.iconMargin} name="download" size={14} color={theme.colors.darkGrey}/>
+            }
+        </Pressable>
+    </View>;
 };
 
 export default Attachments;
 const styles = StyleSheet.create({
     container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         borderWidth: 1,
         paddingVertical: OFFSET.POINT,
         paddingHorizontal: OFFSET.POINT,
-        marginVertical: OFFSET.POINT * 2
+        marginTop: OFFSET.POINT * 2
     },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexGrow: 1,
+    },
+    iconMargin: {
+        marginHorizontal: OFFSET.POINT * 2,
+    }
 });
