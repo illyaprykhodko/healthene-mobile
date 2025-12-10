@@ -1,10 +1,10 @@
 // outsource dependencies
 import * as yup from 'yup';
 import moment from 'moment';
+import { Formik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useCallback, useState } from 'react';
-import { Formik, FormikProps } from 'formik';
 import Toast from 'react-native-toast-message';
+import React, { useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { pick, types } from '@react-native-documents/picker';
@@ -18,15 +18,15 @@ import Screen from 'components/Screen.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
-import { Attachment, MessageForm } from 'types/messenger.ts';
 import TextInput from 'components/TextInput.tsx';
 import { RootState, useAppSelector } from 'store';
 import ProfileImage from 'components/ProfileImage.tsx';
 import { RootStackParamList } from 'services/navigation';
+import LoadingOverlay from 'components/LoadingOverlay.tsx';
+import { Attachment, MessageForm } from 'types/messenger.ts';
 import { useUploadAttachmentMutation } from 'store/api/s3ServiceApi.ts';
 import Attachments from 'screens/privateScreens/Messenger/components/Attachments.tsx';
 import { useCreateChainMutation, useReplyToChainMutation } from 'store/api/messengerApi.ts';
-import LoadingOverlay from 'components/LoadingOverlay.tsx';
 
 
 // configure
@@ -74,7 +74,6 @@ const WriteMessageScreen = () => {
             const [file] = await pick({ type: [types.allFiles] });
             const formData = new FormData();
             const fileName = `${moment().format('YYYY_MM_DD')}_${file.name}`;
-            console.log('Selected file:', file);
             formData.append('file', {
                 uri: file.uri,
                 name: fileName,
@@ -83,7 +82,6 @@ const WriteMessageScreen = () => {
             formData.append('title', fileName);
             formData.append('description', moment().format());
             const attachment = await uploadFile({ body: formData }).unwrap();
-            console.log('RESULT', attachment);
             onAttach(attachment);
             Toast.show({
                 type: 'success',
@@ -150,7 +148,6 @@ const WriteMessageScreen = () => {
                     }}
                 >
                     {({ values, errors, touched, handleChange, handleSubmit, setFieldValue }) => {
-                        console.log('values', values);
                         const setAttachmentsValue = (attachment: Attachment) => setFieldValue('attachments', [...values.attachments, attachment]);
                         return <View style={styles.formContainer}>
                             <TextInput
