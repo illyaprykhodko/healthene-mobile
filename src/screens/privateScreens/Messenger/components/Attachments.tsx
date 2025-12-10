@@ -17,10 +17,11 @@ import { sessionManager } from 'store/api/baseApi.ts';
 
 // configure
 interface AttachmentsProps extends Attachment{
+    isUploadFile?: boolean;
     onPreloader: (preloader: boolean) => void;
 }
 
-const Attachments = ({ title, mimeType, id, fileName, onPreloader }: AttachmentsProps) => {
+const Attachments = ({ title, mimeType, id, fileName, onPreloader, isUploadFile = false }: AttachmentsProps) => {
     const theme = useTheme();
     const attachmentType = mimeType.split('/')[0];
     const [isDownload, setIsDownload] = React.useState(false);
@@ -114,13 +115,14 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader }: Attachments
         >
             {getIcon()}
             <Text style={styles.flexShrink} numberOfLines={1}>{title}</Text>
+            {isUploadFile ? <Icon style={styles.icon} name="eye" size={14} color={theme.colors.darkGrey}/> : null}
         </Pressable>
-        <Pressable onPress={downloadFile}>
+        {isUploadFile ? null : <Pressable onPress={downloadFile}>
             {isDownload
-                ? <MaterialIndicator style={styles.icon} color={theme.colors.darkGrey} size={14} />
+                ? <MaterialIndicator style={styles.icon} color={theme.colors.darkGrey} size={14}/>
                 : <Icon style={styles.icon} name="download" size={14} color={theme.colors.darkGrey}/>
             }
-        </Pressable>
+        </Pressable>}
     </View>;
 };
 

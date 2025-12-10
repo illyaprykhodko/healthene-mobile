@@ -4,6 +4,7 @@ import { CropRect } from 'react-native-image-crop-picker';
 
 // local dependencies
 import { baseQuery } from './baseApi';
+import { Attachment } from 'types/messenger.ts';
 
 // configure
 export const DIR = {
@@ -25,8 +26,15 @@ export const s3ServiceApi = createApi({
                 url: '/s3-service/images/upload',
             }),
         }),
+        uploadAttachment: builder.mutation<Attachment, { body: FormData }>({
+            query: ({ body }) => ({
+                body,
+                method: 'POST',
+                url: '/s3-service/attachment/upload',
+            }),
+        }),
     })
 });
 
-export const { useUploadImageMutation } = s3ServiceApi;
+export const { useUploadAttachmentMutation } = s3ServiceApi;
 export const uploadImageInitiate = s3ServiceApi.endpoints.uploadImage.initiate;

@@ -103,6 +103,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: StyleSheet.hairlineWidth,
     },
     row: {
+        marginTop: OFFSET.POINT * 2,
         flexDirection: 'row',
         alignItems: 'center'
     },
