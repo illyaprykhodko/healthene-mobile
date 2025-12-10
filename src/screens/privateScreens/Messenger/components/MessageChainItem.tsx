@@ -34,11 +34,10 @@ const renderNode = (node: HTMLViewNode, index: number, _: HTMLViewNode[], parent
 };
 
 interface MessageChainItemProps extends MessageChain{
-
+    onPreloader: (preloader: boolean) => void;
 }
 
-const MessageChainItem = memo(({ sender, date, text, attachments }: MessageChainItemProps) => {
-    console.log('TEXT', text);
+const MessageChainItem = memo(({ sender, date, text, attachments, onPreloader }: MessageChainItemProps) => {
     const theme = useTheme();
     const user = useSelector((state: RootState) => state.app.user);
     const [isExpanded, setExpanded] = useState(false);
@@ -87,7 +86,7 @@ const MessageChainItem = memo(({ sender, date, text, attachments }: MessageChain
                                     {`Attachments Files (${attachments.length})`}
                                 </Text>
                             </View>
-                            {attachments.map(item => <Attachments key={item?.id} {...item}/>)}
+                            {attachments.map(item => <Attachments onPreloader={onPreloader} key={item?.id} {...item}/>)}
                         </View>
                         : null
                 }

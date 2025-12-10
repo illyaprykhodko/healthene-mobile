@@ -5,6 +5,7 @@ import { FlatList, RefreshControl, StyleSheet } from 'react-native';
 
 // local dependencies
 import { OFFSET } from 'constants/offset.ts';
+import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { useGetMessagesChainQuery } from 'store/api/messengerApi.ts';
 import MessageChainItem from 'screens/privateScreens/Messenger/components/MessageChainItem.tsx';
 
@@ -13,6 +14,8 @@ interface MessageChainProps {
 }
 
 const MessageChain = ({ id }: MessageChainProps) => {
+    const [preloader, setPreloader] = useState<boolean>(false);
+    console.log('preloader', preloader);
     // Handle message chain
     const [page, setPage] = useState<number>(0);
     const { data: messageChain, refetch } = useGetMessagesChainQuery(
@@ -45,19 +48,20 @@ const MessageChain = ({ id }: MessageChainProps) => {
         }
     };
 
-    console.log('CHAIN', messageChain?.data);
-
-    return <FlatList
-        onEndReached={loadMore}
-        style={styles.container}
-        onEndReachedThreshold={0.6}
-        data={messageChain?.data ?? []}
-        showsVerticalScrollIndicator={false}
-        keyExtractor={({ id }) => String(id)}
-        contentContainerStyle={styles.flexGrow}
-        renderItem={({ item }) => <MessageChainItem key={item.id} {...item} />}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
-    />;
+    return <>
+        <LoadingOverlay init={preloader} />
+        <FlatList
+            onEndReached={loadMore}
+            style={styles.container}
+            onEndReachedThreshold={0.6}
+            data={messageChain?.data ?? []}
+            showsVerticalScrollIndicator={false}
+            keyExtractor={({ id }) => String(id)}
+            contentContainerStyle={styles.flexGrow}
+            renderItem={({ item }) => <MessageChainItem onPreloader={setPreloader} key={item.id} {...item} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
+        />
+    </>;
 };
 
 export default MessageChain;

@@ -2,9 +2,9 @@
 import React from 'react';
 import Toast from 'react-native-toast-message';
 import RNBlobUtil from 'react-native-blob-util';
-import { Platform, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { viewDocument } from '@react-native-documents/viewer';
+import { Platform, Pressable, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // local dependencies
@@ -18,14 +18,17 @@ import { RootStackParamList } from 'services/navigation';
 // configure
 
 interface AttachmentsProps extends Attachment{
-  // props here
+    onPreloader: (preloader: boolean) => void;
 }
 
-const Attachments = ({ title, mimeType, id, fileName }: AttachmentsProps) => {
+const Attachments = ({ title, mimeType, id, fileName, onPreloader }: AttachmentsProps) => {
     const attachmentType = mimeType.split('/')[0];
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const openRemotePDF = async () => {
+
+    const openRemoteFile = async () => {
         try {
+            onPreloader(true);
+            console.log('TRUE');
             const dir = Platform.OS === 'ios' ? RNBlobUtil.fs.dirs.DocumentDir : RNBlobUtil.fs.dirs.DCIMDir;
             const options = {
                 fileCache: true,
@@ -58,23 +61,18 @@ const Attachments = ({ title, mimeType, id, fileName }: AttachmentsProps) => {
                 text1: 'Update failed',
                 text2: errObj?.error || 'Unknown error. Please try again later.',
             });
+        } finally {
+            onPreloader(false);
         }
     };
 
     const openFile = () => {
         switch (attachmentType) {
-            // default:
-            //     Toast.show({
-            //         type: 'info',
-            //         text1: 'Unsupported file type',
-            //         text2: mimeType || 'Cannot open this attachment.',
-            //     });
-            default:
-                openRemotePDF().then(result => { console.log('RESULT!!', result); });
-                break;
+            default: return openRemoteFile();
+
         }
     };
-    // navigation.navigate(ROUTES.DOCUMENTS_VIEWER, { attachmentType })
+
     return <Pressable style={styles.container} onPress={openFile}>
         <Text>{title}</Text>
     </Pressable>;
