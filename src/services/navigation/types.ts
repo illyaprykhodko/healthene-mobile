@@ -40,14 +40,15 @@ export type RootStackParamList = {
   [ROUTES.FOOD_ALLERGIES]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;
-  [ROUTES.BIOMETRIC_SETTINGS]: undefined;
   [ROUTES.FOOD_PREFERENCES]: undefined;
+  [ROUTES.BIOMETRIC_SETTINGS]: undefined;
   [ROUTES.READ_MESSAGE_SCREEN]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
   [ROUTES.WRITE_MESSAGE_SCREEN]: undefined;
 
   // Example of a screen that requires params
+  [ROUTES.DOCUMENTS_VIEWER]: { attachmentType: string };
   [ROUTES.SMART_SCALE]: {
     measurementPhaseItem: object;
   };

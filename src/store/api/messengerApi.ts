@@ -68,7 +68,7 @@ export const messengerApi = createApi({
                 method: 'GET',
                 params: { ...params, sort: 'id,DESC', size: 10 },
             }),
-            serializeQueryArgs: ({ endpointName }) => endpointName,
+            serializeQueryArgs: ({ endpointName, queryArgs }) => `${endpointName}-${queryArgs.chainId}`,
             transformResponse (response: PaginatedResponse<MessageChain>, _, args) {
                 return {
                     data: response.content,

@@ -11,6 +11,7 @@ import { MessageEntity } from 'types/common/interfaces.ts';
 import MessengerList from 'screens/privateScreens/Messenger';
 import ReadMessageScreen from 'screens/privateScreens/Messenger/ReadMessageScreen.tsx';
 import WriteMessageScreen from 'screens/privateScreens/Messenger/WriteMessageScreen.tsx';
+import DocumentsViewerScreen from 'screens/privateScreens/Messenger/DocumentsViewerScreen.tsx';
 
 const Stack = createStackNavigator();
 const MessengerStack = () => {
@@ -39,6 +40,7 @@ const MessengerStack = () => {
         >
             <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.MESSAGE_LIST} component={MessengerList} />
             <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.READ_MESSAGE_SCREEN} component={ReadMessageScreen} />
+            <Stack.Screen options={{ title: 'Document' }} name={ROUTES.DOCUMENTS_VIEWER} component={DocumentsViewerScreen} />
             <Stack.Screen
                 name={ROUTES.WRITE_MESSAGE_SCREEN} component={WriteMessageScreen}
                 options={({ route }: {route: { params?: MessageEntity }}) => ({ title: route.params?.id ? 'Message' : 'New Message' })}

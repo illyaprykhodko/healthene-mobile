@@ -14,8 +14,11 @@ interface MessageChainProps {
 
 const MessageChain = ({ id }: MessageChainProps) => {
     // Handle message chain
-    const [page, setPage] = useState<number>(1);
-    const { data: messageChain, refetch } = useGetMessagesChainQuery({ chainId: id, params: { page, size: 10 } });
+    const [page, setPage] = useState<number>(0);
+    const { data: messageChain, refetch } = useGetMessagesChainQuery(
+        { chainId: id, params: { page, size: 10 } },
+        { refetchOnFocus: true }
+    );
 
     // Lazy load handle
     const loadMore = useCallback(() => {
@@ -42,12 +45,15 @@ const MessageChain = ({ id }: MessageChainProps) => {
         }
     };
 
+    console.log('CHAIN', messageChain?.data);
+
     return <FlatList
         onEndReached={loadMore}
         style={styles.container}
         onEndReachedThreshold={0.6}
         data={messageChain?.data ?? []}
         showsVerticalScrollIndicator={false}
+        keyExtractor={({ id }) => String(id)}
         contentContainerStyle={styles.flexGrow}
         renderItem={({ item }) => <MessageChainItem key={item.id} {...item} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
