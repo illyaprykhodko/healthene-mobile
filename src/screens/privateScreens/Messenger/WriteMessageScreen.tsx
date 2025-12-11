@@ -74,13 +74,12 @@ const WriteMessageScreen = () => {
             setPreloader(true);
             const [file] = await pick({ type: [types.allFiles] });
             const formData = new FormData();
-            const fileName = `${moment().format('YYYY_MM_DD')}_${file.name}`;
             formData.append('file', {
                 uri: file.uri,
-                name: fileName,
+                name: file.name,
                 type: file.type ?? 'application/octet-stream',
             });
-            formData.append('title', fileName);
+            formData.append('title', file.name);
             formData.append('description', moment().format());
             const attachment = await uploadFile({ body: formData }).unwrap();
             onAttach(attachment);

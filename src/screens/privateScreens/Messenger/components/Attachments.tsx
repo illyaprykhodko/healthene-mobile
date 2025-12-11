@@ -18,10 +18,11 @@ import { sessionManager } from 'store/api/baseApi.ts';
 // configure
 interface AttachmentsProps extends Attachment{
     isUploadFile?: boolean;
+    onDelete?: (url: string) => void;
     onPreloader: (preloader: boolean) => void;
 }
 
-const Attachments = ({ title, mimeType, id, fileName, onPreloader, isUploadFile = false }: AttachmentsProps) => {
+const Attachments = ({ title, mimeType, id, fileName, onPreloader, onDelete, isUploadFile = false }: AttachmentsProps) => {
     const theme = useTheme();
     const attachmentType = mimeType.split('/')[0];
     const [isDownload, setIsDownload] = React.useState(false);
@@ -32,8 +33,8 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader, isUploadFile 
             fileCache: true,
             addAndroidDownloads: {
                 path,
-                notification: true,
                 mime: mimeType,
+                notification: true,
                 mediaScannable: true,
                 useDownloadManager: true,
                 title: 'Downloading file',
@@ -41,14 +42,14 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader, isUploadFile 
         };
         const session = await sessionManager.get();
         return RNBlobUtil.config(options).fetch('GET', `${config.serviceUrl}/${config.apiPath}/s3-service/attachment/${id}`, {
-            Authorization: `Bearer${ session.accessToken}`,
+            Authorization: `Bearer ${session.accessToken}`,
         });
     };
 
     const downloadFile = async () => {
         setIsDownload(true);
         try {
-            const dir = Platform.OS === 'ios' ? RNBlobUtil.fs.dirs.DocumentDir : 'android';
+            const dir = Platform.OS === 'ios' ? RNBlobUtil.fs.dirs.DocumentDir : RNBlobUtil.fs.dirs.LegacyDownloadDir;
             await fetchFile(`${dir }/${ fileName}`, mimeType).then(() => {
                 Toast.show({
                     type: 'success',
@@ -70,7 +71,7 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader, isUploadFile 
     const openRemoteFile = async () => {
         try {
             onPreloader(true);
-            const dir = Platform.OS === 'ios' ? RNBlobUtil.fs.dirs.DocumentDir : RNBlobUtil.fs.dirs.DCIMDir;
+            const dir = Platform.OS === 'ios' ? RNBlobUtil.fs.dirs.DocumentDir : RNBlobUtil.fs.dirs.DownloadDir;
             await fetchFile(`${dir }/${ fileName}`, mimeType).then(async result => {
                 await viewDocument({
                     mimeType,
