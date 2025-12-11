@@ -18,11 +18,10 @@ import { sessionManager } from 'store/api/baseApi.ts';
 // configure
 interface AttachmentsProps extends Attachment{
     isUploadFile?: boolean;
-    onDelete?: (url: string) => void;
     onPreloader: (preloader: boolean) => void;
 }
 
-const Attachments = ({ title, mimeType, id, fileName, onPreloader, onDelete, isUploadFile = false }: AttachmentsProps) => {
+const Attachments = ({ title, mimeType, id, fileName, onPreloader, isUploadFile = false }: AttachmentsProps) => {
     const theme = useTheme();
     const attachmentType = mimeType.split('/')[0];
     const [isDownload, setIsDownload] = React.useState(false);
