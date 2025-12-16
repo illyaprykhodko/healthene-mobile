@@ -50,7 +50,6 @@ const Recipe: React.FC<RecipeProps> = ({ recipe }) => {
     const renderItem = ({ item, index }: { item: any; index: number }) => {
         const stepIndex = stepsTitles.findIndex(step => step.name === item.name);
         const isLastItem = index === steps.length - 1;
-
         return (
             <View style={[styles.offset]}>
                 {item?.name ? (
@@ -87,9 +86,9 @@ const Recipe: React.FC<RecipeProps> = ({ recipe }) => {
         <FlatList
             data={steps}
             renderItem={renderItem}
+            initialNumToRender={steps.length}
             ListHeaderComponent={renderHeader}
             ListFooterComponent={renderFooter}
-            initialNumToRender={steps.length}
             keyExtractor={({ id }, index) => String(id || index)}
         />
     );

@@ -1,5 +1,4 @@
 // outsource dependencies
-import _ from 'lodash';
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 
@@ -82,29 +81,55 @@ const Overview: React.FC<OverviewProps> = ({
                     </View>
                 );
             }
-            case ENTITY_TYPE.CUSTOM_RECIPE: {
-                const { recipe } = item;
+            case ENTITY_TYPE.CUSTOM_RECIPE:
+            case ENTITY_TYPE.RECIPE: {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const recipeData = recipe;
                 return (
-                    <View style={[styles.offset, styles.main]}>
-                        <View style={styles.main}>
-                            <Text textAlign="center" variant="h1" style={styles.title}>
-                                {recipe?.name}
+                    <View style={styles.offset}>
+                        <View style={styles.titleWrapper}>
+                            <Text variant="h1" textAlign="center" style={styles.title}>
+                                {recipeData?.name}
                             </Text>
-                            <View style={[styles.center, { marginBottom: OFFSET.VERTICAL }]}>
-                                <DefImage
-                                    src={recipe?.coverImage?.url}
-                                    style={styles.image}
-                                />
-                            </View>
-                            <View style={[styles.center, styles.marginBottom]}>
-                                <Controls
-                                    disabled={disabled}
-                                    unit={recipe?.serving?.name}
-                                    amount={amount || initialAmount}
-                                    isSurrogateRecipe={isSurrogateRecipe}
-                                    updateData={amount => updateItem({ ...item, amount })}
-                                />
-                            </View>
+                            <Text textAlign="center" variant="h1" style={styles.subTitle}>
+                                Rate this Recipe
+                            </Text>
+                        </View>
+                        <Rating
+                            value={rating || 0}
+                            disabled={disabled}
+                            style={styles.rating}
+                            onApply={({ rating }) => updateItem({ ...item, rating })}
+                        />
+                        <View style={[styles.center, { marginBottom: OFFSET.VERTICAL }]}>
+                            <DefImage
+                                style={styles.image}
+                                src={
+                                    recipeData?.surrogateRecipe
+                                        ? recipeData?.ingredients?.[0]?.entity?.coverImage?.url
+                                        : recipeData?.coverImage?.url
+                                }
+                            />
+                        </View>
+                        <View style={[styles.center, styles.marginBottom]}>
+                            <Controls
+                                disabled={disabled}
+                                amount={amount || initialAmount || 1}
+                                updateData={amount => updateItem({ ...item, amount })}
+                                unit={
+                                    isSurrogateRecipe
+                                        ? prepareIngredientNameWithUnit(
+                                            {
+                                                amount,
+                                                serving,
+                                                useServing,
+                                                ingredient: recipeData?.ingredients?.[0],
+                                            },
+                                            { withoutName: true, withoutAmount: true }
+                                        )
+                                        : recipeData?.serving?.name || 'serving'
+                                }
+                            />
                         </View>
                     </View>
                 );
@@ -166,54 +191,6 @@ const Overview: React.FC<OverviewProps> = ({
                         </View>
                     </View>
                 );
-            case ENTITY_TYPE.RECIPE: {
-                return (
-                    <View style={styles.offset}>
-                        <View style={styles.titleWrapper}>
-                            <Text variant="h1" textAlign="center" style={styles.title}>
-                                {recipe?.name}
-                            </Text>
-                            <Text textAlign="center" variant="h1" style={styles.subTitle}>
-                                Rate this Recipe
-                            </Text>
-                        </View>
-                        <Rating
-                            value={rating || 0}
-                            disabled={disabled}
-                            style={styles.rating}
-                            onApply={({ rating }) => updateItem({ ...item, rating })}
-                        />
-                        <View style={[styles.center, { marginBottom: OFFSET.VERTICAL }]}>
-                            <DefImage
-                                style={styles.image}
-                                src={
-                                    recipe?.surrogateRecipe
-                                        ? recipe?.ingredients?.[0]?.entity?.coverImage?.url
-                                        : recipe?.coverImage?.url
-                                }
-                            />
-                        </View>
-                        <View style={[styles.center, styles.marginBottom]}>
-                            <Controls
-                                disabled={disabled}
-                                amount={amount || 0}
-                                isSurrogateRecipe={isSurrogateRecipe}
-                                updateData={amount => updateItem({ ...item, amount })}
-                                multiplier={recipe?.ingredients?.[0]?.amount || 1}
-                                unit={prepareIngredientNameWithUnit(
-                                    {
-                                        amount,
-                                        serving,
-                                        useServing,
-                                        ingredient: recipe?.ingredients?.[0],
-                                    },
-                                    { withoutName: true, withoutAmount: true }
-                                )}
-                            />
-                        </View>
-                    </View>
-                );
-            }
             default:
                 return (
                     <View style={styles.offset}>

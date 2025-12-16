@@ -30,12 +30,13 @@ const ITEM_TABS = {
     // MORE_INFO: 'MORE_INFO',
 };
 
+// Returns true if tab should be HIDDEN for surrogate recipes
 const isShownSurrogateRecipe = (tab: string, item: any) => (
     [ITEM_TABS.RECIPE, ITEM_TABS.INGREDIENTS, ITEM_TABS.OVERVIEW].includes(tab)
-    && (item?.recipe?.surrogateRecipe ?? true)
+    && (item?.recipe?.surrogateRecipe ?? false)
 );
-// && _.get(item, 'recipe.surrogateRecipe', true);
-
+// [ITEM_TABS.RECIPE, ITEM_TABS.INGREDIENTS, ITEM_TABS.OVERVIEW].includes(tab)
+// && (item?.recipe?.surrogateRecipe ?? true)
 const Item: React.FC = () => {
     const theme = useTheme();
     const navigation = useNavigation();
@@ -52,7 +53,6 @@ const Item: React.FC = () => {
         skip: !itemId,
     }) as { data: PhaseItem| undefined; isLoading: boolean; error: any };
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
-    
     useEffect(() => {
         if (item) {
             const type = item.type;
@@ -153,7 +153,7 @@ const Item: React.FC = () => {
             value: tab,
         }));
 
-        if (tabs.length === 0) {
+        if (tabs.length === 0 || !item?.recipe) {
             return null;
         }
 
@@ -240,12 +240,12 @@ const styles = StyleSheet.create({
     tabButton: {
         flex: 1,
         paddingVertical: 15,
-        backgroundColor: '#F3F3F3',
+        backgroundColor: COLORS.LIGHT_GREY,
         alignItems: 'center',
         borderRightColor: '#156F93',
     },
     activeTabButton: {
-        backgroundColor: '#2978A0',
+        backgroundColor: COLORS.BLUE,
     },
     tabText: {
         color: COLORS.BLACK,

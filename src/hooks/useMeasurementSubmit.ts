@@ -8,7 +8,6 @@ import {
     useAddMeasurementRecordMutation,
     useUpdatePhaseItemMutation,
 } from 'store/api/dayOverviewApi';
-import { PhaseItem } from 'types/overview';
 
 export interface UseMeasurementSubmitOptions {
   onSuccess?: () => void;
@@ -25,8 +24,54 @@ export interface UseMeasurementSubmitReturn {
   error: string | null;
 }
 
+export interface MeasurementItem {
+    id: number;
+    type: string;
+    status: string;
+    phaseId: number;
+    measurement: {
+        id: number;
+        name: string;
+        description: string;
+        coverImage: { url: string };
+        category: {
+            id: number;
+            name: string;
+            editable: boolean;
+        }
+        type: MeasurementType;
+        units: [{
+            id: number;
+            name: string;
+            unitType: string;
+        }],
+        numeric: boolean;
+        applicableTo: ['FEMALE', 'MALE'];
+        order: number;
+        status: string;
+        video: {
+            user: {
+                id: number;
+            },
+            id: number;
+        category: null | object;
+        title: null | string;
+        subject: null | string;
+        description: null | string;
+        mimeType: string;
+        fileName: null | string;
+        embedUrl: string;
+        contentLength: null | number;
+        timestamp: string;
+        status: string;
+        medicalTerm: null | object;
+        foodCategory: null | object;
+        }
+    };
+}
+
 export const useMeasurementSubmit = (
-    item: PhaseItem,
+    item: MeasurementItem,
     options?: UseMeasurementSubmitOptions
 ): UseMeasurementSubmitReturn => {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,6 +92,7 @@ export const useMeasurementSubmit = (
             try {
                 const measurementType = item.measurement?.type as MeasurementType;
                 const unitId = item.measurement?.units?.[0]?.id;
+
                 if (!measurementType) {
                     throw new Error('Measurement type is required');
                 }
@@ -62,7 +108,7 @@ export const useMeasurementSubmit = (
                 }).unwrap();
                 await updatePhaseItem({
                     id: item.id,
-                    phaseId: item.phase.id,
+                    phaseId: item.phaseId,
                     data: {
                         ...item,
                         status: 'DONE',

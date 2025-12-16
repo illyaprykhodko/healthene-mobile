@@ -66,8 +66,8 @@ export function prepareIngredientNameWithUnit (
     }
 
     if (!withoutAmount) {
-        const calculateAmount = peopleEatingNumber > 1 ? amount * peopleEatingNumber : amount;
-        resultString = `${decimalsToFractions(calculateAmount)} ${resultString}`;
+        // const calculateAmount = peopleEatingNumber > 1 ? amount * peopleEatingNumber : amount;
+        resultString = `${decimalsToFractions(amount)} ${resultString}`;
     }
 
     return resultString;

@@ -4,6 +4,7 @@ import { View, TextInput, StyleSheet, Platform } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
+import { COLORS } from 'constants/colors';
 import type { MeasurementFieldConfig } from 'types/health';
 
 interface BloodPressureFieldsProps {
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
     separatorLine: {
         height: 3,
         width: 175,
-        backgroundColor: '#2978A0',
+        backgroundColor: COLORS.BLUE,
     },
     separatorUnit: {
         marginLeft: 15,

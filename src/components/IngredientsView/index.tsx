@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
+import { useTheme } from 'hooks/useTheme';
 
 interface Ingredient {
     id: number | string;
@@ -11,14 +12,14 @@ interface Ingredient {
 }
 
 interface IngredientsViewProps {
-    ingredients: Ingredient[];
     style?: object;
     expandTrigger?: boolean;
+    ingredients: Ingredient[];
 }
 
 const IngredientsView: React.FC<IngredientsViewProps> = ({ ingredients, style, expandTrigger }) => {
     const [isExpanded, setIsExpanded] = useState(false);
-
+    const theme = useTheme();
     const handleToggle = () => {
         setIsExpanded(prev => !prev);
     };
@@ -31,12 +32,12 @@ const IngredientsView: React.FC<IngredientsViewProps> = ({ ingredients, style, e
         <View>
             <View style={styles.chevronWrapper}>
                 <TouchableOpacity onPress={handleToggle} style={styles.rowCenter}>
-                    <Text style={styles.chevronText} color="#2978A0">
+                    <Text style={styles.chevronText} color={theme.colors.blue}>
                         View Ingredients:{' '}
                     </Text>
                     <Icon
                         name={(isExpanded || expandTrigger) ? 'chevron-up' : 'chevron-down'}
-                        color="#2978A0"
+                        color={theme.colors.blue}
                         size={12}
                     />
                 </TouchableOpacity>

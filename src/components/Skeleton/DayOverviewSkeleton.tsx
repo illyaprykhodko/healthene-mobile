@@ -46,13 +46,10 @@ export const DayOverviewSkeleton: React.FC = () => {
 
     return (
         <View style={styles.container}>
-            {/* Header skeleton */}
             <View style={styles.header}>
                 <Skeleton width={120} height={24} borderRadius={4} />
             </View>
-
-            {/* Timeline line */}
-            <View
+            {/* <View
                 style={[
                     styles.timelineLine,
                     {
@@ -60,16 +57,14 @@ export const DayOverviewSkeleton: React.FC = () => {
                         opacity: 0.3,
                     },
                 ]}
-            />
+            /> */}
 
-            {/* Phase items */}
             <View style={styles.phasesList}>
                 {Array.from({ length: skeletonCount }).map((_, index) => (
                     <SkeletonPhaseItem key={index} index={index} />
                 ))}
             </View>
 
-            {/* Bottom buttons skeleton */}
             <View style={styles.bottomButtons}>
                 <AnytimeMenuSkeleton />
                 {/* <Skeleton width={60} height={60} borderRadius={30} style={styles.fabButton} /> */}
@@ -89,10 +84,10 @@ const styles = StyleSheet.create({
     },
     timelineLine: {
         position: 'absolute',
-        left: TIMELINE_WIDTH / 2,
-        top: 80,
+        left: 40,
+        top: 100,
         width: 1,
-        height: ROW_HEIGHT * 5,
+        height: ROW_HEIGHT * 6,
     },
     phasesList: {
         flex: 1,

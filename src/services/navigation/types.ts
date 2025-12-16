@@ -98,6 +98,14 @@ export type RootStackParamList = {
     substanceType: string;
     onApply?: (data: any) => void;
   };
+  [ROUTES.EDIT_FOOD]: {
+    item: any;
+    date?: string;
+    prevItem?: any;
+    entityType?: string;
+    substanceType?: string;
+    onApply?: (data: any) => void;
+  };
 };
 
 type RouteName = keyof RootStackParamList;
