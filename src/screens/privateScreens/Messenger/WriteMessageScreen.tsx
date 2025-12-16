@@ -16,6 +16,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import Text from 'components/Text.tsx';
 import { filters } from 'services/filter';
 import Screen from 'components/Screen.tsx';
+import { ROUTES } from 'constants/routes.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
@@ -101,7 +102,11 @@ const WriteMessageScreen = () => {
 
     const getAttachment = useCallback((item: AttachmentType, onAttach: (attachment: Attachment) => void) => {
         switch (item) {
-            default: return <Pressable key={item} style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}>
+            default: return <Pressable
+                key={item}
+                onPress={() => navigation.navigate(ROUTES.CAMERA_SCREEN)}
+                style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
+            >
                 <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
                     <Icon name="video" color={theme.colors.darkGrey} size={20} />
                 </View>

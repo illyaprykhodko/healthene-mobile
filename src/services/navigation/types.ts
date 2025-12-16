@@ -36,6 +36,7 @@ export type RootStackParamList = {
   [ROUTES.ABOUT_PLAN]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
   [ROUTES.MESSAGE_LIST]: undefined;
+  [ROUTES.CAMERA_SCREEN]: undefined;
   [ROUTES.HEALTH_PROFILE]: undefined;
   [ROUTES.FOOD_ALLERGIES]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
@@ -48,7 +49,6 @@ export type RootStackParamList = {
   [ROUTES.WRITE_MESSAGE_SCREEN]: undefined;
 
   // Example of a screen that requires params
-  [ROUTES.DOCUMENTS_VIEWER]: { attachmentType: string };
   [ROUTES.SMART_SCALE]: {
     measurementPhaseItem: object;
   };
