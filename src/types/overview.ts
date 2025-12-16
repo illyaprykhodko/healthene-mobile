@@ -1,3 +1,4 @@
+import { EntityType } from 'constants/spec';
 import { CoverImage } from './common/interfaces';
 import { AlgorithmSetting, CookingMethod, CookingMethodType, InitialStateTag, PlantType, RescueTag, ShoppingCartCategory, StateTag, Tag } from './meal';
 
@@ -8,8 +9,51 @@ enum Status {
     DID_NOT_EAT = 'DID_NOT_EAT',
 }
 // DayOverviewRecipeItem
+
+
+export type AddPhaseItemData = {
+    activityCount: number,
+    activityCountUnit: 'STEP' | string,
+    amount: number,
+    food: {
+      id: number
+    },
+    initialAmount: number,
+    measurement: {
+      id: number
+    },
+    physicalActivity: {
+      id: number
+    },
+    question: {
+      id: number
+    },
+    rating: number,
+    recipe: {
+      id: number
+    },
+    section: string,
+    status: 'DID_NOT_EAT' | 'DONE' | 'INCOMPLETE' | 'PENDING',
+    substanceType: 'DRINK' | 'FOOD',
+    supplement: {
+      id: number
+    },
+    type: 'ATTACHMENT' | 'FOOD' | 'ITEMS_CATEGORY' |'ADDED_BY_PATIENT' | 'MEASUREMENT' | 'MEDICATION' | 'PHYSICAL_ACTIVITY' | 'QUESTION' | 'RECIPE' | 'RECIPE_TEMPLATE' | 'RESPONSE' | 'SUPPLEMENT' | 'TEXT',
+    weight: {
+      id: number
+    },
+    medication: {
+        id: number
+      },
+      modified: boolean,
+      order: number,
+      phase: {
+        id: number
+      },
+  }
 export interface PhaseItem {
     food?: any;
+    // type: EntityType;
     type: string;
     title: string;
     amount?: number;

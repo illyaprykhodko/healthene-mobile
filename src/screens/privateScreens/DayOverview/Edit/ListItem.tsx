@@ -380,7 +380,7 @@ interface IngredientLike {
 }
 
 interface ServingLike {
-  name?: string;           // fallback if singular/plural are missing
+  name?: string;
   pluralName?: string;
   singularName?: string;
 }
@@ -388,7 +388,6 @@ interface ServingLike {
 interface PrepareOptions {
     withoutName?: boolean;
     withoutAmount?: boolean;
-  // Optional external formatter for amount (e.g., filters.decimalsToFractions)
     formatAmount?: (n: number) => string;
 }
 
@@ -401,13 +400,11 @@ interface PrepareArgs {
     ingredient?: Maybe<IngredientLike>;
 }
 
-// Default options
 const defaultOptions: Required<Omit<PrepareOptions, 'formatAmount'>> = {
     withoutAmount: false,
     withoutName: false,
 };
 
-// Utility: safely pick unit names with fallbacks
 function resolveUnitNames (
     useServing: boolean,
     serving: Maybe<ServingLike>,
@@ -437,15 +434,11 @@ function resolveEntityName (
     return ent.singularName || ent.name || '';
 }
 
-// Utility: when withoutName=true and unit contains " of", drop the " of"
 function stripOfIfNeeded (unitLabel: string): string {
     const excludeWord = /\s(of)\b/gi;
     return excludeWord.test(unitLabel) ? unitLabel.replace(excludeWord, '') : unitLabel;
 }
 
-/**
- * Core function (new logic, typed)
- */
 export function prepareIngredientNameWithUnit ({
     serving,
     options,
@@ -464,8 +457,9 @@ export function prepareIngredientNameWithUnit ({
 
     const { singular, plural } = resolveUnitNames(useServing, serving, ingredient);
 
-    const calculatedAmount = peopleEatingNumber > 1 ? amount * peopleEatingNumber : amount;
-    const isPlural = calculatedAmount > 1;
+    // const calculatedAmount = peopleEatingNumber > 1 ? amount * peopleEatingNumber : amount;
+    // const isPlural = calculatedAmount > 1;
+    const isPlural = amount > 1;
 
     let unitLabel = isPlural ? plural : singular;
 
@@ -481,17 +475,12 @@ export function prepareIngredientNameWithUnit ({
     let result = `${unitLabel}${namePart}`.trim();
 
     if (!opt.withoutAmount) {
-        result = `${opt.formatAmount(calculatedAmount)} ${result}`.trim();
+        result = `${opt.formatAmount(amount)} ${result}`.trim();
     }
 
     return result;
 }
 
-/**
- * Convenience adapter: “from item”
- * Use this if you have the flat `item` like in your original code.
- * Safely extracts amount/initialAmount, serving/useServing, and the 1st recipe ingredient.
- */
 export function prepareIngredientNameWithUnitFromItem (
     item: {
     amount?: number | null;

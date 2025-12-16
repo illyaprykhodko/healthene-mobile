@@ -1,14 +1,14 @@
 // outsource dependencies
+import Icon from 'react-native-vector-icons/FontAwesome5';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, FlatList, TextInput } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, FlatList, TextInput, Image } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { COLORS } from 'constants/colors';
-import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
-import { Button } from 'components/Button';
+import { ROUTES } from 'constants/routes';
 import {
     useGetCatalogPrototypeTreeNodesQuery,
     useGetRecipePrototypesQuery,
@@ -17,51 +17,32 @@ import {
 } from 'store/api/dayOverviewApi';
 import { CATALOG_TAG_TYPE, SEARCH_TYPE } from 'constants/spec';
 
-// Temporary types until full migration
-interface AddReplaceItemProps {
-  entityType?: string;
-  itemToReplace?: any;
-  excludeIds?: string[];
-  replaceMode?: boolean;
-  onApply?: (item: any) => void;
-}
-
-// TAG_TYPE and SEARCH_TYPE centralized in constants/spec
-
-export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
-    const theme = useTheme();
-    const navigation = useNavigation();
+export const AddReplaceItem: React.FC = () => {
+    const navigation = useNavigation<any>();
     const route = useRoute<any>();
   
-    const [selectedItems, setSelectedItems] = useState<AvailableItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [page, setPage] = useState(0);
     const [allItems, setAllItems] = useState<AvailableItem[]>([]);
 
-    // default tab is Food/Drink
     const initialEntityType: string = CATALOG_TAG_TYPE.PATIENT_FOOD;
     const initialSearchType: string = SEARCH_TYPE.ITEM;
 
     const [activeTab, setActiveTab] = useState<string>(initialEntityType);
     const [searchType, setSearchType] = useState<string>(initialSearchType);
-
     const [currentNodeId, setCurrentNodeId] = useState<number | null>(null);
-    // const [currentNodeName, setCurrentNodeName] = useState<string>('');
   
-    // const excludeIds = route.params?.excludeIds || [];
     const onApply = route.params?.onApply;
-    const replaceMode = route.params?.replaceMode || false;
-    const itemToReplace = route.params?.itemToReplace;
+    const date = route.params?.date;
 
-    // Debounce search query
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             setDebouncedSearchQuery(searchQuery);
         }, 500);
-
         return () => clearTimeout(timeoutId);
     }, [searchQuery]);
+
     useEffect(() => {
         if (debouncedSearchQuery.trim().length === 0 && activeTab !== CATALOG_TAG_TYPE.RESTAURANT) {
             setPage(0);
@@ -69,58 +50,51 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         }
     }, [debouncedSearchQuery, activeTab]);
 
-    // restaurants only tree search
     const { data: catalogTreeData, isLoading: isCatalogTreeLoading } = useGetCatalogPrototypeTreeNodesQuery({
         filter: {
             restaurantCatalog: true,
             parentId: currentNodeId || undefined,
             name: debouncedSearchQuery || undefined,
-            // excludeIds: excludeIds.map((id: string) => parseInt(id)),
         },
         page,
         size: 10,
         sort: 'name,ASC',
     }, {
-        // skip: !(activeTab === TAG_TYPE.RESTAURANT),
         skip: !(activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE),
     });
 
-    // recipe prototypes query (non-restaurants, item search)
-    // useGetRecipePrototypesQuery
     const { data: recipeData, isLoading: isRecipeLoading } = useGetRecipePrototypesQuery({
         filter: {
             name: debouncedSearchQuery || undefined,
             catalogNodeId: currentNodeId || undefined,
-            // excludeIds: excludeIds.map((id: string) => parseInt(id)),
         },
         page,
         size: 10,
         sort: 'name,ASC',
     }, {
-        skip: !(activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES && searchType === SEARCH_TYPE.ITEM && debouncedSearchQuery.trim().length > 0),
+        skip: !(activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES
+            && searchType === SEARCH_TYPE.ITEM
+            && debouncedSearchQuery.trim().length > 0),
     });
 
-    // foods query (non-restaurants, item search)
     const { data: foodsData, isLoading: isFoodsLoading } = useGetFoodsQuery({
         filter: {
-            // name: debouncedSearchQuery || undefined,
             isEnabled: true,
             categoryNodeId: currentNodeId || undefined,
             nameFragment: debouncedSearchQuery || undefined,
             treeTypeViewLabel: 'PATIENT_NAVIGATION' as const,
-            // excludeIds: excludeIds.map((id: string) => parseInt(id)),
         },
         page,
         size: 10,
         sort: 'name,ASC',
     }, {
-        skip: !(activeTab === CATALOG_TAG_TYPE.PATIENT_FOOD && searchType === SEARCH_TYPE.ITEM && debouncedSearchQuery.trim().length > 0),
+        skip: !(activeTab === CATALOG_TAG_TYPE.PATIENT_FOOD
+            && searchType === SEARCH_TYPE.ITEM
+            && debouncedSearchQuery.trim().length > 0),
     });
 
-    // stable empty array reference
     const EMPTY = useMemo(() => [] as any[], []);
 
-    // determine which content to use and memoize to avoid identity churn
     const currentContent: any[] = useMemo(() => {
         if (activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE) {
             return catalogTreeData?.content || EMPTY;
@@ -160,37 +134,24 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         }
     }, [page, contentKey, allItemsKey, currentContent, debouncedSearchQuery, activeTab]);
 
-    // const filteredItems = allItems; // keep placeholder for potential future filtering
-
-    useEffect(() => {
-        const title = replaceMode
-            ? `Replace ${activeTab.toLowerCase().replace('_', ' ')}`
-            : `Select ${activeTab.toLowerCase().replace('_', ' ')}`;
-        navigation.setOptions({ title });
-    }, [navigation, activeTab, replaceMode]);
-
-    // useEffect(() => {
-    //     setPage(0);
-    //     setAllItems([]);
-    // }, [debouncedSearchQuery, activeTab, searchType, currentNodeId]);
-
     const handleItemPress = (item: AvailableItem) => {
-        if (selectedItems.find(selected => selected.id === item.id)) {
-            setSelectedItems(selectedItems.filter(selected => selected.id !== item.id));
+        const isNode = activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE;
+        
+        if (isNode) {
+            setCurrentNodeId(item.id as number);
+            setPage(0);
+            setAllItems([]);
         } else {
-            if (replaceMode) {
-                setSelectedItems([item]);
-            } else {
-                setSelectedItems([...selectedItems, item]);
-            }
-        }
-    };
-
-    const handleApply = () => {
-        if (onApply && selectedItems.length > 0) {
-            const itemToApply = selectedItems[0];
-            onApply(itemToApply);
-            navigation.goBack();
+            navigation.navigate(ROUTES.EDIT_FOOD, {
+                item,
+                date,
+                entityType: activeTab,
+                onApply: (editedItem: any) => {
+                    if (onApply) {
+                        onApply(editedItem);
+                    }
+                },
+            });
         }
     };
 
@@ -202,7 +163,6 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
 
     const handleTabPress = (tabType: string) => {
         setActiveTab(tabType);
-        setSelectedItems([]);
         setPage(0);
         setAllItems([]);
         setSearchQuery('');
@@ -210,20 +170,6 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
         setCurrentNodeId(null);
         setSearchType(tabType === CATALOG_TAG_TYPE.RESTAURANT ? SEARCH_TYPE.TREE : SEARCH_TYPE.ITEM);
     };
-
-    const handleNodePress = (node: any) => {
-        if (activeTab !== CATALOG_TAG_TYPE.RESTAURANT) { return; }
-        setCurrentNodeId(node.id);
-        setPage(0);
-        setAllItems([]);
-    };
-
-    // const handleScanUPC = () => {
-    //     (navigation as any).navigate('UPCScan', {
-    //         entityType: activeTab === TAG_TYPE.PATIENT_FOOD ? 'FOOD' : 'RECIPE',
-    //         onApply: (scannedItem: any) => { if (onApply) { onApply(scannedItem); } },
-    //     });
-    // };
 
     const renderTabs = () => {
         const tabs = [
@@ -257,161 +203,83 @@ export const AddReplaceItem: React.FC<AddReplaceItemProps> = () => {
     };
 
     const renderItem = ({ item }: { item: AvailableItem }) => {
-        const isSelected = selectedItems.find(selected => selected.id === item.id);
-        const isNode = activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE;
-    
+        const imageUrl = (item as any).coverImage?.url;
+        
         return (
-            <TouchableOpacity
-                style={styles.listItem}
-                onPress={() => (isNode ? handleNodePress(item) : handleItemPress(item))}
-            >
+            <TouchableOpacity style={styles.listItem} onPress={() => handleItemPress(item)}>
                 <View style={styles.content}>
-                    <View style={styles.image} />
+                    {imageUrl ? (
+                        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+                    ) : (
+                        <View style={[styles.image, styles.imagePlaceholder]} />
+                    )}
                     <View style={styles.listTitle}>
-                        <Text style={{ fontSize: 16, fontWeight: '500', color: theme.colors.text }}>
+                        <Text style={styles.itemName} numberOfLines={2}>
                             {item.name}
                         </Text>
-                        <Text style={{ fontSize: 14, color: theme.colors.grey, marginTop: 4 }}>
-                            {isNode ? 'Category' : (activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES ? 'RECIPE' : 'FOOD')}
+                        <Text style={styles.itemType}>
+                            {activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES ? 'RECIPE' : 'FOOD'}
                         </Text>
-                        {item.description && (
-                            <Text style={{ fontSize: 12, color: theme.colors.grey, marginTop: 2 }}>
-                                {item.description}
-                            </Text>
-                        )}
                     </View>
                 </View>
-                {!isNode && isSelected && (
-                    <Text style={{ color: theme.colors.blue, fontSize: 18 }}>✓</Text>
-                )}
-                {isNode && (
-                    <Text style={{ color: theme.colors.grey, fontSize: 16 }}>›</Text>
-                )}
+                <Icon name="chevron-right" size={16} color={COLORS.BLACK} />
             </TouchableOpacity>
         );
     };
 
     const renderSearchInput = () => (
-        <View style={[styles.search, styles.offset]}>
-            <TextInput
-                value={searchQuery}
-                autoCorrect={false}
-                autoCapitalize="none"
-                returnKeyType="search"
-                placeholder="Search..."
-                onChangeText={setSearchQuery}
-                placeholderTextColor={theme.colors.grey}
-                style={[styles.searchInput, { color: theme.colors.text }]}
-            />
+        <View style={styles.searchContainer}>
+            <View style={styles.searchInputWrapper}>
+                <Icon name="search" size={14} color={COLORS.GREY} style={styles.searchIcon} />
+                <TextInput
+                    value={searchQuery}
+                    autoCorrect={false}
+                    autoCapitalize="none"
+                    returnKeyType="search"
+                    placeholder="Search..."
+                    style={styles.searchInput}
+                    onChangeText={setSearchQuery}
+                    placeholderTextColor={COLORS.GREY}
+                />
+                {searchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+                        <Icon name="times" size={14} color={COLORS.GREY} />
+                    </TouchableOpacity>
+                )}
+            </View>
         </View>
     );
 
-    const renderReplaceInfo = () => {
-        if (!replaceMode || !itemToReplace) { return null; }
-
-        return (
-            <View style={styles.replaceInfo}>
-                <Text style={{ fontSize: 14, color: theme.colors.grey, marginBottom: 8 }}>
-                    Replacing:
-                </Text>
-                <Text style={{ fontSize: 16, fontWeight: '500', color: theme.colors.text }}>
-                    {itemToReplace.recipe?.name || itemToReplace.food?.name || 'Item'}
-                </Text>
-            </View>
-        );
-    };
-
-    // const renderBreadcrumb = () => {
-    //     if (!currentNodeName || !(activeTab === TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE)) { return null; }
-    //     return (
-    //         <View style={styles.breadcrumb}>
-    //             <TouchableOpacity onPress={() => {
-    //                 setCurrentNodeId(null);
-    //                 setCurrentNodeName('');
-    //             }}>
-    //                 <Text style={{ color: theme.colors.blue, textDecorationLine: 'underline' }}>
-    //                     Back to root
-    //                 </Text>
-    //             </TouchableOpacity>
-    //             <Text style={{ color: theme.colors.grey }}> › {currentNodeName}</Text>
-    //         </View>
-    //     );
-    // };
-
-    // if (isLoading && page === 0) {
-    //     return (
-    //         <Screen initialized={true} style={styles.container}>
-    //             <View style={styles.loadingContainer}>
-    //                 <Text>Loading available items...</Text>
-    //             </View>
-    //         </Screen>
-    //     );
-    // }
     return (
         <Screen initialized={true} style={styles.container}>
-            <View style={styles.offset}>
-                <Text variant="h3" style={styles.title}>
-                    {replaceMode ? `Replace ${activeTab.toLowerCase().replace('_', ' ')}` : `Select ${activeTab.toLowerCase().replace('_', ' ')}`}
-                </Text>
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Add item</Text>
             </View>
 
-            {renderReplaceInfo()}
-
             {renderTabs()}
-
-            {/* {renderBreadcrumb()} */}
-
             {renderSearchInput()}
 
             <FlatList
                 data={allItems}
                 style={styles.list}
-                // data={filteredItems}
-                keyExtractor={item => String(item.id)}
                 renderItem={renderItem}
-                onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
+                onEndReached={handleLoadMore}
                 keyboardShouldPersistTaps="handled"
+                keyExtractor={item => String(item.id)}
                 ListEmptyComponent={
-                    <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
-            No items found
+                    <Text style={styles.emptyScreen}>
+                        {searchQuery.trim().length > 0 ? 'No items found' : 'Enter a search term'}
                     </Text>
                 }
                 ListFooterComponent={
                     isLoading && page > 0 ? (
-                        <View style={{ padding: 20, alignItems: 'center' }}>
+                        <View style={styles.loadingMore}>
                             <Text>Loading more...</Text>
                         </View>
                     ) : null
                 }
             />
-
-            <View style={styles.bottomSection}>
-                {/* {Platform.OS === 'ios' && (
-                    <View style={styles.scanButtonContainer}>
-                        <Button
-                            title="SCAN UPC CODE"
-                            variant="secondary"
-                            onPress={handleScanUPC}
-                            style={styles.scanButton}
-                            textStyle={styles.scanButtonText}
-                        />
-                    </View>
-                )} */}
-
-                {selectedItems.length > 0 && searchType === SEARCH_TYPE.ITEM && (
-                    <View style={styles.buttonContainer}>
-                        <Button
-                            title={replaceMode
-                                ? `Replace with ${selectedItems[0].name}`
-                                : `Add ${selectedItems.length} item${selectedItems.length > 1 ? 's' : ''}`
-                            }
-                            variant="primary"
-                            onPress={handleApply}
-                        />
-                    </View>
-                )}
-            </View>
         </Screen>
     );
 };
@@ -420,38 +288,29 @@ export default AddReplaceItem;
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
         paddingLeft: 0,
         paddingRight: 0,
+        backgroundColor: COLORS.WHITE,
     },
-    offset: {
-        paddingTop: OFFSET.VERTICAL,
-        paddingLeft: OFFSET.HORIZONTAL,
-        paddingRight: OFFSET.HORIZONTAL,
-    },
-    title: {
-        paddingTop: OFFSET.VERTICAL,
-        marginBottom: OFFSET.VERTICAL,
-    },
-    replaceInfo: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: '#F5F5F5',
-        marginBottom: 8,
-    },
-    breadcrumb: {
-        flexDirection: 'row',
+    header: {
+        backgroundColor: '#E0EBF7',
+        paddingVertical: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL,
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        backgroundColor: '#F9F9F9',
-        marginBottom: 8,
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: '400',
+        color: '#181818',
     },
     tabsRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginHorizontal: 16,
-        marginBottom: 20,
+        marginHorizontal: OFFSET.HORIZONTAL,
+        marginTop: OFFSET.VERTICAL,
+        marginBottom: OFFSET.VERTICAL,
         borderWidth: 2,
         borderColor: '#156F93',
         borderRadius: 8,
@@ -465,87 +324,91 @@ const styles = StyleSheet.create({
         borderRightColor: '#156F93',
     },
     activeTabButton: {
-        backgroundColor: COLORS.BLUE,
+        backgroundColor: '#2978A0',
     },
     tabText: {
         color: COLORS.BLACK,
         fontWeight: '500',
+        fontSize: 14,
     },
     activeTabText: {
         color: COLORS.WHITE,
         fontWeight: '600',
     },
-    search: {
-        marginBottom: 4,
+    searchContainer: {
+        paddingHorizontal: OFFSET.HORIZONTAL,
+        marginBottom: OFFSET.VERTICAL,
+    },
+    searchInputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#D9D9D9',
+        borderRadius: 25,
+        paddingHorizontal: 16,
+        backgroundColor: COLORS.WHITE,
+    },
+    searchIcon: {
+        marginRight: 8,
     },
     searchInput: {
-        borderWidth: 1,
-        borderColor: COLORS.GREY,
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+        flex: 1,
+        paddingVertical: 10,
         fontSize: 16,
-        backgroundColor: COLORS.WHITE,
+        color: COLORS.BLACK,
+    },
+    clearButton: {
+        padding: 4,
     },
     list: {
         flex: 1,
-        paddingLeft: 16,
-        paddingRight: 0,
     },
     listItem: {
-        display: 'flex',
         flexDirection: 'row',
-        paddingVertical: 20,
-        paddingHorizontal: 4,
         alignItems: 'center',
         justifyContent: 'space-between',
+        paddingVertical: 16,
+        paddingHorizontal: OFFSET.HORIZONTAL,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.DARK_GREY,
-        marginRight: 16,
+        borderBottomColor: '#E5E5E5',
     },
     content: {
-        display: 'flex',
         flexDirection: 'row',
-        maxWidth: '85%',
+        alignItems: 'center',
+        flex: 1,
+        marginRight: 12,
     },
     image: {
         width: 48,
         height: 48,
-        marginRight: 4,
-        backgroundColor: '#F3F3F3',
         borderRadius: 4,
+        marginRight: 12,
+    },
+    imagePlaceholder: {
+        backgroundColor: '#F3F3F3',
     },
     listTitle: {
         flex: 1,
-        alignSelf: 'center',
+    },
+    itemName: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: COLORS.BLACK,
+        marginBottom: 4,
+    },
+    itemType: {
+        fontSize: 12,
+        color: COLORS.GREY,
+        textTransform: 'uppercase',
     },
     emptyScreen: {
-        marginTop: 20,
+        textAlign: 'center',
+        color: COLORS.GREY,
+        marginTop: OFFSET.VERTICAL * 2,
+        fontSize: 16,
     },
-    bottomSection: {
-        padding: 16,
-        borderTopWidth: 1,
-        borderTopColor: '#F3F3F3',
-    },
-    scanButtonContainer: {
-        marginBottom: 16,
-    },
-    scanButton: {
-        borderWidth: 0,
-        backgroundColor: '#CAE1F9',
-        paddingTop: 15,
-        paddingBottom: 15,
-    },
-    scanButtonText: {
-        color: '#567697',
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    buttonContainer: {
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
+    loadingMore: {
+        padding: 20,
         alignItems: 'center',
     },
 });

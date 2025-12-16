@@ -9,6 +9,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Item from './Item';
 import Edit from './Edit';
 import UPCScan from './UPCScan';
+import EditFood from './EditFood';
 import { Overview } from './Overview';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
@@ -20,8 +21,10 @@ import AddReplaceRecipe from './AddReplaceRecipe';
 import SmartScaleScreen from '../SmartScaleScreen';
 import TimeSwitcher from 'components/TimeSwitcher';
 import TreeAddReplaceItem from './TreeAddReplaceItem';
+import ModifyIngredient from './Item/ModifyIngredient';
 import { useAppDispatch, useAppSelector } from 'store';
 import { RootStackParamList } from 'services/navigation';
+import ModifyTypeIngredient from './ModifyTypeIngredient';
 import AllRecordedDataScreen from '../AllRecordedDataScreen';
 import MeasurementChartScreen from '../MeasurementChartScreen';
 import WeightMeasurementScreen from '../WeightMeasurementScreen';
@@ -153,6 +156,51 @@ const DayOverviewStack: React.FC = () => {
                 component={TreeAddReplaceItem}
                 options={({ route, navigation }) => ({
                     title: 'Select Item',
+                    headerTitle: () =>
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
+                })}
+            />
+            <Stack.Screen
+                name="EditFood"
+                component={EditFood}
+                options={({ route, navigation }) => ({
+                    title: 'Edit Food',
+                    headerTitle: () =>
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
+                })}
+            />
+            <Stack.Screen
+                name="ModifyIngredient"
+                component={ModifyIngredient}
+                options={({ route, navigation }) => ({
+                    title: 'Ingredients',
+                    headerTitle: () =>
+                        <TimeSwitcher
+                            disabled
+                            isHideLeftBtn
+                            isHideRightBtn
+                            init={() => {}}
+                            date={currentDate}
+                        />
+                })}
+            />
+            <Stack.Screen
+                name="ModifyTypeIngredient"
+                component={ModifyTypeIngredient}
+                options={({ route, navigation }) => ({
+                    title: 'Modify',
                     headerTitle: () =>
                         <TimeSwitcher
                             disabled

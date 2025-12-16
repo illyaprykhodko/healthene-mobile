@@ -1,13 +1,19 @@
 // outsource dependencies
 import _ from 'lodash';
-import React from 'react';
-import { View, StyleSheet, ScrollView, FlatList } from 'react-native';
-
+import Icon from 'react-native-vector-icons/FontAwesome5';
+import { SwipeListView } from 'react-native-swipe-list-view';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { View, StyleSheet, ScrollView, FlatList, TouchableOpacity, UIManager, LayoutAnimation, Platform } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { OFFSET } from 'constants/offset';
-import { useTheme } from 'hooks/useTheme';
-import { PhaseItem } from 'types/overview';
+import { COLORS } from 'constants/colors';
+import { TAG_TYPE } from 'constants/spec';
+import DefImage from 'components/DefImage';
+import { PhaseItem, Ingredient } from 'types/overview';
+import ApproveButtons from 'components/ApproveButtons';
+import { useUpdatePhaseItemMutation } from 'store/api/dayOverviewApi';
 import { prepareIngredientNameWithUnit } from 'utils/ingredientUtils';
 
 interface IngredientsProps {
@@ -15,33 +21,196 @@ interface IngredientsProps {
 }
 
 const Ingredients: React.FC<IngredientsProps> = ({ item }) => {
-    const theme = useTheme();
+    const route = useRoute<any>();
+    const navigation = useNavigation<any>();
+    
+    const [updatePhaseItem] = useUpdatePhaseItemMutation();
+
     const { recipe } = item;
     const ingredients = recipe?.ingredients || [];
     const serving = recipe?.serving || {};
     const peopleEatingNumber = item.peopleEatingNumber || 1;
-    const servingAmount = item.amount || 1;
+    const servingAmount = recipe?.servingAmount || item.amount || 1;
     const servingName = serving.name || 'serving';
+
+    const [localIngredients, setLocalIngredients] = useState<Ingredient[]>(ingredients);
+    const [localRecipe, setLocalRecipe] = useState(recipe);
+
+    useEffect(() => {
+        setLocalIngredients(ingredients);
+        setLocalRecipe(recipe);
+    }, [ingredients, recipe]);
+
+    // set LayoutAnimation for Android
+    useEffect(() => {
+        if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+            UIManager.setLayoutAnimationEnabledExperimental(true);
+        }
+    }, []);
+
+    const handleDeleteIngredient = useCallback((ing: any) => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        const newList = localIngredients.filter(i => i.id !== ing?.item?.id);
+        setLocalIngredients(newList);
+        setLocalRecipe({
+            ...localRecipe,
+            ingredients: newList
+        });
+    }, [localIngredients, localRecipe]);
+
+    const handleNavigateToModifyIngredient = useCallback((ing: Ingredient) => {
+        navigation.navigate('ModifyIngredient', {
+            item: ing,
+            itemData: item,
+            ingredients: localIngredients,
+            section: route.params?.section
+        });
+    }, [navigation, item, localIngredients, route]);
+
+    const handleSave = useCallback(async () => {
+        try {
+            await updatePhaseItem({
+                id: item.id,
+                phaseId: item.phase?.id,
+                data: {
+                    ...item,
+                    recipe: {
+                        ...localRecipe,
+                        ingredients: localIngredients,
+                        modified: true
+                    },
+                },
+            }).unwrap();
+            navigation.goBack();
+        } catch (error) {
+            console.error('Failed to save recipe:', error);
+        }
+    }, [item, localRecipe, localIngredients, updatePhaseItem, navigation]);
+
+    const handleCancel = useCallback(() => {
+        navigation.goBack();
+    }, [navigation]);
+
+    // Check if this is a patient recipe (custom recipe)
+    const isPatientRecipe = (item as any).entityType === TAG_TYPE.PATIENT_RECIPES
+        || (item as any).type === 'CUSTOM_RECIPE'
+        || (item.section && item.section.includes('Patient'));
 
     if (!recipe || !ingredients.length) {
         return (
             <View style={styles.emptyContainer}>
-                <Text
-                    textAlign="center"
-                    style={{ color: theme.colors.grey, fontSize: 16 }}
-                >
+                <Text textAlign="center" style={{ color: COLORS.GREY, fontSize: 16 }}>
                     No ingredients information available
                 </Text>
             </View>
         );
     }
 
+    if (isPatientRecipe) {
+        return (
+            <View style={styles.container}>
+                <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: COLORS.BLACK }]}>
+                    {recipe.name}
+                </Text>
+
+                <View style={styles.infoGroup}>
+                    <Text style={styles.servings}>
+                        Servings: {servingAmount} {servingName}
+                    </Text>
+                </View>
+
+                <Text style={[styles.subtitle, { fontSize: 18, color: COLORS.BLACK }]}>Ingredients:</Text>
+
+                <ScrollView contentContainerStyle={styles.scroller}>
+                    {localIngredients.length === 0 ? (
+                        <Text textAlign="center" style={styles.emptyScreen}>
+                            No items found
+                        </Text>
+                    ) : (
+                        <SwipeListView
+                            useFlatList
+                            closeOnScroll
+                            disableRightSwipe
+                            rightOpenValue={-75}
+                            data={localIngredients}
+                            recalculateHiddenLayout
+                            keyExtractor={i => String(i?.id)}
+                            renderHiddenItem={i => (
+                                <TouchableOpacity
+                                    style={styles.listItemBtnReplace}
+                                    onPress={() => handleDeleteIngredient(i)}
+                                >
+                                    <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                                        <Icon
+                                            size={18}
+                                            name="trash-alt"
+                                            color={COLORS.BLACK}
+                                            style={{ marginRight: 5 }}
+                                        />
+                                        <Text style={styles.buttonText}>Delete</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            )}
+                            renderItem={({ item: ing }) => (
+                                <View style={styles.listItemWrapper}>
+                                    <View style={styles.listItem}>
+                                        <View style={styles.main}>
+                                            <TouchableOpacity
+                                                onPress={() => handleNavigateToModifyIngredient(ing)}
+                                                style={{ marginHorizontal: OFFSET.HORIZONTAL }}
+                                            >
+                                                <View style={styles.recipeContainer}>
+                                                    <DefImage
+                                                        style={styles.itemImage}
+                                                        src={_.get(ing, 'entity.coverImage.url')}
+                                                    />
+                                                    <View style={[styles.offset, styles.main]}>
+                                                        <Text
+                                                            variant="h6"
+                                                            numberOfLines={2}
+                                                            style={[styles.offset, { color: COLORS.BLACK, fontSize: 14 }]}
+                                                        >
+                                                            {prepareIngredientNameWithUnit({
+                                                                ingredient: ing,
+                                                                peopleEatingNumber,
+                                                                amount: _.get(ing, 'amount'),
+                                                            })}
+                                                        </Text>
+                                                        {ing?.modified && (
+                                                            <Text style={[styles.offset, { fontSize: 12, color: COLORS.GREY }]}>
+                                                                edited by me
+                                                            </Text>
+                                                        )}
+                                                    </View>
+                                                    <View style={styles.checkboxContainer}>
+                                                        <Icon name="chevron-right" color={COLORS.DARK_GREY} size={14} />
+                                                    </View>
+                                                </View>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                </View>
+                            )}
+                            onRowOpen={(rowKey, rowMap) => {
+                                setTimeout(() => {
+                                    rowMap[rowKey] && rowMap[rowKey].closeRow();
+                                }, 10 * 1000);
+                            }}
+                        />
+                    )}
+                </ScrollView>
+
+                <ApproveButtons
+                    handleBack={handleCancel}
+                    handleSave={handleSave}
+                />
+            </View>
+        );
+    }
+
     return (
         <ScrollView style={styles.container}>
-            <Text
-                textAlign="center"
-                style={[styles.title, { fontSize: 24, fontWeight: '700' }]}
-            >
+            <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: COLORS.BLACK }]}>
                 {recipe.name}
             </Text>
 
@@ -51,7 +220,7 @@ const Ingredients: React.FC<IngredientsProps> = ({ item }) => {
                 </Text>
             </View>
 
-            <Text style={[styles.subtitle, { fontSize: 22 }]}>Ingredients:</Text>
+            <Text style={[styles.subtitle, { fontSize: 18, color: COLORS.BLACK }]}>Ingredients:</Text>
 
             <FlatList
                 scrollEnabled={false}
@@ -112,6 +281,57 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
         marginBottom: OFFSET.VERTICAL,
     },
+    scroller: {
+        flexGrow: 1,
+    },
+    emptyScreen: {
+        marginTop: OFFSET.VERTICAL,
+        color: COLORS.GREY,
+    },
+    // For editable ingredients (patient recipes)
+    listItemWrapper: {
+        backgroundColor: COLORS.WHITE,
+    },
+    listItem: {
+        alignItems: 'center',
+        flexDirection: 'row',
+    },
+    main: {
+        flex: 1,
+    },
+    recipeContainer: {
+        alignItems: 'center',
+        flexDirection: 'row',
+        paddingVertical: 12,
+    },
+    itemImage: {
+        width: 40,
+        height: 40,
+    },
+    offset: {
+        paddingLeft: OFFSET.HORIZONTAL,
+        paddingRight: OFFSET.HORIZONTAL,
+    },
+    checkboxContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 5,
+    },
+    listItemBtnReplace: {
+        backgroundColor: '#8EF9F3',
+        height: '100%',
+        width: 75,
+        paddingRight: OFFSET.HORIZONTAL,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+        alignSelf: 'flex-end',
+    },
+    buttonText: {
+        color: COLORS.BLACK,
+        fontSize: 12,
+    },
+    // For read-only ingredients
     ingredientItem: {
         flexDirection: 'row',
         alignItems: 'flex-start',
@@ -123,10 +343,12 @@ const styles = StyleSheet.create({
         lineHeight: 26,
         paddingRight: 5,
         paddingLeft: OFFSET.HORIZONTAL,
+        color: COLORS.BLACK,
     },
     ingredientText: {
         lineHeight: 24,
         flex: 1,
         paddingRight: OFFSET.HORIZONTAL,
+        color: COLORS.BLACK,
     },
 });

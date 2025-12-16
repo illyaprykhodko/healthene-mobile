@@ -3,7 +3,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from './baseApi';
 import { MeasurementType } from 'types';
-import { PhaseItem, PatientFoodCategoryQuestion } from 'types/overview';
+import { PhaseItem, PatientFoodCategoryQuestion, AddPhaseItemData } from 'types/overview';
 
 export interface Phase {
     type: string;
@@ -123,6 +123,7 @@ export interface RecipePrototypeFilter {
     excludeIds?: number[];
     includeIds?: number[];
     prefixName?: string;
+    restaurantCatalog?: boolean;
 }
 
 export interface FoodFilter {
@@ -241,6 +242,29 @@ export const dayOverviewApi = createApi({
             providesTags: ['AvailableItems'],
         }),
   
+        getRecipePrototype: builder.query<any, number | string>({
+            query: id => ({
+                url: `/patient-service/recipe-prototypes/${id}`,
+                method: 'GET',
+            }),
+        }),
+  
+        recalculateRecipeSteps: builder.mutation<any, { ingredients: any[]; steps: any[] }>({
+            query: data => ({
+                url: '/patient-service/recipe-prototypes/steps',
+                method: 'POST',
+                body: data,
+            }),
+        }),
+
+        getIngredientsBySibling: builder.query<any[], { id: number | string; useInPrototypes?: boolean }>({
+            query: ({ id, useInPrototypes = false }) => ({
+                url: `/patient-service/recipe-prototypes/ingredients-by-sibling/${id}`,
+                method: 'GET',
+                params: { useInPrototypes },
+            }),
+        }),
+  
         getFoods: builder.query<any, { filter: FoodFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
                 url: '/patient-service/foods/filter',
@@ -344,28 +368,68 @@ export const dayOverviewApi = createApi({
                 }
             },
         }),
-        addPhaseItem: builder.mutation<PhaseItem, { phaseId: number | string; data: any }>({
+        // addPhaseItem: builder.mutation<PhaseItem, { phaseId: number | string; data: any }>({
+        //     query: ({ phaseId, data }) => ({
+        //         url: `/patient-service/patients/day-overview/phase/${phaseId}/items`,
+        //         method: 'POST',
+        //         body: data,
+        //     }),
+        //     invalidatesTags: (result, error, { phaseId }) => [{ type: 'PhaseItems', id: phaseId }],
+        //     async onQueryStarted ({ phaseId }, { dispatch, queryFulfilled }) {
+        //         try {
+        //             const { data: created } = await queryFulfilled;
+        //             dispatch(
+        //                 dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
+        //                     const key = created?.type || 'UNKNOWN';
+        //                     if (!draft[key]) { draft[key] = []; }
+        //                     draft[key].push(created);
+        //                     draft[key].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        //                 })
+        //             );
+        //         } catch (error) {
+        //             // console.error('error', error);
+        //         }
+        //     },
+        // }),
+        // Add recipe from library (not modified)
+        addPhaseRecipe: builder.mutation<PhaseItem, { phaseId: number | string; data: any }>({
             query: ({ phaseId, data }) => ({
-                url: `/patient-service/patients/day-overview/phase/${phaseId}/items`,
+                url: `/patient-service/patients/day-overview/phase/${phaseId}/previous-recipe`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { phaseId }) => [
+                { type: 'PhaseItems', id: phaseId },
+                'DayOverview',
+            ],
+        }),
+        // Add custom recipe (with modified ingredients)
+        addPhaseCustomRecipe: builder.mutation<PhaseItem, { phaseId: number | string; data: any }>({
+            query: ({ phaseId, data }) => ({
+                url: `/patient-service/patients/day-overview/phase/${phaseId}/recipe`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { phaseId }) => [
+                { type: 'PhaseItems', id: phaseId },
+                'DayOverview',
+            ],
+        }),
+        addPhaseMealItem: builder.mutation<PhaseItem, { phaseId: number | string; data: AddPhaseItemData }>({
+            query: ({ phaseId, data }) => ({
+                url: '/patient-service/patients/day-overview/phase/items',
                 method: 'POST',
                 body: data,
             }),
             invalidatesTags: (result, error, { phaseId }) => [{ type: 'PhaseItems', id: phaseId }],
-            async onQueryStarted ({ phaseId }, { dispatch, queryFulfilled }) {
-                try {
-                    const { data: created } = await queryFulfilled;
-                    dispatch(
-                        dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
-                            const key = created?.type || 'UNKNOWN';
-                            if (!draft[key]) { draft[key] = []; }
-                            draft[key].push(created);
-                            draft[key].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-                        })
-                    );
-                } catch (error) {
-                    // console.error('error', error);
-                }
-            },
+        }),
+        addPhaseItem: builder.mutation<PhaseItem, { phaseId: number | string; data: any }>({
+            query: ({ phaseId, data }) => ({
+                url: '/patient-service/patients/day-overview/phase',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: (result, error, { phaseId }) => [{ type: 'PhaseItems', id: phaseId }],
         }),
         replacePhaseItem: builder.mutation<PhaseItem, ReplaceItemRequest>({
             query: ({ itemId, replacementItem }) => ({
@@ -884,6 +948,9 @@ export const {
     useGetDayOverviewQuery,
     useUpdatePhaseMutation,
     useAddPhaseItemMutation,
+    useAddPhaseRecipeMutation,
+    useAddPhaseMealItemMutation,
+    useAddPhaseCustomRecipeMutation,
     // useGetAvailableItemsQuery,
     useUpdatePhaseItemMutation,
     useDeletePhaseItemMutation,
@@ -891,6 +958,9 @@ export const {
     useGetCategoryTreeNodesQuery,
     useGetCatalogPrototypeTreeNodesQuery,
     useGetRecipePrototypesQuery,
+    useGetRecipePrototypeQuery,
+    useRecalculateRecipeStepsMutation,
+    useGetIngredientsBySiblingQuery,
     useGetFoodsQuery,
     useGetPhysicalActivityItemQuery,
     useGetStretchingExerciseQuery,

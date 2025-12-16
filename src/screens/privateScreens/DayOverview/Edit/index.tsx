@@ -1,6 +1,6 @@
 // outsource dependencies
 import moment from 'moment';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
@@ -14,14 +14,16 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import { PhaseItem } from 'types/overview';
-import SwipeList from 'components/SwipeList';
 import { groupBy, isEmpty } from 'utils/general';
 import { RootStackParamList } from 'services/navigation';
+import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import { selectDayOverview } from 'store/slices/dayOverviewSlice';
-import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS } from 'constants/spec';
+import SwipeList, { SwipeValueChange } from 'components/SwipeList';
+import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
 import { useGetDayOverviewQuery, useGetPhaseItemsQuery, useUpdatePhaseItemMutation,
-    useDeletePhaseItemMutation, useAddPhaseItemMutation, useUpdatePhaseMutation, useReplacePhaseItemMutation,
+    useDeletePhaseItemMutation, useAddPhaseMealItemMutation, useAddPhaseRecipeMutation, useAddPhaseCustomRecipeMutation,
+    useUpdatePhaseMutation, useReplacePhaseItemMutation, useAddPhaseItemMutation,
     useUpdateIncludeRescueFoodsMutation } from 'store/api/dayOverviewApi';
 
 
@@ -48,12 +50,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
   
-    // get day overview data
     const { data: dayOverviewData, isLoading: isDayOverviewLoading } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
     });
-  
-    // get phase items
+
     const { data: phaseItems, isLoading: isPhaseItemsLoading } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
         refetchOnFocus: true,
@@ -62,50 +62,36 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     });
     // mutations
     const [updatePhase] = useUpdatePhaseMutation();
+    const [addPhaseMealItem] = useAddPhaseMealItemMutation();
     const [addPhaseItem] = useAddPhaseItemMutation();
+    // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
+    const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
-    const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
-
+    const [updatePhaseItem] = useUpdatePhaseItemMutation();
+    //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
   
-    const items: PhaseItem[] = React.useMemo(() => {
+    const getItemTitle = (item: any) =>
+        item.food?.name
+        || item.recipe?.name
+        || item.measurement?.name
+        || item.medication?.name
+        || item.supplement?.name
+        || item.physicalActivity?.name
+        || 'Item';
+    
+    const items = useMemo(() => {
         if (!phaseItems) { return []; }
     
-        const flatItems: PhaseItem[] = [];
-        Object.entries(phaseItems).forEach(([type, typeItems]) => {
-            (typeItems as any[]).forEach((item: any) => {
-                flatItems.push({
-                    id: item.id,
-                    type: item.type,
-                    food: item.food,
-                    order: item.order,
-                    phase: item.phase,
-                    recipe: item.recipe,
-                    status: item.status,
-                    amount: item.amount,
-                    weight: item.weight,
-                    rating: item.rating,
-                    serving: item.serving,
-                    section: item.section,
-                    modified: item.modified,
-                    useServing: item.useServing,
-                    medication: item.medication,
-                    supplement: item.supplement,
-                    measurement: item.measurement,
-                    initialAmount: item.initialAmount,
-                    physicalActivity: item.physicalActivity,
-                    peopleEatingNumber: item.peopleEatingNumber,
-                    patientFoodCategoryQuestion: item.patientFoodCategoryQuestion,
-                    recipeOilyFishProteinReplaced: item.recipeOilyFishProteinReplaced,
-                    patientFoodCategoryAttachment: item.patientFoodCategoryAttachment,
-                    title: item.food?.name || item.recipe?.name || item.measurement?.name || item.medication?.name || item.supplement?.name || item.physicalActivity?.name || 'Item',
-                });
-            });
-        });
-    
-        return flatItems.sort((a, b) => (a.order || 0) - (b.order || 0));
+        return Object.values(phaseItems)
+            .flat()
+            .map(item => ({
+                ...item,
+                title: getItemTitle(item),
+            }))
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
     }, [phaseItems]);
 
     useEffect(() => {
@@ -152,22 +138,178 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         const excludeIds = computeExcludeIds();
         const entityType = mapPhaseTypeToEntityType();
-    
+  
+        const isMealPhase = currentPhase?.type === OVERVIEW_TYPE.MEAL || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT;
+        if (isMealPhase) {
+            navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
+                date: targetDate,
+                prevItem: null,
+                entityType: 'PATIENT_FOOD',
+                substanceType: 'FOOD',
+                onApply: async (payload: any) => {
+                    try {
+                        const selectedItemData = payload.item || payload;
+                        const selectedItem = { ...selectedItemData?.item };
+                        const itemEntityType = selectedItemData?.entityType || entityType;
+                        const itemSubstanceType = selectedItemData?.substanceType || selectedItem.substanceType;
+                        // const currentAddedPhaseId = (currentPhase?.items||[]).find(p => p?.section === 'Added')?.id;
+                        const itemData: any = {
+                            order: items.length,
+                            status: PHASE_ITEM_STATUS.PENDING,
+                            amount: selectedItem?.amount || 1,
+                            section: selectedItem?.section || 'Added',
+                            initialAmount: selectedItem?.servingAmount || 1,
+                            
+                        };
+                        if (itemEntityType === ENTITY_TYPE.FOOD || itemEntityType === 'PATIENT_FOOD' || itemEntityType === 'PATIENT_DRINK') {
+                            itemData.food = { id: selectedItem.id };
+                            itemData.substanceType = itemSubstanceType || SUBSTANCE_TYPE.FOOD;
+                            itemData.type = ENTITY_TYPE.FOOD;
+                            if (selectedItem.weight) {
+                                itemData.weight = selectedItem.weight;
+                            }
+                            const defaultWeight = selectedItem.weights?.find((w: any) => w.isDefault) || selectedItem.weights?.[0];
+                            if (defaultWeight && !itemData.weight) {
+                                itemData.weight = { id: defaultWeight.id };
+                            }
+                            itemData.phase = { id: targetPhaseId };
+                            itemData.modified = selectedItem?.modified || false;
+                            itemData.rating = 0;
+                            // itemData.substanceType = "FOOD";
+                            itemData.type = ENTITY_TYPE.FOOD;
+                            // const addPhaseItemData: any = {
+                            // amount: payload?.item?.item?.amount || 1,
+                            // food: {
+                            //     id: payload?.item?.item?.id
+                            // },
+                            // modified: false,
+                            // initialAmount: 1,
+                            // order: items?.length || 0,
+                            // order: 0,
+                            // phase: {
+                            //     id: targetPhaseId as number
+                            // },
+                            // rating: 0,
+                            // section: 'Added',
+                            // substanceType: 'FOOD',
+                            // type: ENTITY_TYPE.FOOD,
+                            // status: PHASE_ITEM_STATUS.PENDING,
+                            // weight: {
+                            //     id: se
+                            //   }
+                            // };
+                            addPhaseMealItem({
+                                data: itemData,
+                                phaseId: targetPhaseId,
+                            });
+                        } else if (itemEntityType === ENTITY_TYPE.RECIPE || itemEntityType === 'PATIENT_RECIPES' || itemEntityType === 'RESTAURANT') {
+                            const hasModifiedIngredients = selectedItem.recipe?.ingredients?.some((ing: any) => ing?.modified);
+                            const isCustomRecipe = selectedItem.recipe && hasModifiedIngredients;
+
+                            if (isCustomRecipe) {
+                                itemData.type = 'RECIPE';
+                                itemData.recipe = { ...selectedItem.recipe, modified: true };
+                                await addPhaseCustomRecipe({
+                                    phaseId: targetPhaseId,
+                                    data: itemData,
+                                });
+                            } else {
+
+                                itemData.type = 'RECIPE';
+                                itemData.recipe = { ...selectedItem.recipe, modified: true };
+                                if (selectedItem.serving) {
+                                    itemData.serving = selectedItem?.serving;
+                                    itemData.useServing = true;
+                                }
+                                // await addPhaseRecipe({
+                                //     phaseId: currentAddedPhaseId,
+                                //     data: itemData,
+                                // });
+                                await addPhaseCustomRecipe({
+                                    phaseId: targetPhaseId,
+                                    data: itemData,
+                                });
+                            }
+                        } else if (itemEntityType === ENTITY_TYPE.MEASUREMENT) {
+                            itemData.measurement = { id: selectedItem.id };
+                            itemData.type = ENTITY_TYPE.MEASUREMENT;
+                            await updatePhaseItem({
+                                id: currentPhase?.id,
+                                phaseId: targetPhaseId,
+                                data: itemData,
+                            });
+                        } else if (itemEntityType === ENTITY_TYPE.MEDICATION) {
+                            itemData.medication = { id: selectedItem.id };
+                            itemData.type = ENTITY_TYPE.MEDICATION;
+                            await updatePhaseItem({
+                                id: currentPhase?.id,
+                                phaseId: targetPhaseId,
+                                data: itemData,
+                            });
+                        } else if (itemEntityType === ENTITY_TYPE.SUPPLEMENT) {
+                            itemData.supplement = { id: selectedItem.id };
+                            itemData.type = ENTITY_TYPE.SUPPLEMENT;
+                            await updatePhaseItem({
+                                id: currentPhase?.id,
+                                phaseId: targetPhaseId,
+                                data: itemData,
+                            });
+                        } else if (itemEntityType === ENTITY_TYPE.PHYSICAL_ACTIVITY) {
+                            itemData.physicalActivity = { id: selectedItem.id };
+                            itemData.type = ENTITY_TYPE.PHYSICAL_ACTIVITY;
+                            await updatePhaseItem({
+                                id: currentPhase.id,
+                                phaseId: targetPhaseId,
+                                data: itemData,
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error adding item:', error);
+                    }
+                }
+            });
+            return;
+        }
+        
         navigation.navigate(ROUTES.ADD_REPLACE_ITEM, {
             date: targetDate,
             prevItem: null,
             excludeIds,
             entityType,
-            onApply: async (selectedItem: any) => {
+            onApply: async (payload: any) => {
                 try {
+                    const selectedItem = payload.item || payload;
+                    const itemEntityType = payload.entityType || entityType;
+
+                    const itemData: any = {
+                        order: items.length,
+                        status: PHASE_ITEM_STATUS.PENDING,
+                        amount: selectedItem.amount || 1,
+                    };
+
+                    if (itemEntityType === ENTITY_TYPE.MEASUREMENT) {
+                        itemData.measurement = { id: selectedItem?.id };
+                        itemData.type = ENTITY_TYPE.MEASUREMENT;
+                    } else if (itemEntityType === ENTITY_TYPE.MEDICATION) {
+                        itemData.medication = { id: selectedItem?.id };
+                        itemData.type = ENTITY_TYPE.MEDICATION;
+                    } else if (itemEntityType === ENTITY_TYPE.SUPPLEMENT) {
+                        itemData.supplement = { id: selectedItem?.id };
+                        itemData.type = ENTITY_TYPE.SUPPLEMENT;
+                    } else if (itemEntityType === ENTITY_TYPE.PHYSICAL_ACTIVITY) {
+                        itemData.physicalActivity = { id: selectedItem?.id };
+                        itemData.type = ENTITY_TYPE.PHYSICAL_ACTIVITY;
+                    }
+
+                    // await updatePhaseItem({
+                    //     id: selectedItem?.recipe?.id,
+                    //     phaseId: targetPhaseId,
+                    //     data: itemData,
+                    // });
+
                     await addPhaseItem({
                         phaseId: targetPhaseId,
-                        data: {
-                            type: entityType,
-                            order: items.length,
-                            name: selectedItem.name,
-                            status: PHASE_ITEM_STATUS.PENDING,
-                        }
+                        data: itemData,
                     });
                 } catch (error) {
                     console.error('Error adding item:', error);
@@ -231,14 +373,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             //     }
             // });
 
-            setLocalItems(prevItems =>
-                prevItems.map(prevItem =>
-                    (prevItem.id === item.id
-                        ? { ...item }
-                        // ? { ...prevItem, status: newStatus }
-                        : prevItem)
-                )
-            );
+         
             await updatePhaseItem({
                 id: item.id,
                 phaseId: targetPhaseId,
@@ -248,6 +383,14 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     amount: item.amount || item.initialAmount
                 }
             });
+            setLocalItems(prevItems =>
+                prevItems.map(prevItem =>
+                    (prevItem.id === item.id
+                        ? { ...item }
+                        // ? { ...prevItem, status: newStatus }
+                        : prevItem)
+                )
+            );
         } catch (error) {
             console.error('Error updating item status:', error);
             setLocalItems(items);
@@ -258,7 +401,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         try {
             setLocalItems(prevItems => prevItems.filter(prevItem => prevItem.id !== item.id));
             await deletePhaseItem({ id: item.id, phaseId: targetPhaseId });
-            // await deletePhaseItem(item.id);
         } catch (error) {
             console.error('Error deleting item:', error);
             setLocalItems(items);
@@ -275,33 +417,41 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         switch (prevItem.type) {
             case ENTITY_TYPE.FOOD: {
-                navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
+                navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
                     date: targetDate,
-                    entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
-                    substanceType: prevItem.substanceType || 'FOOD',
+                    phaseId: targetPhaseId,
                     prevItem: prevItemWithoutRating,
-                    onApply: (data: any) => {
-                        handleConfirmReplaceFood(prevItemWithoutRating, data.item);
-                    },
+                    title: currentPhase?.meal?.name || 'Meal',
+                    entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
                 });
                 break;
+                // navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
+                //     date: targetDate,
+                //     entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
+                //     substanceType: prevItem.substanceType || 'FOOD',
+                //     prevItem: prevItemWithoutRating,
+                //     onApply: (data: any) => {
+                //         handleConfirmReplaceFood(prevItemWithoutRating, data.item);
+                //     },
+                // });
+                // break;
             }
             case ENTITY_TYPE.RECIPE: {
                 if (prevItem.recipe?.surrogateRecipe) {
                     navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
                         date: targetDate,
-                        entityType: 'SURROGATE_RECIPE',
-                        title: currentPhase?.meal?.name || 'Meal',
-                        prevItem: prevItemWithoutRating,
                         phaseId: targetPhaseId,
+                        entityType: 'SURROGATE_RECIPE',
+                        prevItem: prevItemWithoutRating,
+                        title: currentPhase?.meal?.name || 'Meal',
                     });
                 } else {
                     navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
                         date: targetDate,
                         entityType: 'RECIPE',
-                        title: currentPhase?.meal?.name || 'Meal',
-                        prevItem: prevItemWithoutRating,
                         phaseId: targetPhaseId,
+                        prevItem: prevItemWithoutRating,
+                        title: currentPhase?.meal?.name || 'Meal',
                     });
                 }
                 break;
@@ -310,14 +460,13 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             case ENTITY_TYPE.SUPPLEMENT:
             case ENTITY_TYPE.MEDICATION:
             case ENTITY_TYPE.PHYSICAL_ACTIVITY: {
-                // Navigate to simple list-based selection
                 const excludeIds = items.map(item => String(item.id));
                 
                 navigation.navigate(ROUTES.ADD_REPLACE_ITEM, {
-                    date: targetDate,
-                    prevItem: prevItemWithoutRating,
-                    entityType: prevItem.type,
                     excludeIds,
+                    date: targetDate,
+                    entityType: prevItem.type,
+                    prevItem: prevItemWithoutRating,
                     onApply: (data: any) => {
                         handleConfirmReplaceItem(prevItemWithoutRating, data.item, getFieldForType(prevItem.type));
                     },
@@ -348,21 +497,21 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         }
     };
 
-    const handleConfirmReplaceFood = async (prevItem: PhaseItem, nextItem: any) => {
-        try {
-            await replacePhaseItem({
-                itemId: prevItem.id,
-                phaseId: targetPhaseId,
-                replacementItem: {
-                    id: nextItem.id,
-                    type: nextItem.type,
-                    name: nextItem.name,
-                },
-            });
-        } catch (error) {
-            console.error('Error replacing food item:', error);
-        }
-    };
+    // const handleConfirmReplaceFood = async (prevItem: PhaseItem, nextItem: any) => {
+    //     try {
+    //         await replacePhaseItem({
+    //             itemId: prevItem.id,
+    //             phaseId: targetPhaseId,
+    //             replacementItem: {
+    //                 id: nextItem.id,
+    //                 type: nextItem.type,
+    //                 name: nextItem.name,
+    //             },
+    //         });
+    //     } catch (error) {
+    //         console.error('Error replacing food item:', error);
+    //     }
+    // };
 
     const handleConfirmReplaceItem = async (prevItem: PhaseItem, nextItem: any, field: string) => {
         try {
@@ -388,17 +537,50 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     };
 
     const handleScrollEnabled = () => setScrollEnabled(true);
-    const handleScrollDisabled = () => setScrollEnabled(false);
+    const handleScrollDisabled = (sv: SwipeValueChange) => {
+        if (sv.value !== 0) {
+            setScrollEnabled(false);
+        }
+    };
 
     const isLoading = isDayOverviewLoading || isPhaseItemsLoading;
   
     if (isLoading) {
         return (
-            <Screen initialized={false} style={styles.container}>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text>Loading...</Text>
+            <View style={styles.section}>
+                <Skeleton width={200} height={20} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: OFFSET.HORIZONTAL * 2 }} >
+                    <ListItemSkeleton />
+                    <Skeleton width={25} height={25} />
                 </View>
-            </Screen>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: OFFSET.HORIZONTAL * 2 }} >
+                    <ListItemSkeleton />
+                    <Skeleton width={25} height={25} />
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: OFFSET.HORIZONTAL * 2 }} >
+                    <ListItemSkeleton />
+                    <Skeleton width={25} height={25} />
+                </View>
+                <Skeleton width={200} height={20} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: OFFSET.HORIZONTAL * 2 }} >
+                    <ListItemSkeleton />
+                    <Skeleton width={25} height={25} />
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: OFFSET.HORIZONTAL * 2 }} >
+                    <ListItemSkeleton />
+                    <Skeleton width={25} height={25} />
+                </View>
+                <Skeleton width={200} height={20} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: OFFSET.HORIZONTAL * 2 }} >
+                    <ListItemSkeleton />
+                    <Skeleton width={25} height={25} />
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: OFFSET.HORIZONTAL * 2 }} >
+                    <ListItemSkeleton />
+                    <Skeleton width={25} height={25} />
+                </View>
+                {/* <ListItemSkeleton showImage={false} lines={3} /> */}
+            </View>
         );
     }
     const groupedBySection = groupBy(localItems, 'section');
@@ -644,4 +826,11 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '500',
     },
+    section: {
+        marginVertical: OFFSET.VERTICAL * 3,
+        paddingHorizontal: OFFSET.HORIZONTAL,
+    },
+    sectionTitle: {
+        marginBottom: OFFSET.VERTICAL,
+    }
 });

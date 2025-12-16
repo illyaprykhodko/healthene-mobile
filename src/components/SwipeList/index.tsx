@@ -9,6 +9,13 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from 'constants/colors';
 import { OVERVIEW_TYPE, PHASE_ITEM_STATUS } from 'constants/spec';
 
+export type SwipeValueChange = {
+    direction: 'left' | 'right';
+    isOpen: boolean;
+    value: number;
+    key: string;
+}
+
 interface SwipeListProps {
     data: any[];
     type: string;
@@ -22,11 +29,11 @@ interface SwipeListProps {
     onRowDidClose?: () => void;
     onDelete?: (item: any) => void;
     onReplace?: (item: any) => void;
-    onSwipeValueChange?: () => void;
     recipeReplacementEnable?: boolean;
     keyExtractor?: (item: any) => string;
     noReplaceItem?: (item: any) => boolean;
     handleCheckboxStatus?: (item: any) => void;
+    onSwipeValueChange?: (item: SwipeValueChange) => void;
     ListHeaderComponent?: () => React.ReactElement | null;
     renderItem: (info: { item: any }) => React.ReactElement;
 }

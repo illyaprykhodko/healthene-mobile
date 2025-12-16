@@ -18,11 +18,10 @@ import Text from 'components/Text';
 // hooks
 import { useTheme } from 'hooks/useTheme';
 import { useHealthIntegration } from 'hooks/useHealthIntegration';
-import { useMeasurementSubmit } from 'hooks/useMeasurementSubmit';
 import { useGetLastMeasurementQuery } from 'store/api/dayOverviewApi';
+import { MeasurementItem, useMeasurementSubmit } from 'hooks/useMeasurementSubmit';
 // types
 import type { MeasurementType } from 'types/health';
-import type { AnytimeMeasurementItem } from 'types/anytime';
 // utils
 import {
     getMeasurementConfig,
@@ -39,7 +38,7 @@ interface MeasurementInputModalProps {
   visible: boolean;
   disabled?: boolean;
   onClose: () => void;
-  item: AnytimeMeasurementItem;
+  item: MeasurementItem;
 }
 
 export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
@@ -189,10 +188,10 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                             values,
                             errors,
                             touched,
+                            setValues,
+                            handleSubmit,
                             setFieldValue,
                             setFieldTouched,
-                            handleSubmit,
-                            setValues,
                         }) => (
                             <ScrollView contentContainerStyle={styles.content}>
                                 <Text style={[styles.label, { color: theme.colors.text }]}>
