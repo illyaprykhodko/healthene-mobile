@@ -1,30 +1,45 @@
 // outsource dependencies
 import {
+    PhotoFile,
+    VideoFile,
     useCameraDevice,
     Camera as RNCamera,
     useCameraPermission,
     useMicrophonePermission
 } from 'react-native-vision-camera';
-import React, { useEffect } from 'react';
 import Toast from 'react-native-toast-message';
 import { StyleSheet, View } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
+import React, { useEffect, useRef, useState } from 'react';
+import { CameraPosition } from 'react-native-vision-camera/src/types/CameraDevice.ts';
 
 // local dependencies
-import { Button } from 'components/Button.tsx';
+import { useTheme } from 'hooks/useTheme.ts';
+import { useAppState } from 'hooks/useAppState.ts';
+import CameraPreview from 'components/Camera/CameraPreview.tsx';
+import CameraControls from 'components/Camera/CameraControls.tsx';
 import NoCameraPermissions from 'components/Camera/NoCameraPermissions.tsx';
 
 interface CameraProps {
-    cameraPosition?: 'back' | 'front'
+    cameraPosition?: CameraPosition
+    onCapture: (item: PhotoFile | VideoFile) => void
 }
 
-const Camera = ({ cameraPosition = 'back' }: CameraProps) => {
-    const device = useCameraDevice(cameraPosition);
+const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
+    const theme = useTheme();
+    const appState = useAppState();
+    const isFocused = useIsFocused();
+    const camera = useRef<RNCamera>(null);
+    const [isRecording, setIsRecording] = useState(false);
+    const [result, setResult] = useState<PhotoFile | VideoFile | null>(null);
+    const [position, setPosition] = useState<CameraPosition>(cameraPosition);
+    const toggleCameraPosition = () => {
+        setPosition(position === 'front' ? 'back' : 'front');
+    };
+    const isActive = isFocused && appState === 'active';
+    const device = useCameraDevice(position);
     const { hasPermission: hasMicPermission, requestPermission: requestMicPermission } = useMicrophonePermission();
     const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission();
-
-
-    // console.log('hasMicPermission', hasMicPermission);
-    // console.log('hasCameraPermission', hasCameraPermission);
 
     useEffect(() => {
         const requestPermissions = async () => {
@@ -48,20 +63,44 @@ const Camera = ({ cameraPosition = 'back' }: CameraProps) => {
         })();
     }, [device, hasCameraPermission, hasMicPermission, requestCameraPermission, requestMicPermission]);
 
-    if (!hasCameraPermission || !hasMicPermission) { return <NoCameraPermissions hasCameraPermission={hasCameraPermission} hasMicPermission={hasMicPermission} />; }
+    if (!hasCameraPermission || !hasMicPermission) {
+        return <NoCameraPermissions
+            hasMicPermission={hasMicPermission}
+            hasCameraPermission={hasCameraPermission}
+        />;
+    }
+    if (result) {
+        return <CameraPreview
+            file={result}
+            onRetake={() => setResult(null)}
+        />;
+    }
+    console.log('Result: ', result);
+    const takePhoto = async () => {
+        if (isRecording) { return; }
+        const photo = await camera.current?.takePhoto({
+            enableShutterSound: true
+        });
+        if (!photo) { return; }
+        setResult(photo);
+    };
 
     return <View style={styles.flex}>
         {device && hasCameraPermission && hasMicPermission
-            ? <RNCamera
-                video
-                audio
-                isActive
-                device={device}
-                style={StyleSheet.absoluteFill}
-            />
+            ? <>
+                <RNCamera
+                    video
+                    audio
+                    photo
+                    ref={camera}
+                    device={device}
+                    isActive={isActive}
+                    style={StyleSheet.absoluteFill}
+                />
+                <CameraControls changePosition={toggleCameraPosition} onPress={takePhoto} isRecording={isRecording} />
+            </>
             : null
         }
-        <Button title="Start Recording" />
     </View>;
 };
 
@@ -69,6 +108,6 @@ export default Camera;
 
 const styles = StyleSheet.create({
     flex: {
-        flex: 1
+        flex: 1,
     },
 });

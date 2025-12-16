@@ -38,3 +38,4 @@ export const s3ServiceApi = createApi({
 
 export const { useUploadAttachmentMutation } = s3ServiceApi;
 export const uploadImageInitiate = s3ServiceApi.endpoints.uploadImage.initiate;
+export const uploadAttachmentInitiate = s3ServiceApi.endpoints.uploadAttachment.initiate;

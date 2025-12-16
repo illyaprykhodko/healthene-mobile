@@ -2,9 +2,9 @@
 import * as yup from 'yup';
 import moment from 'moment';
 import { Formik } from 'formik';
-import { useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import React, { useCallback, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { pick, types } from '@react-native-documents/picker';
@@ -26,6 +26,7 @@ import ProfileImage from 'components/ProfileImage.tsx';
 import { RootStackParamList } from 'services/navigation';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { Attachment, MessageForm } from 'types/messenger.ts';
+import { setAttachment } from 'store/slices/messengerSlice.ts';
 import { useUploadAttachmentMutation } from 'store/api/s3ServiceApi.ts';
 import Attachments from 'screens/privateScreens/Messenger/components/Attachments.tsx';
 import { useCreateChainMutation, useReplyToChainMutation } from 'store/api/messengerApi.ts';
@@ -51,9 +52,11 @@ const validationSchema = yup.object().shape({
 
 const WriteMessageScreen = () => {
     const theme = useTheme();
-    const user = useAppSelector((state: RootState) => state.app.user);
-    const chain = useSelector((state: RootState) => state.messenger.reply);
+    const dispatch = useDispatch();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+    const user = useAppSelector((state: RootState) => state.app.user);
+    const { reply: chain, attachments } = useSelector((state: RootState) => state.messenger);
 
     const [preloader, setPreloader] = useState<boolean>(false);
 
@@ -70,7 +73,7 @@ const WriteMessageScreen = () => {
     }, [chain, navigation]);
 
 
-    const handleAttachFile = useCallback(async (onAttach: (attachment: Attachment) => void) => {
+    const handleAttachFile = useCallback(async () => {
         try {
             setPreloader(true);
             const [file] = await pick({ type: [types.allFiles] });
@@ -83,13 +86,14 @@ const WriteMessageScreen = () => {
             formData.append('title', file.name);
             formData.append('description', moment().format());
             const attachment = await uploadFile({ body: formData }).unwrap();
-            onAttach(attachment);
+            dispatch(setAttachment(attachment));
             Toast.show({
                 type: 'success',
                 text1: 'Upload successful',
                 text2: 'File selected successfully',
             });
         } catch (error) {
+            console.log('ERROR', error);
             Toast.show({
                 type: 'error',
                 text1: 'Upload failed',
@@ -100,7 +104,7 @@ const WriteMessageScreen = () => {
         }
     }, []);
 
-    const getAttachment = useCallback((item: AttachmentType, onAttach: (attachment: Attachment) => void) => {
+    const getAttachment = useCallback((item: AttachmentType) => {
         switch (item) {
             default: return <Pressable
                 key={item}
@@ -118,7 +122,7 @@ const WriteMessageScreen = () => {
                 </View>
                 <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
             </Pressable>;
-            case ATTACHMENTS.FILE: return <Pressable onPress={() => handleAttachFile(onAttach)} key={item} style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}>
+            case ATTACHMENTS.FILE: return <Pressable onPress={() => handleAttachFile()} key={item} style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}>
                 <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
                     <Icon name="paperclip" color={theme.colors.darkGrey} size={20} />
                 </View>
@@ -154,12 +158,10 @@ const WriteMessageScreen = () => {
                         validationSchema={validationSchema}
                         initialValues={{
                             text: '',
-                            attachments: [],
                             subject: chain?.subject ?? ''
                         }}
                     >
-                        {({ values, errors, touched, handleChange, handleSubmit, setFieldValue }) => {
-                            const setAttachmentsValue = (attachment: Attachment) => setFieldValue('attachments', [...values.attachments, attachment]);
+                        {({ values, errors, touched, handleChange, handleSubmit }) => {
                             return <View style={styles.formContainer}>
                                 <TextInput
                                     name="subject"
@@ -182,9 +184,9 @@ const WriteMessageScreen = () => {
                                     onChangeText={handleChange('text')}
                                     error={touched.text && errors.text ? { text: errors.text } : undefined}
                                 />
-                                {values.attachments.map(item => <Attachments isUploadFile onPreloader={setPreloader} key={item?.id} {...item}/>)}
+                                {attachments.map(item => <Attachments isUploadFile onPreloader={setPreloader} key={item?.id} {...item}/>)}
                                 <View style={styles.attachmentsContainer}>
-                                    {Object.values(ATTACHMENTS).map(item => getAttachment(item, setAttachmentsValue))}
+                                    {Object.values(ATTACHMENTS).map(item => getAttachment(item))}
                                 </View>
                                 <Button
                                     variant="outline"
