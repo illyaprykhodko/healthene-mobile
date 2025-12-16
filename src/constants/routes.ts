@@ -12,6 +12,7 @@ export const ROUTES = {
     LIBRARY: 'Library',
     SHOPPING: 'Shopping',
     EDIT_FOOD: 'EditFood',
+    MESSENGER: 'Messenger',
     DAILY_PLAN: 'DailyPlan',
     MY_RESULTS: 'MyResults',
     ABOUT_PLAN: 'AboutPlan',
@@ -19,7 +20,6 @@ export const ROUTES = {
     REPLACEMENT: 'Replacement',
     DAY_OVERVIEW: 'DayOverview',
     REPLACE_ITEMS: 'ReplaceItems',
-    COMMUNICATION: 'Communication',
     FOOD_ALLERGIES: 'FoodAllergies',
     HEALTH_PROFILE: 'HealthProfile',
     ADD_REPLACE_ITEM: 'AddReplaceItem',
@@ -38,6 +38,11 @@ export const ROUTES = {
     FOOD_PREFERENCES: 'FoodPreferences',
     PERSONAL_INFORMATION: 'PersonalInformation',
 
+    // Messanger
+    MESSAGE_LIST: 'MessengerList',
+    READ_MESSAGE_SCREEN: 'ReadMessagesScreen',
+    WRITE_MESSAGE_SCREEN: 'WriteMessageScreen',
+
     // Legacy routes (for compatibility)
     HOME: 'Home',
     PROFILE: 'Profile',
@@ -54,10 +59,10 @@ export const PRIVATE_ROUTES = [
     ROUTES.INFO,
     ROUTES.LIBRARY,
     ROUTES.SHOPPING,
+    ROUTES.MESSENGER,
     ROUTES.DAILY_PLAN,
     ROUTES.MY_RESULTS,
     ROUTES.ABOUT_PLAN,
-    ROUTES.COMMUNICATION,
     ROUTES.HEALTH_PROFILE,
     ROUTES.MEAL_PREFERENCES,
     ROUTES.CUISINE_DISTRIBUTION,

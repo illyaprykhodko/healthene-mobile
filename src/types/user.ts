@@ -32,7 +32,7 @@ export interface Physician {
   name: string;
   username: string;
   enabled: boolean;
-  coverImage: Url;
+  coverImage?: Url;
   roles: IdName[];
   clinicRole: string;   // enum ClinicRole
   createdDate: string;
@@ -158,6 +158,7 @@ export interface User {
       activityVisible: boolean;
     };
   };
+  physician?: Physician;
   addresses?: Address[];
   health?: {
     bloodType?: string;
