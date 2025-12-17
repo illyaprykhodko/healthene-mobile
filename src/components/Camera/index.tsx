@@ -15,6 +15,7 @@ import { CameraPosition } from 'react-native-vision-camera/src/types/CameraDevic
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme.ts';
+import { Attachment } from 'types/messenger.ts';
 import { useAppState } from 'hooks/useAppState.ts';
 import CameraPreview from 'components/Camera/CameraPreview.tsx';
 import CameraControls from 'components/Camera/CameraControls.tsx';
@@ -22,17 +23,19 @@ import NoCameraPermissions from 'components/Camera/NoCameraPermissions.tsx';
 
 interface CameraProps {
     cameraPosition?: CameraPosition
-    onCapture: (item: PhotoFile | VideoFile) => void
+    onCapture: (item: Attachment) => void
 }
 
 const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
-    const theme = useTheme();
     const appState = useAppState();
     const isFocused = useIsFocused();
     const camera = useRef<RNCamera>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [result, setResult] = useState<PhotoFile | VideoFile | null>(null);
     const [position, setPosition] = useState<CameraPosition>(cameraPosition);
+    const recordingStartRef = useRef<number | null>(null);
+    const [recordingDuration, setRecordingDuration] = useState(0);
+    const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const toggleCameraPosition = () => {
         setPosition(position === 'front' ? 'back' : 'front');
     };
@@ -72,10 +75,11 @@ const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
     if (result) {
         return <CameraPreview
             file={result}
+            onCapture={onCapture}
             onRetake={() => setResult(null)}
         />;
     }
-    console.log('Result: ', result);
+
     const takePhoto = async () => {
         if (isRecording) { return; }
         const photo = await camera.current?.takePhoto({
@@ -83,6 +87,54 @@ const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
         });
         if (!photo) { return; }
         setResult(photo);
+    };
+
+    const stopRecordingTimer = () => {
+        if (recordingTimerRef.current) {
+            clearInterval(recordingTimerRef.current);
+            recordingTimerRef.current = null;
+        }
+
+        recordingStartRef.current = null;
+        setIsRecording(false);
+    };
+
+    const startRecording = async () => {
+        if (isRecording || !camera.current) { return; }
+        recordingStartRef.current = Date.now();
+        setRecordingDuration(0);
+        setIsRecording(true);
+
+        recordingTimerRef.current = setInterval(() => {
+            if (!recordingStartRef.current) { return; }
+
+            const elapsedMs = Date.now() - recordingStartRef.current;
+            setRecordingDuration(Math.floor(elapsedMs / 1000));
+        }, 500);
+
+        setIsRecording(true);
+
+        camera.current.startRecording({
+            onRecordingFinished: (video: VideoFile) => {
+                setIsRecording(false);
+                stopRecordingTimer();
+                setResult(video);
+            },
+            onRecordingError: error => {
+                setIsRecording(false);
+                Toast.show({
+                    type: 'error',
+                    text1: 'Recording failed',
+                    text2: error.message,
+                });
+            },
+        });
+    };
+
+    const stopRecording = async () => {
+        if (!isRecording || !camera.current) { return; }
+
+        await camera.current.stopRecording();
     };
 
     return <View style={styles.flex}>
@@ -97,7 +149,14 @@ const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
                     isActive={isActive}
                     style={StyleSheet.absoluteFill}
                 />
-                <CameraControls changePosition={toggleCameraPosition} onPress={takePhoto} isRecording={isRecording} />
+                <CameraControls
+                    onPress={takePhoto}
+                    isRecording={isRecording}
+                    onStopRecording={stopRecording}
+                    onStartRecording={startRecording}
+                    recordingDuration={recordingDuration}
+                    changePosition={toggleCameraPosition}
+                />
             </>
             : null
         }

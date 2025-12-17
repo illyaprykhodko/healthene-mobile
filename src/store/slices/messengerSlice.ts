@@ -2,16 +2,20 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // local dependencies
-import { Attachment, MessageItem } from 'types/messenger.ts';
+import { Attachment, MessageForm, MessageItem } from 'types/messenger.ts';
 
 interface MessengerState {
     reply: MessageItem | null;
-    attachments: Attachment[];
+    initialValues: MessageForm
 }
 
 const initialState: MessengerState = {
     reply: null,
-    attachments: []
+    initialValues: {
+        text: '',
+        subject: '',
+        attachments: []
+    }
 };
 
 const messengerSlice = createSlice({
@@ -24,14 +28,18 @@ const messengerSlice = createSlice({
             state.reply = action.payload;
         },
         setAttachment: (state, action: PayloadAction<Attachment>) => {
-            state.attachments.push(action.payload);
+            state.initialValues.attachments.push(action.payload);
         },
+        saveMessageForm: (state, action: PayloadAction<MessageForm>) => {
+            state.initialValues = { ...state.initialValues, ...action.payload };
+        }
     },
 });
 
 export const {
     clear,
     setAttachment,
+    saveMessageForm,
     setReplyMessage,
     clearReplyMessage
 } = messengerSlice.actions;

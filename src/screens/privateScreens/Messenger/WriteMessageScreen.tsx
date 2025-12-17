@@ -21,13 +21,13 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
+import { MessageForm } from 'types/messenger.ts';
 import { RootState, useAppSelector } from 'store';
 import ProfileImage from 'components/ProfileImage.tsx';
 import { RootStackParamList } from 'services/navigation';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
-import { Attachment, MessageForm } from 'types/messenger.ts';
-import { setAttachment } from 'store/slices/messengerSlice.ts';
 import { useUploadAttachmentMutation } from 'store/api/s3ServiceApi.ts';
+import { setAttachment, saveMessageForm } from 'store/slices/messengerSlice.ts';
 import Attachments from 'screens/privateScreens/Messenger/components/Attachments.tsx';
 import { useCreateChainMutation, useReplyToChainMutation } from 'store/api/messengerApi.ts';
 
@@ -56,22 +56,30 @@ const WriteMessageScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     const user = useAppSelector((state: RootState) => state.app.user);
-    const { reply: chain, attachments } = useSelector((state: RootState) => state.messenger);
+    const { reply: chain, initialValues } = useSelector((state: RootState) => state.messenger);
 
     const [preloader, setPreloader] = useState<boolean>(false);
 
     const [replyChain] = useReplyToChainMutation();
     const [createChain] = useCreateChainMutation();
     const [uploadFile] = useUploadAttachmentMutation();
+    const formInitialValues: MessageForm = chain
+        ? { ...initialValues, subject: chain.subject }
+        : initialValues;
+    const saveForm = useCallback(
+        (values: MessageForm) => {
+            dispatch(saveMessageForm(values));
+        },
+        [dispatch]
+    );
     const handleSubmit = useCallback(async (data: MessageForm) => {
         if (chain) {
-            await replyChain({ chain, ...data }).unwrap();
+            await replyChain({ chain, ...data, attachments: initialValues.attachments }).unwrap();
         } else {
-            await createChain(data);
+            await createChain({ ...data, attachments: initialValues.attachments });
         }
         navigation.goBack();
     }, [chain, navigation]);
-
 
     const handleAttachFile = useCallback(async () => {
         try {
@@ -93,7 +101,6 @@ const WriteMessageScreen = () => {
                 text2: 'File selected successfully',
             });
         } catch (error) {
-            console.log('ERROR', error);
             Toast.show({
                 type: 'error',
                 text1: 'Upload failed',
@@ -104,11 +111,14 @@ const WriteMessageScreen = () => {
         }
     }, []);
 
-    const getAttachment = useCallback((item: AttachmentType) => {
+    const getAttachment = useCallback((item: AttachmentType, onSave: () => void) => {
         switch (item) {
             default: return <Pressable
                 key={item}
-                onPress={() => navigation.navigate(ROUTES.CAMERA_SCREEN)}
+                onPress={() => {
+                    onSave();
+                    navigation.navigate(ROUTES.CAMERA_SCREEN);
+                }}
                 style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
             >
                 <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
@@ -122,7 +132,14 @@ const WriteMessageScreen = () => {
                 </View>
                 <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
             </Pressable>;
-            case ATTACHMENTS.FILE: return <Pressable onPress={() => handleAttachFile()} key={item} style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}>
+            case ATTACHMENTS.FILE: return <Pressable
+                key={item}
+                onPress={() => {
+                    onSave();
+                    handleAttachFile().catch(error => console.error(error));
+                }}
+                style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
+            >
                 <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
                     <Icon name="paperclip" color={theme.colors.darkGrey} size={20} />
                 </View>
@@ -130,7 +147,6 @@ const WriteMessageScreen = () => {
             </Pressable>;
         }
     }, [handleAttachFile]);
-
 
     return <>
         <LoadingOverlay init={preloader} />
@@ -154,12 +170,10 @@ const WriteMessageScreen = () => {
                         </View>
                     </View>
                     <Formik<MessageForm>
+                        enableReinitialize
                         onSubmit={handleSubmit}
+                        initialValues={formInitialValues}
                         validationSchema={validationSchema}
-                        initialValues={{
-                            text: '',
-                            subject: chain?.subject ?? ''
-                        }}
                     >
                         {({ values, errors, touched, handleChange, handleSubmit }) => {
                             return <View style={styles.formContainer}>
@@ -184,9 +198,9 @@ const WriteMessageScreen = () => {
                                     onChangeText={handleChange('text')}
                                     error={touched.text && errors.text ? { text: errors.text } : undefined}
                                 />
-                                {attachments.map(item => <Attachments isUploadFile onPreloader={setPreloader} key={item?.id} {...item}/>)}
+                                {initialValues.attachments.map(item => <Attachments isUploadFile onPreloader={setPreloader} key={item?.id} {...item}/>)}
                                 <View style={styles.attachmentsContainer}>
-                                    {Object.values(ATTACHMENTS).map(item => getAttachment(item))}
+                                    {Object.values(ATTACHMENTS).map(item => getAttachment(item, () => saveForm(values)))}
                                 </View>
                                 <Button
                                     variant="outline"

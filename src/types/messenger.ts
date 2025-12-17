@@ -63,6 +63,7 @@ export interface MessageChain {
 export interface MessageForm {
     text: string,
     subject: string,
+    attachments: Attachment[]
 }
 
 export interface Attachment {
