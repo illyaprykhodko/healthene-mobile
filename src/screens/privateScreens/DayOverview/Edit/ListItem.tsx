@@ -37,7 +37,7 @@ export const ListItem: React.FC<ListItemProps> = ({
 
     const handleCheckboxPress = (next: boolean) => {
         if (handleCheckboxStatus && !disabled) {
-            handleCheckboxStatus({ ...item, status: isDone ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
+            handleCheckboxStatus({ ...item, status: (isDone || isDidNotEat) ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
             // handleCheckboxStatus(item);
         }
     };

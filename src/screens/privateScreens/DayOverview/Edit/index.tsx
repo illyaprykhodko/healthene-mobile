@@ -352,6 +352,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             //         break;
             //     default:
             //         newStatus = PHASE_ITEM_STATUS.DID_NOT_EAT;
+
             // }
             // switch (item.status) {
             //     case PHASE_ITEM_STATUS.DONE:
@@ -417,41 +418,60 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         switch (prevItem.type) {
             case ENTITY_TYPE.FOOD: {
-                navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
-                    date: targetDate,
-                    phaseId: targetPhaseId,
-                    prevItem: prevItemWithoutRating,
-                    title: currentPhase?.meal?.name || 'Meal',
-                    entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
-                });
-                break;
-                // navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
+                // navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
                 //     date: targetDate,
-                //     entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
-                //     substanceType: prevItem.substanceType || 'FOOD',
+                //     phaseId: targetPhaseId,
                 //     prevItem: prevItemWithoutRating,
-                //     onApply: (data: any) => {
-                //         handleConfirmReplaceFood(prevItemWithoutRating, data.item);
-                //     },
+                //     title: currentPhase?.meal?.name || 'Meal',
+                //     entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
                 // });
                 // break;
+                navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
+                    date: targetDate,
+                    entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
+                    substanceType: prevItem.substanceType || 'FOOD',
+                    prevItem: prevItemWithoutRating,
+                    onApply: (data: any) => {
+                        handleConfirmReplaceFood(prevItemWithoutRating, data.item);
+                    },
+                });
+                break;
             }
             case ENTITY_TYPE.RECIPE: {
                 if (prevItem.recipe?.surrogateRecipe) {
-                    navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
+                    // navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
+                    //     date: targetDate,
+                    //     phaseId: targetPhaseId,
+                    //     entityType: 'SURROGATE_RECIPE',
+                    //     prevItem: prevItemWithoutRating,
+                    //     title: currentPhase?.meal?.name || 'Meal',
+                    // });
+                    navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
                         date: targetDate,
-                        phaseId: targetPhaseId,
-                        entityType: 'SURROGATE_RECIPE',
+                        entityType: 'PATIENT_FOOD',
+                        // entityType: 'SURROGATE_RECIPE',
                         prevItem: prevItemWithoutRating,
-                        title: currentPhase?.meal?.name || 'Meal',
+                        substanceType: prevItem.substanceType || 'FOOD',
+                        onApply: (data: any) => {
+                            handleConfirmReplaceFood(prevItemWithoutRating, data.item);
+                        },
                     });
                 } else {
-                    navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
+                    // navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
+                    //     date: targetDate,
+                    //     entityType: 'RECIPE',
+                    //     phaseId: targetPhaseId,
+                    //     prevItem: prevItemWithoutRating,
+                    //     title: currentPhase?.meal?.name || 'Meal',
+                    // });
+                    navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
                         date: targetDate,
-                        entityType: 'RECIPE',
-                        phaseId: targetPhaseId,
+                        entityType: 'PATIENT_RECIPES',
                         prevItem: prevItemWithoutRating,
-                        title: currentPhase?.meal?.name || 'Meal',
+                        substanceType: prevItem.substanceType || 'FOOD',
+                        onApply: (data: any) => {
+                            handleConfirmReplaceFood(prevItemWithoutRating, data.item);
+                        },
                     });
                 }
                 break;
@@ -497,21 +517,21 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         }
     };
 
-    // const handleConfirmReplaceFood = async (prevItem: PhaseItem, nextItem: any) => {
-    //     try {
-    //         await replacePhaseItem({
-    //             itemId: prevItem.id,
-    //             phaseId: targetPhaseId,
-    //             replacementItem: {
-    //                 id: nextItem.id,
-    //                 type: nextItem.type,
-    //                 name: nextItem.name,
-    //             },
-    //         });
-    //     } catch (error) {
-    //         console.error('Error replacing food item:', error);
-    //     }
-    // };
+    const handleConfirmReplaceFood = async (prevItem: PhaseItem, nextItem: any) => {
+        try {
+            await replacePhaseItem({
+                itemId: prevItem.id,
+                phaseId: targetPhaseId,
+                replacementItem: {
+                    id: nextItem.id,
+                    type: nextItem.type,
+                    name: nextItem.name,
+                },
+            });
+        } catch (error) {
+            console.error('Error replacing food item:', error);
+        }
+    };
 
     const handleConfirmReplaceItem = async (prevItem: PhaseItem, nextItem: any, field: string) => {
         try {

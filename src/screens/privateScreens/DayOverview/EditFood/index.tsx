@@ -89,7 +89,6 @@ const EDIT_FOOD_TABS = {
     RECIPE: 'RECIPE',
 };
 
-// UnitsView component matching original
 interface UnitsViewProps {
     unit: string;
     unitsList: Array<{ id: number; unitName: string }>;
