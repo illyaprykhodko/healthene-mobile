@@ -16,7 +16,7 @@ const CameraScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const handleCapture = (item: Attachment) => {
         dispatch(setAttachment(item));
-        navigation.navigate(ROUTES.WRITE_MESSAGE_SCREEN);
+        navigation.navigate(ROUTES.WRITE_MESSAGE);
     };
 
     return <Camera cameraPosition="front" onCapture={handleCapture} />;

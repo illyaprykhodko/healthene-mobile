@@ -32,10 +32,10 @@ const MessengerList = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const goToWriteMessage = () => navigation.navigate(ROUTES.WRITE_MESSAGE_SCREEN);
+    const goToWriteMessage = () => navigation.navigate(ROUTES.WRITE_MESSAGE);
     const goToReadMessage = useCallback((item: MessageItem) => {
         dispatch(setReplyMessage(item));
-        navigation.navigate(ROUTES.READ_MESSAGE_SCREEN);
+        navigation.navigate(ROUTES.READ_MESSAGE);
     }, [dispatch, navigation]);
     const init = useCallback(() => dispatch(clearReplyMessage()), [dispatch]);
 
