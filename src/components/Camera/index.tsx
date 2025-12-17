@@ -14,7 +14,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CameraPosition } from 'react-native-vision-camera/src/types/CameraDevice.ts';
 
 // local dependencies
-import { useTheme } from 'hooks/useTheme.ts';
 import { Attachment } from 'types/messenger.ts';
 import { useAppState } from 'hooks/useAppState.ts';
 import CameraPreview from 'components/Camera/CameraPreview.tsx';

@@ -76,7 +76,9 @@ const WriteMessageScreen = () => {
         if (chain) {
             await replyChain({ chain, ...data, attachments: initialValues.attachments }).unwrap();
         } else {
-            await createChain({ ...data, attachments: initialValues.attachments });
+            if (user?.physician?.id) {
+                await createChain({ ...data, attachments: initialValues.attachments, collocutor: { id: user.physician.id } });
+            }
         }
         navigation.goBack();
     }, [chain, navigation]);

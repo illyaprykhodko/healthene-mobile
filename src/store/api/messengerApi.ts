@@ -100,7 +100,7 @@ export const messengerApi = createApi({
             }),
             invalidatesTags: ['ChanMessages', 'ListOfChain'],
         }),
-        createChain: builder.mutation<void, MessageForm>({
+        createChain: builder.mutation<void, MessageForm & {collocutor: {id: number}}>({
             query: body => ({
                 body,
                 method: 'POST',
