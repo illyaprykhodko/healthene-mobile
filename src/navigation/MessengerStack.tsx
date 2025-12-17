@@ -9,6 +9,7 @@ import { OFFSET } from 'constants/offset.ts';
 import BackButton from 'components/BackButton.tsx';
 import { MessageEntity } from 'types/common/interfaces.ts';
 import MessengerList from 'screens/privateScreens/Messenger';
+import CameraScreen from 'screens/privateScreens/Messenger/CameraScreen.tsx';
 import ReadMessageScreen from 'screens/privateScreens/Messenger/ReadMessageScreen.tsx';
 import WriteMessageScreen from 'screens/privateScreens/Messenger/WriteMessageScreen.tsx';
 
@@ -22,9 +23,7 @@ const MessengerStack = () => {
                 headerShown: true,
                 drawerPosition: 'right',
                 gestureDirection: 'horizontal-inverted',
-                headerLeft: () => (
-                    <BackButton navigation={navigation} theme={theme} />
-                ),
+                headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
                 headerStyle: {
                     backgroundColor: theme.colors.primary,
                 },
@@ -37,6 +36,7 @@ const MessengerStack = () => {
                 },
             })}
         >
+            <Stack.Screen options={{ title: 'Camera' }} name={ROUTES.CAMERA_SCREEN} component={CameraScreen} />
             <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.MESSAGE_LIST} component={MessengerList} />
             <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.READ_MESSAGE_SCREEN} component={ReadMessageScreen} />
             <Stack.Screen

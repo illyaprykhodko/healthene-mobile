@@ -6,8 +6,8 @@ import Animated, {
     useAnimatedStyle
 } from 'react-native-reanimated';
 import moment from 'moment/moment';
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import React, { memo, useState } from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { Pressable, StyleSheet, View } from 'react-native';
 import HTMLView, { HTMLViewNode, HTMLViewNodeRenderer } from 'react-native-htmlview';
@@ -19,6 +19,7 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { MessageChain } from 'types/messenger.ts';
 import ProfileImage from 'components/ProfileImage.tsx';
+import Attachments from 'screens/privateScreens/Messenger/components/Attachments.tsx';
 
 // configure
 // eslint-disable-next-line max-params
@@ -33,10 +34,10 @@ const renderNode = (node: HTMLViewNode, index: number, _: HTMLViewNode[], parent
 };
 
 interface MessageChainItemProps extends MessageChain{
-
+    onPreloader: (preloader: boolean) => void;
 }
 
-const MessageChainItem = ({ sender, date, text }: MessageChainItemProps) => {
+const MessageChainItem = memo(({ sender, date, text, attachments, onPreloader }: MessageChainItemProps) => {
     const theme = useTheme();
     const user = useSelector((state: RootState) => state.app.user);
     const [isExpanded, setExpanded] = useState(false);
@@ -55,33 +56,44 @@ const MessageChainItem = ({ sender, date, text }: MessageChainItemProps) => {
         onPress={expandedTrigger}
         style={[styles.itemContainer, { borderColor: theme.colors.grey }]}
     >
-        <View style={styles.sender}>
+        <View style={styles.row}>
             <ProfileImage uri={sender?.coverImage?.url}/>
             <View style={styles.senderInfo}>
                 <Text>{sender?.id === user?.id ? 'You' : sender?.name}</Text>
                 {
                     date
-                        ? <Text color={theme.colors.grey}>
-                            {moment(date).fromNow()}
-                        </Text>
+                        ? <Text color={theme.colors.grey}>{moment(date).fromNow()}</Text>
                         : null
                 }
             </View>
-            <Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} color={theme.colors.black} size={16}
-                style={styles.chevronIcon}/>
+            <Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} color={theme.colors.black} size={16} style={styles.chevronIcon}/>
         </View>
         <Animated.View style={[styles.animatedView, animatedStyle]}>
-            <View style={styles.wrapper} onLayout={e => {
-                contentHeight.value = e.nativeEvent.layout.height;
-            }}>
+            <View
+                style={styles.wrapper}
+                onLayout={e => contentHeight.value = e.nativeEvent.layout.height}
+            >
                 <HTMLView
                     value={text}
                     renderNode={renderNode}
                 />
+                {
+                    attachments.length
+                        ? <View>
+                            <View style={styles.row}>
+                                <Icon name="paperclip" size={20} color={theme.colors.darkGrey} style={styles.attachmentsTitleIcon} />
+                                <Text color={theme.colors.darkGrey} variant="bold">
+                                    {`Attachments Files (${attachments.length})`}
+                                </Text>
+                            </View>
+                            {attachments.map(item => <Attachments onPreloader={onPreloader} key={item?.id} {...item}/>)}
+                        </View>
+                        : null
+                }
             </View>
         </Animated.View>
     </Pressable>;
-};
+});
 
 export default MessageChainItem;
 
@@ -90,7 +102,8 @@ const styles = StyleSheet.create({
         paddingVertical: OFFSET.POINT * 2,
         borderBottomWidth: StyleSheet.hairlineWidth,
     },
-    sender: {
+    row: {
+        marginTop: OFFSET.POINT * 2,
         flexDirection: 'row',
         alignItems: 'center'
     },
@@ -110,4 +123,7 @@ const styles = StyleSheet.create({
         width: '100%',
         paddingVertical: OFFSET.VERTICAL
     },
+    attachmentsTitleIcon: {
+        marginRight: OFFSET.POINT * 2
+    }
 });

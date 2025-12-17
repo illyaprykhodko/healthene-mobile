@@ -138,8 +138,8 @@ const MessengerList = () => {
             />
             <Button
                 variant="outline"
-                title="NEW MESSAGE"
                 style={styles.btn}
+                title="NEW MESSAGE"
                 onPress={goToWriteMessage}
             />
         </Screen>

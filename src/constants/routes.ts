@@ -40,6 +40,7 @@ export const ROUTES = {
 
     // Messanger
     MESSAGE_LIST: 'MessengerList',
+    CAMERA_SCREEN: 'CameraScreen',
     READ_MESSAGE_SCREEN: 'ReadMessagesScreen',
     WRITE_MESSAGE_SCREEN: 'WriteMessageScreen',
 
