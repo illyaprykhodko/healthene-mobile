@@ -1,6 +1,7 @@
 // outsource dependencies
 import Video from 'react-native-video';
 import React, { useState } from 'react';
+import { ReactNativeBlobUtilStat } from 'react-native-blob-util';
 import { VideoFile, PhotoFile } from 'react-native-vision-camera';
 import { Dimensions, Image, Platform, StyleSheet, View } from 'react-native';
 
@@ -12,16 +13,17 @@ import { Button } from 'components/Button.tsx';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { handleCapture } from 'utils/attachment/mediaCapture.ts';
 
-interface CameraPreviewProps {
+interface RecordPreviewProps {
     onRetake: () => void;
+    recordType: 'camera' | 'audio'
     onCapture: (item: Attachment) => void;
-    file: PhotoFile | VideoFile | null,
+    file: PhotoFile | VideoFile | ReactNativeBlobUtilStat | null,
 }
 
-export const CameraPreview = ({ file, onRetake, onCapture }: CameraPreviewProps) => {
+export const RecordPreview = ({ file, onRetake, onCapture, recordType }: RecordPreviewProps) => {
     const isVideo = Boolean(file && 'duration' in file);
     const [preloader, setPreloader] = useState<boolean>(false);
-
+    console.log('recordType', recordType);
     const onPressSave = async () => {
         if (!file) { return; }
         const attachment = await handleCapture({
@@ -40,9 +42,13 @@ export const CameraPreview = ({ file, onRetake, onCapture }: CameraPreviewProps)
         <View style={styles.container}>
             <Text style={styles.title} textAlign="center" variant="h2">Review your capture</Text>
             <View style={styles.wrapper}>
-                {isVideo
-                    ? <Video controls source={{ uri: `file://${file?.path}` }} style={styles.media} />
-                    : <Image source={{ uri: `file://${file?.path}` }} style={styles.media}/>
+                {recordType === 'camera'
+                    ? isVideo
+                        ? <Video controls source={{ uri: `file://${file?.path}` }} style={styles.media}/>
+                        : <Image source={{ uri: `file://${file?.path}` }} style={styles.media}/>
+                    : <View style={styles.media}>
+
+                    </View>
                 }
                 <View style={styles.actions}>
                     <Button variant="outline" style={styles.flex} title="Retake" onPress={() => onRetake()} />
@@ -53,7 +59,7 @@ export const CameraPreview = ({ file, onRetake, onCapture }: CameraPreviewProps)
     </>;
 };
 
-export default CameraPreview;
+export default RecordPreview;
 
 const styles = StyleSheet.create({
     container: {

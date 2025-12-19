@@ -2,6 +2,7 @@
 import React from 'react';
 import moment from 'moment/moment';
 import Toast from 'react-native-toast-message';
+import { ReactNativeBlobUtilStat } from 'react-native-blob-util';
 import { VideoFile, PhotoFile } from 'react-native-vision-camera';
 
 // local dependencies
@@ -10,7 +11,7 @@ import { uploadAttachmentInitiate } from 'store/api/s3ServiceApi.ts';
 
 interface CaptureProps {
     isVideo: boolean,
-    file: PhotoFile | VideoFile,
+    file: PhotoFile | VideoFile | ReactNativeBlobUtilStat,
     setPreloader: React.Dispatch<React.SetStateAction<boolean>>
 }
 export const handleCapture = async ({

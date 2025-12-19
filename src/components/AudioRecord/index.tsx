@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Sound, { RecordBackType } from 'react-native-nitro-sound';
 import React, { memo, useCallback, useEffect, useState } from 'react';
+import RNBlobUtil, { ReactNativeBlobUtilStat } from 'react-native-blob-util';
 
 // local dependencies
 import Text from 'components/Text.tsx';
@@ -10,6 +11,7 @@ import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { Attachment } from 'types/messenger.ts';
 import { formatDuration } from 'utils/general.ts';
+import RecordPreview from 'components/RecordPreview.tsx';
 
 // configure
 const BUTTON_SIZE = 60;
@@ -18,19 +20,17 @@ interface AudioRecordProps {
     onCapture: (item: Attachment) => void
 }
 
-const AudioRecord = (props: AudioRecordProps) => {
+const AudioRecord = ({ onCapture }: AudioRecordProps) => {
     const theme = useTheme();
     const [isRecording, setIsRecording] = useState(false);
-    const [recordSecs, setRecordSecs] = useState(0);
-    const [recordTime, setRecordTime] = useState('00:00');
+    const [recordTime, setRecordTime] = useState('0:00');
+    const [result, setResult] = useState<ReactNativeBlobUtilStat | null>(null);
 
     const startAudioRecording = useCallback(async () => {
-        setRecordSecs(0);
         setRecordTime('00:00');
 
         Sound.addRecordBackListener((e: RecordBackType) => {
             const seconds = Math.floor(e.currentPosition / 1000);
-            setRecordSecs(seconds);
             setRecordTime(formatDuration(seconds));
         });
 
@@ -38,14 +38,18 @@ const AudioRecord = (props: AudioRecordProps) => {
         setIsRecording(true);
     }, []);
 
+
     const stopAudioRecording = useCallback(async () => {
-        const result = await Sound.stopRecorder();
+        const filePath = await Sound.stopRecorder();
         Sound.removeRecordBackListener();
 
-        console.log('Recorded file:', result);
+        const path = filePath.replace('file://', '');
+
+        const result = await RNBlobUtil.fs.stat(path);
+        setResult(result);
 
         setIsRecording(false);
-    }, []);
+    }, [onCapture]);
 
     useEffect(() => {
         return () => {
@@ -53,6 +57,14 @@ const AudioRecord = (props: AudioRecordProps) => {
         };
     }, []);
 
+    if (result) {
+        return <RecordPreview
+            file={result}
+            recordType="audio"
+            onCapture={onCapture}
+            onRetake={() => setResult(null)}
+        />;
+    }
     return <View style={styles.container}>
         <View style={styles.wrapper}>
             <Icon

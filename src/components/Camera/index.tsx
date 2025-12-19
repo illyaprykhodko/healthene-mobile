@@ -16,7 +16,7 @@ import { CameraPosition } from 'react-native-vision-camera/src/types/CameraDevic
 // local dependencies
 import { Attachment } from 'types/messenger.ts';
 import { useAppState } from 'hooks/useAppState.ts';
-import CameraPreview from 'components/Camera/CameraPreview.tsx';
+import RecordPreview from 'components/RecordPreview.tsx';
 import CameraControls from 'components/Camera/CameraControls.tsx';
 import NoCameraPermissions from 'components/Camera/NoCameraPermissions.tsx';
 
@@ -72,8 +72,9 @@ const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
         />;
     }
     if (result) {
-        return <CameraPreview
+        return <RecordPreview
             file={result}
+            recordType="camera"
             onCapture={onCapture}
             onRetake={() => setResult(null)}
         />;
