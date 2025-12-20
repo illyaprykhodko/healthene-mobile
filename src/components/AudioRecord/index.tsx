@@ -83,7 +83,7 @@ const AudioRecord = ({ onCapture }: AudioRecordProps) => {
     }
 
     if (permissionHasDenied) {
-        return <NoMicPermission hasNoPermission={permissionHasDenied} />;
+        return <NoMicPermission />;
     }
     return <View style={styles.container}>
         <View style={styles.wrapper}>

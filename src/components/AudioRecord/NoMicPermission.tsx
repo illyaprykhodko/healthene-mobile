@@ -1,5 +1,5 @@
 // outsource dependencies
-import React, { memo, useMemo } from 'react';
+import React, { memo } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
@@ -9,11 +9,7 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 
-interface NoMicPermissionProps {
-    hasNoPermission: boolean
-}
-
-const NoMicPermission = ({ hasNoPermission }: NoMicPermissionProps) => {
+const NoMicPermission = () => {
     const theme = useTheme();
     const title = 'Microphone access required';
     const description = 'To continue, please allow microphone access in your device settings.';
