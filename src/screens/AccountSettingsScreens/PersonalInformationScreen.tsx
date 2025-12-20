@@ -43,7 +43,6 @@ export const PersonalInformationScreen = () => {
     const dispatch = useDispatch();
     const [updateUserData] = useUpdateUserDataMutation();
     const user = useSelector((state: RootState) => state.app.user);
-    console.log('USER', user);
     // Birthday Bottom Sheet
     const [dateModalOpen, setDateModalOpen] = useState(false);
 
