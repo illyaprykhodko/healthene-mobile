@@ -22,6 +22,7 @@ import { Dropdown } from 'components/Dropdown.tsx';
 import { setUser } from 'store/slices/appSlice.ts';
 import ProfileImage from 'components/ProfileImage.tsx';
 import DatePickerSelector from 'components/DatePicker.tsx';
+import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { getPicture, takePicture } from 'services/image-picker';
 import { PREFIXES, SUFFIXES, GENDERS } from 'constants/spec.ts';
 import { useUpdateUserDataMutation } from 'store/api/settingsApi.ts';
@@ -47,7 +48,7 @@ export const PersonalInformationScreen = () => {
     const [dateModalOpen, setDateModalOpen] = useState(false);
 
     // User Image Bottom Sheet
-    const [isImgLoading, setIsImgLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const userImgSheetRef = useRef<BottomSheetModal>(null);
     const openUserImgBottomSheet = () => {
         userImgSheetRef.current?.present();
@@ -55,6 +56,7 @@ export const PersonalInformationScreen = () => {
 
     const handleSubmit = async (data: Partial<User>) => {
         try {
+            setIsLoading(true);
             const submit = await updateUserData(data).unwrap();
             dispatch(setUser(submit));
             Toast.show({
@@ -68,6 +70,8 @@ export const PersonalInformationScreen = () => {
                 text1: 'Update failed',
                 text2: String(filters.humanize(error?.data?.errorCode)) || 'Something went wrong while updating your information. Please try again later.',
             });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -91,23 +95,24 @@ export const PersonalInformationScreen = () => {
                 {({ values, errors, touched, handleChange, handleSubmit, dirty }) => {
                     const uploadImage = async () => {
                         userImgSheetRef.current?.close();
-                        setIsImgLoading(true);
+                        setIsLoading(true);
                         const url = await getPicture();
                         if (url) {
                             handleChange('coverImage.url')(url);
                         }
-                        setIsImgLoading(false);
+                        setIsLoading(false);
                     };
                     const uploadCameraImage = async () => {
                         userImgSheetRef.current?.close();
-                        setIsImgLoading(true);
+                        setIsLoading(true);
                         const url = await takePicture();
                         if (url) {
                             handleChange('coverImage.url')(url);
                         }
-                        setIsImgLoading(false);
+                        setIsLoading(false);
                     };
                     return <>
+                        <LoadingOverlay init={isLoading} />
                         <KeyboardAvoidingView
                             style={styles.flex}
                             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
