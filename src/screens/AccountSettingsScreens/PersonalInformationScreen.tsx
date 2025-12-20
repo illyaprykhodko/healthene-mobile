@@ -18,10 +18,10 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
-import { Dropdown } from 'components/Dropdown.tsx';
 import { setUser } from 'store/slices/appSlice.ts';
 import ProfileImage from 'components/ProfileImage.tsx';
 import DatePickerSelector from 'components/DatePicker.tsx';
+import OptionSelector from 'components/OptionSelector.tsx';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { getPicture, takePicture } from 'services/image-picker';
 import { PREFIXES, SUFFIXES, GENDERS } from 'constants/spec.ts';
@@ -43,7 +43,7 @@ export const PersonalInformationScreen = () => {
     const dispatch = useDispatch();
     const [updateUserData] = useUpdateUserDataMutation();
     const user = useSelector((state: RootState) => state.app.user);
-
+    console.log('USER', user);
     // Birthday Bottom Sheet
     const [dateModalOpen, setDateModalOpen] = useState(false);
 
@@ -161,20 +161,16 @@ export const PersonalInformationScreen = () => {
                                     onChangeText={handleChange('lastName')}
                                     error={touched.lastName && errors.lastName ? { lastName: errors.lastName } : undefined}
                                 />
-                                <Dropdown
+                                <OptionSelector
                                     label="Prefix"
                                     data={PREFIXES}
-                                    labelField="label"
-                                    valueField="value"
                                     value={values.prefix}
-                                    onSelect={data => handleChange('suffix')(data?.value)}
+                                    onSelect={data => handleChange('prefix')(data?.value)}
                                 />
                                 <View style={styles.paddingVertical}>
-                                    <Dropdown
+                                    <OptionSelector
                                         label="Suffix"
                                         data={SUFFIXES}
-                                        labelField="label"
-                                        valueField="value"
                                         value={values.suffix}
                                         onSelect={data => handleChange('suffix')(data?.value)}
                                     />
@@ -207,15 +203,11 @@ export const PersonalInformationScreen = () => {
                                     currentDate={values?.birthday ? values.birthday.toString() : new Date().toString()}
                                 />
                                 <View style={styles.paddingVertical}>
-                                    <Dropdown
+                                    <OptionSelector
                                         label="Gender"
                                         data={GENDERS}
-                                        labelField="label"
-                                        valueField="value"
                                         value={values.gender}
-                                        touched={touched?.gender}
-                                        errorText={errors?.gender}
-                                        onSelect={data => handleChange('suffix')(data?.value)}
+                                        onSelect={data => handleChange('gender')(data?.value)}
                                     />
                                 </View>
                             </ScrollView>
