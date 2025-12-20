@@ -1,5 +1,5 @@
 // outsource dependencies
-import { Pressable, StyleSheet, View } from 'react-native';
+import { PermissionsAndroid, Platform, Pressable, StyleSheet, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Sound, { RecordBackType } from 'react-native-nitro-sound';
 import React, { memo, useCallback, useEffect, useState } from 'react';
@@ -12,6 +12,7 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { Attachment } from 'types/messenger.ts';
 import { formatDuration } from 'utils/general.ts';
 import RecordPreview from 'components/RecordPreview.tsx';
+import NoMicPermission from 'components/AudioRecord/NoMicPermission.tsx';
 
 // configure
 const BUTTON_SIZE = 60;
@@ -22,11 +23,26 @@ interface AudioRecordProps {
 
 const AudioRecord = ({ onCapture }: AudioRecordProps) => {
     const theme = useTheme();
+    const [permissionHasDenied, setPermissionHasDenied] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [recordTime, setRecordTime] = useState('0:00');
     const [result, setResult] = useState<ReactNativeBlobUtilStat | null>(null);
 
+    // Helper to check microphone permission
+    const checkMicrophonePermission = useCallback(async () => {
+        if (Platform.OS === 'android') {
+            const granted = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
+            if (granted) { return true; }
+            const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
+            return result === PermissionsAndroid.RESULTS.GRANTED;
+        }
+        return true;
+    }, []);
+
+
     const startAudioRecording = useCallback(async () => {
+        const hasPermission = await checkMicrophonePermission();
+        setPermissionHasDenied(hasPermission);
         setRecordTime('00:00');
 
         Sound.addRecordBackListener((e: RecordBackType) => {
@@ -65,12 +81,16 @@ const AudioRecord = ({ onCapture }: AudioRecordProps) => {
             onRetake={() => setResult(null)}
         />;
     }
+
+    if (permissionHasDenied) {
+        return <NoMicPermission hasNoPermission={permissionHasDenied} />;
+    }
     return <View style={styles.container}>
         <View style={styles.wrapper}>
             <Icon
                 size={148}
-                name="multitrack-audio"
                 style={styles.icon}
+                name="multitrack-audio"
                 color={theme.colors.darkGrey}
             />
         </View>

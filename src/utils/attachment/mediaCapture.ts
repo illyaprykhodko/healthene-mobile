@@ -9,26 +9,49 @@ import { VideoFile, PhotoFile } from 'react-native-vision-camera';
 import { store } from 'store';
 import { uploadAttachmentInitiate } from 'store/api/s3ServiceApi.ts';
 
+type captureType = 'video' | 'image' | 'audio'
 interface CaptureProps {
-    isVideo: boolean,
+    captureType: captureType,
     file: PhotoFile | VideoFile | ReactNativeBlobUtilStat,
     setPreloader: React.Dispatch<React.SetStateAction<boolean>>
 }
 export const handleCapture = async ({
     file,
-    isVideo,
+    captureType,
     setPreloader
 }: CaptureProps) => {
     if (!file) { return; }
     setPreloader(true);
 
-    const mimeType = isVideo
-        ? 'video/mp4'
-        : 'image/jpeg';
-    const date = moment().format('YYYY-MM-DD_HH-mm-ss');
-    const fileTitle = isVideo ? `Video ${date}` : `Photo ${date}`;
-    const fileName = isVideo ? `video_${date}.mp4` : `photo_${date}.jpg`;
-    const fileDescription = isVideo ? 'Video captured from camera' : 'Photo captured from camera';
+    const prepareFile = (type: captureType) => {
+        const date = moment().format('YYYY-MM-DD_HH-mm-ss');
+        switch (type) {
+            default:
+                return {
+                    mimeType: 'video/mp4',
+                    fileTitle: `Video ${date}`,
+                    fileName: `video_${date}.mp4`,
+                    fileDescription: 'Video captured from camera'
+                };
+            case 'image':
+                return {
+                    mimeType: 'image/jpeg',
+                    fileTitle: `Photo ${date}`,
+                    fileName: `photo_${date}.jpg`,
+                    fileDescription: 'Photo captured from camera'
+                };
+            case 'audio':
+                return {
+                    mimeType: 'audio/m4a',
+                    fileTitle: `Audio ${date}`,
+                    fileName: `audio_${date}.m4a`,
+                    fileDescription: 'Audio recorded by user'
+                };
+        }
+
+    };
+
+    const { mimeType, fileTitle, fileName, fileDescription } = prepareFile(captureType);
     try {
         const formData = new FormData();
         formData.append('file', {
