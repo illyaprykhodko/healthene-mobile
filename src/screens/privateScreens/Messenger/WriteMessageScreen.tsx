@@ -119,7 +119,7 @@ const WriteMessageScreen = () => {
                 key={item}
                 onPress={() => {
                     onSave();
-                    navigation.navigate(ROUTES.CAMERA_SCREEN);
+                    navigation.navigate(ROUTES.MESSENGER_CAMERA);
                 }}
                 style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
             >
@@ -128,7 +128,11 @@ const WriteMessageScreen = () => {
                 </View>
                 <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
             </Pressable>;
-            case ATTACHMENTS.AUDIO: return <Pressable key={item} style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}>
+            case ATTACHMENTS.AUDIO: return <Pressable
+                key={item}
+                onPress={() => navigation.navigate(ROUTES.MESSENGER_AUDIO)}
+                style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
+            >
                 <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
                     <Icon name="microphone" color={theme.colors.darkGrey} size={20} />
                 </View>

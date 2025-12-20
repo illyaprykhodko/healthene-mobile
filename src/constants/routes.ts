@@ -39,10 +39,11 @@ export const ROUTES = {
     PERSONAL_INFORMATION: 'PersonalInformation',
 
     // Messanger
+    READ_MESSAGE: 'ReadMessages',
     MESSAGE_LIST: 'MessengerList',
-    CAMERA_SCREEN: 'CameraScreen',
-    READ_MESSAGE_SCREEN: 'ReadMessagesScreen',
-    WRITE_MESSAGE_SCREEN: 'WriteMessageScreen',
+    WRITE_MESSAGE: 'WriteMessage',
+    MESSENGER_AUDIO: 'MessengerAudio',
+    MESSENGER_CAMERA: 'MessengerCamera',
 
     // Legacy routes (for compatibility)
     HOME: 'Home',

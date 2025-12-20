@@ -7,16 +7,11 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
+import { formatDuration } from 'utils/general.ts';
 
 // configure
 const BUTTON_SIZE = 60;
 const CAMERA_SWITCH_SIZE = 48;
-const formatDuration = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-
-    return `${m}:${s.toString().padStart(2, '0')}`;
-};
 
 interface CameraControlsProps {
     onPress: () => void;

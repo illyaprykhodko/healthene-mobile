@@ -36,17 +36,18 @@ export type RootStackParamList = {
   [ROUTES.ABOUT_PLAN]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
   [ROUTES.MESSAGE_LIST]: undefined;
-  [ROUTES.CAMERA_SCREEN]: undefined;
+  [ROUTES.READ_MESSAGE]: undefined;
+  [ROUTES.WRITE_MESSAGE]: undefined;
   [ROUTES.HEALTH_PROFILE]: undefined;
   [ROUTES.FOOD_ALLERGIES]: undefined;
+  [ROUTES.MESSENGER_AUDIO]: undefined;
+  [ROUTES.MESSENGER_CAMERA]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;
   [ROUTES.FOOD_PREFERENCES]: undefined;
   [ROUTES.BIOMETRIC_SETTINGS]: undefined;
-  [ROUTES.READ_MESSAGE_SCREEN]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
-  [ROUTES.WRITE_MESSAGE_SCREEN]: undefined;
 
   // Example of a screen that requires params
   [ROUTES.SMART_SCALE]: {

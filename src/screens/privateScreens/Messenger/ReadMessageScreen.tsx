@@ -26,7 +26,7 @@ const ReadMessageScreen = () => {
     const { data, isLoading } = useGetMessageQuery(message?.id ? { id: message.id } : skipToken);
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const goToWriteMessage = useCallback(() => navigation.navigate(ROUTES.WRITE_MESSAGE_SCREEN), [dispatch, navigation]);
+    const goToWriteMessage = useCallback(() => navigation.navigate(ROUTES.WRITE_MESSAGE), [dispatch, navigation]);
     return <Screen initialized={!isLoading} style={styles.container}>
         <View style={styles.header}>
             <Text variant="h4" color={theme.colors.darkGrey}>{data?.subject}</Text>
