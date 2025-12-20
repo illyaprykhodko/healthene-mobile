@@ -21,7 +21,7 @@ import TextInput from 'components/TextInput.tsx';
 import { setUser } from 'store/slices/appSlice.ts';
 import ProfileImage from 'components/ProfileImage.tsx';
 import DatePickerSelector from 'components/DatePicker.tsx';
-import OptionSelector from 'components/OptionSelector.tsx';
+import OptionSelector from 'components/Selector/OptionSelector.tsx';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { getPicture, takePicture } from 'services/image-picker';
 import { PREFIXES, SUFFIXES, GENDERS } from 'constants/spec.ts';

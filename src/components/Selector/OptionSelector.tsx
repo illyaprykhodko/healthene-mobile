@@ -1,15 +1,15 @@
 // outsource dependencies
 import React, { useRef } from 'react';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { ListRenderItemInfo, Pressable, StyleSheet, View } from 'react-native';
+import { ListRenderItemInfo, Pressable, StyleSheet } from 'react-native';
 import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
 
 // local dependencies
 import Text from 'components/Text.tsx';
-import { humanize } from 'services/filter';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
+import Selector from 'components/Selector/Selector.tsx';
+import Separator from 'components/Selector/Separator.tsx';
 
 type DataType = { label: string; value: string }
 interface OptionSelectorProps {
@@ -24,26 +24,13 @@ interface OptionSelectorProps {
 const OptionSelector = ({ label, touched, errorText, data, onSelect, value = '' }: OptionSelectorProps) => {
     const theme = useTheme();
     const modalSheetRef = useRef<BottomSheetModal>(null);
+    const openModalSheet = () => modalSheetRef.current?.present();
     const handlePress = (item: DataType) => {
         modalSheetRef.current?.close();
         onSelect(item);
     };
-    const ItemSeparator = () => (<View style={[styles.separator, { borderTopColor: theme.colors.border }]} />);
     return <>
-        <View>
-            <Text color={touched && errorText ? theme.colors.error : theme.colors.black} variant="caption">
-                {label}
-            </Text>
-            <Pressable
-                onPress={() => modalSheetRef.current?.present()}
-                style={[styles.selectBtn, { borderBottomColor: touched && errorText ? theme.colors.error : theme.colors.grey }]}
-            >
-                <Text color={value ? theme.colors.black : theme.colors.grey}>
-                    {value ? humanize(value) : 'Select item'}
-                </Text>
-                <Ionicons color={theme.colors.grey} name="chevron-down-sharp" size={16} />
-            </Pressable>
-        </View>
+        <Selector label={label} value={value} touched={touched} errorText={errorText} openModalSheet={openModalSheet} />
         <BottomSheetModal
             ref={modalSheetRef}
             enablePanDownToClose
@@ -59,7 +46,7 @@ const OptionSelector = ({ label, touched, errorText, data, onSelect, value = '' 
             )}>
             <BottomSheetFlatList
                 data={data}
-                ItemSeparatorComponent={ItemSeparator}
+                ItemSeparatorComponent={Separator}
                 contentContainerStyle={styles.contentContainer}
                 keyExtractor={({ value }: DataType) => value.toString()}
                 renderItem={({ item }: ListRenderItemInfo<DataType>) => {
@@ -80,9 +67,6 @@ const OptionSelector = ({ label, touched, errorText, data, onSelect, value = '' 
 export default OptionSelector;
 
 const styles = StyleSheet.create({
-    container: {
-    // style here
-    },
     selectBtn: {
         height: 40,
         flexDirection: 'row',
@@ -102,7 +86,4 @@ const styles = StyleSheet.create({
     itemText: {
         marginLeft: OFFSET.POINT * 2
     },
-    separator: {
-        borderTopWidth: 1
-    }
 });
