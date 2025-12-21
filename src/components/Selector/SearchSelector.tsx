@@ -1,15 +1,16 @@
 // outsource dependencies
 import React, { useRef } from 'react';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { ListRenderItemInfo, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ListRenderItemInfo, Pressable, StyleSheet } from 'react-native';
 import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
 
 // local dependencies
 import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
-import Selector from 'components/Selector/Selector.tsx';
-import Separator from 'components/Selector/Separator.tsx';
+import Selector from 'components/Selector/components/Selector.tsx';
+import Separator from 'components/Selector/components/Separator.tsx';
+import ListHeader from 'components/Selector/components/ListHeader.tsx';
 
 interface SearchSelectorProps <T extends Record<string, any>> {
     data: T[];
@@ -20,7 +21,9 @@ interface SearchSelectorProps <T extends Record<string, any>> {
     errorText?: string;
     valueField: keyof T;
     placeholder: string;
+    searchValue?: string;
     onSelect: (item: T) => void;
+    onSearch: (item: string) => void;
 }
 
 const SearchSelector = <T extends Record<string, any>>({
@@ -28,10 +31,13 @@ const SearchSelector = <T extends Record<string, any>>({
     label,
     touched,
     disabled,
+    onSearch,
+    onSelect,
     errorText,
     valueField,
-    placeholder,
-    onSelect, value = ''
+    value = '',
+    searchValue,
+    placeholder
 }: SearchSelectorProps<T>) => {
     const theme = useTheme();
     const modalSheetRef = useRef<BottomSheetModal>(null);
@@ -40,6 +46,7 @@ const SearchSelector = <T extends Record<string, any>>({
         modalSheetRef.current?.close();
         onSelect(item);
     };
+
     return <>
         <Selector label={label} value={value} touched={touched} errorText={errorText} openModalSheet={openModalSheet} />
         <BottomSheetModal
@@ -58,34 +65,15 @@ const SearchSelector = <T extends Record<string, any>>({
             <BottomSheetFlatList
                 data={data}
                 ItemSeparatorComponent={Separator}
-                ListHeaderComponent={() => <>
-                    <View style={[
-                        styles.inputWrapper,
-                        {
-                            borderBottomColor: theme.colors.grey
-                        }]}>
-                        <TextInput
-                            value=""
-                            editable={!disabled}
-                            autoCapitalize="none"
-                            placeholder={placeholder}
-                            selectionColor={theme.colors.info}
-                            // onBlur={() => value && setIsBlur(true)}
-                            // onChangeText={onChangeText}
-                            style={[
-                                styles.inputStyle,
-                                { color: theme.colors.black }
-                            ]}
-                        />
-                    </View>
-                    <View style={styles.itemContainer}>
-                        <Icon name="radio-button-checked" size={24} color={theme.colors.primary}/>
-                        <Text style={styles.itemText}>{value}</Text>
-                    </View>
-                    <Separator />
-                </>}
                 contentContainerStyle={styles.contentContainer}
                 keyExtractor={(item: T) => String(item[valueField])}
+                ListHeaderComponent={<ListHeader
+                    value={value}
+                    onSearch={onSearch}
+                    disabled={disabled}
+                    searchValue={searchValue}
+                    placeholder={placeholder}
+                />}
                 renderItem={({ item }: ListRenderItemInfo<T>) => {
                     return <Pressable onPress={() => handlePress(item)} style={styles.itemContainer}>
                         {item.value === value

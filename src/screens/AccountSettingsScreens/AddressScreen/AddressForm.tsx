@@ -2,7 +2,7 @@
 import { View, StyleSheet } from 'react-native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { FormikErrors, FieldArrayRenderProps } from 'formik';
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { FormikHandlers, FormikTouched, FormikHelpers } from 'formik/dist/types';
 
 // local dependencies
@@ -10,10 +10,11 @@ import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Address, Country, State } from 'types';
+import { filterByName } from 'utils/general.ts';
 import TextInput from 'components/TextInput.tsx';
 import { MessageService } from 'services/messages';
-import { Dropdown } from 'components/Dropdown.tsx';
 import { useFilterStateMutation } from 'store/api/settingsApi.ts';
+import SearchSelector from 'components/Selector/SearchSelector.tsx';
 
 interface AddressFormProps {
     index: number,
@@ -60,35 +61,23 @@ export const AddressForm = memo(({
     // handle state
     const [filterState] = useFilterStateMutation();
     const [states, setStates] = useState<State[] | []>([]);
-
     const handleGetStates = useCallback(async (countryId: number) => {
         try {
             const result = await filterState({ country: countryId }).unwrap();
             if (result.length > 0) {
                 setStates(result);
                 // NOTE: set id for validation
-                setFieldValue(`addresses[${index}].state`, {
+                await setFieldValue(`addresses[${index}].state`, {
                     id: null
                 });
             } else {
                 setStates([]);
-                setFieldValue(`addresses[${index}].state`, null);
+                await setFieldValue(`addresses[${index}].state`, null);
             }
         } catch (error) {
             console.error('Error fetching states:', error);
         }
     }, [setFieldTouched, setFieldValue, index]);
-
-    const handleCountry = useCallback((country: Country) => {
-        handleGetStates(country.id);
-        setFieldTouched(`addresses[${index}].country`, true);
-        setFieldValue(`addresses[${index}].country`, country);
-    }, [setFieldValue, setFieldTouched, handleGetStates]);
-
-    const handleState = useCallback((state: State) => {
-        setFieldValue(`addresses[${index}].state`, state);
-        setFieldTouched(`addresses[${index}].state.id`, false);
-    }, [setFieldValue, setFieldTouched]);
 
     useEffect(() => {
         if (address.country.id) {
@@ -107,6 +96,30 @@ export const AddressForm = memo(({
             if (value) { onRemove(index); }
         });
     }, [onRemove, index]);
+
+    const [searchValue, setSearchValue] = useState('');
+
+    // Handle Country
+    const handleCountrySearch = useCallback((search: string) => setSearchValue(search), []);
+    const filteredCountryData = useMemo(() => filterByName(countryData, searchValue), [countryData, searchValue]);
+
+    const handleCountry = useCallback(async (country: Country) => {
+        setSearchValue('');
+        await handleGetStates(country.id);
+        await setFieldTouched(`addresses[${index}].country`, true);
+        await setFieldValue(`addresses[${index}].country`, country);
+    }, [setFieldValue, setFieldTouched, handleGetStates]);
+
+    // Handle State
+    const handleStateSearch = useCallback((search: string) => setSearchValue(search), []);
+    const searchedStates = useMemo(() => filterByName(states, searchValue), [states, searchValue]);
+    const filteredStateData = useMemo(() => searchedStates.filter(state => state.id !== address.state?.id), [searchedStates, address.state?.id]);
+    const handleState = useCallback(async (state: State) => {
+        setSearchValue('');
+        await setFieldValue(`addresses[${index}].state`, state);
+        await setFieldTouched(`addresses[${index}].state.id`, false);
+    }, [setFieldValue, setFieldTouched]);
+
 
     return <View style={{ ...styles.container, borderRadius: theme.borderRadius.md, borderColor: theme.colors.grey }}>
         <View style={[styles.wrapper, styles.addressHeader]}>
@@ -196,31 +209,31 @@ export const AddressForm = memo(({
                 />
             </View>
             <View style={styles.wrapper}>
-                <Dropdown
-                    isSearch
-                    position="top"
+                <SearchSelector
                     label="Country"
-                    labelField="name"
                     valueField="name"
-                    data={countryData ?? []}
-                    onSelect={handleCountry}
                     errorText={countryError}
+                    onSelect={handleCountry}
+                    searchValue={searchValue}
+                    data={filteredCountryData}
                     value={address.country.name}
+                    placeholder="Select country"
+                    onSearch={handleCountrySearch}
                     touched={touched?.addresses?.[index]?.country?.id}
                 />
             </View>
             {states.length
                 ? <View style={styles.wrapper}>
-                    <Dropdown
-                        isSearch
+                    <SearchSelector
                         label="State"
-                        data={states}
-                        position="top"
-                        labelField="name"
                         valueField="name"
                         errorText={stateError}
                         onSelect={handleState}
+                        data={filteredStateData}
+                        searchValue={searchValue}
                         value={address.state.name}
+                        placeholder="Select state"
+                        onSearch={handleStateSearch}
                         touched={touched?.addresses?.[index]?.state?.id}
                     />
                 </View>

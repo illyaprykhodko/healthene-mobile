@@ -11,16 +11,16 @@ export const settingsApi = createApi({
     endpoints: builder => ({
         updateUserData: builder.mutation<any, Partial<User>>({
             query: body => ({
-                url: '/patient-service/patients/me',
-                method: 'PUT',
                 body,
+                method: 'PUT',
+                url: '/patient-service/patients/me',
             }),
         }),
         filterCountry: builder.mutation<Country[], any >({
             query: body => {
                 return {
+                    body,
                     method: 'POST',
-                    body: { ...body },
                     url: '/patient-service/country/filter',
                 };
             },
@@ -28,8 +28,8 @@ export const settingsApi = createApi({
         filterState: builder.mutation<State[], {country: number} >({
             query: body => {
                 return {
+                    body,
                     method: 'POST',
-                    body: { ...body },
                     url: '/patient-service/country/state/filter',
                 };
             },

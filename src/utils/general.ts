@@ -299,4 +299,18 @@ function formatDuration (seconds: number) {
     return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export { groupBy, isEmpty, size, sortBy, get, uniqBy, flatten, chunk, debounce, throttle, formatDuration };
+function filterByName<T extends { name: string }> (
+    data: T[] | undefined,
+    search: string
+): T[] {
+    if (!data) { return []; }
+
+    const value = search.trim().toLowerCase();
+    if (!value) { return data; }
+
+    return data.filter(item =>
+        item.name.toLowerCase().startsWith(value)
+    );
+}
+
+export { groupBy, isEmpty, size, sortBy, get, uniqBy, flatten, chunk, debounce, throttle, formatDuration, filterByName };
