@@ -14,7 +14,7 @@ const AccountSettings = () => {
     const [preloader, setPreloader] = useState(false);
     return <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
         <LoadingOverlay init={preloader} />
-        <EmailForm />
+        <EmailForm onPreloader={setPreloader} />
         <AccountInformationForm onPreloader={setPreloader} />
     </View>;
 };
