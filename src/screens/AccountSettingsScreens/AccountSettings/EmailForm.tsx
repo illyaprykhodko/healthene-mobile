@@ -2,22 +2,22 @@
 import React from 'react';
 import { Formik } from 'formik';
 import Toast from 'react-native-toast-message';
+import { StyleSheet, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
 // local dependencies
 import { User } from 'types';
 import { RootState } from 'store';
 import { filters } from 'services/filter';
 import { useTheme } from 'hooks/useTheme.ts';
+import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
 import { setUser } from 'store/slices/appSlice.ts';
 import { useUpdateUserDataMutation } from 'store/api/settingsApi.ts';
-import { OFFSET } from 'constants/offset.ts';
 
 interface EmailFormProps {
-    // props here
+    onPreloader: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const EmailForm = (props: EmailFormProps) => {
