@@ -1,6 +1,6 @@
 // outsource dependencies
 import moment from 'moment';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
@@ -15,14 +15,16 @@ import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import { PhaseItem } from 'types/overview';
 import { groupBy, isEmpty } from 'utils/general';
+import { AnytimeMenu } from 'components/AnytimeMenu';
 import { RootStackParamList } from 'services/navigation';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import { selectDayOverview } from 'store/slices/dayOverviewSlice';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
+import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
 import { useGetDayOverviewQuery, useGetPhaseItemsQuery, useUpdatePhaseItemMutation,
-    useDeletePhaseItemMutation, useAddPhaseMealItemMutation, useAddPhaseRecipeMutation, useAddPhaseCustomRecipeMutation,
+    useDeletePhaseItemMutation, useAddPhaseMealItemMutation, useAddPhaseCustomRecipeMutation,
     useUpdatePhaseMutation, useReplacePhaseItemMutation, useAddPhaseItemMutation,
     useUpdateIncludeRescueFoodsMutation } from 'store/api/dayOverviewApi';
 
@@ -46,6 +48,12 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const [scrollEnabled, setScrollEnabled] = useState(true);
     const [localItems, setLocalItems] = useState<PhaseItem[]>([]);
     const [showRescueFoodsModal, setShowRescueFoodsModal] = useState(false);
+
+    const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+    const [replacementData, setReplacementData] = useState<{ prevItem: PhaseItem | null; nextItem: any }>({
+        prevItem: null,
+        nextItem: null,
+    });
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
@@ -418,59 +426,48 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         switch (prevItem.type) {
             case ENTITY_TYPE.FOOD: {
-                // navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
-                //     date: targetDate,
-                //     phaseId: targetPhaseId,
-                //     prevItem: prevItemWithoutRating,
-                //     title: currentPhase?.meal?.name || 'Meal',
-                //     entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
-                // });
-                // break;
                 navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
                     date: targetDate,
                     entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
                     substanceType: prevItem.substanceType || 'FOOD',
                     prevItem: prevItemWithoutRating,
                     onApply: (data: any) => {
-                        handleConfirmReplaceFood(prevItemWithoutRating, data.item);
+                        setReplacementData({
+                            prevItem: prevItemWithoutRating,
+                            nextItem: data.item || data,
+                        });
+                        setShowConfirmationModal(true);
                     },
                 });
                 break;
             }
             case ENTITY_TYPE.RECIPE: {
                 if (prevItem.recipe?.surrogateRecipe) {
-                    // navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
-                    //     date: targetDate,
-                    //     phaseId: targetPhaseId,
-                    //     entityType: 'SURROGATE_RECIPE',
-                    //     prevItem: prevItemWithoutRating,
-                    //     title: currentPhase?.meal?.name || 'Meal',
-                    // });
                     navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
                         date: targetDate,
                         entityType: 'PATIENT_FOOD',
-                        // entityType: 'SURROGATE_RECIPE',
                         prevItem: prevItemWithoutRating,
                         substanceType: prevItem.substanceType || 'FOOD',
                         onApply: (data: any) => {
-                            handleConfirmReplaceFood(prevItemWithoutRating, data.item);
+                            setReplacementData({
+                                prevItem: prevItemWithoutRating,
+                                nextItem: data.item || data,
+                            });
+                            setShowConfirmationModal(true);
                         },
                     });
                 } else {
-                    // navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
-                    //     date: targetDate,
-                    //     entityType: 'RECIPE',
-                    //     phaseId: targetPhaseId,
-                    //     prevItem: prevItemWithoutRating,
-                    //     title: currentPhase?.meal?.name || 'Meal',
-                    // });
                     navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
                         date: targetDate,
                         entityType: 'PATIENT_RECIPES',
                         prevItem: prevItemWithoutRating,
                         substanceType: prevItem.substanceType || 'FOOD',
                         onApply: (data: any) => {
-                            handleConfirmReplaceFood(prevItemWithoutRating, data.item);
+                            setReplacementData({
+                                prevItem: prevItemWithoutRating,
+                                nextItem: data.item || data,
+                            });
+                            setShowConfirmationModal(true);
                         },
                     });
                 }
@@ -481,7 +478,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             case ENTITY_TYPE.MEDICATION:
             case ENTITY_TYPE.PHYSICAL_ACTIVITY: {
                 const excludeIds = items.map(item => String(item.id));
-                
+
                 navigation.navigate(ROUTES.ADD_REPLACE_ITEM, {
                     excludeIds,
                     date: targetDate,
@@ -517,32 +514,26 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         }
     };
 
-    const handleConfirmReplaceFood = async (prevItem: PhaseItem, nextItem: any) => {
+    const handleConfirmationModalApply = useCallback(async ({ prevItem, nextItem }: { prevItem: any; nextItem: any }) => {
         try {
+            const replacementId = nextItem?.id || nextItem?.item?.id;
+
             await replacePhaseItem({
+                replacementId,
                 itemId: prevItem.id,
                 phaseId: targetPhaseId,
-                replacementItem: {
-                    id: nextItem.id,
-                    type: nextItem.type,
-                    name: nextItem.name,
-                },
             });
         } catch (error) {
-            console.error('Error replacing food item:', error);
+            console.error('Error replacing item:', error);
         }
-    };
+    }, [replacePhaseItem, targetPhaseId]);
 
     const handleConfirmReplaceItem = async (prevItem: PhaseItem, nextItem: any, field: string) => {
         try {
             await replacePhaseItem({
                 itemId: prevItem.id,
                 phaseId: targetPhaseId,
-                replacementItem: {
-                    id: nextItem.id,
-                    type: nextItem.type,
-                    name: nextItem.name,
-                },
+                replacementId: nextItem.id,
             });
         } catch (error) {
             console.error('Error replacing item:', error);
@@ -761,6 +752,19 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     }
                 }}
             />
+
+            <ConfirmationReplaceModal
+                visible={showConfirmationModal}
+                prevItem={replacementData.prevItem}
+                nextItem={replacementData.nextItem}
+                onClose={() => {
+                    setShowConfirmationModal(false);
+                    setReplacementData({ prevItem: null, nextItem: null });
+                }}
+                onApply={handleConfirmationModalApply}
+            />
+
+            <AnytimeMenu date={targetDate} />
         </Screen>
     );
 };

@@ -1,103 +1,92 @@
 // outsource dependencies
-import React, { memo, useCallback, useMemo } from 'react';
-import {
-    Modal,
-    View,
-    Platform,
-    StyleSheet,
-    TouchableOpacity,
-} from 'react-native';
+import React, { memo, useMemo, useCallback } from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { Modal, StyleSheet, TouchableOpacity, View, Platform, Image } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
-import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
-import { Button } from 'components/Button';
+import { COLORS } from 'constants/colors';
 import DefImage from 'components/DefImage';
 
 interface ConfirmationReplaceModalProps {
+    visible: boolean;
     prevItem: any;
     nextItem: any;
-    visible: boolean;
     onClose: () => void;
-    onApply: ({ prevItem, nextItem }: { prevItem: any; nextItem: any }) => void;
+    onApply: (data: { prevItem: any; nextItem: any }) => void;
 }
 
-const ConfirmationReplaceModal: React.FC<ConfirmationReplaceModalProps> = ({
+const ConfirmationReplaceModal: React.FC<ConfirmationReplaceModalProps> = memo(({
     visible,
-    onClose,
-    onApply,
     prevItem,
     nextItem,
+    onClose,
+    onApply,
 }) => {
-    const theme = useTheme();
-
     const handleApply = useCallback(() => {
         onApply({ prevItem, nextItem });
         onClose();
     }, [prevItem, nextItem, onApply, onClose]);
 
-    const { prevName, prevImage, nextName, nextImage } = useMemo(() => {
-        const prevName = prevItem?.name || prevItem?.recipe?.name || prevItem?.food?.name || '';
-        const prevImage = prevItem?.coverImage?.url || prevItem?.recipe?.coverImage?.url || prevItem?.food?.coverImage?.url || '';
-        const nextName = nextItem?.name || nextItem?.recipe?.name || nextItem?.food?.name || '';
-        const nextImage = nextItem?.coverImage?.url || nextItem?.recipe?.coverImage?.url || nextItem?.food?.coverImage?.url || '';
+    const { prevName, nextName, nextImage } = useMemo(() => {
+        const prevName = prevItem?.name
+            || prevItem?.recipe?.name
+            || prevItem?.food?.name
+            || '';
+        const nextName = nextItem?.name
+            || nextItem?.recipe?.name
+            || nextItem?.food?.name
+            || nextItem?.item?.name
+            || '';
+        const nextImage = nextItem?.coverImage?.url
+            || nextItem?.recipe?.coverImage?.url
+            || nextItem?.food?.coverImage?.url
+            || nextItem?.item?.coverImage?.url
+            || '';
 
-        return { prevName, prevImage, nextName, nextImage };
+        return { prevName, nextName, nextImage };
     }, [prevItem, nextItem]);
 
     return (
-        <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+        <Modal visible={visible} transparent animationType="slide">
             <View style={styles.wrapper}>
-                <View style={[styles.header, { backgroundColor: '#E0EBF7' }]}>
-                    <Text style={[styles.headerTitle, { color: theme.colors.text }]} textAlign="center">
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle} textAlign="center">
                         Replacement Options
                     </Text>
                     <TouchableOpacity style={styles.close} onPress={onClose}>
-                        <Icon name="times" color={theme.colors.black} size={24} />
+                        <Icon name="times" color={COLORS.BLACK} size={24} />
                     </TouchableOpacity>
                 </View>
-                <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+                <View style={styles.container}>
                     <View style={styles.logoWrap}>
                         {nextImage ? (
-                            <View style={styles.logo}>
-                                <DefImage src={nextImage} style={styles.imagePlaceholder} />
-                                {/* <View style={[styles.imagePlaceholder, { backgroundColor: theme.colors.lightGrey }]} /> */}
-                            </View>
+                            <DefImage src={nextImage} style={styles.logo} />
                         ) : null}
                         {nextName ? (
-                            <Text style={[styles.restaurantName, { color: theme.colors.text }]}>
-                                {nextName}
-                            </Text>
+                            <Text style={styles.itemName}>{nextName}</Text>
                         ) : null}
                     </View>
-                    <View style={{ flexGrow: 2, justifyContent: 'space-between', width: '100%' }}>
-                        <Text style={[styles.title, { color: theme.colors.text }]} textAlign="center">
-                            Replace
-                            {' '}
-                            {prevName || 'this item'}
-                            {' '}
-                            with
-                            {' '}
-                            {nextName || 'selected item'}
-                            ?
+                    <View style={styles.contentWrapper}>
+                        <Text style={styles.title} textAlign="center">
+                            Replace {prevName || 'this item'} with {nextName || 'selected item'}?
                         </Text>
                         <View style={styles.buttonsRow}>
-                            <Button
-                                title="REPLACE ITEM"
+                            <TouchableOpacity
                                 onPress={handleApply}
                                 style={styles.replaceBtn}
-                                textStyle={{ color: '#567697', fontWeight: '500', fontSize: 20 }}
-                            />
+                            >
+                                <Text style={styles.replaceBtnText}>REPLACE ITEM</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
             </View>
         </Modal>
     );
-};
+});
 
-export default memo(ConfirmationReplaceModal);
+export default ConfirmationReplaceModal;
 
 const styles = StyleSheet.create({
     wrapper: {
@@ -107,7 +96,7 @@ const styles = StyleSheet.create({
         top: Platform.OS === 'ios' ? 100 : 60,
         bottom: 0,
         elevation: 7,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: COLORS.WHITE,
         zIndex: 999,
         flex: 1,
         justifyContent: 'flex-start',
@@ -116,11 +105,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: '#E0EBF7',
         height: 56,
         position: 'relative',
     },
     headerTitle: {
         flex: 1,
+        color: '#181818',
         fontSize: 15,
         fontWeight: '500',
         textAlign: 'center',
@@ -136,6 +127,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL * 1.5,
         paddingTop: OFFSET.VERTICAL * 2,
         paddingBottom: OFFSET.VERTICAL * 2,
+        backgroundColor: COLORS.WHITE,
         justifyContent: 'space-between',
     },
     logoWrap: {
@@ -150,26 +142,26 @@ const styles = StyleSheet.create({
         height: 80,
         marginRight: 15,
     },
-    imagePlaceholder: {
-        width: 80,
-        height: 80,
-        borderRadius: 8,
-    },
-    restaurantName: {
+    itemName: {
         fontSize: 23,
         fontWeight: '600',
-        fontFamily: 'Nunito Sans',
+        color: COLORS.BLACK,
+    },
+    contentWrapper: {
+        flexGrow: 2,
+        justifyContent: 'space-between',
+        width: '100%',
     },
     title: {
         fontSize: 32,
         fontWeight: '500',
         marginBottom: 24,
+        color: COLORS.BLACK,
         textAlign: 'center',
         paddingHorizontal: OFFSET.HORIZONTAL * 1.5,
     },
     buttonsRow: {
         width: '100%',
-        alignSelf: 'center',
     },
     replaceBtn: {
         width: '100%',
@@ -177,7 +169,12 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         paddingTop: 21,
         paddingBottom: 21,
-        borderWidth: 0,
         borderRadius: 100,
+        alignItems: 'center',
+    },
+    replaceBtnText: {
+        color: '#567697',
+        fontWeight: '500',
+        fontSize: 20,
     },
 });

@@ -185,9 +185,9 @@ export const ListItem: React.FC<ListItemProps> = ({
                                 {/* {prepareIngredientNameWithUnit(item, { withoutName: true })} */}
                             </Text>
                         )}
-                        {item.modified && (
+                        {item?.recipe?.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                added by me
+                                edited by me
                             </Text>
                         )}
                     </View>
@@ -210,11 +210,11 @@ export const ListItem: React.FC<ListItemProps> = ({
                                 {`${amount} ${item.weight?.unit?.name || ''}`}
                             </Text>
                         )}
-                        {item.modified && (
+                        {/* {item.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
                                 added by me
                             </Text>
-                        )}
+                        )} */}
                     </View>
                 </View>
             );

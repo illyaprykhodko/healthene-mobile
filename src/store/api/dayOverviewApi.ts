@@ -85,11 +85,7 @@ export interface AvailableItem {
 export interface ReplaceItemRequest {
     itemId: number | string;
     phaseId: number | string;
-    replacementItem: {
-        id: number | string;
-        type: string;
-        name: string;
-    };
+    replacementId: number | string;
 }
 
 // Filter interfaces based on swagger.json
@@ -432,10 +428,13 @@ export const dayOverviewApi = createApi({
             invalidatesTags: (result, error, { phaseId }) => [{ type: 'PhaseItems', id: phaseId }],
         }),
         replacePhaseItem: builder.mutation<PhaseItem, ReplaceItemRequest>({
-            query: ({ itemId, replacementItem }) => ({
-                url: `/patient-service/patients/day-overview/phase/item/${itemId}/replace`,
-                method: 'PUT',
-                body: replacementItem,
+            query: ({ itemId, replacementId }) => ({
+                url: `/patient-service/patient/day-overview/rescue/phase-item/${itemId}/recipe-replacement`,
+                method: 'POST',
+                body: {
+                    id: itemId,
+                    replacement: { id: replacementId },
+                },
             }),
             invalidatesTags: (result, error, { itemId, phaseId }) => [
                 { type: 'PhaseItem', id: itemId },
