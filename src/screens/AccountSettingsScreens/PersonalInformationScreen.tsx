@@ -6,7 +6,7 @@ import moment from 'moment/moment';
 import Toast from 'react-native-toast-message';
 import React, { useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import EntypoIcon from 'react-native-vector-icons/Entypo';
+import EntypoIcon from '@react-native-vector-icons/entypo';
 import { BottomSheetBackdrop, BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Pressable, ScrollView, StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
 
@@ -75,179 +75,183 @@ export const PersonalInformationScreen = () => {
     };
 
 
-    return <>
-        <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
-            <Formik
-                onSubmit={handleSubmit}
-                validationSchema={validationSchema}
-                initialValues={{
-                    prefix: user?.prefix,
-                    suffix: user?.suffix,
-                    gender: user?.gender,
-                    birthday: user?.birthday,
-                    lastName: user?.lastName,
-                    firstName: user?.firstName,
-                    middleName: user?.middleName,
-                    coverImage: user?.coverImage
-                }}
-            >
-                {({ values, errors, touched, handleChange, handleSubmit, dirty }) => {
-                    const uploadImage = async () => {
-                        userImgSheetRef.current?.close();
-                        setIsLoading(true);
-                        const url = await getPicture();
-                        if (url) {
-                            handleChange('coverImage.url')(url);
-                        }
-                        setIsLoading(false);
-                    };
-                    const uploadCameraImage = async () => {
-                        userImgSheetRef.current?.close();
-                        setIsLoading(true);
-                        const url = await takePicture();
-                        if (url) {
-                            handleChange('coverImage.url')(url);
-                        }
-                        setIsLoading(false);
-                    };
-                    return <>
-                        <LoadingOverlay init={isLoading} />
-                        <KeyboardAvoidingView
-                            style={styles.flex}
-                            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                            keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100}
-                        >
-                            <ScrollView style={styles.flex}>
-                                <View style={styles.imageContainer}>
-                                    <Pressable style={styles.userImg} onPress={openUserImgBottomSheet}>
-                                        <ProfileImage uri={values?.coverImage?.url} width={65} height={65} />
-                                    </Pressable>
-                                    <View style={styles.flexShrink}>
-                                        <Text color={theme.colors.primary}>Profile Picture</Text>
-                                        <Text variant="caption" color={theme.colors.grey}>
-                                        This photo is used for your profile and appears in places where you check in.
-                                        </Text>
+    return (
+        <>
+            <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
+                <Formik
+                    onSubmit={handleSubmit}
+                    validationSchema={validationSchema}
+                    initialValues={{
+                        prefix: user?.prefix,
+                        suffix: user?.suffix,
+                        gender: user?.gender,
+                        birthday: user?.birthday,
+                        lastName: user?.lastName,
+                        firstName: user?.firstName,
+                        middleName: user?.middleName,
+                        coverImage: user?.coverImage
+                    }}
+                >
+                    {({ values, errors, touched, handleChange, handleSubmit, dirty }) => {
+                        const uploadImage = async () => {
+                            userImgSheetRef.current?.close();
+                            setIsLoading(true);
+                            const url = await getPicture();
+                            if (url) {
+                                handleChange('coverImage.url')(url);
+                            }
+                            setIsLoading(false);
+                        };
+                        const uploadCameraImage = async () => {
+                            userImgSheetRef.current?.close();
+                            setIsLoading(true);
+                            const url = await takePicture();
+                            if (url) {
+                                handleChange('coverImage.url')(url);
+                            }
+                            setIsLoading(false);
+                        };
+                        return (
+                            <>
+                                <LoadingOverlay init={isLoading} />
+                                <KeyboardAvoidingView
+                                    style={styles.flex}
+                                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                                    keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100}
+                                >
+                                    <ScrollView style={styles.flex}>
+                                        <View style={styles.imageContainer}>
+                                            <Pressable style={styles.userImg} onPress={openUserImgBottomSheet}>
+                                                <ProfileImage uri={values?.coverImage?.url} width={65} height={65} />
+                                            </Pressable>
+                                            <View style={styles.flexShrink}>
+                                                <Text color={theme.colors.primary}>Profile Picture</Text>
+                                                <Text variant="caption" color={theme.colors.grey}>
+                                                This photo is used for your profile and appears in places where you check in.
+                                                </Text>
+                                            </View>
+                                        </View>
+                                        <TextInput
+                                            name="firstName"
+                                            disabled={false}
+                                            textAlign="left"
+                                            touched={touched}
+                                            label="First Name"
+                                            value={values.firstName}
+                                            color={theme.colors.black}
+                                            onChangeText={handleChange('firstName')}
+                                            error={touched.firstName && errors.firstName ? { firstName: errors.firstName } : undefined}
+                                        />
+                                        <TextInput
+                                            name="middleName"
+                                            disabled={false}
+                                            textAlign="left"
+                                            label="Middle Name"
+                                            value={values.middleName}
+                                            color={theme.colors.black}
+                                            onChangeText={handleChange('middleName')}
+                                        />
+                                        <TextInput
+                                            name="lastName"
+                                            disabled={false}
+                                            textAlign="left"
+                                            label="Last Name"
+                                            touched={touched}
+                                            value={values.lastName}
+                                            color={theme.colors.black}
+                                            onChangeText={handleChange('lastName')}
+                                            error={touched.lastName && errors.lastName ? { lastName: errors.lastName } : undefined}
+                                        />
+                                        <OptionSelector
+                                            label="Prefix"
+                                            data={PREFIXES}
+                                            value={values.prefix}
+                                            onSelect={data => handleChange('prefix')(data?.value)}
+                                        />
+                                        <View style={styles.paddingVertical}>
+                                            <OptionSelector
+                                                label="Suffix"
+                                                data={SUFFIXES}
+                                                value={values.suffix}
+                                                onSelect={data => handleChange('suffix')(data?.value)}
+                                            />
+                                        </View>
+                                        <View style={styles.paddingVertical}>
+                                            <Text
+                                                variant="caption"
+                                                color={touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.black}
+                                            >
+                                            Date of Birth
+                                            </Text>
+                                            <Pressable
+                                                onPress={() => setDateModalOpen(true)}
+                                                style={[
+                                                    styles.currentItem,
+                                                    { borderBottomColor: touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.grey }
+                                                ]}
+                                            >
+                                                <Text
+                                                    color={values.birthday ? theme.colors.black : theme.colors.grey}
+                                                >
+                                                    {values.birthday ? moment(values.birthday).format('YYYY-MM-DD') : 'Select birthday'}
+                                                </Text>
+                                            </Pressable>
+                                        </View>
+                                        <DatePickerSelector
+                                            modalOpened={dateModalOpen}
+                                            onCancel={() => setDateModalOpen(false)}
+                                            onSelect={(value: string) => handleChange('birthday')(value)}
+                                            currentDate={values?.birthday ? values.birthday.toString() : new Date().toString()}
+                                        />
+                                        <View style={styles.paddingVertical}>
+                                            <OptionSelector
+                                                label="Gender"
+                                                data={GENDERS}
+                                                value={values.gender}
+                                                onSelect={data => handleChange('gender')(data?.value)}
+                                            />
+                                        </View>
+                                    </ScrollView>
+                                </KeyboardAvoidingView>
+                                <Button
+                                    disabled={!dirty}
+                                    variant="outline"
+                                    onPress={handleSubmit}
+                                    title="Update Information"
+                                    style={styles.updateBtn}
+                                />
+                                <BottomSheetModal
+                                    ref={userImgSheetRef}
+                                    enablePanDownToClose
+                                    snapPoints={['25%']}
+                                    enableDynamicSizing={false}
+                                    backdropComponent={backdropProps => (
+                                        // show overlay
+                                        (<BottomSheetBackdrop
+                                            {...backdropProps}
+                                            opacity={0.5}
+                                            appearsOnIndex={0}
+                                            disappearsOnIndex={-1}
+                                        />)
+                                    )}>
+                                    <View style={styles.userImgModal}>
+                                        <Pressable onPress={() => uploadCameraImage()} style={styles.userImgOption}>
+                                            <EntypoIcon style={styles.marginRight} size={20} name="camera" />
+                                            <Text>Take a Photo</Text>
+                                        </Pressable>
+                                        <Pressable onPress={() => uploadImage()} style={styles.userImgOption}>
+                                            <EntypoIcon style={styles.marginRight} size={20} name="image-inverted" />
+                                            <Text>Choose Photo</Text>
+                                        </Pressable>
                                     </View>
-                                </View>
-                                <TextInput
-                                    name="firstName"
-                                    disabled={false}
-                                    textAlign="left"
-                                    touched={touched}
-                                    label="First Name"
-                                    value={values.firstName}
-                                    color={theme.colors.black}
-                                    onChangeText={handleChange('firstName')}
-                                    error={touched.firstName && errors.firstName ? { firstName: errors.firstName } : undefined}
-                                />
-                                <TextInput
-                                    name="middleName"
-                                    disabled={false}
-                                    textAlign="left"
-                                    label="Middle Name"
-                                    value={values.middleName}
-                                    color={theme.colors.black}
-                                    onChangeText={handleChange('middleName')}
-                                />
-                                <TextInput
-                                    name="lastName"
-                                    disabled={false}
-                                    textAlign="left"
-                                    label="Last Name"
-                                    touched={touched}
-                                    value={values.lastName}
-                                    color={theme.colors.black}
-                                    onChangeText={handleChange('lastName')}
-                                    error={touched.lastName && errors.lastName ? { lastName: errors.lastName } : undefined}
-                                />
-                                <OptionSelector
-                                    label="Prefix"
-                                    data={PREFIXES}
-                                    value={values.prefix}
-                                    onSelect={data => handleChange('prefix')(data?.value)}
-                                />
-                                <View style={styles.paddingVertical}>
-                                    <OptionSelector
-                                        label="Suffix"
-                                        data={SUFFIXES}
-                                        value={values.suffix}
-                                        onSelect={data => handleChange('suffix')(data?.value)}
-                                    />
-                                </View>
-                                <View style={styles.paddingVertical}>
-                                    <Text
-                                        variant="caption"
-                                        color={touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.black}
-                                    >
-                                    Date of Birth
-                                    </Text>
-                                    <Pressable
-                                        onPress={() => setDateModalOpen(true)}
-                                        style={[
-                                            styles.currentItem,
-                                            { borderBottomColor: touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.grey }
-                                        ]}
-                                    >
-                                        <Text
-                                            color={values.birthday ? theme.colors.black : theme.colors.grey}
-                                        >
-                                            {values.birthday ? moment(values.birthday).format('YYYY-MM-DD') : 'Select birthday'}
-                                        </Text>
-                                    </Pressable>
-                                </View>
-                                <DatePickerSelector
-                                    modalOpened={dateModalOpen}
-                                    onCancel={() => setDateModalOpen(false)}
-                                    onSelect={(value: string) => handleChange('birthday')(value)}
-                                    currentDate={values?.birthday ? values.birthday.toString() : new Date().toString()}
-                                />
-                                <View style={styles.paddingVertical}>
-                                    <OptionSelector
-                                        label="Gender"
-                                        data={GENDERS}
-                                        value={values.gender}
-                                        onSelect={data => handleChange('gender')(data?.value)}
-                                    />
-                                </View>
-                            </ScrollView>
-                        </KeyboardAvoidingView>
-                        <Button
-                            disabled={!dirty}
-                            variant="outline"
-                            onPress={handleSubmit}
-                            title="Update Information"
-                            style={styles.updateBtn}
-                        />
-                        <BottomSheetModal
-                            ref={userImgSheetRef}
-                            enablePanDownToClose
-                            snapPoints={['25%']}
-                            enableDynamicSizing={false}
-                            backdropComponent={backdropProps => (
-                                // show overlay
-                                <BottomSheetBackdrop
-                                    {...backdropProps}
-                                    opacity={0.5}
-                                    appearsOnIndex={0}
-                                    disappearsOnIndex={-1}
-                                />
-                            )}>
-                            <View style={styles.userImgModal}>
-                                <Pressable onPress={() => uploadCameraImage()} style={styles.userImgOption}>
-                                    <EntypoIcon style={styles.marginRight} size={20} name="camera" />
-                                    <Text>Take a Photo</Text>
-                                </Pressable>
-                                <Pressable onPress={() => uploadImage()} style={styles.userImgOption}>
-                                    <EntypoIcon style={styles.marginRight} size={20} name="image-inverted" />
-                                    <Text>Choose Photo</Text>
-                                </Pressable>
-                            </View>
-                        </BottomSheetModal>
-                    </>;
-                }}
-            </Formik>
-        </View>
-    </>;
+                                </BottomSheetModal>
+                            </>
+                        );
+                    }}
+                </Formik>
+            </View>
+        </>
+    );
 };
 
 const styles = StyleSheet.create({

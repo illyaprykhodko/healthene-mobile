@@ -1,9 +1,10 @@
 // outsource dependencies
 import { Text } from '@react-native-material/core';
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from '@react-native-vector-icons/ionicons';
 import type { BiometryType } from 'react-native-biometrics';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, TouchableWithoutFeedback, Pressable, TouchableOpacity, Alert } from 'react-native';
+
 // local dependencies
 import { LoginData } from 'types';
 import Screen from 'components/Screen';
@@ -12,7 +13,6 @@ import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
-// import { LoginData } from 'store/api/types';
 import TextInput from 'components/TextInput';
 import { navigate } from 'services/navigation';
 import { TextLogo } from 'components/TextLogo';
@@ -108,7 +108,7 @@ export const SignIn: React.FC = (): React.ReactElement => {
             }
 
             await signIn(formData);
-            
+
             if (!biometricEnabled) {
                 const { available } = await biometricService.isAvailable();
                 if (available) {
@@ -156,7 +156,7 @@ export const SignIn: React.FC = (): React.ReactElement => {
         setIsBiometricLoading(true);
         try {
             const credentials = await biometricService.getCredentials();
-            
+
             if (credentials) {
                 await signIn({
                     username: credentials.username,
@@ -264,9 +264,9 @@ export const SignIn: React.FC = (): React.ReactElement => {
                             disabled={isBiometricLoading || isLoading}
                         >
                             <Icon
-                                name={biometricService.getBiometricIcon(biometryType)}
                                 size={24}
                                 color={theme.colors.primary}
+                                name={biometricService.getBiometricIcon(biometryType)}
                             />
                             <Text variant="body2" color={theme.colors.primary}>
                                 Log in with {biometricService.getBiometricTypeName(biometryType)}

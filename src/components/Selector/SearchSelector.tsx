@@ -1,6 +1,6 @@
 // outsource dependencies
 import React, { useRef } from 'react';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@react-native-vector-icons/material-icons';
 import { ListRenderItemInfo, Pressable, StyleSheet } from 'react-native';
 import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
 

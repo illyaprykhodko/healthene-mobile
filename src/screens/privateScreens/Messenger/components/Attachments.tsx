@@ -2,7 +2,7 @@
 import React from 'react';
 import Toast from 'react-native-toast-message';
 import RNBlobUtil from 'react-native-blob-util';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { MaterialIndicator } from 'react-native-indicators';
 import { viewDocument } from '@react-native-documents/viewer';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
@@ -119,7 +119,7 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader, isUploadFile 
         {isUploadFile ? null : <Pressable onPress={downloadFile}>
             {isDownload
                 ? <MaterialIndicator style={styles.icon} color={theme.colors.darkGrey} size={14}/>
-                : <Icon style={styles.icon} name="download" size={14} color={theme.colors.darkGrey}/>
+                : <Icon iconStyle="solid" style={styles.icon} name="download" size={14} color={theme.colors.darkGrey}/>
             }
         </Pressable>}
     </View>;

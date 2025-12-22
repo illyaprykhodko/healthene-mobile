@@ -1,10 +1,11 @@
 // outsource dependencies
 import _ from 'lodash';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, UIManager, LayoutAnimation, Platform } from 'react-native';
+
 // local dependencies
 import Text from 'components/Text';
 import { useAppSelector } from 'store';
@@ -109,9 +110,10 @@ const UnitsView: React.FC<UnitsViewProps> = ({ unit, unitsList, handleUnit }) =>
                 <TouchableOpacity onPress={handleToggle} style={styles.unitTouchable}>
                     <Text style={styles.unitText}>{unit}</Text>
                     <Icon
-                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                        color={COLORS.BLACK}
                         size={16}
+                        iconStyle="solid"
+                        color={COLORS.BLACK}
+                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
                     />
                 </TouchableOpacity>
             </View>
@@ -151,7 +153,7 @@ export const EditFood: React.FC = () => {
     const [localIngredients, setLocalIngredients] = useState<Ingredient[]>(initialItem?.recipe?.ingredients || []);
     const dayOverviewState = useAppSelector(selectDayOverview);
     const isRecipe = entityType === CATALOG_TAG_TYPE.PATIENT_RECIPES || entityType === CATALOG_TAG_TYPE.RESTAURANT;
-    
+
     const shouldLoadRecipe = isRecipe && !initialItem?.recipe?.ingredients;
     const { data: recipeData } = useGetRecipePrototypeQuery(initialItem?.id, {
         skip: !shouldLoadRecipe,
@@ -406,7 +408,7 @@ export const EditFood: React.FC = () => {
                                                 )}
                                             </View>
                                             <View style={styles.checkboxContainer}>
-                                                <Icon name="chevron-right" color={COLORS.DARK_GREY} size={14} />
+                                                <Icon iconStyle="solid" name="chevron-right" color={COLORS.DARK_GREY} size={14} />
                                             </View>
                                         </View>
                                     </TouchableOpacity>
@@ -449,11 +451,11 @@ export const EditFood: React.FC = () => {
     //         )}
     //     </ScrollView>
     // );
-    
+
     const renderRecipeTab = () => {
         const steps = item?.recipe?.steps || [];
         const sortedSteps = [...steps].sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-        
+
         return (
             <View style={styles.recipeTab}>
                 {sortedSteps.length > 0 ? (
@@ -490,7 +492,7 @@ export const EditFood: React.FC = () => {
         if (!isRecipe && entityType !== CATALOG_TAG_TYPE.RESTAURANT) {
             return null;
         }
-        
+
         const tabs = Object.values(EDIT_FOOD_TABS).map(tab => ({
             label: humanize(tab),
             value: tab,

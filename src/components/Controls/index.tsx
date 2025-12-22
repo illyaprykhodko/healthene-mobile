@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 
 // local dependencies
@@ -60,7 +60,7 @@ const Controls: React.FC<ControlsProps> = ({
                     disabled={disabled || amount <= 0.5}
                     onPress={() => !(disabled || amount <= 0.5) && handleUpdateData(amount - 0.5)}
                 >
-                    <Icon name="minus" color="#76A7D8" size={24} />
+                    <Icon iconStyle="solid" name="minus" color="#76A7D8" size={24} />
                 </TouchableOpacity>
                 {/* <Text style={styles.count}>{formatAmount(amount)}</Text> */}
                 <Text style={styles.count}>{decimalsToFractions(amount)}</Text>
@@ -70,7 +70,7 @@ const Controls: React.FC<ControlsProps> = ({
                     hitSlop={clickableZone}
                     onPress={() => !disabled && handleUpdateData(amount + 0.5)}
                 >
-                    <Icon name="plus" color="#76A7D8" size={24} />
+                    <Icon iconStyle="solid" name="plus" color="#76A7D8" size={24} />
                 </TouchableOpacity>
             </View>
             {!unit ? null : (

@@ -8,7 +8,7 @@ import Animated, {
 import moment from 'moment/moment';
 import { useSelector } from 'react-redux';
 import React, { memo, useState } from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { Pressable, StyleSheet, View } from 'react-native';
 import HTMLView, { HTMLViewNode, HTMLViewNodeRenderer } from 'react-native-htmlview';
 
@@ -66,7 +66,7 @@ const MessageChainItem = memo(({ sender, date, text, attachments, onPreloader }:
                         : null
                 }
             </View>
-            <Icon name={isExpanded ? 'chevron-up' : 'chevron-down'} color={theme.colors.black} size={16} style={styles.chevronIcon}/>
+            <Icon iconStyle="solid" name={isExpanded ? 'chevron-up' : 'chevron-down'} color={theme.colors.black} size={16} style={styles.chevronIcon}/>
         </View>
         <Animated.View style={[styles.animatedView, animatedStyle]}>
             <View
@@ -81,7 +81,7 @@ const MessageChainItem = memo(({ sender, date, text, attachments, onPreloader }:
                     attachments.length
                         ? <View>
                             <View style={styles.row}>
-                                <Icon name="paperclip" size={20} color={theme.colors.darkGrey} style={styles.attachmentsTitleIcon} />
+                                <Icon iconStyle="solid" name="paperclip" size={20} color={theme.colors.darkGrey} style={styles.attachmentsTitleIcon} />
                                 <Text color={theme.colors.darkGrey} variant="bold">
                                     {`Attachments Files (${attachments.length})`}
                                 </Text>

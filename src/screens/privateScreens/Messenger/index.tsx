@@ -2,7 +2,7 @@
 import { useDispatch } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View, RefreshControl } from 'react-native';

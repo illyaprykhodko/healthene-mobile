@@ -1,7 +1,8 @@
 // outsource dependencies
 import React, { memo, useCallback } from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { StyleSheet, TouchableOpacity, ViewStyle, StyleProp } from 'react-native';
+
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
 
@@ -45,7 +46,7 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
     }, [editable, onChange, value]);
 
     const renderGeneralIcon = () => (value
-        ? <Icon solid name="check-square" size={size + 15} color={theme.colors.successAlt} />
+        ? <Icon iconStyle="solid" name="check-square" size={size + 15} color={theme.colors.successAlt} />
         : <Icon name="square" size={size + 15} color={theme.colors.white} />
     );
 
@@ -54,9 +55,9 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
             default:
                 return <Icon name="square" size={size + 3} color={theme.colors.white} />;
             case 'DONE':
-                return <Icon solid name="check-square" size={size + 13} color={theme.colors.successAlt} />;
+                return <Icon iconStyle="solid" name="check-square" size={size + 13} color={theme.colors.successAlt} />;
             case 'DID_NOT_EAT':
-                return <Icon solid name="minus-square" size={size + 5} color={theme.colors.darkBlue} />;
+                return <Icon iconStyle="solid" name="minus-square" size={size + 5} color={theme.colors.darkBlue} />;
         }
     };
 

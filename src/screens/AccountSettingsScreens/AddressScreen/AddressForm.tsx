@@ -1,6 +1,6 @@
 // outsource dependencies
 import { View, StyleSheet } from 'react-native';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import FeatherIcon from '@react-native-vector-icons/feather';
 import { FormikErrors, FieldArrayRenderProps } from 'formik';
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { FormikHandlers, FormikTouched, FormikHelpers } from 'formik/dist/types';

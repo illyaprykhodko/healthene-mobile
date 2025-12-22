@@ -1,10 +1,11 @@
 // outsource dependencies
 import _ from 'lodash';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import React, { useState, useCallback, useEffect } from 'react';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { View, StyleSheet, ScrollView, FlatList, TouchableOpacity, UIManager, LayoutAnimation, Platform } from 'react-native';
+
 // local dependencies
 import Text from 'components/Text';
 import { OFFSET } from 'constants/offset';
@@ -23,7 +24,7 @@ interface IngredientsProps {
 const Ingredients: React.FC<IngredientsProps> = ({ item }) => {
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
-    
+
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
 
     const { recipe } = item;
@@ -183,7 +184,7 @@ const Ingredients: React.FC<IngredientsProps> = ({ item }) => {
                                                         )}
                                                     </View>
                                                     <View style={styles.checkboxContainer}>
-                                                        <Icon name="chevron-right" color={COLORS.DARK_GREY} size={14} />
+                                                        <Icon iconStyle="solid" name="chevron-right" color={COLORS.DARK_GREY} size={14} />
                                                     </View>
                                                 </View>
                                             </TouchableOpacity>

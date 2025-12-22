@@ -1,6 +1,6 @@
 // outsource dependencies
 import React, { useCallback } from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
@@ -126,7 +126,7 @@ const ReplacementScreen: React.FC = () => {
                             </View>
                         ) : category.name === 'Restaurant Meals' ? (
                             <View style={styles.imageContainer}>
-                                <Icon name="utensils" size={32} color={theme.colors.primary} />
+                                <Icon iconStyle="solid" name="utensils" size={32} color={theme.colors.primary} />
                             </View>
                         ) : (
                             <View style={styles.imageContainer} />
@@ -136,6 +136,7 @@ const ReplacementScreen: React.FC = () => {
                         </Text>
                         <Icon
                             size={18}
+                            iconStyle="solid"
                             name="chevron-right"
                             color={theme.colors.textSecondary}
                         />

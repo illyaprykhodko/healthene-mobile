@@ -1,9 +1,9 @@
 // outsource dependencies
 import _ from 'lodash';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -27,7 +27,7 @@ interface ModifyIngredientProps {
 const ModifyIngredient: React.FC = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
-    
+
     const params = route.params as ModifyIngredientProps;
     const initialIngredient = params?.item;
     const targetId = initialIngredient?.id;
@@ -35,14 +35,14 @@ const ModifyIngredient: React.FC = () => {
     const allIngredients = params?.ingredients || [];
     const isEditMode = params?.isEditMode;
     const onUpdate = params?.onUpdate;
-    
+
     const [recalculateSteps] = useRecalculateRecipeStepsMutation();
-    
+
     const { data: modifyIngredients = [] } = useGetIngredientsBySiblingQuery(
         { id: initialIngredient?.id, useInPrototypes: false },
         { skip: !initialIngredient?.id }
     );
-    
+
     const [ingredient, setIngredient] = useState<Ingredient>(initialIngredient);
     const [amount, setAmount] = useState(initialIngredient?.amount || 1);
     const [selectedWeight, setSelectedWeight] = useState<IngredientWeight | null>(null);
@@ -56,19 +56,19 @@ const ModifyIngredient: React.FC = () => {
     useEffect(() => {
         const weights = ingredient?.entity?.weights || [];
         if (!weights.length) { return; }
-      
+
         const defaultWeight
           = weights.find(w => w.usedInRecipes)
           || weights.find(w => w.isDefault)
           || weights[0];
-      
+
         setSelectedWeight(defaultWeight);
     }, [ingredient?.entity?.id]);
-    
+
     const handleBack = useCallback(() => {
         navigation.goBack();
     }, [navigation]);
-    
+
     const handleSave = useCallback(async () => {
         const updatedIngredient = {
             // ...initialIngredient,
@@ -125,21 +125,21 @@ const ModifyIngredient: React.FC = () => {
             navigation.goBack();
         }
     }, [ingredient, amount, selectedWeight, isEditMode, onUpdate, allIngredients, itemData, recalculateSteps, navigation, params, targetId]);
-    
+
     const handleUpdateAmount = useCallback((newAmount: number) => {
         setAmount(Math.max(1, newAmount));
     }, []);
-    
+
     const unit = _.get(
         _.find(ingredient?.entity?.weights, { usedInRecipes: true })
             || _.get(ingredient?.entity, 'weights.0'),
         'unit'
     ) || ingredient?.weight?.unit;
-    
+
     const getCurrentUnit = () => {
         return selectedWeight?.unit?.name || unit?.name || 'unit';
     };
-    
+
     const goToUnits = useCallback(() => {
         navigation.navigate('ModifyTypeIngredient', {
             modifyType: MODIFY_TYPES.UNIT,
@@ -162,7 +162,7 @@ const ModifyIngredient: React.FC = () => {
             }
         });
     }, [navigation, ingredient]);
-    
+
     const goToIngredients = useCallback(() => {
         navigation.navigate('ModifyTypeIngredient', {
             modifyType: MODIFY_TYPES.INGREDIENT,
@@ -176,7 +176,7 @@ const ModifyIngredient: React.FC = () => {
                     amount: replacementIngredient.amount ?? amount,
                     modified: true,
                 };
-              
+
                 setIngredient(next);
                 setSelectedWeight(null);
                 setAmount(next.amount ?? 1);
@@ -188,13 +188,13 @@ const ModifyIngredient: React.FC = () => {
         if (!text) { return ''; }
         return text.length > length ? `${text.substring(0, length)}...` : text;
     };
-    
+
     return (
         <Screen initialized style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Add item</Text>
             </View>
-            
+
             <View style={styles.main}>
                 <View style={styles.nameContainer}>
                     <Text
@@ -204,7 +204,7 @@ const ModifyIngredient: React.FC = () => {
                         {ingredient?.entity?.name}
                     </Text>
                 </View>
-                
+
                 <View style={styles.controlsWrapper}>
                     <Controls
                         amount={amount}
@@ -212,12 +212,12 @@ const ModifyIngredient: React.FC = () => {
                         updateData={handleUpdateAmount}
                     />
                 </View>
-                
+
                 <ScrollView scrollEnabled={false}>
                     <View style={styles.unitViewContainer}>
                         <TouchableOpacity onPress={goToUnits} style={styles.unitTouchable}>
                             <Text style={styles.unitText}>{getCurrentUnit()}</Text>
-                            <Icon name="chevron-right" color={COLORS.BLACK} size={16} />
+                            <Icon iconStyle="solid" name="chevron-right" color={COLORS.BLACK} size={16} />
                         </TouchableOpacity>
                     </View>
                     {modifyIngredients?.length > 0 && (
@@ -226,13 +226,13 @@ const ModifyIngredient: React.FC = () => {
                                 <Text style={styles.unitText}>
                                     {truncateText(ingredient?.entity?.name || '')}
                                 </Text>
-                                <Icon name="chevron-right" color={COLORS.BLACK} size={16} />
+                                <Icon iconStyle="solid" name="chevron-right" color={COLORS.BLACK} size={16} />
                             </TouchableOpacity>
                         </View>
                     )}
                 </ScrollView>
             </View>
-            
+
             <ApproveButtons
                 handleBack={handleBack}
                 handleSave={handleSave}

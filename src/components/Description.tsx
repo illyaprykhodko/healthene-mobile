@@ -1,7 +1,7 @@
 // outsource dependencies
+import Icon from '@react-native-vector-icons/ionicons';
 import React, { useState, useCallback, memo } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, ViewStyle, Modal, ScrollView } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 
 // local dependencies
 import { OFFSET } from 'constants/offset';

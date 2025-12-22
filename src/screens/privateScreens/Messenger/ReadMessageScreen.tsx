@@ -3,7 +3,7 @@ import React, { useCallback } from 'react';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -31,7 +31,7 @@ const ReadMessageScreen = () => {
         <View style={styles.header}>
             <Text variant="h4" color={theme.colors.darkGrey}>{data?.subject}</Text>
             <Pressable onPress={goToWriteMessage}>
-                <Icon name="reply" color={theme.colors.grey} size={24} />
+                <Icon iconStyle="solid" name="reply" color={theme.colors.grey} size={24} />
             </Pressable>
         </View>
         {message?.id ? <MessageChain id={message?.id}/> : null}

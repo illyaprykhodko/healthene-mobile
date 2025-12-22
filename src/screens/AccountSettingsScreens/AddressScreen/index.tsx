@@ -4,7 +4,7 @@ import Toast from 'react-native-toast-message';
 import React, { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FieldArray, Formik, FormikErrors } from 'formik';
-import EvilIcon from 'react-native-vector-icons/EvilIcons';
+import EvilIcon from '@react-native-vector-icons/evil-icons';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 // local dependencies

@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 
 // local dependencies
@@ -24,6 +24,7 @@ export const Hamburger: React.FC<HamburgerProps> = ({ onPress, style }) => {
             <Icon
                 size={24}
                 name="bars"
+                iconStyle="solid"
                 color={theme.colors.background}
             />
         </TouchableOpacity>

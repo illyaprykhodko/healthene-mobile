@@ -1,14 +1,12 @@
 // outsource dependencies
 import React from 'react';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-// outsource dependencies
+// local dependencies
 import Text from 'components/Text.tsx';
 import { humanize } from 'services/filter';
 import { useTheme } from 'hooks/useTheme.ts';
-
-// local dependencies
 
 interface SelectorProps {
   label: string,

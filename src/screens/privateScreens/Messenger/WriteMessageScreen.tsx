@@ -6,7 +6,7 @@ import Toast from 'react-native-toast-message';
 import React, { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { pick, types } from '@react-native-documents/picker';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,7 +30,6 @@ import { useUploadAttachmentMutation } from 'store/api/s3ServiceApi.ts';
 import { setAttachment, saveMessageForm } from 'store/slices/messengerSlice.ts';
 import Attachments from 'screens/privateScreens/Messenger/components/Attachments.tsx';
 import { useCreateChainMutation, useReplyToChainMutation } from 'store/api/messengerApi.ts';
-
 
 // configure
 const ATTACHMENTS = {
@@ -124,7 +123,7 @@ const WriteMessageScreen = () => {
                 style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
             >
                 <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
-                    <Icon name="video" color={theme.colors.darkGrey} size={20} />
+                    <Icon iconStyle="solid" name="video" color={theme.colors.darkGrey} size={20} />
                 </View>
                 <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
             </Pressable>;
@@ -134,7 +133,7 @@ const WriteMessageScreen = () => {
                 style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
             >
                 <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
-                    <Icon name="microphone" color={theme.colors.darkGrey} size={20} />
+                    <Icon iconStyle="solid" name="microphone" color={theme.colors.darkGrey} size={20} />
                 </View>
                 <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
             </Pressable>;
@@ -147,7 +146,7 @@ const WriteMessageScreen = () => {
                 style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
             >
                 <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
-                    <Icon name="paperclip" color={theme.colors.darkGrey} size={20} />
+                    <Icon iconStyle="solid" name="paperclip" color={theme.colors.darkGrey} size={20} />
                 </View>
                 <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
             </Pressable>;
