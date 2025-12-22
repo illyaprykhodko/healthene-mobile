@@ -1,6 +1,6 @@
 // outsource dependencies
 import React, { useRef } from 'react';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from "@react-native-vector-icons/material-icons";
 import { ListRenderItemInfo, Pressable, StyleSheet } from 'react-native';
 import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
 
@@ -29,38 +29,40 @@ const OptionSelector = ({ label, touched, errorText, data, onSelect, value = '' 
         modalSheetRef.current?.close();
         onSelect(item);
     };
-    return <>
-        <Selector label={label} value={value} touched={touched} errorText={errorText} openModalSheet={openModalSheet} />
-        <BottomSheetModal
-            ref={modalSheetRef}
-            enablePanDownToClose
-            enableDynamicSizing
-            backdropComponent={backdropProps => (
-                // show overlay
-                <BottomSheetBackdrop
-                    {...backdropProps}
-                    opacity={0.5}
-                    appearsOnIndex={0}
-                    disappearsOnIndex={-1}
+    return (
+        <>
+            <Selector label={label} value={value} touched={touched} errorText={errorText} openModalSheet={openModalSheet} />
+            <BottomSheetModal
+                ref={modalSheetRef}
+                enablePanDownToClose
+                enableDynamicSizing
+                backdropComponent={backdropProps => (
+                    // show overlay
+                    (<BottomSheetBackdrop
+                        {...backdropProps}
+                        opacity={0.5}
+                        appearsOnIndex={0}
+                        disappearsOnIndex={-1}
+                    />)
+                )}>
+                <BottomSheetFlatList
+                    data={data}
+                    ItemSeparatorComponent={Separator}
+                    contentContainerStyle={styles.contentContainer}
+                    keyExtractor={({ value }: DataType) => value.toString()}
+                    renderItem={({ item }: ListRenderItemInfo<DataType>) => {
+                        return <Pressable onPress={() => handlePress(item)} style={styles.itemContainer}>
+                            {item.value === value
+                                ? <Icon name="radio-button-checked" size={24} color={theme.colors.primary}/>
+                                : <Icon name="radio-button-off" size={24} color={theme.colors.grey}/>
+                            }
+                            <Text style={styles.itemText}>{item.label}</Text>
+                        </Pressable>;
+                    }}
                 />
-            )}>
-            <BottomSheetFlatList
-                data={data}
-                ItemSeparatorComponent={Separator}
-                contentContainerStyle={styles.contentContainer}
-                keyExtractor={({ value }: DataType) => value.toString()}
-                renderItem={({ item }: ListRenderItemInfo<DataType>) => {
-                    return <Pressable onPress={() => handlePress(item)} style={styles.itemContainer}>
-                        {item.value === value
-                            ? <Icon name="radio-button-checked" size={24} color={theme.colors.primary}/>
-                            : <Icon name="radio-button-off" size={24} color={theme.colors.grey}/>
-                        }
-                        <Text style={styles.itemText}>{item.label}</Text>
-                    </Pressable>;
-                }}
-            />
-        </BottomSheetModal>
-    </>;
+            </BottomSheetModal>
+        </>
+    );
 };
 
 

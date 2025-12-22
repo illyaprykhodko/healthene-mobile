@@ -1,7 +1,7 @@
 // outsource dependencies
 import React, { memo } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import FeatherIcon from '@react-native-vector-icons/feather';
 
 // local dependencies
 import Text from 'components/Text.tsx';

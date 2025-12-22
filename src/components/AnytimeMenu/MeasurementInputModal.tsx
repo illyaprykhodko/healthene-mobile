@@ -1,8 +1,4 @@
 // outsource dependencies
-import { Formik } from 'formik';
-import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
-import React, { useState, useMemo, useEffect } from 'react';
 import {
     View,
     Modal,
@@ -13,6 +9,10 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
 } from 'react-native';
+import { Formik } from 'formik';
+import { useNavigation } from '@react-navigation/native';
+import Icon from '@react-native-vector-icons/fontawesome5';
+import React, { useState, useMemo, useEffect } from 'react';
 // components
 import Text from 'components/Text';
 // hooks
@@ -80,7 +80,7 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
     });
 
     const { data: lastMeasurement } = useGetLastMeasurementQuery(measurementType);
- 
+
     useEffect(() => {
         if (lastMeasurement?.values?.[0]) {
             setHasLastMeasurement(true);
@@ -154,8 +154,8 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                 presentationStyle="pageSheet"
             >
                 <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                     style={styles.container}
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 >
                     <View
                         style={[
@@ -173,7 +173,7 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                             </Text>
                         </View>
                         <TouchableOpacity onPress={onClose} disabled={isSubmitting}>
-                            <Icon name="times" size={24} color={theme.colors.text} />
+                            <Icon iconStyle="solid" name="times" size={24} color={theme.colors.text} />
                         </TouchableOpacity>
                     </View>
 
@@ -252,6 +252,7 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                                             </Text>
                                             <Icon
                                                 size={16}
+                                                iconStyle="solid"
                                                 color={theme.colors.blue}
                                                 name={showUnitPicker ? 'chevron-up' : 'chevron-down'}
                                             />

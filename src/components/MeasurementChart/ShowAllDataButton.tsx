@@ -1,6 +1,6 @@
 // outsource dependencies
 import React, { memo } from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 interface ShowAllDataButtonProps {
@@ -10,7 +10,7 @@ interface ShowAllDataButtonProps {
 const ShowAllDataButton: React.FC<ShowAllDataButtonProps> = ({ onPress }) => (
     <TouchableOpacity style={styles.button} onPress={onPress}>
         <Text style={styles.buttonText}>Show All Data</Text>
-        <Icon name="chevron-right" size={14} color="#000" />
+        <Icon iconStyle="solid" name="chevron-right" size={14} color="#000" />
     </TouchableOpacity>
 );
 
@@ -19,7 +19,6 @@ export default memo(ShowAllDataButton);
 const styles = StyleSheet.create({
     button: {
         padding: 20,
-        // marginTop: 25,
         marginBottom: 20,
         flexDirection: 'row',
         alignItems: 'center',

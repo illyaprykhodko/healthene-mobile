@@ -3,7 +3,7 @@ import React from 'react';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 
 // local dependencies
 import { RootState } from 'store';
@@ -25,58 +25,61 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
     const companion = isIncoming ? owner : collocutor;
     const handlePress = () => goToReadMessage(id);
 
-    return <Pressable onPress={handlePress} style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
-        <View style={[styles.row, styles.alignItems]}>
-            <View style={[styles.unreadDot, { backgroundColor: lastMessage?.isRead ? 'transparent' : theme.colors.primary }]} />
-            <ProfileImage uri={owner?.coverImage?.url} />
-        </View>
-        <View style={styles.messageInfoContainer}>
-            <View style={styles.row}>
-                <View style={styles.shrink}>
-                    <View style={styles.row}>
-                        <View style={[
-                            styles.badge,
-                            {
-                                borderColor: theme.colors.grey,
-                                backgroundColor: theme.colors.lighterGrey,
-                            }
-                        ]}>
-                            <Icon
-                                color={theme.colors.grey}
-                                name={isIncoming ? 'angle-double-left' : 'angle-double-right'}
-                            />
+    return (
+        <Pressable onPress={handlePress} style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
+            <View style={[styles.row, styles.alignItems]}>
+                <View style={[styles.unreadDot, { backgroundColor: lastMessage?.isRead ? 'transparent' : theme.colors.primary }]} />
+                <ProfileImage uri={owner?.coverImage?.url} />
+            </View>
+            <View style={styles.messageInfoContainer}>
+                <View style={styles.row}>
+                    <View style={styles.shrink}>
+                        <View style={styles.row}>
+                            <View style={[
+                                styles.badge,
+                                {
+                                    borderColor: theme.colors.grey,
+                                    backgroundColor: theme.colors.lighterGrey,
+                                }
+                            ]}>
+                                <Icon
+                                    iconStyle="solid"
+                                    color={theme.colors.grey}
+                                    name={isIncoming ? 'angle-double-left' : 'angle-double-right'}
+                                />
+                            </View>
+                            <Text
+                                variant="caption"
+                                numberOfLines={1}
+                                style={styles.shrink}
+                            >
+                                { isIncoming ? 'From:' : 'To:' }
+                                    &nbsp;
+                                { companion?.name }
+                            </Text>
                         </View>
                         <Text
-                            variant="caption"
                             numberOfLines={1}
                             style={styles.shrink}
                         >
-                            { isIncoming ? 'From:' : 'To:' }
+                            { subject }
                                 &nbsp;
-                            { companion?.name }
+                            { messagesCount }
+                        </Text>
+                        <Text numberOfLines={1} style={styles.shrink}>
+                            {lastMessage?.text.replace(/<\/?[^>]+(>|$)/g, '')}
                         </Text>
                     </View>
-                    <Text
-                        numberOfLines={1}
-                        style={styles.shrink}
-                    >
-                        { subject }
-                            &nbsp;
-                        { messagesCount }
-                    </Text>
-                    <Text numberOfLines={1} style={styles.shrink}>
-                        {lastMessage?.text.replace(/<\/?[^>]+(>|$)/g, '')}
-                    </Text>
                 </View>
             </View>
-        </View>
-        <View style={styles.additionalInfoWrapper}>
-            <Text color={theme.colors.grey}>
-                { moment(date).format('DD MMM') }
-            </Text>
-            { attachmentCount ? <Icon name="paperclip" size={16} color={theme.colors.grey} /> : null }
-        </View>
-    </Pressable>;
+            <View style={styles.additionalInfoWrapper}>
+                <Text color={theme.colors.grey}>
+                    { moment(date).format('DD MMM') }
+                </Text>
+                { attachmentCount ? <Icon iconStyle="solid" name="paperclip" size={16} color={theme.colors.grey} /> : null }
+            </View>
+        </Pressable>
+    );
 };
 
 const styles = StyleSheet.create({

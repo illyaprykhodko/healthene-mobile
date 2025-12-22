@@ -1,7 +1,8 @@
 // outsource dependencies
 import React, { memo } from 'react';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+
 // local dependencies
 import Text from './Text';
 import { OFFSET } from 'constants/offset';
@@ -24,7 +25,7 @@ const Controls: React.FC<ControlsProps> = ({ amount, updateData, disabled, unit 
                     activeOpacity={0.7}
                     onPress={() => !(disabled || amount <= 1) && updateData(amount - 1)}
                 >
-                    <Icon name="minus" color="#76A7D8" size={24} />
+                    <Icon iconStyle="solid" name="minus" color="#76A7D8" size={24} />
                 </TouchableOpacity>
                 <View>
                     <Text style={styles.count}>
@@ -36,7 +37,7 @@ const Controls: React.FC<ControlsProps> = ({ amount, updateData, disabled, unit 
                     activeOpacity={0.7}
                     onPress={() => !disabled && updateData(amount + 1)}
                 >
-                    <Icon name="plus" color="#76A7D8" size={24} />
+                    <Icon iconStyle="solid" name="plus" color="#76A7D8" size={24} />
                 </TouchableOpacity>
             </View>
             {unit && (

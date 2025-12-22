@@ -1,9 +1,9 @@
 // outsource dependencies
-import { PermissionsAndroid, Platform, Pressable, StyleSheet, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@react-native-vector-icons/material-icons';
 import Sound, { RecordBackType } from 'react-native-nitro-sound';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import RNBlobUtil, { ReactNativeBlobUtilStat } from 'react-native-blob-util';
+import { PermissionsAndroid, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text.tsx';

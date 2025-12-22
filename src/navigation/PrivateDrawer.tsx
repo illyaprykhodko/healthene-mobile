@@ -1,7 +1,7 @@
 // outsource dependencies
 import React from 'react';
 import { Dimensions } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 
 // local dependencies
@@ -81,7 +81,7 @@ export const PrivateDrawer: React.FC = () => {
                 options={{
                     title: 'Shopping List',
                     drawerIcon: ({ color }) => (
-                        <Icon name="shopping-cart" size={24} color={color} />
+                        <Icon iconStyle="solid" name="shopping-cart" size={24} color={color} />
                     ),
                 }}
             />
@@ -125,7 +125,7 @@ export const PrivateDrawer: React.FC = () => {
                 options={{
                     title: 'My Health Profile',
                     drawerIcon: ({ color }) => (
-                        <Icon name="heartbeat" size={24} color={color} />
+                        <Icon iconStyle="solid" name="heartbeat" size={24} color={color} />
                     ),
                 }}
             />
@@ -136,7 +136,7 @@ export const PrivateDrawer: React.FC = () => {
                 options={{
                     title: 'Library',
                     drawerIcon: ({ color }) => (
-                        <Icon name="book" size={24} color={color} />
+                        <Icon iconStyle="solid" name="book" size={24} color={color} />
                     ),
                 }}
             />
@@ -147,7 +147,7 @@ export const PrivateDrawer: React.FC = () => {
                 options={{
                     title: 'Info',
                     drawerIcon: ({ color }) => (
-                        <Icon name="info-circle" size={24} color={color} />
+                        <Icon iconStyle="solid" name="info-circle" size={24} color={color} />
                     ),
                 }}
             />
@@ -158,7 +158,7 @@ export const PrivateDrawer: React.FC = () => {
                 options={{
                     title: 'Meal Preferences',
                     drawerIcon: ({ color }) => (
-                        <Icon name="glass" size={24} color={color} />
+                        <Icon iconStyle="solid" name="glasses" size={24} color={color} />
                     ),
                 }}
             />
@@ -169,7 +169,7 @@ export const PrivateDrawer: React.FC = () => {
                 options={{
                     title: 'Cuisine Distribution',
                     drawerIcon: ({ color }) => (
-                        <Icon name="award" size={24} color={color} />
+                        <Icon iconStyle="solid" name="award" size={24} color={color} />
                     ),
                 }}
             />

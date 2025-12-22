@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import FeatherIcon from '@react-native-vector-icons/feather';
 import { Image, StyleSheet, View, ViewStyle } from 'react-native';
 
 interface ProfileImageProps {

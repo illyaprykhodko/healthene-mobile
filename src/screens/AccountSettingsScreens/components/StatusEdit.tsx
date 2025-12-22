@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSelector } from 'react-redux';
 import { Pressable, StyleSheet, } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useCallback, useEffect, useState } from 'react';
 
 // local dependencies
@@ -68,7 +68,7 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
     const getStatusIcon = useCallback((status: CategoryStatusType) => {
         if (treeTypeViewLabel === TREE_TYPE.DISLIKE) {
             switch (status) {
-                default: return <Icon name="question" color={theme.colors.red} size={22} />;
+                default: return <Icon iconStyle="solid" name="question" color={theme.colors.red} size={22} />;
                 case CATEGORY_STATUS.I_LOVE_IT: return <Icon name="heart" color={theme.colors.red} size={22} />;
                 case CATEGORY_STATUS.INCLUDE: return <Icon name="thumbs-up" color={theme.colors.green} size={22} />;
                 case CATEGORY_STATUS.EXCLUDE: return <Icon name="thumbs-down" color={theme.colors.orange} size={22} />;

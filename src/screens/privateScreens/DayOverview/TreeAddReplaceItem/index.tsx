@@ -1,7 +1,4 @@
 // outsource dependencies
-import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
     View,
     Image,
@@ -12,8 +9,18 @@ import {
     TouchableOpacity,
     ActivityIndicator,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 // local dependencies
+import {
+    useGetFoodsQuery,
+    useGetRecipePrototypesQuery,
+    useGetCategoryTreeNodesQuery,
+    useGetCatalogPrototypeTreeNodesQuery,
+} from 'store/api/dayOverviewApi';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
@@ -22,12 +29,6 @@ import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
 import { RootStackParamList } from 'services/navigation';
 import { SEARCH_TYPE, SUBSTANCE_TYPE, TAG_TYPE } from 'constants/spec';
-import {
-    useGetFoodsQuery,
-    useGetRecipePrototypesQuery,
-    useGetCategoryTreeNodesQuery,
-    useGetCatalogPrototypeTreeNodesQuery,
-} from 'store/api/dayOverviewApi';
 
 interface TreeItem {
     id: number;
@@ -270,7 +271,7 @@ const TreeAddReplaceItem: React.FC = () => {
 
     const handleSelectItem = useCallback((item: any) => {
         const isNode = searchType === SEARCH_TYPE.TREE;
-        
+
         if (isNode) {
             setBreadcrumb(prev => [...prev, item]);
             // setList(item.list || []);
@@ -300,18 +301,18 @@ const TreeAddReplaceItem: React.FC = () => {
             const newBreadcrumb = [...breadcrumb];
             newBreadcrumb.pop();
             setBreadcrumb(newBreadcrumb);
-    
+
             if (newBreadcrumb.length > 0) {
                 const currentParent = newBreadcrumb[newBreadcrumb.length - 1];
                 setCurrentNodeId(currentParent.id);
             } else {
                 setCurrentNodeId(null);
             }
-    
+
             if (selectedTab === TAG_TYPE.RESTAURANT) {
                 setSearchType(SEARCH_TYPE.TREE);
             }
-    
+
             setPage(0);
             setAllItems([]);
         } else {
@@ -325,7 +326,7 @@ const TreeAddReplaceItem: React.FC = () => {
     //         // const parent = newBreadcrumb.pop();
     //         newBreadcrumb.pop();
     //         setBreadcrumb(newBreadcrumb);
-            
+
     //         if (newBreadcrumb.length > 0) {
     //             const currentParent = newBreadcrumb[newBreadcrumb.length - 1];
     //             // setList(currentParent.list || []);
@@ -348,7 +349,7 @@ const TreeAddReplaceItem: React.FC = () => {
     //         if (onApply) {
     //             onApply({ item: nextItem });
     //         }
-            
+
     //         // Navigate back
     //         navigation.goBack();
     //     } catch (error) {
@@ -426,7 +427,7 @@ const TreeAddReplaceItem: React.FC = () => {
     const renderItem = useCallback(
         ({ item }: { item: any }) => {
             const imageUrl = item.coverImage?.url;
-            
+
             return (
                 <TouchableOpacity style={styles.listItem} onPress={() => handleSelectItem(item)}>
                     <View style={styles.content}>
@@ -446,7 +447,7 @@ const TreeAddReplaceItem: React.FC = () => {
                             </Text> */}
                         </View>
                     </View>
-                    <Icon name="chevron-right" size={16} color={COLORS.BLACK} />
+                    <Icon iconStyle="solid" name="chevron-right" size={16} color={COLORS.BLACK} />
                 </TouchableOpacity>
             );
         },
@@ -456,7 +457,7 @@ const TreeAddReplaceItem: React.FC = () => {
     const renderSearchInput = () => (
         <View style={styles.searchContainer}>
             <View style={styles.searchInputWrapper}>
-                <Icon name="search" size={14} color={COLORS.GREY} style={styles.searchIcon} />
+                <Icon iconStyle="solid" name="search" size={14} color={COLORS.GREY} style={styles.searchIcon} />
                 <TextInput
                     value={searchQuery}
                     autoCorrect={false}
@@ -475,7 +476,7 @@ const TreeAddReplaceItem: React.FC = () => {
                             setDebouncedSearchQuery('');
                         }}
                     >
-                        <Icon name="times" size={14} color={COLORS.GREY} />
+                        <Icon iconStyle="solid" name="times" size={14} color={COLORS.GREY} />
                     </TouchableOpacity>
                 )}
             </View>
@@ -486,7 +487,7 @@ const TreeAddReplaceItem: React.FC = () => {
         navigation.setOptions({
             headerLeft: () => (
                 <TouchableOpacity onPress={handleGoBack} style={{ paddingLeft: 16 }}>
-                    <Icon name="arrow-left" size={20} color={COLORS.WHITE} />
+                    <Icon iconStyle="solid" name="arrow-left" size={20} color={COLORS.WHITE} />
                 </TouchableOpacity>
             ),
         });

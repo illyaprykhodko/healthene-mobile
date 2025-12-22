@@ -1,5 +1,5 @@
 import React from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 
 // local dependencies
@@ -17,7 +17,7 @@ const BuckButton = ({ theme, navigation }: BuckButtonProps) => {
         style={styles.backButton}
         onPress={() => navigation.goBack()}
     >
-        <Icon name="chevron-left" size={16} color={theme.colors.white} />
+        <Icon iconStyle="solid" name="chevron-left" size={16} color={theme.colors.white} />
         <Text style={[{ color: theme.colors.white }, styles.backText]}>Back</Text>
     </TouchableOpacity>;
 };

@@ -1,7 +1,7 @@
 // outsource dependencies
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import FeatherIcon from '@react-native-vector-icons/feather';
 import { StyleSheet, View, FlatList, Pressable } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 

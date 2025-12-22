@@ -1,5 +1,4 @@
 // outsource dependencies
-import React, { memo } from 'react';
 import {
     Modal,
     View,
@@ -9,7 +8,8 @@ import {
     ScrollView,
     TouchableOpacity,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import React, { memo } from 'react';
+import Icon from '@react-native-vector-icons/fontawesome5';
 // local dependencies
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
@@ -44,12 +44,12 @@ const ReplaceItemModal: React.FC<ReplaceItemModalProps> = ({
             <ScrollView contentContainerStyle={styles.container} style={{ backgroundColor: theme.colors.background }}>
                 <View style={styles.closeButton}>
                     <TouchableOpacity onPress={onClose}>
-                        <Icon name="times" color="#2978A0" size={20} />
+                        <Icon iconStyle="solid" name="times" color="#2978A0" size={20} />
                     </TouchableOpacity>
                 </View>
                 <View style={styles.main}>
                     <View style={styles.iconContainer}>
-                        <Icon name="utensils" size={60} color="#2978A0" />
+                        <Icon iconStyle="solid" name="utensils" size={60} color="#2978A0" />
                     </View>
 
                     <Text textAlign="center" style={[styles.title1, { color: theme.colors.text }]}>

@@ -1,36 +1,32 @@
 // outside dependencies
 import React from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { StyleSheet, TouchableOpacity, View, StyleProp, ViewStyle } from 'react-native';
+
 // local dependencies
 import Text from './Text';
 import { useTheme } from '../hooks/useTheme';
 import { useKeyboard } from 'services/keyboard';
 
-type IconType = 'brand' | 'light' | 'solid' | null;
-
 interface BaseProps {
-  // icon: string;
-  size?: number;
-  color?: string;
-  textLeft?: string;
-  textRight?: string;
-  disabled?: boolean;
-  iconType?: IconType;
-  closeKeyboard?: boolean;
-  style?: StyleProp<ViewStyle>;
-  // CustomIcon?: React.ReactNode;
-  onPress?: (...args: any[]) => void;
+    size?: number;
+    color?: string;
+    textLeft?: string;
+    textRight?: string;
+    disabled?: boolean;
+    closeKeyboard?: boolean;
+    style?: StyleProp<ViewStyle>;
+    onPress?: (...args: any[]) => void;
 }
 
 interface PropsWithIcon extends BaseProps {
-  icon: string;
-  CustomIcon?: undefined;
+    icon: string;
+    CustomIcon?: undefined;
 }
 
 interface PropsWithCustomIcon extends BaseProps {
-  CustomIcon?: React.ReactNode;
-  icon?: undefined;
+    icon?: string;
+    CustomIcon?: React.ReactNode;
 }
 
 type IconButtonProps = PropsWithIcon | PropsWithCustomIcon;
@@ -44,7 +40,6 @@ export const IconButton: React.FC<IconButtonProps> = props => {
         size = 22,
         textLeft = '',
         textRight = '',
-        iconType = null,
         disabled = false,
         // CustomIcon = null,
         closeKeyboard = false,
@@ -92,7 +87,6 @@ export const IconButton: React.FC<IconButtonProps> = props => {
               size={size}
               name={props.icon}
               color={iconColor}
-              {...(iconType ? { [iconType]: true } : {})}
           />}
                 {textRight && (
                     <Text

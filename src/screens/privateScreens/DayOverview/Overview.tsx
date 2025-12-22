@@ -2,7 +2,7 @@
 import moment from 'moment';
 import Svg, { Line, Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 // local dependencies
@@ -455,7 +455,7 @@ export const Overview: React.FC = () => {
         if (phase.type === 'MEASUREMENT') {
             const measurementPhase = data?.phases?.find(p => p.type === 'MEASUREMENT');
             const measurementItem = measurementPhase?.items?.find((item: any) => item.id === phase.id);
-            
+
             if (measurementItem) {
                 const measurementType = measurementItem.measurement?.type;
                 if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
@@ -485,12 +485,12 @@ export const Overview: React.FC = () => {
             }
             return;
         }
-        
+
         if (phase.type === 'ANYTIME' && phase.phaseId) {
             (navigation as any).navigate('Edit', { phaseId: phase.phaseId, date: currentDate });
         } else if (phase.type === 'PHYSICAL_ACTIVITY') {
             const physicalActivityPhase = data?.phases?.find(p => p.type === 'PHYSICAL_ACTIVITY');
-            
+
             (navigation as any).navigate('ExerciseCategories', {
                 list: [],
                 deepCounter: 0,
@@ -545,7 +545,7 @@ export const Overview: React.FC = () => {
                             return (
                                 <TouchableOpacity key={String(item.id)} style={styles.row} onPress={() => handlePhasePress(item)}>
                                     <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: iconMarginLeft }]}>
-                                        <Icon name={name} color={fg} size={18} />
+                                        <Icon iconStyle="solid" name={name} color={fg} size={18} />
                                     </View>
                                     <View style={styles.rightContent}>
                                         <Text variant="h4" style={{ color: theme.colors.text }}>

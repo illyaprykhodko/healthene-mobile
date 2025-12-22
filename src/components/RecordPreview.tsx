@@ -1,7 +1,7 @@
 // outsource dependencies
 import Video from 'react-native-video';
 import React, { useState } from 'react';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@react-native-vector-icons/material-icons';
 import { ReactNativeBlobUtilStat } from 'react-native-blob-util';
 import { VideoFile, PhotoFile } from 'react-native-vision-camera';
 import { Dimensions, Image, Platform, StyleSheet, View } from 'react-native';

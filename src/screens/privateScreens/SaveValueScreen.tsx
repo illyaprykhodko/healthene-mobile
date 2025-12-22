@@ -1,7 +1,4 @@
 // outsource dependencies
-import moment from 'moment';
-import React, { useCallback, useMemo } from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
 import {
     View,
     Alert,
@@ -9,19 +6,22 @@ import {
     TouchableOpacity,
     ActivityIndicator,
 } from 'react-native';
+import moment from 'moment';
+import React, { useCallback, useMemo } from 'react';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation, useRoute } from '@react-navigation/native';
 // local dependencies
+import {
+    useUpdatePhaseItemMutation,
+    useDeleteMeasurementsMutation,
+    useGetAggregateMeasurementDataQuery,
+} from 'store/api/dayOverviewApi';
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
 import { MessageService } from 'services/messages/service';
 import { RootStackParamList } from 'services/navigation/types';
-import {
-    useGetAggregateMeasurementDataQuery,
-    useDeleteMeasurementsMutation,
-    useUpdatePhaseItemMutation,
-} from 'store/api/dayOverviewApi';
 
 type Navigation = StackNavigationProp<RootStackParamList>;
 
@@ -161,7 +161,7 @@ const SaveValueScreen: React.FC = () => {
                 onPress={handleGoToChart}
                 disabled={!isSameDate}
             >
-                {isSameDate && <Icon name="chart-line" size={18} color={theme.colors.primary} />}
+                {isSameDate && <Icon iconStyle="solid" name="chart-line" size={18} color={theme.colors.primary} />}
                 <Text
                     style={[
                         styles.graphButtonText,

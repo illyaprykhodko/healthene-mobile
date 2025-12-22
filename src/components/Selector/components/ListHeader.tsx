@@ -1,7 +1,7 @@
 // outsource dependencies
 import React, { memo } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@react-native-vector-icons/material-icons';
 
 // local dependencies
 import Text from 'components/Text.tsx';

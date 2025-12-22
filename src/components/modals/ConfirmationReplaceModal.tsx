@@ -1,5 +1,4 @@
 // outsource dependencies
-import React, { memo, useCallback, useMemo } from 'react';
 import {
     Modal,
     View,
@@ -7,7 +6,9 @@ import {
     StyleSheet,
     TouchableOpacity,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import React, { memo, useCallback, useMemo } from 'react';
+import Icon from '@react-native-vector-icons/fontawesome5';
+
 // local dependencies
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';

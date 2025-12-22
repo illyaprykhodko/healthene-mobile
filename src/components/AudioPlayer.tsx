@@ -2,7 +2,7 @@
 import Sound from 'react-native-nitro-sound';
 import Toast from 'react-native-toast-message';
 import Slider from '@react-native-community/slider';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 
@@ -72,6 +72,7 @@ const AudioPlayer = ({ file }: AudioPlayerProps) => {
             >
                 <Icon
                     size={20}
+                    iconStyle="solid"
                     color={theme.colors.white}
                     name={isPlaying ? 'pause' : 'play'}
                 />
@@ -97,7 +98,7 @@ const AudioPlayer = ({ file }: AudioPlayerProps) => {
             </Text>
 
             <Pressable onPress={stop} style={styles.button}>
-                <Icon name="stop" size={18} color={theme.colors.white} />
+                <Icon iconStyle="solid" name="stop" size={18} color={theme.colors.white} />
             </Pressable>
         </View>
     );

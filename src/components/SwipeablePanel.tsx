@@ -1,13 +1,13 @@
 // outsource dependencies
-import Icon from 'react-native-vector-icons/Ionicons';
-import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
-import React, { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import {
     BottomSheetModal,
     BottomSheetView,
     BottomSheetBackdrop,
     BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
+import Icon from '@react-native-vector-icons/ionicons';
+import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import React, { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
