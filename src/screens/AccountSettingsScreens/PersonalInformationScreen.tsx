@@ -74,7 +74,6 @@ export const PersonalInformationScreen = () => {
         }
     };
 
-
     return <>
         <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
             <Formik
