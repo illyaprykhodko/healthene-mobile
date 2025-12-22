@@ -141,10 +141,10 @@ export const AddressScreen = () => {
                                                 touched={touched}
                                                 onRemove={remove}
                                                 onChange={handleChange}
-                                                countryData={countryData}
                                                 addressErrors={addressErrors}
                                                 setFieldValue={setFieldValue}
                                                 setFieldTouched={setFieldTouched}
+                                                countryData={(countryData || []).filter(country => country.id !== address.country.id)}
                                             />;
                                         })}
                                     </ScrollView>

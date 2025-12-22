@@ -18,10 +18,11 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
-import { Dropdown } from 'components/Dropdown.tsx';
 import { setUser } from 'store/slices/appSlice.ts';
 import ProfileImage from 'components/ProfileImage.tsx';
 import DatePickerSelector from 'components/DatePicker.tsx';
+import OptionSelector from 'components/Selector/OptionSelector.tsx';
+import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { getPicture, takePicture } from 'services/image-picker';
 import { PREFIXES, SUFFIXES, GENDERS } from 'constants/spec.ts';
 import { useUpdateUserDataMutation } from 'store/api/settingsApi.ts';
@@ -42,12 +43,11 @@ export const PersonalInformationScreen = () => {
     const dispatch = useDispatch();
     const [updateUserData] = useUpdateUserDataMutation();
     const user = useSelector((state: RootState) => state.app.user);
-
     // Birthday Bottom Sheet
     const [dateModalOpen, setDateModalOpen] = useState(false);
 
     // User Image Bottom Sheet
-    const [isImgLoading, setIsImgLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const userImgSheetRef = useRef<BottomSheetModal>(null);
     const openUserImgBottomSheet = () => {
         userImgSheetRef.current?.present();
@@ -55,6 +55,7 @@ export const PersonalInformationScreen = () => {
 
     const handleSubmit = async (data: Partial<User>) => {
         try {
+            setIsLoading(true);
             const submit = await updateUserData(data).unwrap();
             dispatch(setUser(submit));
             Toast.show({
@@ -68,6 +69,8 @@ export const PersonalInformationScreen = () => {
                 text1: 'Update failed',
                 text2: String(filters.humanize(error?.data?.errorCode)) || 'Something went wrong while updating your information. Please try again later.',
             });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -91,23 +94,24 @@ export const PersonalInformationScreen = () => {
                 {({ values, errors, touched, handleChange, handleSubmit, dirty }) => {
                     const uploadImage = async () => {
                         userImgSheetRef.current?.close();
-                        setIsImgLoading(true);
+                        setIsLoading(true);
                         const url = await getPicture();
                         if (url) {
                             handleChange('coverImage.url')(url);
                         }
-                        setIsImgLoading(false);
+                        setIsLoading(false);
                     };
                     const uploadCameraImage = async () => {
                         userImgSheetRef.current?.close();
-                        setIsImgLoading(true);
+                        setIsLoading(true);
                         const url = await takePicture();
                         if (url) {
                             handleChange('coverImage.url')(url);
                         }
-                        setIsImgLoading(false);
+                        setIsLoading(false);
                     };
                     return <>
+                        <LoadingOverlay init={isLoading} />
                         <KeyboardAvoidingView
                             style={styles.flex}
                             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -156,20 +160,16 @@ export const PersonalInformationScreen = () => {
                                     onChangeText={handleChange('lastName')}
                                     error={touched.lastName && errors.lastName ? { lastName: errors.lastName } : undefined}
                                 />
-                                <Dropdown
+                                <OptionSelector
                                     label="Prefix"
                                     data={PREFIXES}
-                                    labelField="label"
-                                    valueField="value"
                                     value={values.prefix}
-                                    onSelect={data => handleChange('suffix')(data?.value)}
+                                    onSelect={data => handleChange('prefix')(data?.value)}
                                 />
                                 <View style={styles.paddingVertical}>
-                                    <Dropdown
+                                    <OptionSelector
                                         label="Suffix"
                                         data={SUFFIXES}
-                                        labelField="label"
-                                        valueField="value"
                                         value={values.suffix}
                                         onSelect={data => handleChange('suffix')(data?.value)}
                                     />
@@ -202,15 +202,11 @@ export const PersonalInformationScreen = () => {
                                     currentDate={values?.birthday ? values.birthday.toString() : new Date().toString()}
                                 />
                                 <View style={styles.paddingVertical}>
-                                    <Dropdown
+                                    <OptionSelector
                                         label="Gender"
                                         data={GENDERS}
-                                        labelField="label"
-                                        valueField="value"
                                         value={values.gender}
-                                        touched={touched?.gender}
-                                        errorText={errors?.gender}
-                                        onSelect={data => handleChange('suffix')(data?.value)}
+                                        onSelect={data => handleChange('gender')(data?.value)}
                                     />
                                 </View>
                             </ScrollView>
