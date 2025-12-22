@@ -34,7 +34,7 @@ const SettingsScreen = () => {
         { title: ITEM.FOOD_ALLERGIES, navigate: () => navigation.navigate(ROUTES.FOOD_ALLERGIES) },
         { title: ITEM.NOTIFICATIONS },
     ];
-    return <View>
+    return <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <FlatList
             data={settingItem}
             renderItem={({ item }) => <Pressable onPress={item.navigate} style={[styles.itemContainer, { borderBottomColor: theme.colors.border }]}>
@@ -50,6 +50,9 @@ const SettingsScreen = () => {
 };
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1
+    },
     itemContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
