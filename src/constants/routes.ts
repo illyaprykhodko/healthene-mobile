@@ -50,8 +50,8 @@ export const ROUTES = {
     HOME: 'Home',
     PROFILE: 'Profile',
 } as const;
-export const PUBLIC = 'public';
-export const PRIVATE = 'private';
+export const PUBLIC = 'public' as const;
+export const PRIVATE = 'private' as const;
 export type Route = typeof ROUTES[keyof typeof ROUTES];
 
 // Route groups

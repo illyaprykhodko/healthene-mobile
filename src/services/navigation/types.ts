@@ -1,7 +1,7 @@
 // outsource dependencies
 // import { ParamListBase } from '@react-navigation/native';
 // // local dependencies
-import { ROUTES } from 'constants/routes';
+import { PRIVATE, PUBLIC, ROUTES } from 'constants/routes';
 
 // export type RootStackParamList = {
 //   // Public screens
@@ -16,6 +16,8 @@ import { ROUTES } from 'constants/routes';
 // } & ParamListBase;
 
 export type RootStackParamList = {
+  [PUBLIC]: undefined;
+  [PRIVATE]: undefined;
   // Public screens
   [ROUTES.SIGN_IN]: undefined;
   [ROUTES.SIGN_UP]: undefined;
