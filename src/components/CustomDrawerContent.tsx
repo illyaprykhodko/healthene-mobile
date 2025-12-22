@@ -14,11 +14,7 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import { navigate } from 'services/navigation';
-import { clearSession } from 'store/slices/appSlice';
 import ProfileImage from 'components/ProfileImage.tsx';
-import FeatherIcon from 'react-native-vector-icons/Feather';
-
-// const { width } = Dimensions.get('window');
 
 interface DrawerItemProps {
     icon: string;
