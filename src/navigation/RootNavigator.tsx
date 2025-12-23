@@ -4,10 +4,9 @@ import { enableScreens } from 'react-native-screens';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // local dependencies
-import { PUBLIC, PRIVATE } from '../constants/routes';
-import { navigationRef } from '../services/navigation';
+import { PUBLIC, PRIVATE } from 'constants/routes';
 import { SplashScreen } from 'components/SplashScreen';
-import { RootStackParamList } from '../services/navigation/types';
+import { RootStackParamList, navigationRef } from 'services/navigation';
 // hooks
 import { useAuth } from 'hooks/useAuth';
 import { RootState, useAppSelector } from 'store';
@@ -25,7 +24,7 @@ export function RootNavigator () {
     if (isLoading) {
         return <SplashScreen onFinish={() => {}} />;
     }
-    
+
     return (
         <NavigationContainer ref={navigationRef}>
             <Stack.Navigator

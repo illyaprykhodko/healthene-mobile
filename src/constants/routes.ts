@@ -33,9 +33,12 @@ export const ROUTES = {
 
     // Account Settings
     ADDRESS: 'Address',
+    SETTINGS: 'Settings',
+    SETTINGS_STACK: 'SettingsStack',
+    CHANGE_PASSWORD: 'ChangePassword',
     ACCOUNT_SETTINGS: 'AccountSettings',
-    BIOMETRIC_SETTINGS: 'BiometricSettings',
     FOOD_PREFERENCES: 'FoodPreferences',
+    BIOMETRIC_SETTINGS: 'BiometricSettings',
     PERSONAL_INFORMATION: 'PersonalInformation',
 
     // Messanger
@@ -48,10 +51,9 @@ export const ROUTES = {
     // Legacy routes (for compatibility)
     HOME: 'Home',
     PROFILE: 'Profile',
-    SETTINGS: 'Settings',
 } as const;
-export const PUBLIC = 'public';
-export const PRIVATE = 'private';
+export const PUBLIC = 'public' as const;
+export const PRIVATE = 'private' as const;
 export type Route = typeof ROUTES[keyof typeof ROUTES];
 
 // Route groups

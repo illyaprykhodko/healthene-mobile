@@ -14,10 +14,10 @@ import { RootStackParamList } from 'services/navigation';
 
 const ITEM = {
     ADDRESS: 'Address',
-    SETTINGS: 'Settings',
     NOTIFICATIONS: 'Notifications',
     FOOD_ALLERGIES: 'Food Allergies',
     FOOD_PREFERENCES: 'Food Preferences',
+    ACCOUNT_SETTINGS: 'Account Settings',
     PERSONAL_INFORMATION: 'Personal Information',
     BIOMETRIC_AUTHENTICATION: 'Biometric Authentication',
 };
@@ -29,12 +29,12 @@ const SettingsScreen = () => {
         { title: ITEM.PERSONAL_INFORMATION, navigate: () => navigation.navigate(ROUTES.PERSONAL_INFORMATION) },
         { title: ITEM.BIOMETRIC_AUTHENTICATION, navigate: () => navigation.navigate(ROUTES.BIOMETRIC_SETTINGS) },
         { title: ITEM.ADDRESS, navigate: () => navigation.navigate(ROUTES.ADDRESS) },
-        { title: ITEM.SETTINGS },
+        { title: ITEM.ACCOUNT_SETTINGS, navigate: () => navigation.navigate(ROUTES.ACCOUNT_SETTINGS) },
         { title: ITEM.FOOD_PREFERENCES, navigate: () => navigation.navigate(ROUTES.FOOD_PREFERENCES) },
         { title: ITEM.FOOD_ALLERGIES, navigate: () => navigation.navigate(ROUTES.FOOD_ALLERGIES) },
         { title: ITEM.NOTIFICATIONS },
     ];
-    return <View style={styles.container}>
+    return <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <FlatList
             data={settingItem}
             renderItem={({ item }) => <Pressable onPress={item.navigate} style={[styles.itemContainer, { borderBottomColor: theme.colors.border }]}>
@@ -51,7 +51,7 @@ const SettingsScreen = () => {
 
 const styles = StyleSheet.create({
     container: {
-    // style here
+        flex: 1
     },
     itemContainer: {
         flexDirection: 'row',
