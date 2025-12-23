@@ -12,17 +12,19 @@ import AccountInformationForm from 'screens/AccountSettingsScreens/AccountSettin
 const AccountSettings = () => {
     const theme = useTheme();
     const [preloader, setPreloader] = useState(false);
-    return <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100}
-    >
-        <ScrollView style={[styles.container, { backgroundColor: theme.colors.white }]}>
-            <LoadingOverlay init={preloader} />
-            <EmailForm onPreloader={setPreloader} />
-            <AccountInformationForm onPreloader={setPreloader} />
-        </ScrollView>
-    </KeyboardAvoidingView>;
+    return <>
+        <LoadingOverlay init={preloader} />
+        <KeyboardAvoidingView
+            style={styles.flex}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100}
+        >
+            <ScrollView style={[styles.container, { backgroundColor: theme.colors.white }]}>
+                <EmailForm onPreloader={setPreloader} />
+                <AccountInformationForm onPreloader={setPreloader} />
+            </ScrollView>
+        </KeyboardAvoidingView>
+    </>;
 };
 
 export default AccountSettings;

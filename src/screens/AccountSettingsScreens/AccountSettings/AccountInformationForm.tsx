@@ -9,10 +9,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { User } from 'types';
 import { RootState } from 'store';
 import { filters } from 'services/filter';
-import { useTheme } from 'hooks/useTheme.ts';
 import { Button } from 'components/Button.tsx';
-import TextInput from 'components/TextInput.tsx';
 import { setUser } from 'store/slices/appSlice.ts';
+import { PhoneInput } from 'components/PhoneInput.tsx';
 import { useUpdateUserDataMutation } from 'store/api/settingsApi.ts';
 
 
@@ -21,7 +20,6 @@ interface AccountInformationFormProps {
 }
 
 const AccountInformationForm = ({ onPreloader }: AccountInformationFormProps) => {
-    const theme = useTheme();
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.app.user);
     const [updateUserData, { isLoading }] = useUpdateUserDataMutation();
@@ -47,68 +45,49 @@ const AccountInformationForm = ({ onPreloader }: AccountInformationFormProps) =>
         }
     };
 
-    return <>
-        <Formik
-            onSubmit={onSubmit}
-            initialValues={{
-                cellPhone: user?.cellPhone,
-                homePhone: user?.homePhone,
-                workPhone: user?.workPhone,
-            }}
-        >
-            {({
-                dirty,
-                values,
-                errors,
-                touched,
-                handleChange,
-                handleSubmit,
-            }) => <>
-                <ScrollView style={styles.flex}>
-                    <TextInput
-                        name="cellPhone"
-                        disabled={false}
-                        textAlign="left"
-                        touched={touched}
-                        label="Cell Phone"
-                        value={values.cellPhone}
-                        color={theme.colors.black}
-                        onChangeText={handleChange('cellPhone')}
-                        error={touched.cellPhone && errors.cellPhone ? { cellPhone: errors.cellPhone } : undefined}
-                    />
-                    <TextInput
-                        name="homePhone"
-                        disabled={false}
-                        textAlign="left"
-                        touched={touched}
-                        label="Home Phone"
-                        value={values.homePhone}
-                        color={theme.colors.black}
-                        onChangeText={handleChange('homePhone')}
-                        error={touched.homePhone && errors.homePhone ? { homePhone: errors.homePhone } : undefined}
-                    />
-                    <TextInput
-                        name="workPhone"
-                        disabled={false}
-                        textAlign="left"
-                        touched={touched}
-                        label="Work Phone"
-                        value={values.workPhone}
-                        color={theme.colors.black}
-                        onChangeText={handleChange('workPhone')}
-                        error={touched.workPhone && errors.workPhone ? { workPhone: errors.workPhone } : undefined}
-                    />
-                    <Button
-                        disabled={!dirty}
-                        variant="outline"
-                        onPress={handleSubmit}
-                        title="EDIT INFORMATION"
-                    />
-                </ScrollView>
-            </>
-            }
-        </Formik>
-    </>;
+    return <Formik
+        onSubmit={onSubmit}
+        initialValues={{
+            cellPhone: user?.cellPhone,
+            homePhone: user?.homePhone,
+            workPhone: user?.workPhone,
+        }}
+    >
+        {({
+            dirty,
+            values,
+            handleChange,
+            handleSubmit,
+        }) => <>
+            <ScrollView style={styles.flex}>
+                <PhoneInput
+                    name="cellPhone"
+                    label="Cell Phone"
+                    value={values.cellPhone}
+                    onChangeText={handleChange('cellPhone')}
+                />
+                <PhoneInput
+                    name="homePhone"
+                    label="Home Phone"
+                    value={values.homePhone}
+                    onChangeText={handleChange('homePhone')}
+                />
+                <PhoneInput
+                    name="workPhone"
+                    label="Work Phone"
+                    value={values.workPhone}
+                    onChangeText={handleChange('workPhone')}
+                />
+                <Button
+                    disabled={!dirty}
+                    variant="outline"
+                    onPress={handleSubmit}
+                    title="EDIT INFORMATION"
+                />
+            </ScrollView>
+        </>
+        }
+    </Formik>;
 };
 
 export default AccountInformationForm;

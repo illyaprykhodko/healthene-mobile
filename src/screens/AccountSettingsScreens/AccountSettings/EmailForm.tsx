@@ -82,9 +82,7 @@ const EmailForm = ({ onPreloader }: EmailFormProps) => {
                 title="CHANGE EMAIL"
                 onPress={handleSubmit}
             />
-        </View>
-        }
-
+        </View>}
     </Formik>;
 };
 
