@@ -1,6 +1,6 @@
 // outsource dependencies
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 
 // local dependencies
 import { OFFSET } from 'constants/offset.ts';

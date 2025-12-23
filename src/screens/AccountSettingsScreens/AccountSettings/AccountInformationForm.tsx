@@ -2,8 +2,8 @@
 import { Formik } from 'formik';
 import React, { useEffect } from 'react';
 import Toast from 'react-native-toast-message';
+import { ScrollView, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 
 // local dependencies
 import { User } from 'types';
