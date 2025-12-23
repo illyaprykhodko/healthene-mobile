@@ -15,6 +15,8 @@ import { MainScreen } from 'screens/privateScreens/MainScreen';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
 import AboutPlanScreen from 'screens/privateScreens/AboutPlanScreen.tsx';
 import { PlaceholderScreen } from 'screens/privateScreens/PlaceholderScreen';
+import HealthProfile from 'screens/privateScreens/HealthProfile';
+
 
 const Drawer = createDrawerNavigator();
 const { width } = Dimensions.get('window');
@@ -121,8 +123,8 @@ export const PrivateDrawer: React.FC = () => {
             />
 
             <Drawer.Screen
-                name={ROUTES.HEALTH_PROFILE}
-                component={PlaceholderScreen}
+                component={HealthProfile}
+                name={ROUTES.HEALTH_PROFILE_STACK}
                 options={{
                     title: 'My Health Profile',
                     drawerIcon: ({ color }) => (

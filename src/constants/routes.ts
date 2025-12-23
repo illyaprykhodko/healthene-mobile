@@ -25,6 +25,7 @@ export const ROUTES = {
     ADD_REPLACE_ITEM: 'AddReplaceItem',
     MEAL_PREFERENCES: 'MealPreferences',
     ALL_RECORDED_DATA: 'AllRecordedData',
+    HEALTH_PROFILE_STACK: 'HealthProfile',
     MEASUREMENT_CHART: 'MeasurementChart',
     MODIFY_INGREDIENT: 'ModifyIngredient',
     ADD_REPLACE_RECIPE: 'AddReplaceRecipe',
