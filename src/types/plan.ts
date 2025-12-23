@@ -1,5 +1,5 @@
 import { Recipe } from './recipe';
-import { IdName, Url } from './common';
+import { Url } from './common';
 import { Supplement } from './supplement';
 import { BaseEntity, NamedEntity, TimestampedEntity } from './common/interfaces';
 
@@ -109,4 +109,21 @@ export interface PlanProgress extends BaseEntity, TimestampedEntity {
     completedMeals: string[];
     notes?: string;
   };
+}
+
+export type DescriptionReference = {
+  id: number;
+  url: string;
+  name: string;
+  order: number;
+  description: string;
+};
+
+export type PlanInfo = {
+  id: number;
+  name: string;
+  goal: string;
+  descriptionForPatient: string;
+  descriptionReferences: DescriptionReference[];
+  allowUserToChangeCaloriesDistribution: boolean | null;
 }
