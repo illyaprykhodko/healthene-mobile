@@ -41,7 +41,7 @@ export const ROUTES = {
     BIOMETRIC_SETTINGS: 'BiometricSettings',
     PERSONAL_INFORMATION: 'PersonalInformation',
 
-    // Messanger
+    // Messenger
     READ_MESSAGE: 'ReadMessages',
     MESSAGE_LIST: 'MessengerList',
     WRITE_MESSAGE: 'WriteMessage',

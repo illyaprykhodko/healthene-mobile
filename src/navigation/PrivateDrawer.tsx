@@ -9,10 +9,11 @@ import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset.ts';
 import BackButton from 'components/BackButton.tsx';
+import MessengerStack from 'navigation/MessengerStack.tsx';
 import DayOverview from 'screens/privateScreens/DayOverview';
 import { MainScreen } from 'screens/privateScreens/MainScreen';
-import MessengerStack from 'navigation/MessengerStack.tsx';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
+import AboutPlanScreen from 'screens/privateScreens/AboutPlanScreen.tsx';
 import { PlaceholderScreen } from 'screens/privateScreens/PlaceholderScreen';
 
 const Drawer = createDrawerNavigator();
@@ -110,7 +111,7 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.ABOUT_PLAN}
-                component={PlaceholderScreen}
+                component={AboutPlanScreen}
                 options={{
                     title: 'About Plan',
                     drawerIcon: ({ color }) => (
