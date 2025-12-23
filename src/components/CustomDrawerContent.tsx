@@ -145,7 +145,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         return props.state?.routes[props.state?.index]?.name;
     };
 
-    const goToAccountSettings = () => navigate(ROUTES.SETTINGS);
+    const goToAccountSettings = () => navigate(ROUTES.SETTINGS_STACK);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>

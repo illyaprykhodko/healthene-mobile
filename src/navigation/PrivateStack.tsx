@@ -17,7 +17,7 @@ export const PrivateStack = () => {
             }}
         >
             <Stack.Screen name="Drawer" component={PrivateDrawer} />
-            <Stack.Screen name={ROUTES.SETTINGS} component={AccountSettingsStack} />
+            <Stack.Screen name={ROUTES.SETTINGS_STACK} component={AccountSettingsStack} />
         </Stack.Navigator>
     );
 };

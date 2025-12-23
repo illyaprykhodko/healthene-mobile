@@ -1,10 +1,13 @@
 // outsource dependencies
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 
 // local dependencies
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
+import { ROUTES } from 'constants/routes.ts';
+import { Button } from 'components/Button.tsx';
+import { navigate } from 'services/navigation';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import EmailForm from 'screens/AccountSettingsScreens/AccountSettings/EmailForm.tsx';
 import AccountInformationForm from 'screens/AccountSettingsScreens/AccountSettings/AccountInformationForm.tsx';
@@ -12,6 +15,7 @@ import AccountInformationForm from 'screens/AccountSettingsScreens/AccountSettin
 const AccountSettings = () => {
     const theme = useTheme();
     const [preloader, setPreloader] = useState(false);
+    // const goToAccountSettings = () => navigate(ROUTES.SETTINGS_STACK);
     return <>
         <LoadingOverlay init={preloader} />
         <KeyboardAvoidingView
@@ -22,6 +26,7 @@ const AccountSettings = () => {
             <ScrollView style={[styles.container, { backgroundColor: theme.colors.white }]}>
                 <EmailForm onPreloader={setPreloader} />
                 <AccountInformationForm onPreloader={setPreloader} />
+                <Button onPress={() => navigate(ROUTES.CHANGE_PASSWORD)} style={styles.sheetBtn} variant="outline" title="CHANGE PASSWORD" />
             </ScrollView>
         </KeyboardAvoidingView>
     </>;
@@ -37,4 +42,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
         paddingVertical: OFFSET.VERTICAL,
     },
+    sheetBtn: {
+        marginVertical: OFFSET.VERTICAL
+    }
 });

@@ -13,11 +13,11 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { setUser } from 'store/slices/appSlice.ts';
 import { useUpdateUserDataMutation } from 'store/api/settingsApi.ts';
 
-interface ChangePasswordFormProps {
+interface ChangePasswordScreenProps {
     // props here
 }
 
-const ChangePasswordForm = (props: ChangePasswordFormProps) => {
+const ChangePasswordScreen = (props: ChangePasswordScreenProps) => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.app.user);
@@ -46,25 +46,25 @@ const ChangePasswordForm = (props: ChangePasswordFormProps) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100}
     >
-        <Formik
-            onSubmit={onSubmit}
-            // initialValues={initialValues}
-            // validationSchema={validationSchema}
-        >
-            {({
-                dirty,
-                values,
-                errors,
-                touched,
-                handleChange,
-                handleSubmit,
-            }) => <View></View>}
-        </Formik>
+        {/*<Formik*/}
+        {/*    onSubmit={onSubmit}*/}
+        {/*    // initialValues={initialValues}*/}
+        {/*    // validationSchema={validationSchema}*/}
+        {/*>*/}
+        {/*    {({*/}
+        {/*        dirty,*/}
+        {/*        values,*/}
+        {/*        errors,*/}
+        {/*        touched,*/}
+        {/*        handleChange,*/}
+        {/*        handleSubmit,*/}
+        {/*    }) => <View></View>}*/}
+        {/*</Formik>*/}
 
     </KeyboardAvoidingView>;
 };
 
-export default ChangePasswordForm;
+export default ChangePasswordScreen;
 const styles = StyleSheet.create({
     flex: {
         flex: 1,

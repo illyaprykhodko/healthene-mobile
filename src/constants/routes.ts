@@ -34,6 +34,8 @@ export const ROUTES = {
     // Account Settings
     ADDRESS: 'Address',
     SETTINGS: 'Settings',
+    SETTINGS_STACK: 'SettingsStack',
+    CHANGE_PASSWORD: 'ChangePassword',
     ACCOUNT_SETTINGS: 'AccountSettings',
     FOOD_PREFERENCES: 'FoodPreferences',
     BIOMETRIC_SETTINGS: 'BiometricSettings',

@@ -40,8 +40,10 @@ export type RootStackParamList = {
   [ROUTES.MESSAGE_LIST]: undefined;
   [ROUTES.READ_MESSAGE]: undefined;
   [ROUTES.WRITE_MESSAGE]: undefined;
+  [ROUTES.SETTINGS_STACK]: undefined;
   [ROUTES.HEALTH_PROFILE]: undefined;
   [ROUTES.FOOD_ALLERGIES]: undefined;
+  [ROUTES.CHANGE_PASSWORD]: undefined;
   [ROUTES.MESSENGER_AUDIO]: undefined;
   [ROUTES.MESSENGER_CAMERA]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;

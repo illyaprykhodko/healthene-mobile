@@ -12,6 +12,7 @@ import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
 import FoodPreferences from 'screens/AccountSettingsScreens/FoodPreferences';
 import AccountSettings from 'screens/AccountSettingsScreens/AccountSettings';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
+import ChangePasswordScreen from 'screens/AccountSettingsScreens/ChangePasswordScreen.tsx';
 import { BiometricSettingsScreen } from 'screens/AccountSettingsScreens/BiometricSettingsScreen';
 import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
 
@@ -47,6 +48,11 @@ export const AccountSettingsStack = () => {
                 name={ROUTES.ADDRESS}
                 component={AddressScreen}
                 options={{ title: 'My Addresses' }}
+            />
+            <Stack.Screen
+                name={ROUTES.CHANGE_PASSWORD}
+                component={ChangePasswordScreen}
+                options={{ title: 'Change Password' }}
             />
             <Stack.Screen
                 name={ROUTES.PERSONAL_INFORMATION}
