@@ -10,8 +10,8 @@ import BackButton from 'components/BackButton.tsx';
 import FoodAllergies from 'screens/AccountSettingsScreens/FoodAllergies';
 import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
 import FoodPreferences from 'screens/AccountSettingsScreens/FoodPreferences';
+import AccountSettings from 'screens/AccountSettingsScreens/AccountSettings';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
-import AccountSettings from 'screens/AccountSettingsScreens/AccountSettings/AccountSettings.tsx';
 import { BiometricSettingsScreen } from 'screens/AccountSettingsScreens/BiometricSettingsScreen';
 import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
 

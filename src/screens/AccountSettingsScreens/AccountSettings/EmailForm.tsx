@@ -1,5 +1,6 @@
 // outsource dependencies
 import React from 'react';
+import * as yup from 'yup';
 import { Formik } from 'formik';
 import Toast from 'react-native-toast-message';
 import { StyleSheet, View } from 'react-native';
@@ -16,11 +17,15 @@ import TextInput from 'components/TextInput.tsx';
 import { setUser } from 'store/slices/appSlice.ts';
 import { useUpdateUserDataMutation } from 'store/api/settingsApi.ts';
 
+const validationSchema = yup.object().shape({
+    email: yup.string().required('Email address is required').email('Invalid email address'),
+});
+
 interface EmailFormProps {
     onPreloader: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const EmailForm = (props: EmailFormProps) => {
+const EmailForm = ({ onPreloader }: EmailFormProps) => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.app.user);
@@ -28,6 +33,7 @@ const EmailForm = (props: EmailFormProps) => {
 
     const onSubmit = async (data: Partial<User>) => {
         try {
+            onPreloader(true);
             const submit = await updateUserData(data).unwrap();
             dispatch(setUser(submit));
             Toast.show({
@@ -41,13 +47,15 @@ const EmailForm = (props: EmailFormProps) => {
                 text1: 'Update failed',
                 text2: String(filters.humanize(error?.data?.errorCode)) || 'Something went wrong while updating your information. Please try again later.',
             });
+        } finally {
+            onPreloader(false);
         }
     };
 
     return <Formik
         onSubmit={onSubmit}
+        validationSchema={validationSchema}
         initialValues={{ email: user?.email }}
-        // validationSchema={validationSchema}
     >
         {({
             dirty,
@@ -56,7 +64,7 @@ const EmailForm = (props: EmailFormProps) => {
             touched,
             handleChange,
             handleSubmit,
-        }) => <View style={{ marginVertical: OFFSET.VERTICAL }}>
+        }) => <View style={styles.container}>
             <TextInput
                 name="email"
                 disabled={false}
@@ -86,6 +94,6 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     container: {
-        // style here
+        marginVertical: OFFSET.VERTICAL
     },
 });
