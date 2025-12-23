@@ -34,8 +34,8 @@ const EmailForm = ({ onPreloader }: EmailFormProps) => {
     const onSubmit = async (data: Partial<User>) => {
         try {
             onPreloader(true);
-            const submit = await updateUserData(data).unwrap();
-            dispatch(setUser(submit));
+            // const submit = await updateUserData(data).unwrap();
+            // dispatch(setUser(submit));
             Toast.show({
                 type: 'success',
                 text1: 'Addresses updated',

@@ -1,5 +1,5 @@
 // outsource dependencies
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 
 // local dependencies
@@ -15,7 +15,6 @@ import AccountInformationForm from 'screens/AccountSettingsScreens/AccountSettin
 const AccountSettings = () => {
     const theme = useTheme();
     const [preloader, setPreloader] = useState(false);
-    // const goToAccountSettings = () => navigate(ROUTES.SETTINGS_STACK);
     return <>
         <LoadingOverlay init={preloader} />
         <KeyboardAvoidingView

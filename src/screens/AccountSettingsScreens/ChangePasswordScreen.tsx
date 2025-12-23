@@ -1,75 +1,126 @@
 // outsource dependencies
 import React from 'react';
+import * as yup from 'yup';
 import { Formik } from 'formik';
+import { StyleSheet } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useDispatch, useSelector } from 'react-redux';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
 // local dependencies
-import { User } from 'types';
-import { RootState } from 'store';
+import { ChangePassword } from 'types';
 import { filters } from 'services/filter';
+import Screen from 'components/Screen.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
-import { setUser } from 'store/slices/appSlice.ts';
-import { useUpdateUserDataMutation } from 'store/api/settingsApi.ts';
+import { OFFSET } from 'constants/offset.ts';
+import { Button } from 'components/Button.tsx';
+import TextInput from 'components/TextInput.tsx';
+import { useChangePasswordMutation } from 'store/api/settingsApi.ts';
 
-interface ChangePasswordScreenProps {
-    // props here
-}
+// validation
+const getValidation = (text: string) => yup.string()
+    .required(`${text} is required`)
+    .min(8, 'Password should be at least 8 characters in a length');
 
-const ChangePasswordScreen = (props: ChangePasswordScreenProps) => {
+const validationSchema = yup
+    .object({
+        newPassword: getValidation('New password'),
+        currentPassword: getValidation('Current password'),
+        checkPassword: getValidation('this field').oneOf([yup.ref('newPassword')], 'Passwords must match'),
+    });
+
+const ChangePasswordScreen = () => {
     const theme = useTheme();
-    const dispatch = useDispatch();
-    const user = useSelector((state: RootState) => state.app.user);
-    const [updateUserData] = useUpdateUserDataMutation();
+    const [updatePassword] = useChangePasswordMutation();
 
-    const onSubmit = async (data: Partial<User>) => {
+    const onSubmit = async (data: ChangePassword) => {
         try {
-            const submit = await updateUserData(data).unwrap();
-            dispatch(setUser(submit));
+            // await updatePassword({
+            //     newPassword: data.newPassword,
+            //     currentPassword: data.currentPassword,
+            // }).unwrap();
             Toast.show({
                 type: 'success',
-                text1: 'Addresses updated',
-                text2: 'Your address information has been updated successfully.',
+                text1: 'Password updated',
+                text2: 'Your password has been changed successfully.',
             });
         } catch (error: any) {
             Toast.show({
                 type: 'error',
-                text1: 'Update failed',
-                text2: String(filters.humanize(error?.data?.errorCode)) || 'Something went wrong while updating your information. Please try again later.',
+                text1: 'Password update failed',
+                text2: String(filters.humanize(error?.data?.errorCode)) || 'Something went wrong while changing your password. Please try again later.',
             });
         }
     };
 
-    return <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100}
-    >
-        {/*<Formik*/}
-        {/*    onSubmit={onSubmit}*/}
-        {/*    // initialValues={initialValues}*/}
-        {/*    // validationSchema={validationSchema}*/}
-        {/*>*/}
-        {/*    {({*/}
-        {/*        dirty,*/}
-        {/*        values,*/}
-        {/*        errors,*/}
-        {/*        touched,*/}
-        {/*        handleChange,*/}
-        {/*        handleSubmit,*/}
-        {/*    }) => <View></View>}*/}
-        {/*</Formik>*/}
-
-    </KeyboardAvoidingView>;
+    return <Screen initialized={true} style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <Formik
+            onSubmit={onSubmit}
+            validationSchema={validationSchema}
+            initialValues={{
+                newPassword: '',
+                checkPassword: '',
+                currentPassword: '',
+            }}
+        >
+            {({
+                values,
+                errors,
+                touched,
+                handleChange,
+                handleSubmit,
+            }) => <>
+                <TextInput
+                    disabled={false}
+                    textAlign="left"
+                    touched={touched}
+                    name="currentPassword"
+                    label="Current Password"
+                    color={theme.colors.black}
+                    value={values.currentPassword}
+                    onChangeText={handleChange('currentPassword')}
+                    error={touched.currentPassword && errors.currentPassword ? { currentPassword: errors.currentPassword } : undefined}
+                />
+                <TextInput
+                    disabled={false}
+                    textAlign="left"
+                    touched={touched}
+                    name="newPassword"
+                    label="New Password"
+                    color={theme.colors.black}
+                    value={values.newPassword}
+                    onChangeText={handleChange('newPassword')}
+                    error={touched.newPassword && errors.newPassword ? { newPassword: errors.newPassword } : undefined}
+                />
+                <TextInput
+                    disabled={false}
+                    textAlign="left"
+                    touched={touched}
+                    name="checkPassword"
+                    color={theme.colors.black}
+                    label="Confirm New Password"
+                    value={values.checkPassword}
+                    onChangeText={handleChange('checkPassword')}
+                    error={touched.checkPassword && errors.checkPassword ? { checkPassword: errors.checkPassword } : undefined}
+                />
+                <Button
+                    variant="outline"
+                    onPress={handleSubmit}
+                    title="CHANGE PASSWORD"
+                    style={styles.submitBtn}
+                />
+            </>}
+        </Formik>
+    </Screen>;
 };
 
 export default ChangePasswordScreen;
 const styles = StyleSheet.create({
-    flex: {
-        flex: 1,
-    },
     container: {
-        // style here
+        flex: 1,
+        paddingVertical: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL,
     },
+    submitBtn: {
+        marginTop: 'auto',
+        marginBottom: OFFSET.VERTICAL,
+    }
 });
