@@ -128,6 +128,7 @@ export interface User {
   id: number;
   email: string;
   phone?: string;
+  name: string;
   firstName: string;
   middleName: string;
   lastName: string;
@@ -138,6 +139,9 @@ export interface User {
   title?: string;
   avatar?: Url;
   country: Country;
+  heightFt: number;
+  heightInches: number;
+  weightLb: number;
   cellPhone?: string;
   homePhone?: string;
   workPhone?: string;
