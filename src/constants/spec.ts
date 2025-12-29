@@ -126,6 +126,20 @@ export const GENDERS = [
     { label: 'Female', value: 'FEMALE' },
 ];
 
+export const PREFERRED_GENDER = {
+    MALE: 'MALE',
+    FEMALE: 'FEMALE',
+    TRANSGENDER: 'TRANSGENDER',
+    OTHER: 'OTHER',
+};
+
+export const PREFERRED_GENDER_OPTIONS = [
+    { label: 'Male', value: PREFERRED_GENDER.MALE },
+    { label: 'Female', value: PREFERRED_GENDER.FEMALE },
+    { label: 'Transgender', value: PREFERRED_GENDER.TRANSGENDER },
+    { label: 'Other', value: PREFERRED_GENDER.OTHER },
+];
+
 export const PREFIXES = [
     { label: 'Mr', value: 'Mr' },
     { label: 'Mrs', value: 'Mrs' },
