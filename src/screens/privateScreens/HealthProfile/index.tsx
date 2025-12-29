@@ -32,11 +32,11 @@ const HealthProfile = () => {
                 <Text style={styles.physicianText} textAlign="center">Physician: &nbsp;
                     <Text color={theme.colors.black}>{user?.physician?.name ?? 'Unknown'}</Text>
                 </Text>
+                <Text color={theme.colors.primary} style={styles.title}>My Stats</Text>
                 <StatsForm setPreloader={setPreloader} />
             </ScrollView>
         </Screen>
     </>;
-
 };
 
 export default HealthProfile;
@@ -60,5 +60,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>) => StyleSheet.create({
     physicianText: {
         marginVertical: OFFSET.POINT,
         textDecorationLine: 'underline',
+    },
+    title: {
+        marginVertical: OFFSET.VERTICAL,
     }
 });
