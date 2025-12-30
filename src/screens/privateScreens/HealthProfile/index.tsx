@@ -12,7 +12,8 @@ import { useTheme } from 'hooks/useTheme.ts';
 import ProfileImage from 'components/ProfileImage.tsx';
 import { useGetPlanInfoQuery } from 'store/api/planApi.ts';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
-import { Stats } from 'screens/privateScreens/HealthProfile/components/Stats.tsx';
+import Stats from 'screens/privateScreens/HealthProfile/components/Stats.tsx';
+import Habits from 'screens/privateScreens/HealthProfile/components/Habits.tsx';
 
 const HealthProfile = () => {
     const theme = useTheme();
@@ -34,6 +35,7 @@ const HealthProfile = () => {
                     <Text color={theme.colors.black}>{user?.physician?.name ?? 'Unknown'}</Text>
                 </Text>
                 <Stats />
+                <Habits />
             </ScrollView>
         </Screen>
     </>;

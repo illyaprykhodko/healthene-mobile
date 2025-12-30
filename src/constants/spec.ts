@@ -121,9 +121,13 @@ export const CONTENT_TYPE = {
 
 export type ContentType = typeof CONTENT_TYPE[keyof typeof CONTENT_TYPE];
 
+export const GENDERS_TYPE = {
+    MALE: 'MALE',
+    FEMALE: 'FEMALE',
+};
 export const GENDERS = [
-    { label: 'Male', value: 'MALE' },
-    { label: 'Female', value: 'FEMALE' },
+    { label: 'Male', value: GENDERS_TYPE.MALE },
+    { label: 'Female', value: GENDERS_TYPE.FEMALE },
 ];
 
 export const PREFERRED_GENDER = {

@@ -15,9 +15,10 @@ import { RootState, useAppSelector } from 'store';
 import { PREFERRED_GENDER } from 'constants/spec.ts';
 import { RootStackParamList } from 'services/navigation';
 import Separator from 'components/FlatListSeparator.tsx';
+import ListHeader from 'screens/privateScreens/HealthProfile/components/ListHeader.tsx';
 
 const EMPTY_VALUE = '-';
-export const Stats = () => {
+const Stats = () => {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(), []);
     const user = useAppSelector((state: RootState) => state.app.user);
@@ -40,14 +41,7 @@ export const Stats = () => {
         ItemSeparatorComponent={Separator}
         ListFooterComponent={<Separator />}
         keyExtractor={(_, index) => index.toString()}
-        ListHeaderComponent={
-            <View style={styles.titleContainer}>
-                <Text color={theme.colors.primary} style={styles.title}>My Stats</Text>
-                <Pressable onPress={goToForm}>
-                    <Icon iconStyle="solid" name="edit" size={24} color={theme.colors.grey} />
-                </Pressable>
-            </View>
-        }
+        ListHeaderComponent={<ListHeader title="My Stats" onAction={goToForm} />}
         renderItem={({ item }) => <View style={styles.itemContainer}>
             <Text color={theme.colors.grey}>{item.label}</Text>
             <Text>{item.value}</Text>
@@ -61,13 +55,5 @@ const createStyles = () => StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingVertical: OFFSET.VERTICAL,
-    },
-    titleContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    title: {
-        marginVertical: OFFSET.VERTICAL,
     },
 });

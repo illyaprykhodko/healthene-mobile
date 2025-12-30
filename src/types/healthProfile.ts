@@ -10,6 +10,11 @@ export interface Stats {
 export interface Habit {
     id: number;
     name: string;
-    group: string;
     icon: { url: string };
+    group: 'ALL' | 'FEMALE';
+}
+
+export interface PatientHabit {
+    id: number;
+    habit: Habit;
 }
