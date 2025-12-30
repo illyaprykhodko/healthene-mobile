@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
 import { useTheme } from 'hooks/useTheme.ts';
+import { StyleSheet, View } from 'react-native';
 
 const Separator = () => {
     const theme = useTheme();

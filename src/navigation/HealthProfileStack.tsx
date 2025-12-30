@@ -8,16 +8,16 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import BackButton from 'components/BackButton.tsx';
 import HealthProfile from 'screens/privateScreens/HealthProfile';
+import ProfileStatsScreen from 'screens/privateScreens/HealthProfile/ProfileStatsScreen.tsx';
 
 const Stack = createStackNavigator();
-const healthProfileStack = () => {
+const HealthProfileStack = () => {
     const theme = useTheme();
     return (
         <Stack.Navigator
             initialRouteName={ROUTES.HEALTH_PROFILE}
             screenOptions={({ navigation }) => ({
                 headerShown: true,
-                drawerPosition: 'right',
                 gestureDirection: 'horizontal-inverted',
                 headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
                 headerStyle: {
@@ -32,10 +32,11 @@ const healthProfileStack = () => {
                 },
             })}
         >
-            <Stack.Screen name={ROUTES.HEALTH_PROFILE} component={HealthProfile} />
+            <Stack.Screen options={{ title: 'My Health Profile' }} name={ROUTES.HEALTH_PROFILE} component={HealthProfile} />
+            <Stack.Screen options={{ title: 'My Stats' }} name={ROUTES.PROFILE_STATS} component={ProfileStatsScreen} />
         </Stack.Navigator>
     );
 };
 
-export default healthProfileStack;
+export default HealthProfileStack;
 

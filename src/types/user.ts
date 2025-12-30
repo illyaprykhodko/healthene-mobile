@@ -147,6 +147,7 @@ export interface User {
   heightFt: number;
   heightInches: number;
   weightLb: number;
+  bmi: number;
   cellPhone?: string;
   homePhone?: string;
   workPhone?: string;

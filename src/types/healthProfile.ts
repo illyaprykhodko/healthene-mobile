@@ -6,3 +6,10 @@ export interface Stats {
     gender: string | undefined;
     patientPreferredGender: string;
 }
+
+export interface Habit {
+    id: number;
+    name: string;
+    group: string;
+    icon: { url: string };
+}

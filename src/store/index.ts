@@ -17,6 +17,7 @@ import { messengerApi } from 'store/api/messengerApi.ts';
 import messengerSlice from 'store/slices/messengerSlice.ts';
 import { dayOverviewReducer } from './slices/dayOverviewSlice';
 import { categoryTreeApi } from 'store/api/categoryTreeApi.ts';
+import { healthProfileApi } from 'store/api/healthProfileApi.ts';
 import forgotPasswordReducer from './slices/forgotPasswordSlice';
 import foodPreferencesSlice from 'store/slices/foodPreferrencesSlice.ts';
 
@@ -37,6 +38,7 @@ export const store = configureStore({
         [messengerApi.reducerPath]: messengerApi.reducer,
         [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
         [categoryTreeApi.reducerPath]: categoryTreeApi.reducer,
+        [healthProfileApi.reducerPath]: healthProfileApi.reducer,
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({ serializableCheck: false })
@@ -49,6 +51,7 @@ export const store = configureStore({
                 s3ServiceApi.middleware,
                 dayOverviewApi.middleware,
                 categoryTreeApi.middleware,
+                healthProfileApi.middleware,
             ),
     enhancers: getDefaultEnhancers =>
         getDefaultEnhancers().concat(reactotron.createEnhancer()),

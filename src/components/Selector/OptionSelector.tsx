@@ -8,8 +8,8 @@ import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gor
 import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
+import Separator from 'components/FlatListSeparator.tsx';
 import Selector from 'components/Selector/components/Selector.tsx';
-import Separator from 'components/Selector/components/Separator.tsx';
 
 type DataType = { label: string; value: string }
 interface OptionSelectorProps {

@@ -12,7 +12,7 @@ import { useTheme } from 'hooks/useTheme.ts';
 import ProfileImage from 'components/ProfileImage.tsx';
 import { useGetPlanInfoQuery } from 'store/api/planApi.ts';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
-import StatsForm from 'screens/privateScreens/HealthProfile/components/StatsForm.tsx';
+import { Stats } from 'screens/privateScreens/HealthProfile/components/Stats.tsx';
 
 const HealthProfile = () => {
     const theme = useTheme();
@@ -20,10 +20,11 @@ const HealthProfile = () => {
     const user = useSelector((state: RootState) => state.app.user);
     const { data, isLoading } = useGetPlanInfoQuery();
     const [preloader, setPreloader] = useState<boolean>(false);
+
     return <>
         <LoadingOverlay init={preloader} />
         <Screen initialized={!isLoading} style={styles.container}>
-            <ScrollView style={styles.scrollView}>
+            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 <ProfileImage style={styles.profileImg} uri={user?.coverImage?.url}/>
                 <Text style={styles.marginVertical} textAlign="center">{user?.name}</Text>
                 <Text style={styles.marginVertical} textAlign="center" color={theme.colors.grey}>Goal: &nbsp;
@@ -32,8 +33,7 @@ const HealthProfile = () => {
                 <Text style={styles.physicianText} textAlign="center">Physician: &nbsp;
                     <Text color={theme.colors.black}>{user?.physician?.name ?? 'Unknown'}</Text>
                 </Text>
-                <Text color={theme.colors.primary} style={styles.title}>My Stats</Text>
-                <StatsForm setPreloader={setPreloader} />
+                <Stats />
             </ScrollView>
         </Screen>
     </>;
@@ -61,7 +61,4 @@ const createStyles = (theme: ReturnType<typeof useTheme>) => StyleSheet.create({
         marginVertical: OFFSET.POINT,
         textDecorationLine: 'underline',
     },
-    title: {
-        marginVertical: OFFSET.VERTICAL,
-    }
 });

@@ -19,6 +19,7 @@ export const ROUTES = {
     SMART_SCALE: 'SmartScale',
     REPLACEMENT: 'Replacement',
     DAY_OVERVIEW: 'DayOverview',
+    PROFILE_STATS: 'ProfileStats',
     REPLACE_ITEMS: 'ReplaceItems',
     FOOD_ALLERGIES: 'FoodAllergies',
     HEALTH_PROFILE: 'HealthProfile',
