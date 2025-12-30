@@ -24,7 +24,7 @@ export const Habits = (props: HabitsProps) => {
 
     console.log('habits', habits);
     return <FlatList
-        data={habits}
+        data={patientHabits}
         scrollEnabled={false}
         keyExtractor={item => item?.id.toString()}
         renderItem={({ item }) => <Text>{item.name}</Text>}

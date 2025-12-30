@@ -26,10 +26,10 @@ export const ROUTES = {
     ADD_REPLACE_ITEM: 'AddReplaceItem',
     MEAL_PREFERENCES: 'MealPreferences',
     ALL_RECORDED_DATA: 'AllRecordedData',
-    HEALTH_PROFILE_STACK: 'HealthProfile',
     MEASUREMENT_CHART: 'MeasurementChart',
     MODIFY_INGREDIENT: 'ModifyIngredient',
     ADD_REPLACE_RECIPE: 'AddReplaceRecipe',
+    HEALTH_PROFILE_STACK: 'HealthProfileStack',
     TREE_ADD_REPLACE_ITEM: 'TreeAddReplaceItem',
     CUISINE_DISTRIBUTION: 'CuisineDistribution',
 
@@ -69,7 +69,7 @@ export const PRIVATE_ROUTES = [
     ROUTES.DAILY_PLAN,
     ROUTES.MY_RESULTS,
     ROUTES.ABOUT_PLAN,
-    ROUTES.HEALTH_PROFILE,
     ROUTES.MEAL_PREFERENCES,
+    ROUTES.HEALTH_PROFILE_STACK,
     ROUTES.CUISINE_DISTRIBUTION,
 ] as const;

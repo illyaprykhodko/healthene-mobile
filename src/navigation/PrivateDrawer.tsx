@@ -127,7 +127,6 @@ export const PrivateDrawer: React.FC = () => {
                 name={ROUTES.HEALTH_PROFILE_STACK}
                 options={{
                     headerShown: false,
-                    title: 'My Health Profile',
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="heartbeat" size={24} color={color} />
                     ),

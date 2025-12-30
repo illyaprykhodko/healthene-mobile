@@ -26,8 +26,8 @@ type DrawerParamList = {
     [ROUTES.DAILY_PLAN]: undefined;
     [ROUTES.ABOUT_PLAN]: undefined;
     [ROUTES.MY_RESULTS]: undefined;
-    [ROUTES.HEALTH_PROFILE]: undefined;
     [ROUTES.MEAL_PREFERENCES]: undefined;
+    [ROUTES.HEALTH_PROFILE_STACK]: undefined;
     [ROUTES.CUISINE_DISTRIBUTION]: undefined;
 };
 

@@ -122,7 +122,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         {
             icon: 'heartbeat',
             title: 'My Health Profile',
-            route: ROUTES.HEALTH_PROFILE,
+            route: ROUTES.HEALTH_PROFILE_STACK,
         },
         {
             icon: 'book',
