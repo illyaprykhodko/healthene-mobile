@@ -1,8 +1,7 @@
 // outsource dependencies
 import React, { memo, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import Icon from '@react-native-vector-icons/fontawesome5';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // local dependencies

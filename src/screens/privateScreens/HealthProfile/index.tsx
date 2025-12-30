@@ -1,6 +1,6 @@
 // outsource dependencies
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
 // local dependencies
@@ -11,7 +11,6 @@ import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import ProfileImage from 'components/ProfileImage.tsx';
 import { useGetPlanInfoQuery } from 'store/api/planApi.ts';
-import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import Stats from 'screens/privateScreens/HealthProfile/components/Stats.tsx';
 import Habits from 'screens/privateScreens/HealthProfile/components/Habits.tsx';
 
@@ -20,25 +19,21 @@ const HealthProfile = () => {
     const styles = useMemo(() => createStyles(theme), [theme]);
     const user = useSelector((state: RootState) => state.app.user);
     const { data, isLoading } = useGetPlanInfoQuery();
-    const [preloader, setPreloader] = useState<boolean>(false);
 
-    return <>
-        <LoadingOverlay init={preloader} />
-        <Screen initialized={!isLoading} style={styles.container}>
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                <ProfileImage style={styles.profileImg} uri={user?.coverImage?.url}/>
-                <Text style={styles.marginVertical} textAlign="center">{user?.name}</Text>
-                <Text style={styles.marginVertical} textAlign="center" color={theme.colors.grey}>Goal: &nbsp;
-                    <Text color={theme.colors.black}>{data?.goal ?? '-'}</Text>
-                </Text>
-                <Text style={styles.physicianText} textAlign="center">Physician: &nbsp;
-                    <Text color={theme.colors.black}>{user?.physician?.name ?? 'Unknown'}</Text>
-                </Text>
-                <Stats />
-                <Habits />
-            </ScrollView>
-        </Screen>
-    </>;
+    return <Screen initialized={!isLoading} style={styles.container}>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+            <ProfileImage style={styles.profileImg} uri={user?.coverImage?.url}/>
+            <Text style={styles.marginVertical} textAlign="center">{user?.name}</Text>
+            <Text style={styles.marginVertical} textAlign="center" color={theme.colors.grey}>Goal: &nbsp;
+                <Text color={theme.colors.black}>{data?.goal ?? '-'}</Text>
+            </Text>
+            <Text style={styles.physicianText} textAlign="center">Physician: &nbsp;
+                <Text color={theme.colors.black}>{user?.physician?.name ?? 'Unknown'}</Text>
+            </Text>
+            <Stats />
+            <Habits />
+        </ScrollView>
+    </Screen>;
 };
 
 export default HealthProfile;
