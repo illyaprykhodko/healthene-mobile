@@ -9,6 +9,7 @@ import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset.ts';
 import BackButton from 'components/BackButton.tsx';
+import Shopping from 'screens/privateScreens/Shopping';
 import DayOverview from 'screens/privateScreens/DayOverview';
 import { MainScreen } from 'screens/privateScreens/MainScreen';
 import MessengerStack from 'navigation/MessengerStack.tsx';
@@ -76,9 +77,10 @@ export const PrivateDrawer: React.FC = () => {
             />
 
             <Drawer.Screen
+                component={Shopping}
                 name={ROUTES.SHOPPING}
-                component={PlaceholderScreen}
                 options={{
+                    headerShown: false,
                     title: 'Shopping List',
                     drawerIcon: ({ color }) => (
                         <Icon name="shopping-cart" size={24} color={color} />
