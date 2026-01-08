@@ -9,6 +9,8 @@ import { OFFSET } from 'constants/offset.ts';
 import BackButton from 'components/BackButton.tsx';
 import { MessageEntity } from 'types/common/interfaces.ts';
 import MessengerList from 'screens/privateScreens/Messenger';
+import AudioScreen from 'screens/privateScreens/Messenger/AudioScreen.tsx';
+import CameraScreen from 'screens/privateScreens/Messenger/CameraScreen.tsx';
 import ReadMessageScreen from 'screens/privateScreens/Messenger/ReadMessageScreen.tsx';
 import WriteMessageScreen from 'screens/privateScreens/Messenger/WriteMessageScreen.tsx';
 
@@ -22,9 +24,7 @@ const MessengerStack = () => {
                 headerShown: true,
                 drawerPosition: 'right',
                 gestureDirection: 'horizontal-inverted',
-                headerLeft: () => (
-                    <BackButton navigation={navigation} theme={theme} />
-                ),
+                headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
                 headerStyle: {
                     backgroundColor: theme.colors.primary,
                 },
@@ -38,9 +38,11 @@ const MessengerStack = () => {
             })}
         >
             <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.MESSAGE_LIST} component={MessengerList} />
-            <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.READ_MESSAGE_SCREEN} component={ReadMessageScreen} />
+            <Stack.Screen options={{ title: 'Camera' }} name={ROUTES.MESSENGER_CAMERA} component={CameraScreen} />
+            <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.READ_MESSAGE} component={ReadMessageScreen} />
+            <Stack.Screen options={{ title: 'Record Audio' }} name={ROUTES.MESSENGER_AUDIO} component={AudioScreen} />
             <Stack.Screen
-                name={ROUTES.WRITE_MESSAGE_SCREEN} component={WriteMessageScreen}
+                name={ROUTES.WRITE_MESSAGE} component={WriteMessageScreen}
                 options={({ route }: {route: { params?: MessageEntity }}) => ({ title: route.params?.id ? 'Message' : 'New Message' })}
             />
         </Stack.Navigator>

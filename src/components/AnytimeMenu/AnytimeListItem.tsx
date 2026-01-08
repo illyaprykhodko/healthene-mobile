@@ -1,5 +1,5 @@
 // outsource dependencies
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 // local dependencies
@@ -8,7 +8,7 @@ import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
 import { filters } from 'services/filter';
 import Checkbox from 'components/Checkbox';
-import type { AnytimeItem, AnytimeFoodItem, AnytimeDrinkItem } from '../../types/anytime';
+import type { AnytimeItem, AnytimeFoodItem, AnytimeDrinkItem } from 'types/anytime.ts';
 import { splitAmountToServings, getServingState, isServingEnabled, isServingDone, applyServingToggle } from './serving';
 
 interface AnytimeListItemProps {
@@ -135,7 +135,7 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
                     ) : (
                         <View style={[styles.image, { backgroundColor: theme.colors.lightGrey }]} />
                     )}
-            
+
                     <View style={styles.textContainer}>
                         <Text style={[styles.itemName, { color: theme.colors.text }]}>
                             {name}
@@ -152,11 +152,11 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
                     <View style={styles.rightControls}>
                         {isDetailsEnabled && (
                             <TouchableOpacity onPress={handleChevronPress} style={[styles.chevron, showParentCheckbox && styles.chevronWithCheckbox]}>
-                                <Icon name={expanded ? 'chevron-up' : 'chevron-down'} color={theme.colors.blue} size={18} />
+                                <Icon iconStyle="solid" name={expanded ? 'chevron-up' : 'chevron-down'} color={theme.colors.blue} size={18} />
                             </TouchableOpacity>
                         )}
                         {isMeasurement && !isCompleted && (
-                            <Icon name="chevron-right" size={22} color={theme.colors.blue} style={{ marginRight: 4 }} />
+                            <Icon iconStyle="solid" name="chevron-right" size={22} color={theme.colors.blue} style={{ marginRight: 4 }} />
                         )}
                         {showParentCheckbox && !isMeasurement && (
                             <Checkbox
@@ -237,7 +237,7 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
                         //         consumedAmount: nextConsumed,
                         //     } as AnytimeItem);
                         // };
-                    
+
                         return (
                             <View
                                 key={unitItem.id}

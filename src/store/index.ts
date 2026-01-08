@@ -5,6 +5,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 // local dependencies
 import { authApi } from './api/authApi';
 import appReducer from './slices/appSlice';
+import { planApi } from 'store/api/planApi.ts';
 import reactotron from '../../ReactotronConfig';
 import { shoppingApi } from './api/shoppingApi';
 import signInReducer from './slices/signInSlice';
@@ -32,6 +33,7 @@ export const store = configureStore({
         forgotPassword: forgotPasswordReducer,
         foodPreferences: foodPreferencesSlice,
         [authApi.reducerPath]: authApi.reducer,
+        [planApi.reducerPath]: planApi.reducer,
         [publicApi.reducerPath]: publicApi.reducer,
         [settingsApi.reducerPath]: settingsApi.reducer,
         [shoppingApi.reducerPath]: shoppingApi.reducer,
@@ -44,6 +46,7 @@ export const store = configureStore({
         getDefaultMiddleware({ serializableCheck: false })
             .concat(
                 authApi.middleware,
+                planApi.middleware,
                 publicApi.middleware,
                 settingsApi.middleware,
                 shoppingApi.middleware,

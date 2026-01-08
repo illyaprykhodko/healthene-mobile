@@ -54,13 +54,21 @@ export interface MessageChain {
     id: number;
     date: string;
     text: string;
-    attachments: []
     isRead: boolean;
     chain: {id: number};
     sender: Participant;
+    attachments: Attachment[]
 }
 
 export interface MessageForm {
+    text: string,
     subject: string,
-    text: string
-};
+    attachments: Attachment[]
+}
+
+export interface Attachment {
+    id: number;
+    title: string;
+    mimeType: string;
+    fileName: string;
+}

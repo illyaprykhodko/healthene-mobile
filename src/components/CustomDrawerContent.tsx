@@ -1,7 +1,7 @@
 // outsource dependencies
 import React from 'react';
 import { useSelector } from 'react-redux';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { View, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 
@@ -13,19 +13,28 @@ import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
-import { navigate } from 'services/navigation';
-import { clearSession } from 'store/slices/appSlice';
 import ProfileImage from 'components/ProfileImage.tsx';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import { navigate, RootStackParamList } from 'services/navigation';
 
-// const { width } = Dimensions.get('window');
+type RouteName = keyof RootStackParamList;
+type DrawerIconName =
+    | 'file'
+    | 'book'
+    | 'award'
+    | 'comments'
+    | 'utensils'
+    | 'chart-bar'
+    | 'clipboard'
+    | 'heartbeat'
+    | 'info-circle'
+    | 'shopping-cart';
 
 interface DrawerItemProps {
-    icon: string;
     title: string;
     badge?: number;
     focused: boolean;
     onPress: () => void;
+    icon: DrawerIconName;
 }
 
 const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, badge }) => {
@@ -39,6 +48,7 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
             <Icon
                 size={24}
                 name={icon}
+                iconStyle="solid"
                 style={styles.menuIcon}
                 color={focused ? theme.colors.primary : theme.colors.textSecondary}
             />
@@ -79,7 +89,11 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         await signOut();
     };
 
-    const menuItems = [
+    const menuItems: {
+        title: string,
+        route: RouteName,
+        icon: DrawerIconName,
+    }[] = [
         {
             icon: 'file',
             title: 'My Daily Plan',
@@ -131,7 +145,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         return props.state?.routes[props.state?.index]?.name;
     };
 
-    const goToAccountSettings = () => navigate('AccountSettings');
+    const goToAccountSettings = () => navigate(ROUTES.SETTINGS_STACK);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>

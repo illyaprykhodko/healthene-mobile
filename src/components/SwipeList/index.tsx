@@ -1,19 +1,19 @@
 // outsource dependencies
 import _ from 'lodash';
 import React from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
 // local dependencies
-// import { useTheme } from 'hooks/useTheme';
 import { COLORS } from 'constants/colors';
 import { OVERVIEW_TYPE, PHASE_ITEM_STATUS } from 'constants/spec';
 
 export type SwipeValueChange = {
-    direction: 'left' | 'right';
-    isOpen: boolean;
-    value: number;
     key: string;
+    value: number;
+    isOpen: boolean;
+    direction: 'left' | 'right';
 }
 
 interface SwipeListProps {
@@ -102,7 +102,7 @@ export const SwipeList: React.FC<SwipeListProps> = ({
                                         onPress={() => onReplace(item)}
                                         style={[styles.button, styles.listItemBtnReplace]}
                                     >
-                                        <Icon name="sync" color={COLORS.BLACK} size={30} />
+                                        <Icon iconStyle="solid" name="sync" color={COLORS.BLACK} size={30} />
                                         <Text style={styles.replaceBtn}>Replace</Text>
                                     </TouchableOpacity>
                                 )}
@@ -123,13 +123,13 @@ export const SwipeList: React.FC<SwipeListProps> = ({
                                         }}
                                         style={[styles.button, styles.listItemBtnNotEat]}
                                     >
-                                        <Icon name="times" color={COLORS.BLACK} size={30} />
+                                        <Icon iconStyle="solid" name="times" color={COLORS.BLACK} size={30} />
                                         <Text style={[styles.notEatBtn, styles.offsetTop]}>Did</Text>
                                         <Text style={styles.notEatBtn}>Not Eat</Text>
                                     </TouchableOpacity>
                                 )
                             ) : (
-                                <></>
+                                (<></>)
                             // <TouchableOpacity
                             //     onPress={() => onDelete(item)}
                             //     style={[styles.button, styles.listItemBtnDelete]}

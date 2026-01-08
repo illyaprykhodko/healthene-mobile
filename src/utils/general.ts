@@ -292,4 +292,25 @@ function throttle<F extends (...args: any[]) => void>(
     return throttled as F & { cancel: () => void };
 }
 
-export { groupBy, isEmpty, size, sortBy, get, uniqBy, flatten, chunk, debounce, throttle };
+function formatDuration (seconds: number) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function filterByName<T extends { name: string }> (
+    data: T[] | undefined,
+    search: string
+): T[] {
+    if (!data) { return []; }
+
+    const value = search.trim().toLowerCase();
+    if (!value) { return data; }
+
+    return data.filter(item =>
+        item.name.toLowerCase().startsWith(value)
+    );
+}
+
+export { groupBy, isEmpty, size, sortBy, get, uniqBy, flatten, chunk, debounce, throttle, formatDuration, filterByName };

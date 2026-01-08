@@ -138,6 +138,9 @@ export interface User {
   title?: string;
   avatar?: Url;
   country: Country;
+  cellPhone?: string;
+  homePhone?: string;
+  workPhone?: string;
   coverImage: {
     url: string;
   },

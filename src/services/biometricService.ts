@@ -1,9 +1,11 @@
 // outsource dependencies
-import { Platform } from 'react-native';
+import { ComponentProps } from 'react';
 import * as Keychain from 'react-native-keychain';
+import Icon from '@react-native-vector-icons/ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ReactNativeBiometrics, { BiometryType } from 'react-native-biometrics';
 
+type IoniconName = ComponentProps<typeof Icon>['name'];
 const BIOMETRIC_STORAGE_KEY = '@biometric_enabled';
 const KEYCHAIN_SERVICE = 'com.intelliceed.patientapp.biometric';
 
@@ -26,7 +28,7 @@ class BiometricService {
     async isAvailable (): Promise<BiometricAvailability> {
         try {
             const { available, biometryType } = await rnBiometrics.isSensorAvailable();
-            
+
             return {
                 available,
                 biometryType: biometryType as BiometryType | null,
@@ -53,7 +55,7 @@ class BiometricService {
         }
     }
 
-    getBiometricIcon (biometryType: BiometryType | null): string {
+    getBiometricIcon (biometryType: BiometryType | null): IoniconName {
         switch (biometryType) {
             case 'FaceID':
                 return 'scan';

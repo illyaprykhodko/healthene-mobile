@@ -33,15 +33,20 @@ export const ROUTES = {
 
     // Account Settings
     ADDRESS: 'Address',
+    SETTINGS: 'Settings',
+    SETTINGS_STACK: 'SettingsStack',
+    CHANGE_PASSWORD: 'ChangePassword',
     ACCOUNT_SETTINGS: 'AccountSettings',
-    BIOMETRIC_SETTINGS: 'BiometricSettings',
     FOOD_PREFERENCES: 'FoodPreferences',
+    BIOMETRIC_SETTINGS: 'BiometricSettings',
     PERSONAL_INFORMATION: 'PersonalInformation',
 
-    // Messanger
+    // Messenger
+    READ_MESSAGE: 'ReadMessages',
     MESSAGE_LIST: 'MessengerList',
-    READ_MESSAGE_SCREEN: 'ReadMessagesScreen',
-    WRITE_MESSAGE_SCREEN: 'WriteMessageScreen',
+    WRITE_MESSAGE: 'WriteMessage',
+    MESSENGER_AUDIO: 'MessengerAudio',
+    MESSENGER_CAMERA: 'MessengerCamera',
 
     // Shopping routes
     STOCK_LIST: 'StockList',
@@ -55,10 +60,9 @@ export const ROUTES = {
     // Legacy routes (for compatibility)
     HOME: 'Home',
     PROFILE: 'Profile',
-    SETTINGS: 'Settings',
 } as const;
-export const PUBLIC = 'public';
-export const PRIVATE = 'private';
+export const PUBLIC = 'public' as const;
+export const PRIVATE = 'private' as const;
 export type Route = typeof ROUTES[keyof typeof ROUTES];
 
 // Route groups

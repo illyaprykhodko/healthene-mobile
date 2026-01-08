@@ -4,7 +4,7 @@ import { Formik } from 'formik';
 import React, { useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // local dependencies
@@ -104,7 +104,7 @@ export const ForgotPasswordScreen: React.FC = () => {
         <View style={styles.formContainer}>
             <View style={styles.row}>
                 <View style={[styles.successIcon, { backgroundColor: theme.colors.success }]}>
-                    <Icon name="check" color={theme.colors.white} size={26} />
+                    <Icon iconStyle="solid" name="check" color={theme.colors.white} size={26} />
                 </View>
             </View>
             <Text

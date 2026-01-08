@@ -1,7 +1,4 @@
 // outsource dependencies
-import Icon from 'react-native-vector-icons/Ionicons';
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import Video, { OnLoadData, OnProgressData } from 'react-native-video';
 import {
     View,
     ViewStyle,
@@ -9,11 +6,14 @@ import {
     TouchableOpacity,
     ActivityIndicator,
 } from 'react-native';
+import Icon from '@react-native-vector-icons/ionicons';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import Video, { OnLoadData, OnProgressData } from 'react-native-video';
 
 // local dependencies
 import Text from './Text';
+import { config } from 'constants';
 import { useAppSelector } from 'store';
-import { config } from 'constants/index';
 import { debounce } from 'utils/general';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';

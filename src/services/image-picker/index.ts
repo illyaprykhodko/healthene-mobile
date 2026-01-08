@@ -70,6 +70,7 @@ export const takePicture = async () => {
             cropping: true,
             multiple: false,
             includeBase64: true,
+            useFrontCamera: true,
             cropperCircleOverlay: true,
             cropperToolbarColor: '#156F93',
             cropperActiveWidgetColor: '#FFFFFF',

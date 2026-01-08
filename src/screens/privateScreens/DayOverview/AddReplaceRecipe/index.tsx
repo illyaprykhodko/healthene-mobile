@@ -1,10 +1,11 @@
 // outsource dependencies
 import _ from 'lodash';
 import React, { useCallback, useState } from 'react';
+import Icon from '@react-native-vector-icons/ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { StyleSheet, FlatList, View, TouchableOpacity, ActivityIndicator } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -111,7 +112,7 @@ const AddReplaceRecipe: React.FC = () => {
                     replacement: { id: nextItem.id },
                 },
             }).unwrap();
- 
+
             navigation.navigate(ROUTES.EDIT, {
                 phaseId: route.params?.phaseId || prevItem.phaseId,
                 isToast: true,

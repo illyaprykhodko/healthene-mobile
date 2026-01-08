@@ -1,8 +1,9 @@
 // outsource dependencies
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import React, { useCallback, useLayoutEffect, useMemo, useState, useEffect } from 'react';
+
 // local dependencies
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
@@ -51,7 +52,7 @@ function extractExercise (item: any): any {
     if (!item) {
         return null;
     }
-    
+
     // If item has a list, it's a category - return the item with processed list
     if (Array.isArray(item.list) && item.list.length > 0) {
         return {
@@ -86,17 +87,17 @@ export default function ExerciseCategories () {
 
     // Load day overview data to get physical activity items
     const { data: dayOverviewData } = useGetDayOverviewQuery(date || new Date().toISOString().split('T')[0]);
-    
+
     // Mutation for updating phase status
     const [updatePhase] = useUpdatePhaseMutation();
-    
+
     // Build exercise categories from physical activity items
     const exerciseCategories = useMemo(() => {
         if (!dayOverviewData?.phases) { return []; }
-        
+
         const physicalActivityPhase = dayOverviewData.phases.find(phase => phase.type === 'PHYSICAL_ACTIVITY');
         if (!physicalActivityPhase?.items) { return []; }
-        
+
         // Group exercises by type
         const groups = physicalActivityPhase.items.reduce((acc: any, item: any) => {
             const { type } = item;
@@ -116,7 +117,7 @@ export default function ExerciseCategories () {
                 .split('_')
                 .map(s => s.charAt(0).toUpperCase() + s.slice(1))
                 .join(' ');
-            
+
             return {
                 title,
                 id: idx + 1,
@@ -130,7 +131,7 @@ export default function ExerciseCategories () {
     // Use exercise categories if no current list is set
     const displayList = currentList.length > 0 ? currentList : exerciseCategories;
     const listIsDone = useMemo(() => areAllItemsFullyDone(displayList), [displayList]);
-    
+
     // Calculate active exercises count
     const activeExercisesCount = useMemo(() => {
         if (!dayOverviewData?.phases) { return 0; }
@@ -138,7 +139,7 @@ export default function ExerciseCategories () {
         if (!physicalActivityPhase?.items) { return 0; }
         return physicalActivityPhase.items.filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
     }, [dayOverviewData]);
-    
+
     // Check if today to determine status logic
     const isToday = useMemo(() => {
         const today = new Date().toISOString().split('T')[0];
@@ -242,7 +243,7 @@ export default function ExerciseCategories () {
                     </View>
                     <Text variant="h3" style={[styles.name, { color: theme.colors.text }]}>{title}</Text>
                     <TouchableOpacity onPress={handleBack}>
-                        <Icon name="times" size={24} color={theme.colors.text} />
+                        <Icon iconStyle="solid" name="times" size={24} color={theme.colors.text} />
                     </TouchableOpacity>
                 </View>
                 <View style={styles.content}>
@@ -269,7 +270,7 @@ export default function ExerciseCategories () {
                                 </View>
                             )}
                             {![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.INCOMPLETE].includes(item?.status) && (
-                                <Icon name="chevron-right" size={18} color={theme.colors.text} />
+                                <Icon iconStyle="solid" name="chevron-right" size={18} color={theme.colors.text} />
                             )}
                         </TouchableOpacity>
                     ))}

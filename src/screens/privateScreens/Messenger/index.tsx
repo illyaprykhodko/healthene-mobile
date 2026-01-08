@@ -2,7 +2,7 @@
 import { useDispatch } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View, RefreshControl } from 'react-native';
@@ -32,10 +32,10 @@ const MessengerList = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const goToWriteMessage = () => navigation.navigate(ROUTES.WRITE_MESSAGE_SCREEN);
+    const goToWriteMessage = () => navigation.navigate(ROUTES.WRITE_MESSAGE);
     const goToReadMessage = useCallback((item: MessageItem) => {
         dispatch(setReplyMessage(item));
-        navigation.navigate(ROUTES.READ_MESSAGE_SCREEN);
+        navigation.navigate(ROUTES.READ_MESSAGE);
     }, [dispatch, navigation]);
     const init = useCallback(() => dispatch(clearReplyMessage()), [dispatch]);
 
@@ -138,8 +138,8 @@ const MessengerList = () => {
             />
             <Button
                 variant="outline"
-                title="NEW MESSAGE"
                 style={styles.btn}
+                title="NEW MESSAGE"
                 onPress={goToWriteMessage}
             />
         </Screen>

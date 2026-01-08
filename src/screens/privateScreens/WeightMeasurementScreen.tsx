@@ -1,8 +1,4 @@
 // outsource dependencies
-import * as yup from 'yup';
-import moment from 'moment';
-import { Formik } from 'formik';
-import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -10,6 +6,10 @@ import {
     StyleSheet,
     TouchableOpacity,
 } from 'react-native';
+import * as yup from 'yup';
+import moment from 'moment';
+import { Formik } from 'formik';
+import React, { useState, useCallback } from 'react';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -82,7 +82,6 @@ const WeightMeasurementScreen: React.FC = () => {
                     onPress={() => setIsPanelOpen(false)}
                 />
             )}
-
             <TouchableOpacity
                 onPress={handleSmartScalePress}
                 style={[styles.scaleButton, { borderColor: theme.colors.success }]}
@@ -91,7 +90,6 @@ const WeightMeasurementScreen: React.FC = () => {
                         Step on Scale
                 </Text>
             </TouchableOpacity>
-
             <TouchableOpacity
                 onPress={handleManualPress}
                 style={[styles.manualButton, { borderColor: theme.colors.primary }]}

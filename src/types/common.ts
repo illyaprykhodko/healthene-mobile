@@ -44,3 +44,9 @@ export interface State {
     code: string;
     country: {id: number};
 }
+
+export interface ChangePassword {
+    newPassword: string
+    checkPassword: string,
+    currentPassword: string,
+}

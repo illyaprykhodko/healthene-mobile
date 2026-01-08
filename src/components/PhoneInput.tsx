@@ -24,7 +24,6 @@ export const PhoneInput = ({
     error,
     touched,
     onChangeText,
-
 }: PhoneInputProps) => {
     const theme = useTheme();
     const errorText = error?.[name];

@@ -1,12 +1,15 @@
 // outsource dependencies
 import React, { useState } from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
-import { Image, View, StyleSheet, ImageStyle, ViewStyle } from 'react-native';
+import Icon from '@react-native-vector-icons/fontawesome5';
+import { Image, View, StyleSheet, ImageStyle } from 'react-native';
+
+type DefImageIconName =
+    | 'utensils'
 
 interface DefImageProps {
     src?: string;
     style?: ImageStyle;
-    defaultIcon?: string;
+    defaultIcon?: DefImageIconName;
 }
 
 const DefImage: React.FC<DefImageProps> = ({ src, style, defaultIcon = 'utensils' }) => {
@@ -16,7 +19,7 @@ const DefImage: React.FC<DefImageProps> = ({ src, style, defaultIcon = 'utensils
     if (!src || hasError) {
         return (
             <View style={[styles.placeholder, style]}>
-                <Icon name={defaultIcon} size={24} color="#CCCCCC" />
+                <Icon iconStyle="solid" name={defaultIcon} size={24} color="#CCCCCC" />
             </View>
         );
     }

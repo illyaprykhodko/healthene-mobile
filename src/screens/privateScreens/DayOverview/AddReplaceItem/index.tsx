@@ -1,26 +1,27 @@
 // outsource dependencies
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, StyleSheet, TouchableOpacity, FlatList, TextInput, Image } from 'react-native';
+
 // local dependencies
+import {
+    AvailableItem,
+    useGetFoodsQuery,
+    useGetRecipePrototypesQuery,
+    useGetCatalogPrototypeTreeNodesQuery
+} from 'store/api/dayOverviewApi';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
-import {
-    useGetCatalogPrototypeTreeNodesQuery,
-    useGetRecipePrototypesQuery,
-    useGetFoodsQuery,
-    AvailableItem
-} from 'store/api/dayOverviewApi';
 import { CATALOG_TAG_TYPE, SEARCH_TYPE } from 'constants/spec';
 
 export const AddReplaceItem: React.FC = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
-  
+
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [page, setPage] = useState(0);
@@ -32,7 +33,7 @@ export const AddReplaceItem: React.FC = () => {
     const [activeTab, setActiveTab] = useState<string>(initialEntityType);
     const [searchType, setSearchType] = useState<string>(initialSearchType);
     const [currentNodeId, setCurrentNodeId] = useState<number | null>(null);
-  
+
     const onApply = route.params?.onApply;
     const date = route.params?.date;
 
@@ -136,7 +137,7 @@ export const AddReplaceItem: React.FC = () => {
 
     const handleItemPress = (item: AvailableItem) => {
         const isNode = activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE;
-        
+
         if (isNode) {
             setCurrentNodeId(item.id as number);
             setPage(0);
@@ -204,7 +205,7 @@ export const AddReplaceItem: React.FC = () => {
 
     const renderItem = ({ item }: { item: AvailableItem }) => {
         const imageUrl = (item as any).coverImage?.url;
-        
+
         return (
             <TouchableOpacity style={styles.listItem} onPress={() => handleItemPress(item)}>
                 <View style={styles.content}>
@@ -222,7 +223,7 @@ export const AddReplaceItem: React.FC = () => {
                         </Text>
                     </View>
                 </View>
-                <Icon name="chevron-right" size={16} color={COLORS.BLACK} />
+                <Icon iconStyle="solid" name="chevron-right" size={16} color={COLORS.BLACK} />
             </TouchableOpacity>
         );
     };
@@ -230,7 +231,7 @@ export const AddReplaceItem: React.FC = () => {
     const renderSearchInput = () => (
         <View style={styles.searchContainer}>
             <View style={styles.searchInputWrapper}>
-                <Icon name="search" size={14} color={COLORS.GREY} style={styles.searchIcon} />
+                <Icon iconStyle="solid" name="search" size={14} color={COLORS.GREY} style={styles.searchIcon} />
                 <TextInput
                     value={searchQuery}
                     autoCorrect={false}
@@ -243,7 +244,7 @@ export const AddReplaceItem: React.FC = () => {
                 />
                 {searchQuery.length > 0 && (
                     <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
-                        <Icon name="times" size={14} color={COLORS.GREY} />
+                        <Icon iconStyle="solid" name="times" size={14} color={COLORS.GREY} />
                     </TouchableOpacity>
                 )}
             </View>

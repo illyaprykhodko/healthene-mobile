@@ -10,7 +10,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from '@react-native-vector-icons/ionicons';
 import type { BiometryType } from 'react-native-biometrics';
 
 // local dependencies
@@ -26,7 +26,7 @@ import { biometricService } from 'services/biometricService';
 export const BiometricSettingsScreen: React.FC = () => {
     const theme = useTheme();
     const user = useAppSelector(state => state.app.user);
-    
+
     const [isLoading, setIsLoading] = useState(true);
     const [isAvailable, setIsAvailable] = useState(false);
     const [isEnabled, setIsEnabled] = useState(false);
@@ -122,14 +122,14 @@ export const BiometricSettingsScreen: React.FC = () => {
         setIsProcessing(true);
         try {
             const saved = await biometricService.saveCredentials(user.email, password);
-            
+
             if (saved) {
                 await biometricService.enable();
                 setIsEnabled(true);
                 setHasCredentials(true);
                 setShowPasswordInput(false);
                 setPassword('');
-                
+
                 Toast.show({
                     type: 'success',
                     text1: 'Biometric Enabled',
@@ -155,7 +155,7 @@ export const BiometricSettingsScreen: React.FC = () => {
             const authenticated = await biometricService.authenticate(
                 'Test biometric authentication'
             );
-            
+
             if (authenticated) {
                 Toast.show({
                     type: 'success',

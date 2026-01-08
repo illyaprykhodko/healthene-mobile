@@ -1,7 +1,7 @@
 // outsource dependencies
 import moment from 'moment';
 import React, { memo, useCallback, useMemo } from 'react';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import FeatherIcon from '@react-native-vector-icons/feather';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 // local dependencies
 import Text from 'components/Text';

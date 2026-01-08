@@ -1,7 +1,8 @@
 // outsource dependencies
 import React, { memo, useState } from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native';
+
 // local dependencies
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
@@ -36,9 +37,10 @@ const IngredientsView: React.FC<IngredientsViewProps> = ({ ingredients, style, e
                         View Ingredients:{' '}
                     </Text>
                     <Icon
-                        name={(isExpanded || expandTrigger) ? 'chevron-up' : 'chevron-down'}
-                        color={theme.colors.blue}
                         size={12}
+                        iconStyle="solid"
+                        color={theme.colors.blue}
+                        name={(isExpanded || expandTrigger) ? 'chevron-up' : 'chevron-down'}
                     />
                 </TouchableOpacity>
             </View>
