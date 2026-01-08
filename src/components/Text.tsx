@@ -58,64 +58,65 @@ export default Text;
 
 const textStyles: Record<TextVariant, TextStyle> = {
     common: {
-        fontSize: 16
+        fontSize: 16,
+        fontFamily: 'Outfit-Regular',
     },
     bold: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontFamily: 'Outfit-Bold',
     },
     h1: {
         fontSize: 32,
         lineHeight: 40,
-        fontWeight: '700',
+        fontFamily: 'Outfit-Bold',
         letterSpacing: -0.5,
     },
     h2: {
         fontSize: 24,
         lineHeight: 32,
-        fontWeight: '700',
+        fontFamily: 'Outfit-Bold',
         letterSpacing: -0.25,
     },
     h3: {
         fontSize: 20,
         lineHeight: 28,
         letterSpacing: 0,
-        fontWeight: '600',
+        fontFamily: 'Outfit-SemiBold',
     },
     h4: {
         fontSize: 18,
         lineHeight: 24,
-        fontWeight: '600',
+        fontFamily: 'Outfit-SemiBold',
         letterSpacing: 0.15,
     },
     h5: {
         fontSize: 16,
         lineHeight: 22,
-        fontWeight: '500',
+        fontFamily: 'Outfit-Medium',
         letterSpacing: 0.15,
     },
     h6: {
         fontSize: 14,
         lineHeight: 20,
-        fontWeight: '500',
+        fontFamily: 'Outfit-Medium',
         letterSpacing: 0.1,
     },
     body: {
         fontSize: 16,
         lineHeight: 24,
-        fontWeight: '400',
+        fontFamily: 'Outfit-Regular',
         letterSpacing: 0.5,
     },
     caption: {
         fontSize: 12,
         lineHeight: 16,
-        fontWeight: '400',
+        fontFamily: 'Outfit-Regular',
         letterSpacing: 0.4,
     },
     small: {
         fontSize: 10,
         lineHeight: 14,
-        fontWeight: '400',
+        fontFamily: 'Outfit-Regular',
         letterSpacing: 0.4,
     },
 };

@@ -72,7 +72,7 @@ export interface AnytimeSupplementItem extends AnytimeBaseItem {
 export interface AnytimeMeasurementItem extends AnytimeBaseItem {
   type: 'MEASUREMENT';
   measurement: {
-    id: string | number;
+    id: number;
     name: string;
     type?: string; // WEIGHT, BLOOD_PRESSURE, BLOOD_GLUCOSE, etc.
     description?: string;

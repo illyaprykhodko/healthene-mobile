@@ -1,10 +1,12 @@
 // outsource dependencies
 import moment from 'moment';
+import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -347,6 +349,59 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         zIndex: 2,
     },
+    calendarBtn: {
+        position: 'absolute',
+        right: 20,
+        bottom: 90,
+    },
+    shadowBtn: {
+        shadowColor: '#000000',
+        ...Platform.select({
+            ios: {
+                shadowOffset: { width: 3, height: 3 },
+                shadowOpacity: 0.8,
+                shadowRadius: 3,
+            },
+            android: {
+                elevation: 5,
+            },
+        }),
+    },
+    roundBtn: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+    },
+    calendarMonth: {
+        backgroundColor: '#F55454',
+        flex: 1,
+        width: '100%',
+    },
+    calendarMonthText: {
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    calendarDay: {
+        backgroundColor: '#FFFFFF',
+        flex: 2,
+        width: '100%',
+        justifyContent: 'center',
+    },
+    calendarDayText: {
+        fontWeight: 'bold',
+    },
+    bottomSheetBg: {
+        backgroundColor: '#FFFFFF',
+    },
+    bottomSheetIndicator: {
+        backgroundColor: '#DADADA',
+        width: 40,
+    },
+    calendarContainer: {
+        flex: 1,
+        paddingHorizontal: OFFSET.HORIZONTAL,
+        paddingTop: OFFSET.VERTICAL,
+    },
 });
 
 const getIconColorByType = (type: PhaseType) => {
@@ -375,7 +430,8 @@ export const Overview: React.FC = () => {
     const theme = useTheme();
     const navigation = useNavigation();
     const dispatch = useAppDispatch();
-    const { date, expectAnswer } = useAppSelector(selectDayOverview);
+    const bottomSheetRef = useRef<BottomSheet>(null);
+    const { date, showCalendar, calendarDays } = useAppSelector(selectDayOverview);
     const currentDate = date || moment().format('YYYY-MM-DD');
     const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
 
@@ -384,13 +440,58 @@ export const Overview: React.FC = () => {
         refetchOnMountOrArgChange: true,
     });
 
+    const incompleteDay = useMemo(() => {
+        const incompleteDays = data?.currentWeekIncompleteDays || [];
+        return incompleteDays.some(day => day?.date === currentDate);
+    }, [data?.currentWeekIncompleteDays, currentDate]);
+
+    const toggleCalendar = useCallback((show: boolean) => {
+        dispatch(meta({ showCalendar: show }));
+        if (show) {
+            bottomSheetRef.current?.expand();
+        } else {
+            bottomSheetRef.current?.close();
+        }
+    }, [dispatch]);
+
+    const handleDayPress = useCallback((day: { dateString: string }) => {
+        const nextDate = day.dateString;
+        const isCurrent = moment(nextDate).isSame(moment(), 'day');
+        const isFuture = moment(nextDate).isAfter(moment(), 'day');
+        const isPast = moment(nextDate).isBefore(moment(), 'day');
+        dispatch(meta({
+            date: nextDate,
+            isPastDate: isPast,
+            showCalendar: false,
+            isFutureDate: isFuture,
+            isCurrentDate: isCurrent,
+            calendarDays: { ...calendarDays, [nextDate]: { selected: true } },
+        }));
+        bottomSheetRef.current?.close();
+    }, [dispatch, calendarDays]);
+
+    const renderBackdrop = useCallback(
+        (props: any) => (
+            <BottomSheetBackdrop
+                {...props}
+                disappearsOnIndex={-1}
+                appearsOnIndex={0}
+                opacity={0.5}
+            />
+        ),
+        []
+    );
+
+    const handleSheetChanges = useCallback((index: number) => {
+        if (index === -1) {
+            dispatch(meta({ showCalendar: false }));
+        }
+    }, [dispatch]);
+
     useEffect(() => {
         moment.updateLocale('en', { week: { dow: 1 } });
     }, []);
 
-    useEffect(() => {
-        dispatch(meta({ expectAnswer: Boolean(isFetching) }));
-    }, [isFetching, dispatch]);
 
     useEffect(() => {
         if (!data) { return; }
@@ -569,14 +670,90 @@ export const Overview: React.FC = () => {
 
             <AnytimeMenu
                 date={currentDate}
-                disabled={Boolean(expectAnswer) || isLoading}
+                disabled={isFetching || isLoading}
             />
+            {/* && data?.id */}
+            {/* Floating Calendar Button */}
+            {!showCalendar && (
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => toggleCalendar(true)}
+                    style={[
+                        styles.calendarBtn,
+                        styles.shadowBtn,
+                        styles.roundBtn,
+                    ]}
+                >
+                    <View style={[
+                        styles.roundBtn,
+                        { backgroundColor: incompleteDay ? '#dc73de' : '#2978A0', overflow: 'hidden' }
+                    ]}>
+                        <View style={styles.calendarMonth}>
+                            <Text
+                                textAlign="center"
+                                style={styles.calendarMonthText}
+                            >
+                                {moment(currentDate).format('MMM')}
+                            </Text>
+                        </View>
+                        <View style={styles.calendarDay}>
+                            <Text
+                                variant="h3"
+                                textAlign="center"
+                                style={styles.calendarDayText}
+                            >
+                                {moment(currentDate).format('DD')}
+                            </Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            )}
+
+            {/* Calendar BottomSheet */}
+            <BottomSheet
+                index={-1}
+                enablePanDownToClose
+                ref={bottomSheetRef}
+                snapPoints={['60%']}
+                backdropComponent={renderBackdrop}
+                onChange={handleSheetChanges}
+                backgroundStyle={styles.bottomSheetBg}
+                handleIndicatorStyle={styles.bottomSheetIndicator}
+            >
+                <BottomSheetView style={styles.calendarContainer}>
+                    <Calendar
+                        current={currentDate}
+                        markedDates={calendarDays}
+                        onDayPress={handleDayPress}
+                        theme={{
+                            backgroundColor: '#ffffff',
+                            calendarBackground: '#ffffff',
+                            textSectionTitleColor: '#7B7B7B',
+                            selectedDayBackgroundColor: '#2978A0',
+                            selectedDayTextColor: '#ffffff',
+                            todayTextColor: '#2978A0',
+                            dayTextColor: '#2d4150',
+                            textDisabledColor: '#d9e1e8',
+                            dotColor: '#2978A0',
+                            selectedDotColor: '#ffffff',
+                            arrowColor: '#2978A0',
+                            monthTextColor: '#2d4150',
+                            textDayFontWeight: '400',
+                            textMonthFontWeight: '600',
+                            textDayHeaderFontWeight: '500',
+                            textDayFontSize: 16,
+                            textMonthFontSize: 18,
+                            textDayHeaderFontSize: 14,
+                        }}
+                    />
+                </BottomSheetView>
+            </BottomSheet>
 
             {selectedMeasurement && (
                 <MeasurementInputModal
+                    disabled={isFetching}
                     item={selectedMeasurement}
                     visible={!!selectedMeasurement}
-                    disabled={Boolean(expectAnswer)}
                     onClose={() => setSelectedMeasurement(null)}
                 />
             )}

@@ -7,9 +7,11 @@ import { authApi } from './api/authApi';
 import appReducer from './slices/appSlice';
 import { planApi } from 'store/api/planApi.ts';
 import reactotron from '../../ReactotronConfig';
+import { shoppingApi } from './api/shoppingApi';
 import signInReducer from './slices/signInSlice';
 import { publicApi } from 'store/api/publicApi.ts';
 import exerciseReducer from './slices/exerciseSlice';
+import shoppingReducer from './slices/shoppingSlice';
 import { dayOverviewApi } from './api/dayOverviewApi';
 import { settingsApi } from 'store/api/settingsApi.ts';
 import { s3ServiceApi } from 'store/api/s3ServiceApi.ts';
@@ -24,6 +26,7 @@ export const store = configureStore({
     reducer: {
         app: appReducer,
         signIn: signInReducer,
+        shopping: shoppingReducer,
         exercise: exerciseReducer,
         messenger: messengerSlice,
         dayOverview: dayOverviewReducer,
@@ -33,6 +36,7 @@ export const store = configureStore({
         [planApi.reducerPath]: planApi.reducer,
         [publicApi.reducerPath]: publicApi.reducer,
         [settingsApi.reducerPath]: settingsApi.reducer,
+        [shoppingApi.reducerPath]: shoppingApi.reducer,
         [s3ServiceApi.reducerPath]: s3ServiceApi.reducer,
         [messengerApi.reducerPath]: messengerApi.reducer,
         [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
@@ -45,6 +49,7 @@ export const store = configureStore({
                 planApi.middleware,
                 publicApi.middleware,
                 settingsApi.middleware,
+                shoppingApi.middleware,
                 messengerApi.middleware,
                 s3ServiceApi.middleware,
                 dayOverviewApi.middleware,

@@ -37,7 +37,7 @@ export const ListItem: React.FC<ListItemProps> = ({
 
     const handleCheckboxPress = (next: boolean) => {
         if (handleCheckboxStatus && !disabled) {
-            handleCheckboxStatus({ ...item, status: isDone ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
+            handleCheckboxStatus({ ...item, status: (isDone || isDidNotEat) ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
             // handleCheckboxStatus(item);
         }
     };
@@ -185,9 +185,9 @@ export const ListItem: React.FC<ListItemProps> = ({
                                 {/* {prepareIngredientNameWithUnit(item, { withoutName: true })} */}
                             </Text>
                         )}
-                        {item.modified && (
+                        {item?.recipe?.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                added by me
+                                edited by me
                             </Text>
                         )}
                     </View>
@@ -210,11 +210,11 @@ export const ListItem: React.FC<ListItemProps> = ({
                                 {`${amount} ${item.weight?.unit?.name || ''}`}
                             </Text>
                         )}
-                        {item.modified && (
+                        {/* {item.modified && (
                             <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
                                 added by me
                             </Text>
-                        )}
+                        )} */}
                     </View>
                 </View>
             );

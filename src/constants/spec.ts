@@ -163,3 +163,53 @@ export const CATEGORY_STATUS = {
     EXCLUDE: 'EXCLUDE',
     I_LOVE_IT: 'I_LOVE_IT'
 } as const;
+
+// Shopping List constants
+export const SHOPPING_STEP = {
+    MEAL: 1,        // Preferences - People eating per meal
+    MAIN: 2,        // Main shopping list view
+    STOCK: 3,       // Stock list check
+    CHECK: 4,       // Final review
+    STORE: 5,       // Choose grocery store
+    CONFIRMED: 6,   // Order confirmed
+} as const;
+
+export type ShoppingStep = typeof SHOPPING_STEP[keyof typeof SHOPPING_STEP];
+
+export const SHOPPING_STATUS = {
+    PENDING: 'PENDING',
+    CONFIRMED: 'CONFIRMED',
+    SHOP_ON_MY_OWN: 'SHOP_ON_MY_OWN',
+} as const;
+
+export type ShoppingStatus = typeof SHOPPING_STATUS[keyof typeof SHOPPING_STATUS];
+
+export const SHOPPING_CONFIRMED_ITEM_TYPE = {
+    NONE: 'NONE',
+    ALL: 'ALL',
+    RESCUE: 'RESCUE',
+    ORIGINAL: 'ORIGINAL',
+} as const;
+
+export type ShoppingConfirmedItemType = typeof SHOPPING_CONFIRMED_ITEM_TYPE[keyof typeof SHOPPING_CONFIRMED_ITEM_TYPE];
+
+export const SHOPPING_ITEM_TYPE = {
+    RESCUE: 'RESCUE',
+    ORIGINAL: 'ORIGINAL',
+} as const;
+
+export type ShoppingItemType = typeof SHOPPING_ITEM_TYPE[keyof typeof SHOPPING_ITEM_TYPE];
+
+export const SHOPPING_LIST_TAB = {
+    ORIGINAL: 'My List',
+    RESCUE: 'Rescue Foods',
+} as const;
+
+export type ShoppingListTab = typeof SHOPPING_LIST_TAB[keyof typeof SHOPPING_LIST_TAB];
+
+export const ORIENTATION = {
+    PORTRAIT: 'PORTRAIT',
+    LANDSCAPE: 'LANDSCAPE',
+} as const;
+
+export type Orientation = typeof ORIENTATION[keyof typeof ORIENTATION];

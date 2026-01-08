@@ -14,9 +14,9 @@ const rnBiometrics = new ReactNativeBiometrics({
 });
 
 export interface BiometricAvailability {
+    error?: string;
     available: boolean;
     biometryType: BiometryType | null;
-    error?: string;
 }
 
 export interface BiometricCredentials {

@@ -48,6 +48,15 @@ export const ROUTES = {
     MESSENGER_AUDIO: 'MessengerAudio',
     MESSENGER_CAMERA: 'MessengerCamera',
 
+    // Shopping routes
+    STOCK_LIST: 'StockList',
+    SHOPPING_PDF: 'ShoppingPDF',
+    SHOPPING_LIST: 'ShoppingList',
+    CHOOSE_ADDRESS: 'ChooseAddress',
+    CONFIRM_SHOPPING: 'ConfirmShopping',
+    CHOOSE_GROCERY_STORE: 'ChooseGroceryStore',
+    SHOPPING_PREFERENCES: 'ShoppingPreferences',
+
     // Legacy routes (for compatibility)
     HOME: 'Home',
     PROFILE: 'Profile',

@@ -9,7 +9,7 @@ import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
-import Controls from 'components/Controls/index';
+import Controls from 'components/Controls';
 import ApproveButtons from 'components/ApproveButtons';
 import { MODIFY_TYPES } from '../ModifyTypeIngredient';
 import { Ingredient, IngredientWeight } from 'types/overview';

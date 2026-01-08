@@ -180,6 +180,7 @@ export interface User {
   isActive: boolean;
   createdDate: string;
   updatedDate: string;
+  submittedShoppingList: boolean;
   preferenceTemplatesExist: boolean;
   includeRescueFoodsInShoppingList: boolean;
 }
@@ -250,7 +251,7 @@ const resources = [
     'healthene',
 ];
 export interface Patient extends User {
-  activeVisit?: ActiveVisit;
+  activeVisit: ActiveVisit;
   preferredGender?: {
     id: number;
     preferredGender: Gender;
