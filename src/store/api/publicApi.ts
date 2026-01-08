@@ -5,6 +5,14 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { BUSINESS_PROPERTIES } from 'types';
 import { baseQueryPub } from 'store/api/baseApi.ts';
 
+interface WelcomeImage {
+    id: number;
+    url: string;
+}
+
+interface WelcomeData {
+    image: WelcomeImage | null;
+}
 
 export const publicApi = createApi({
     reducerPath: 'publicApi',
@@ -16,9 +24,16 @@ export const publicApi = createApi({
                 url: `patient-service/public/business-properties/key/${property}`
             }),
         }),
+        getWelcome: builder.query<WelcomeData, void>({
+            query: () => ({
+                method: 'GET',
+                url: 'patient-service/public/patients/welcome'
+            }),
+        }),
     }),
 });
 
 export const {
-    useGetTermsQuery
+    useGetTermsQuery,
+    useGetWelcomeQuery,
 } = publicApi;

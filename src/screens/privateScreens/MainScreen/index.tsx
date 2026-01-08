@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
-import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, Image, Platform } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text';
@@ -14,8 +14,7 @@ import { Button } from 'components/Button';
 import { TextLogo } from 'components/TextLogo';
 import { Hamburger } from 'components/Hamburger';
 import { RootState, useAppSelector } from 'store';
-
-const { width } = Dimensions.get('window');
+import { useGetWelcomeQuery } from 'store/api/publicApi';
 
 type DrawerParamList = {
     [ROUTES.MAIN]: undefined;
@@ -35,13 +34,17 @@ export const MainScreen: React.FC = () => {
     const theme = useTheme();
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
     const user = useAppSelector((state: RootState) => state.app.user);
+
+    const { data: welcomeData, isLoading } = useGetWelcomeQuery();
+    const welcomeImageUrl = welcomeData?.image?.url;
+
     const timeGreeting = () => {
         const hour = new Date().getHours();
         const name = user?.firstName || '';
 
-        if (hour < 12) { return `Good Morning ${name}`; }
-        if (hour < 18) { return `Good Afternoon ${name}`; }
-        return `Good Evening ${name}`;
+        if (hour < 12) { return `Good Morning\n${name}`; }
+        if (hour < 18) { return `Good Afternoon\n${name}`; }
+        return `Good Evening\n${name}`;
     };
 
     const handleGetStarted = () => {
@@ -53,7 +56,7 @@ export const MainScreen: React.FC = () => {
     };
 
     return (
-        <Screen style={styles.container} initialized={true}>
+        <Screen style={styles.container} initialized={!isLoading}>
             <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
                 <View style={styles.textLogoWrapper}>
                     <TextLogo color={theme.colors.background} />
@@ -69,17 +72,20 @@ export const MainScreen: React.FC = () => {
                 </View>
 
                 <View style={styles.imageWrapper}>
-                    <Image
-                        resizeMode="contain"
-                        style={styles.image}
-                        source={{ uri: 'https://via.placeholder.com/400x300/007AFF/FFFFFF?text=Welcome+Image' }}
-                    />
+                    {welcomeImageUrl && (
+                        <Image
+                            resizeMode="contain"
+                            style={styles.image}
+                            source={{ uri: welcomeImageUrl }}
+                        />
+                    )}
                 </View>
 
                 <Button
                     title="GET STARTED"
                     style={styles.button}
                     onPress={handleGetStarted}
+                    textStyle={styles.buttonText}
                 />
             </View>
         </Screen>
@@ -117,13 +123,13 @@ const styles = StyleSheet.create({
     descriptionWrapper: {
         flexDirection: 'row',
         marginBottom: OFFSET.VERTICAL,
-        marginTop: OFFSET.VERTICAL * 2,
+        marginTop: OFFSET.VERTICAL * 5,
     },
     title: {
         flex: 1,
-        fontSize: 24,
+        fontSize: 32,
         textAlign: 'center',
-        fontWeight: '600',
+        fontWeight: Platform.OS === 'ios' ? '600' : '700',
     },
     imageWrapper: {
         flex: 1,
@@ -133,13 +139,19 @@ const styles = StyleSheet.create({
     image: {
         height: '100%',
         width: '100%',
-        maxWidth: width * 0.8,
+        resizeMode: 'contain',
     },
     button: {
-        paddingVertical: OFFSET.VERTICAL,
-        marginBottom: OFFSET.VERTICAL,
-        borderRadius: 50,
         width: '90%',
+        borderRadius: 30,
         alignSelf: 'center',
+        backgroundColor: '#96E072',
+        borderColor: 'transparent',
+    },
+    buttonText: {
+        fontSize: 20,
+        color: '#4E733C',
+        paddingVertical: 3,
+        fontWeight: Platform.OS === 'ios' ? '600' : '700',
     },
 });
