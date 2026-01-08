@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
     },
     printText: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
         color: COLORS.THEME_COLOR,
     },
