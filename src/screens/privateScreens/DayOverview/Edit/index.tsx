@@ -1,10 +1,22 @@
 // outsource dependencies
 import moment from 'moment';
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 // local dependencies
+import {
+    useGetPhaseItemsQuery,
+    useGetDayOverviewQuery,
+    useUpdatePhaseMutation,
+    useAddPhaseItemMutation,
+    useUpdatePhaseItemMutation,
+    useDeletePhaseItemMutation,
+    useReplacePhaseItemMutation,
+    useAddPhaseMealItemMutation,
+    useAddPhaseCustomRecipeMutation,
+    useUpdateIncludeRescueFoodsMutation
+} from 'store/api/dayOverviewApi';
 import ListItem from './ListItem';
 import Text from 'components/Text';
 import { useAppSelector } from 'store';
@@ -17,16 +29,13 @@ import { PhaseItem } from 'types/overview';
 import { groupBy, isEmpty } from 'utils/general';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { RootStackParamList } from 'services/navigation';
+import { BirdAnimation } from 'animation/BirdAnimation.tsx';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import { selectDayOverview } from 'store/slices/dayOverviewSlice';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
-import { useGetDayOverviewQuery, useGetPhaseItemsQuery, useUpdatePhaseItemMutation,
-    useDeletePhaseItemMutation, useAddPhaseMealItemMutation, useAddPhaseCustomRecipeMutation,
-    useUpdatePhaseMutation, useReplacePhaseItemMutation, useAddPhaseItemMutation,
-    useUpdateIncludeRescueFoodsMutation } from 'store/api/dayOverviewApi';
 
 
 interface EditProps {
@@ -44,7 +53,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const route = useRoute<any>();
     const { date: currentDate } = useAppSelector(selectDayOverview);
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  
+
     const [scrollEnabled, setScrollEnabled] = useState(true);
     const [localItems, setLocalItems] = useState<PhaseItem[]>([]);
     const [showRescueFoodsModal, setShowRescueFoodsModal] = useState(false);
@@ -57,7 +66,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
-  
+
     const { data: dayOverviewData, isLoading: isDayOverviewLoading } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
     });
@@ -80,7 +89,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
     //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
-  
+
     const getItemTitle = (item: any) =>
         item.food?.name
         || item.recipe?.name
@@ -89,10 +98,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         || item.supplement?.name
         || item.physicalActivity?.name
         || 'Item';
-    
+
     const items = useMemo(() => {
         if (!phaseItems) { return []; }
-    
+
         return Object.values(phaseItems)
             .flat()
             .map(item => ({
@@ -146,7 +155,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         const excludeIds = computeExcludeIds();
         const entityType = mapPhaseTypeToEntityType();
-  
+
         const isMealPhase = currentPhase?.type === OVERVIEW_TYPE.MEAL || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT;
         if (isMealPhase) {
             navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
@@ -167,7 +176,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             amount: selectedItem?.amount || 1,
                             section: selectedItem?.section || 'Added',
                             initialAmount: selectedItem?.servingAmount || 1,
-                            
+
                         };
                         if (itemEntityType === ENTITY_TYPE.FOOD || itemEntityType === 'PATIENT_FOOD' || itemEntityType === 'PATIENT_DRINK') {
                             itemData.food = { id: selectedItem.id };
@@ -278,7 +287,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             });
             return;
         }
-        
+
         navigation.navigate(ROUTES.ADD_REPLACE_ITEM, {
             date: targetDate,
             prevItem: null,
@@ -328,7 +337,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     const handlePhaseDone = async () => {
         if (!targetPhaseId) { return; }
-    
+
         try {
             await updatePhase({
                 id: targetPhaseId,
@@ -382,7 +391,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             //     }
             // });
 
-         
+
             await updatePhaseItem({
                 id: item.id,
                 phaseId: targetPhaseId,
@@ -554,8 +563,18 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         }
     };
 
+    /****** Bord animation trigger *****/
+    const [birdAnimationStep, setBirdAnimationStep] = useState(false);
+    useEffect(() => {
+        if ((localItems || []).length > 0) {
+            const allDone = localItems.every(item => item.status === 'DONE');
+            setBirdAnimationStep(allDone);
+        }
+    }, [localItems]);
+
+
     const isLoading = isDayOverviewLoading || isPhaseItemsLoading;
-  
+
     if (isLoading) {
         return (
             <View style={styles.section}>
@@ -604,6 +623,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
+            {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
+                ? <BirdAnimation startAnimation={ birdAnimationStep } />
+                : null
+            }
             <View style={[styles.title, isFutureDate && styles.opacity]}>
                 <View>
                     <Text style={styles.titleText}>

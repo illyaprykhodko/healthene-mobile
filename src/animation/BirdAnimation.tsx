@@ -37,6 +37,7 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
             if (animations.length && path) {
                 try {
                     const base64 = await RNBlobUtil.fs.readFile(path, 'base64');
+                    console.log('base64', base64);
                     if (webViewRef?.current) {
                         webViewRef.current.injectJavaScript(`
                         (function() {
@@ -55,7 +56,6 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
                         })();
                     `);
                     }
-
                 } catch (error) {
                     console.error('Error read file: ', error);
                     return null;
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 1,
+        zIndex: 19999999,
         pointerEvents: 'none',
     },
 });
