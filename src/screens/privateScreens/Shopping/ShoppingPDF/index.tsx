@@ -1,7 +1,7 @@
 // outsource dependencies
 import moment from 'moment';
 import RNBlobUtil from 'react-native-blob-util';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { memo, useCallback, useState, useEffect } from 'react';
 import { StyleSheet, View, Platform, Alert, ActivityIndicator } from 'react-native';

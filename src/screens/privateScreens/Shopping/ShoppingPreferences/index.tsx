@@ -1,25 +1,23 @@
 // outsource dependencies
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '@react-native-vector-icons/feather';
 import { useNavigation } from '@react-navigation/native';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View, FlatList, TouchableOpacity } from 'react-native';
-import React, { memo, useCallback, useEffect, useLayoutEffect, useState } from 'react';
 // local dependencies
+import {
+    useGetShoppingPreferencesQuery,
+    useGenerateShoppingListMutation,
+    useUpdateShoppingPreferencesMutation,
+} from 'store/api/shoppingApi';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { useAppDispatch } from 'store';
-import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import { SHOPPING_STEP } from 'constants/spec';
 import { setCurrentStep } from 'store/slices/shoppingSlice';
-import {
-    useGetShoppingPreferencesQuery,
-    useUpdateShoppingPreferencesMutation,
-    useGenerateShoppingListMutation,
-} from 'store/api/shoppingApi';
-import { ShoppingListSkeleton } from 'components/Skeleton/ShoppingListSkeleton';
 import GenerateShoppingListSkeleton from 'components/Skeleton/GenerateShoppingListSkeleton';
 import { ShoppingPreferencesSkeleton } from 'components/Skeleton/ShoppingPreferencesSkeleton';
 

@@ -1,5 +1,5 @@
 // outsource dependencies
-import Icon from 'react-native-vector-icons/Fontisto';
+import Icon from '@react-native-vector-icons/fontisto';
 import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View, TouchableOpacity, FlatList } from 'react-native';
 import React, { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
