@@ -121,9 +121,27 @@ export const CONTENT_TYPE = {
 
 export type ContentType = typeof CONTENT_TYPE[keyof typeof CONTENT_TYPE];
 
+export const GENDERS_TYPE = {
+    MALE: 'MALE',
+    FEMALE: 'FEMALE',
+};
 export const GENDERS = [
-    { label: 'Male', value: 'MALE' },
-    { label: 'Female', value: 'FEMALE' },
+    { label: 'Male', value: GENDERS_TYPE.MALE },
+    { label: 'Female', value: GENDERS_TYPE.FEMALE },
+];
+
+export const PREFERRED_GENDER = {
+    MALE: 'MALE',
+    FEMALE: 'FEMALE',
+    TRANSGENDER: 'TRANSGENDER',
+    OTHER: 'OTHER',
+};
+
+export const PREFERRED_GENDER_OPTIONS = [
+    { label: 'Male', value: PREFERRED_GENDER.MALE },
+    { label: 'Female', value: PREFERRED_GENDER.FEMALE },
+    { label: 'Transgender', value: PREFERRED_GENDER.TRANSGENDER },
+    { label: 'Other', value: PREFERRED_GENDER.OTHER },
 ];
 
 export const PREFIXES = [

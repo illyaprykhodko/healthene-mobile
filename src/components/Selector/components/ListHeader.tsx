@@ -7,9 +7,7 @@ import Icon from '@react-native-vector-icons/material-icons';
 import Text from 'components/Text.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
-import Separator from 'components/Selector/components/Separator.tsx';
-
-// local dependencies
+import Separator from 'components/FlatListSeparator.tsx';
 
 interface ListHeaderProps {
     value?: string,
@@ -20,7 +18,6 @@ interface ListHeaderProps {
 }
 
 const ListHeader = ({ searchValue, disabled, placeholder, value, onSearch }: ListHeaderProps) => {
-    console.log('Cvalue', value);
     const theme = useTheme();
     return (
         <>

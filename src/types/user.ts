@@ -1,7 +1,7 @@
+import { Address } from './contact';
+import { Gender } from './common/enums';
 import { Url, IdName, Country } from './common';
-import { AdditionalContacts, Address } from './contact';
-import { FileAttachment, PatientMedicalProblem } from './medical';
-import { Gender, OnboardingStatus, OnboardingStep } from './common/enums';
+import { PatientMedicalProblem } from './medical';
 
 export interface ActiveVisit { id: number; }
 export interface UserAlgorithmRun {
@@ -128,6 +128,7 @@ export interface User {
   id: number;
   email: string;
   phone?: string;
+  name: string;
   firstName: string;
   middleName: string;
   lastName: string;
@@ -135,9 +136,18 @@ export interface User {
   prefix: string;
   suffix: string;
   gender: string;
+  patientPreferredGender: {
+    id?: number,
+    additionalInfo: string;
+    preferredGender: string;
+  },
   title?: string;
   avatar?: Url;
   country: Country;
+  heightFt: number;
+  heightInches: number;
+  weightLb: number;
+  bmi: number;
   cellPhone?: string;
   homePhone?: string;
   workPhone?: string;

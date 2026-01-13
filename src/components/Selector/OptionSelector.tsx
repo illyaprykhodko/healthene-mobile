@@ -1,27 +1,28 @@
 // outsource dependencies
 import React, { useRef } from 'react';
-import Icon from "@react-native-vector-icons/material-icons";
-import { ListRenderItemInfo, Pressable, StyleSheet } from 'react-native';
+import Icon from '@react-native-vector-icons/material-icons';
+import { ListRenderItemInfo, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
 
 // local dependencies
 import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
+import Separator from 'components/FlatListSeparator.tsx';
 import Selector from 'components/Selector/components/Selector.tsx';
-import Separator from 'components/Selector/components/Separator.tsx';
 
 type DataType = { label: string; value: string }
 interface OptionSelectorProps {
     label: string,
     value?: string,
     data: DataType[];
+    style?: ViewStyle;
     touched?: boolean;
     errorText?: string;
     onSelect: (item: DataType) => void;
 }
 
-const OptionSelector = ({ label, touched, errorText, data, onSelect, value = '' }: OptionSelectorProps) => {
+const OptionSelector = ({ label, touched, errorText, data, onSelect, style, value = '' }: OptionSelectorProps) => {
     const theme = useTheme();
     const modalSheetRef = useRef<BottomSheetModal>(null);
     const openModalSheet = () => modalSheetRef.current?.present();
@@ -30,7 +31,7 @@ const OptionSelector = ({ label, touched, errorText, data, onSelect, value = '' 
         onSelect(item);
     };
     return (
-        <>
+        <View style={style}>
             <Selector label={label} value={value} touched={touched} errorText={errorText} openModalSheet={openModalSheet} />
             <BottomSheetModal
                 ref={modalSheetRef}
@@ -61,7 +62,7 @@ const OptionSelector = ({ label, touched, errorText, data, onSelect, value = '' 
                     }}
                 />
             </BottomSheetModal>
-        </>
+        </View>
     );
 };
 

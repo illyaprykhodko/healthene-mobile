@@ -13,9 +13,11 @@ import Shopping from 'screens/privateScreens/Shopping';
 import MessengerStack from 'navigation/MessengerStack.tsx';
 import DayOverview from 'screens/privateScreens/DayOverview';
 import { MainScreen } from 'screens/privateScreens/MainScreen';
+import HealthProfileStack from 'navigation/HealthProfileStack.tsx';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
 import AboutPlanScreen from 'screens/privateScreens/AboutPlanScreen.tsx';
 import { PlaceholderScreen } from 'screens/privateScreens/PlaceholderScreen';
+
 
 const Drawer = createDrawerNavigator();
 const { width } = Dimensions.get('window');
@@ -123,10 +125,10 @@ export const PrivateDrawer: React.FC = () => {
             />
 
             <Drawer.Screen
-                name={ROUTES.HEALTH_PROFILE}
-                component={PlaceholderScreen}
+                component={HealthProfileStack}
+                name={ROUTES.HEALTH_PROFILE_STACK}
                 options={{
-                    title: 'My Health Profile',
+                    headerShown: false,
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="heartbeat" size={24} color={color} />
                     ),
