@@ -1,6 +1,6 @@
 // outsource dependencies
 import moment from 'moment';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '@react-native-vector-icons/feather';
 import { useNavigation, useRoute, useIsFocused } from '@react-navigation/native';
 import { StyleSheet, View, SectionList, TouchableOpacity, Modal } from 'react-native';
 import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';

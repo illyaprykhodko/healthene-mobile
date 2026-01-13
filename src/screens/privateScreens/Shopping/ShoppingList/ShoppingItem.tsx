@@ -1,5 +1,5 @@
 // outsource dependencies
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '@react-native-vector-icons/feather';
 import React, { memo, useCallback, useRef, useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 // local dependencies
