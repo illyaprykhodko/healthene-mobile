@@ -2,9 +2,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 // local dependencies
-import { Badge } from './Badge';
-import { useTheme } from 'hooks/useTheme';
-import { useAnytimeData } from 'hooks/useAnytimeData';
 import {
     FoodIcon,
     DrinkIcon,
@@ -12,8 +9,11 @@ import {
     SupplementIcon,
     MeasurementIcon,
 } from './AnytimeIcons';
+import { Badge } from './Badge';
+import { useTheme } from 'hooks/useTheme';
 import { AnytimeModal } from './AnytimeModal';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
+import { useAnytimeData } from 'hooks/useAnytimeData';
 import type { AnytimeItemType } from 'types/anytime.ts';
 import { AnytimeExercisesModal } from './AnytimeExercisesModal';
 import { useGetDayOverviewQuery } from 'store/api/dayOverviewApi';
@@ -113,7 +113,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
     return (
         <>
-            <View onLayout={props => console.log('PROPS', props)} style={[styles.container, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.blue }]}>
+            <View style={[styles.container, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.blue }]}>
                 <TouchableOpacity
                     style={styles.iconButton}
                     disabled={disabled || isLoading}

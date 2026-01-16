@@ -6,7 +6,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { ROUTES } from 'constants/routes.ts';
 import { PrivateDrawer } from './PrivateDrawer';
 import { AccountSettingsStack } from 'navigation/AccountSettingsStack.tsx';
-import { useHeaderHeight } from '@react-navigation/elements';
 
 const Stack = createStackNavigator();
 

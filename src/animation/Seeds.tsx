@@ -42,10 +42,7 @@ const SeedsAnimation = ({ seeds }: SeedsAnimationProps) => {
     const headerHeight = useHeaderHeight();
     const [elements, setElements] = useState<GameObjects[]>([]);
     const boxesWorld = useRef<Matter.Body[]>([]);
-    const bottomWallRef = useRef<Matter.Body | null>(null);
-    console.log('headerHeight!', headerHeight);
 
-    const [canvasHeight, setCanvasHeight] = useState(0);
     const seedImages = [
         useImage(require('../../assets/seeds/seed1.png')),
         useImage(require('../../assets/seeds/seed2.png')),
@@ -147,6 +144,8 @@ const SeedsAnimation = ({ seeds }: SeedsAnimationProps) => {
         spawnNext();
     };
 
+    const [canvasHeight, setCanvasHeight] = useState(0);
+    const bottomWallRef = useRef<Matter.Body | null>(null);
     const handleLayout = (e: LayoutChangeEvent) => {
         const h = e.nativeEvent.layout.height;
         setCanvasHeight(h);
@@ -168,7 +167,6 @@ const SeedsAnimation = ({ seeds }: SeedsAnimationProps) => {
             bottomWallRef.current = wall;
         }
     };
-
 
     return (
         <View
