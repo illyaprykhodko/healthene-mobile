@@ -1,7 +1,7 @@
 // outsource dependencies
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useRef } from 'react';
 import Icon from '@react-native-vector-icons/fontawesome5';
-import { StyleSheet, TouchableOpacity, ViewStyle, StyleProp } from 'react-native';
+import { StyleSheet, TouchableOpacity, ViewStyle, StyleProp, View } from 'react-native';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
@@ -9,6 +9,14 @@ import { useTheme } from 'hooks/useTheme';
 // Temporary status type until full migration
 export type PhaseItemStatus = 'DONE' | 'PENDING' | 'DID_NOT_EAT' | string;
 
+export interface CheckboxCoordinate {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    centerX: number;
+    centerY: number;
+}
 export interface CheckboxProps {
     size?: number;
     value?: boolean;
@@ -16,7 +24,7 @@ export interface CheckboxProps {
     isDayOverview?: boolean;
     status?: PhaseItemStatus;
     style?: StyleProp<ViewStyle>;
-    onChange: (next: boolean) => void;
+    onChange: (next: boolean, checkboxCoordinate: CheckboxCoordinate) => void;
 }
 
 const clickableZone = { bottom: 25, left: 25, right: 25, top: 25 } as const;
@@ -40,9 +48,22 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
     isDayOverview = false,
 }) => {
     const theme = useTheme();
+
+    // Icons wrapper for getting icon coordinate
+    const iconRef = useRef<View>(null);
     const handlePress = useCallback(() => {
         if (!editable) { return; }
-        onChange(!value);
+        iconRef.current?.measureInWindow((x, y, width, height) => {
+            const checkboxCoordinate: CheckboxCoordinate = {
+                x,
+                y,
+                width,
+                height,
+                centerX: x + width / 2,
+                centerY: y + height / 2,
+            };
+            onChange(!value, checkboxCoordinate);
+        });
     }, [editable, onChange, value]);
 
     const renderGeneralIcon = () => (value
@@ -71,7 +92,9 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
                 borderColor: value ? 'transparent' : theme.colors.border,
             }])}
         >
-            {isDayOverview ? renderDayOverviewIcon() : renderGeneralIcon()}
+            <View ref={iconRef}>
+                {isDayOverview ? renderDayOverviewIcon() : renderGeneralIcon()}
+            </View>
         </TouchableOpacity>
     );
 };

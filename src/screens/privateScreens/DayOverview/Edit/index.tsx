@@ -30,10 +30,12 @@ import { groupBy, isEmpty } from 'utils/general';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { RootStackParamList } from 'services/navigation';
 import { BirdAnimation } from 'animation/BirdAnimation.tsx';
+import { CheckboxCoordinate } from 'components/Checkbox.tsx';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import { selectDayOverview } from 'store/slices/dayOverviewSlice';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
+import SeedsAnimation, { SeedsCoordinates } from 'animation/Seeds.tsx';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
 
@@ -75,7 +77,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         skip: !targetPhaseId,
         refetchOnFocus: true,
         refetchOnReconnect: true,
-        // refetchOnMountOrArgChange: true,
     });
     // mutations
     const [updatePhase] = useUpdatePhaseMutation();
@@ -349,7 +350,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         }
     };
 
-    const handleCheckboxStatus = async (item: PhaseItem) => {
+    const [seeds, setSeeds] = useState<SeedsCoordinates[]>([]);
+    const handleCheckboxStatus = async (item: PhaseItem, checkboxCoordinate?: CheckboxCoordinate) => {
+        if (item.status === 'DONE' && checkboxCoordinate?.centerX && checkboxCoordinate?.centerY) {
+            setSeeds([...seeds, { centerX: checkboxCoordinate.centerX, centerY: checkboxCoordinate.centerY }]);
+        }
         try {
             // let newStatus: string;
             // const status = isDidNotEatItem
@@ -623,6 +628,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
+            <SeedsAnimation seeds={seeds} />
             {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
                 ? <BirdAnimation startAnimation={ birdAnimationStep } />
                 : null

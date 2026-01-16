@@ -1,71 +1,30 @@
+// outsource dependencies
 import Matter from 'matter-js';
-import { Button } from 'components/Button.tsx';
-import { StyleSheet, Dimensions } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import React, { memo, useEffect, useRef, useState } from 'react';
 import { SharedValue, makeMutable } from 'react-native-reanimated';
+import { ANYTIME_HEIGHT } from 'components/AnytimeMenu/AnytimeMenu.tsx';
+import { StyleSheet, Dimensions, View, LayoutChangeEvent } from 'react-native';
 import { SkPoint, Canvas, Image, vec, useImage, SkImage } from '@shopify/react-native-skia';
 
-const { height, width } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const BOX_SIZE = 6;
-const BOTTOM_HEIGHT = 160;
-
 const engine = Matter.Engine.create();
 const world = engine.world;
 
-const topWall = Matter.Bodies.rectangle(
-    width / 2,
-    0,
-    width,
-    1,
-    { isStatic: true }
-);
-
-const bottomWall = Matter.Bodies.rectangle(
-    width / 2,
-    height - BOTTOM_HEIGHT,
-    width,
-    BOTTOM_HEIGHT,
-    { isStatic: true }
-);
-
 const ACTIVE_WIDTH = width * 0.15;
-const leftLimit = (width - ACTIVE_WIDTH) / 2;
-const rightLimit = leftLimit + ACTIVE_WIDTH;
 
-const slopeAngle = Math.PI / 8;
+export type SeedsCoordinates = {
+    centerX: number,
+    centerY: number
+}
 
-const leftWall = Matter.Bodies.rectangle(
-    leftLimit - 6,
-    height - BOTTOM_HEIGHT / 2,
-    6,
-    BOTTOM_HEIGHT,
-    {
-        isStatic: true,
-        angle: slopeAngle,
-        friction: 1,
-        frictionStatic: 1,
-        restitution: 0,
-    }
-);
+interface SeedsAnimationProps {
+    seeds: SeedsCoordinates[]
+}
 
-const rightWall = Matter.Bodies.rectangle(
-    rightLimit + 6,
-    height - BOTTOM_HEIGHT / 2,
-    6,
-    BOTTOM_HEIGHT,
-    {
-        isStatic: true,
-        angle: -slopeAngle,
-        friction: 1,
-        frictionStatic: 1,
-        restitution: 0,
-    }
-);
-
-Matter.World.add(world, [bottomWall, topWall, leftWall, rightWall]);
-
-type BoxCoords = {
+interface BoxCoords {
     type: 'box';
     width: number;
     height: number;
@@ -79,11 +38,14 @@ type BoxCoords = {
 type GameObjects = BoxCoords;
 
 
-const SeedsAnimation = () => {
-
+const SeedsAnimation = ({ seeds }: SeedsAnimationProps) => {
+    const headerHeight = useHeaderHeight();
     const [elements, setElements] = useState<GameObjects[]>([]);
     const boxesWorld = useRef<Matter.Body[]>([]);
+    const bottomWallRef = useRef<Matter.Body | null>(null);
+    console.log('headerHeight!', headerHeight);
 
+    const [canvasHeight, setCanvasHeight] = useState(0);
     const seedImages = [
         useImage(require('../../assets/seeds/seed1.png')),
         useImage(require('../../assets/seeds/seed2.png')),
@@ -91,6 +53,19 @@ const SeedsAnimation = () => {
         useImage(require('../../assets/seeds/seed4.png')),
     ];
 
+    const processedCount = useRef(0);
+    useEffect(() => {
+        if (!seeds.length) { return; }
+
+        const newSeeds = seeds.slice(processedCount.current);
+        if (!newSeeds.length) { return; }
+
+        newSeeds.forEach(seed => {
+            dropSeedsFrom(seed);
+        });
+
+        processedCount.current = seeds.length;
+    }, [seeds]);
 
     useEffect(() => {
         let animationFrame: any;
@@ -115,21 +90,25 @@ const SeedsAnimation = () => {
         return () => cancelAnimationFrame(animationFrame);
     }, [elements]);
 
-    const handleCoordinates = () => {
-        const center = (leftLimit + rightLimit) / 2;
-        const spread = ACTIVE_WIDTH * 0.1;
+    const dropSeedsFrom = (origin: SeedsCoordinates) => {
         const COLLISION_SIZE = BOX_SIZE * 0.7;
-
         const TOTAL = 5;
         const DELAY = 100;
+
         let count = 0;
+
         const spawnNext = () => {
             if (count >= TOTAL) { return; }
 
-            const randomImage
-                = seedImages[Math.floor(Math.random() * seedImages.length)] ?? null;
+            const randomImage = seedImages[Math.floor(Math.random() * seedImages.length)] ?? null;
 
-            const spawnX = center + (Math.random() - 0.5) * spread;
+            const spread = ACTIVE_WIDTH * 0.1;
+            const maxY = canvasHeight - ANYTIME_HEIGHT - BOX_SIZE;
+            const adjustedY = Math.min(
+                Math.max(origin.centerY - headerHeight, 0),
+                maxY
+            );
+            const spawnX = origin.centerX + (Math.random() - 0.5) * spread;
 
             const newBoxCoords: BoxCoords = {
                 type: 'box',
@@ -137,29 +116,28 @@ const SeedsAnimation = () => {
                 height: BOX_SIZE,
                 image: randomImage,
                 x: makeMutable(spawnX),
-                y: makeMutable(200),
+                y: makeMutable(adjustedY),
                 origin: makeMutable(vec(0, 0)),
                 angle: makeMutable([{ rotateZ: 0 }]),
             };
 
             const newBox = Matter.Bodies.rectangle(
-                newBoxCoords.x.value + BOX_SIZE / 2,
-                newBoxCoords.y.value + BOX_SIZE / 2,
+                spawnX,
+                adjustedY,
                 COLLISION_SIZE,
                 COLLISION_SIZE,
                 {
-                    restitution: 0.05,
-                    friction: 1,
-                    frictionStatic: 0.6,
-                    frictionAir: 0.02,
-                    slop: 0.01,
-                    sleepThreshold: 150,
+                    slop: 0.001,
+                    friction: 0.8,
+                    restitution: 0,
+                    frictionAir: 0.05,
+                    sleepThreshold: 40,
+                    frictionStatic: 1.2,
                 }
             );
 
             Matter.World.add(world, newBox);
             boxesWorld.current.push(newBox);
-
             setElements(prev => [...prev, newBoxCoords]);
 
             count += 1;
@@ -169,16 +147,40 @@ const SeedsAnimation = () => {
         spawnNext();
     };
 
+    const handleLayout = (e: LayoutChangeEvent) => {
+        const h = e.nativeEvent.layout.height;
+        setCanvasHeight(h);
+
+        if (!bottomWallRef.current) {
+            const FLOOR_OFFSET = 2;
+
+            const bottomCenterY = h - ANYTIME_HEIGHT / 2 - FLOOR_OFFSET;
+
+            const wall = Matter.Bodies.rectangle(
+                width / 2,
+                bottomCenterY,
+                width,
+                ANYTIME_HEIGHT,
+                { isStatic: true }
+            );
+
+            Matter.World.add(world, wall);
+            bottomWallRef.current = wall;
+        }
+    };
+
+
     return (
-        <>
-            <Canvas style={styles.canvas}>
+        <View
+            style={styles.canvasContainer}
+            onLayout={handleLayout}
+        >
+            <Canvas style={StyleSheet.absoluteFill}>
                 {elements.map((box, index) => {
                     return <Image
                         x={box.x}
                         y={box.y}
                         key={index}
-                        // style="stroke"
-                        // strokeWidth={3}
                         image={box.image}
                         width={box.width}
                         color="limegreen"
@@ -188,8 +190,7 @@ const SeedsAnimation = () => {
                     />;
                 })}
             </Canvas>
-            <Button title="Add" onPress={handleCoordinates} />
-        </>
+        </View>
     );
 };
 
@@ -199,9 +200,13 @@ SeedsAnimation.propTypes = {};
 SeedsAnimation.defaultProps = {};
 
 const styles = StyleSheet.create({
-    canvas: {
+    canvasContainer: {
         flex: 1,
-        backgroundColor: 'white',
-    }
+        zIndex: 99,
+        borderWidth: 1,
+        borderColor: 'red',
+        pointerEvents: 'none',
+        ...StyleSheet.absoluteFillObject,
+    },
 });
 

@@ -7,15 +7,16 @@ import Text from 'components/Text';
 import { filters } from 'services/filter';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
-import Checkbox from 'components/Checkbox';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE } from 'constants/spec';
+import Checkbox, { CheckboxCoordinate } from 'components/Checkbox';
+
 interface ListItemProps {
   item: any;
   date?: string;
   disabled?: boolean;
   nextSection?: string;
   updateData?: (item: any) => void;
-  handleCheckboxStatus?: (item: any) => void;
+  handleCheckboxStatus?: (item: any, checkboxCoordinate: CheckboxCoordinate) => void;
 }
 
 export const ListItem: React.FC<ListItemProps> = ({
@@ -35,10 +36,12 @@ export const ListItem: React.FC<ListItemProps> = ({
     const isCustomRecipe = item.type === ENTITY_TYPE.CUSTOM_RECIPE;
     const isDidNotEat = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
 
-    const handleCheckboxPress = (next: boolean) => {
+    const handleCheckboxPress = (next: boolean, checkboxCoordinate: CheckboxCoordinate) => {
         if (handleCheckboxStatus && !disabled) {
-            handleCheckboxStatus({ ...item, status: (isDone || isDidNotEat) ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
-            // handleCheckboxStatus(item);
+            handleCheckboxStatus(
+                { ...item, status: (isDone || isDidNotEat) ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE },
+                checkboxCoordinate
+            );
         }
     };
 
@@ -84,7 +87,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     //     let result = '';
     //     let unitSingularName,
     //     unitPluralName;
-        
+
     //     if (useServing && serving) {
     //         result += `${serving} serving`;
     //     } else {

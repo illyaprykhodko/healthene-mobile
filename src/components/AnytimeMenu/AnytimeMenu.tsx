@@ -1,6 +1,6 @@
 // outsource dependencies
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 // local dependencies
 import { Badge } from './Badge';
 import { useTheme } from 'hooks/useTheme';
@@ -14,10 +14,11 @@ import {
 } from './AnytimeIcons';
 import { AnytimeModal } from './AnytimeModal';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
-import type { AnytimeItemType } from '../../types/anytime';
+import type { AnytimeItemType } from 'types/anytime.ts';
 import { AnytimeExercisesModal } from './AnytimeExercisesModal';
 import { useGetDayOverviewQuery } from 'store/api/dayOverviewApi';
 
+export const ANYTIME_HEIGHT = 80;
 interface AnytimeMenuProps {
     date?: string;
     disabled?: boolean;
@@ -39,7 +40,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
     const handleIconPress = (type: AnytimeItemType) => {
         if (disabled || isLoading) { return; }
-        
+
         if (type === 'PHYSICAL_ACTIVITY') {
             setShowExercisesModal(true);
         } else {
@@ -112,7 +113,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
     return (
         <>
-            <View style={[styles.container, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.blue }]}>
+            <View onLayout={props => console.log('PROPS', props)} style={[styles.container, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.blue }]}>
                 <TouchableOpacity
                     style={styles.iconButton}
                     disabled={disabled || isLoading}
@@ -188,13 +189,13 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
 const styles = StyleSheet.create({
     container: {
+        paddingTop: 0,
+        paddingBottom: 0,
         borderTopWidth: 2,
         flexDirection: 'row',
-        justifyContent: 'space-around',
         alignItems: 'center',
-        // paddingVertical: 5,
-        paddingTop: 5,
-        marginBottom: Platform.OS === 'ios' ? 16 : 0,
+        height: ANYTIME_HEIGHT,
+        justifyContent: 'space-around',
     },
     iconButton: {
         alignItems: 'center',
