@@ -15,6 +15,7 @@ import { TextLogo } from 'components/TextLogo';
 import { Hamburger } from 'components/Hamburger';
 import { RootState, useAppSelector } from 'store';
 import { useGetWelcomeQuery } from 'store/api/publicApi';
+import SeedsAnimation from 'animation/Seeds.tsx';
 
 type DrawerParamList = {
     [ROUTES.MAIN]: undefined;
@@ -57,37 +58,38 @@ export const MainScreen: React.FC = () => {
 
     return (
         <Screen style={styles.container} initialized={!isLoading}>
-            <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
-                <View style={styles.textLogoWrapper}>
-                    <TextLogo color={theme.colors.background} />
-                </View>
-                <Hamburger onPress={handleOpenDrawer} style={styles.hamburger} />
-            </View>
+            <SeedsAnimation />
+            {/*<View style={[styles.header, { backgroundColor: theme.colors.primary }]}>*/}
+            {/*    <View style={styles.textLogoWrapper}>*/}
+            {/*        <TextLogo color={theme.colors.background} />*/}
+            {/*    </View>*/}
+            {/*    <Hamburger onPress={handleOpenDrawer} style={styles.hamburger} />*/}
+            {/*</View>*/}
 
-            <View style={styles.content}>
-                <View style={styles.descriptionWrapper}>
-                    <Text variant="h1" style={[styles.title, { color: theme.colors.text }]}>
-                        {timeGreeting()}
-                    </Text>
-                </View>
+            {/*<View style={styles.content}>*/}
+            {/*    <View style={styles.descriptionWrapper}>*/}
+            {/*        <Text variant="h1" style={[styles.title, { color: theme.colors.text }]}>*/}
+            {/*            {timeGreeting()}*/}
+            {/*        </Text>*/}
+            {/*    </View>*/}
 
-                <View style={styles.imageWrapper}>
-                    {welcomeImageUrl && (
-                        <Image
-                            resizeMode="contain"
-                            style={styles.image}
-                            source={{ uri: welcomeImageUrl }}
-                        />
-                    )}
-                </View>
+            {/*    <View style={styles.imageWrapper}>*/}
+            {/*        {welcomeImageUrl && (*/}
+            {/*            <Image*/}
+            {/*                resizeMode="contain"*/}
+            {/*                style={styles.image}*/}
+            {/*                source={{ uri: welcomeImageUrl }}*/}
+            {/*            />*/}
+            {/*        )}*/}
+            {/*    </View>*/}
 
-                <Button
-                    title="GET STARTED"
-                    style={styles.button}
-                    onPress={handleGetStarted}
-                    textStyle={styles.buttonText}
-                />
-            </View>
+            {/*    <Button*/}
+            {/*        title="GET STARTED"*/}
+            {/*        style={styles.button}*/}
+            {/*        onPress={handleGetStarted}*/}
+            {/*        textStyle={styles.buttonText}*/}
+            {/*    />*/}
+            {/*</View>*/}
         </Screen>
     );
 };

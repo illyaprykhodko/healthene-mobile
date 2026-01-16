@@ -2042,6 +2042,36 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - react-native-skia (2.4.14):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React
+    - React-callinvoker
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - react-native-slider (5.1.1):
     - boost
     - DoubleConversion
@@ -2103,6 +2133,7 @@ PODS:
   - react-native-vector-icons-evil-icons (12.4.0)
   - react-native-vector-icons-feather (12.4.0)
   - react-native-vector-icons-fontawesome5 (12.3.0)
+  - react-native-vector-icons-fontisto (12.4.0)
   - react-native-vector-icons-ionicons (12.3.0)
   - react-native-vector-icons-material-icons (12.4.0)
   - react-native-video (6.18.0):
@@ -3286,11 +3317,13 @@ DEPENDENCIES:
   - "react-native-document-picker (from `../node_modules/@react-native-documents/picker`)"
   - "react-native-document-viewer (from `../node_modules/@react-native-documents/viewer`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - "react-native-skia (from `../node_modules/@shopify/react-native-skia`)"
   - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - "react-native-vector-icons-entypo (from `../node_modules/@react-native-vector-icons/entypo`)"
   - "react-native-vector-icons-evil-icons (from `../node_modules/@react-native-vector-icons/evil-icons`)"
   - "react-native-vector-icons-feather (from `../node_modules/@react-native-vector-icons/feather`)"
   - "react-native-vector-icons-fontawesome5 (from `../node_modules/@react-native-vector-icons/fontawesome5`)"
+  - "react-native-vector-icons-fontisto (from `../node_modules/@react-native-vector-icons/fontisto`)"
   - "react-native-vector-icons-ionicons (from `../node_modules/@react-native-vector-icons/ionicons`)"
   - "react-native-vector-icons-material-icons (from `../node_modules/@react-native-vector-icons/material-icons`)"
   - react-native-video (from `../node_modules/react-native-video`)
@@ -3448,6 +3481,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-documents/viewer"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-skia:
+    :path: "../node_modules/@shopify/react-native-skia"
   react-native-slider:
     :path: "../node_modules/@react-native-community/slider"
   react-native-vector-icons-entypo:
@@ -3458,6 +3493,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-vector-icons/feather"
   react-native-vector-icons-fontawesome5:
     :path: "../node_modules/@react-native-vector-icons/fontawesome5"
+  react-native-vector-icons-fontisto:
+    :path: "../node_modules/@react-native-vector-icons/fontisto"
   react-native-vector-icons-ionicons:
     :path: "../node_modules/@react-native-vector-icons/ionicons"
   react-native-vector-icons-material-icons:
@@ -3605,11 +3642,13 @@ SPEC CHECKSUMS:
   react-native-document-picker: 242069417dabbb9c9d6592e022768c210f595a9a
   react-native-document-viewer: 2e05bc55b8275c78c9f230e50f8df76d7937cb05
   react-native-safe-area-context: 54d812805f3c4e08a4580ad086cbde1d8780c2e4
+  react-native-skia: b3cd83e2bbc7fb7e4e38a23f4ba12fdf0e7e3fbe
   react-native-slider: e35799fb9983a19307195d77f10caf5f6a716842
   react-native-vector-icons-entypo: feb9d28fa1769fd6b1913649f4a56f50510ee9a1
   react-native-vector-icons-evil-icons: 5160157a6b05251812d4b74702efc84130fe52a3
   react-native-vector-icons-feather: b0c81b5240bc89ba1546220b694fc5f7b660258d
   react-native-vector-icons-fontawesome5: 271d813e27a86d30bb8cf1fc2f12dae74b74b69b
+  react-native-vector-icons-fontisto: f2a88c77dee7b31477514c26fa612d84cbbca44b
   react-native-vector-icons-ionicons: ad07e944a092a5cf71b8b569d8f5ce2bf674c415
   react-native-vector-icons-material-icons: d67e485a05560416ff6b5977d5fa7e0eb6af6870
   react-native-video: 7be878f72d62c9259f40e44c9318f45dc38fb58d
