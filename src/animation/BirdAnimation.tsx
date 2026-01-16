@@ -18,14 +18,16 @@ export enum BirdAnimationStep {
     // WALKS_OUT = 0,
     SITTING = 0,
     FLY = 1,
-    WALKING = 2
+    WALKING = 2,
+    PECKING = 3
 }
 
 interface BirdAnimationProps {
+    adjustedX: number;
     startAnimation: boolean;
 }
 
-export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) => {
+export const BirdAnimation = ({ startAnimation = false, adjustedX }: BirdAnimationProps) => {
     const webViewRef = useRef<WebView>(null);
     const [phase, setPhase] = useState<BirdAnimationStep>(BirdAnimationStep.SITTING);
 
@@ -37,7 +39,6 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
             if (animations.length && path) {
                 try {
                     const base64 = await RNBlobUtil.fs.readFile(path, 'base64');
-                    console.log('base64', base64);
                     if (webViewRef?.current) {
                         webViewRef.current.injectJavaScript(`
                         (function() {
@@ -77,6 +78,8 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
             handleAnimations(flyingBird);
             const walkingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/walking.mov`;
             handleAnimations(walkingBird);
+            const peckingBird = `${RNBlobUtil.fs.dirs.MainBundleDir}/pecking.mov`;
+            handleAnimations(peckingBird);
         };
 
         (async () => {
@@ -135,9 +138,8 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
             { translateY: birdY.value },
         ],
     }));
-    const handleFlyFinished = useCallback(() => {
-        setPhase(BirdAnimationStep.WALKING);
-    }, [animations]);
+    const handleFlyFinished = useCallback(() => setPhase(BirdAnimationStep.WALKING), [animations]);
+    const handleWalkingFinished = useCallback(() => setPhase(BirdAnimationStep.PECKING), [animations]);
 
     useEffect(() => {
         if (phase === BirdAnimationStep.SITTING) {
@@ -153,12 +155,18 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
                     runOnJS(handleFlyFinished)();
                 }
             });
+        } else if (phase === BirdAnimationStep.WALKING) {
+            birdX.value = withTiming(SCREEN_WIDTH - 60 - 10 - adjustedX, { duration: 2000 }, finished => {
+                if (finished) {
+                    runOnJS(handleWalkingFinished)();
+                }
+            });
         }
-    }, [phase, getAnimationSize, animations]);
+    }, [phase, getAnimationSize, animations, adjustedX]);
 
     return (
         <View style={styles.container}>
-            <Animated.View style={[{ position: 'absolute', right: 0 }, animatedStyle]}>
+            <Animated.View style={[{ position: 'absolute', right: 0, }, animatedStyle]}>
                 <WebView
                     ref={webViewRef}
                     onMessage={handleMessage}
@@ -179,7 +187,6 @@ export const BirdAnimation = ({ startAnimation = false }: BirdAnimationProps) =>
                                   width: 100%;
                                   height: 100%;
                                   overflow: hidden;
-                                  border: #449fdb 1px solid;
                                 }
                                 video {
                                   width: 100%;

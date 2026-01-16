@@ -170,8 +170,8 @@ const SeedsAnimation = ({ seeds }: SeedsAnimationProps) => {
 
     return (
         <View
-            style={styles.canvasContainer}
             onLayout={handleLayout}
+            style={styles.canvasContainer}
         >
             <Canvas style={StyleSheet.absoluteFill}>
                 {elements.map((box, index) => {
@@ -201,8 +201,6 @@ const styles = StyleSheet.create({
     canvasContainer: {
         flex: 1,
         zIndex: 99,
-        borderWidth: 1,
-        borderColor: 'red',
         pointerEvents: 'none',
         ...StyleSheet.absoluteFillObject,
     },

@@ -351,7 +351,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     };
 
     const [seeds, setSeeds] = useState<SeedsCoordinates[]>([]);
+    const [adjustedX, setAdjustedX] = useState<number>(0);
     const handleCheckboxStatus = async (item: PhaseItem, checkboxCoordinate?: CheckboxCoordinate) => {
+        if (!adjustedX && checkboxCoordinate?.x) {
+            setAdjustedX(checkboxCoordinate.x);
+        }
         if (item.status === 'DONE' && checkboxCoordinate?.centerX && checkboxCoordinate?.centerY) {
             setSeeds([...seeds, { centerX: checkboxCoordinate.centerX, centerY: checkboxCoordinate.centerY }]);
         }
@@ -630,7 +634,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         <Screen initialized={!isLoading} style={styles.container}>
             <SeedsAnimation seeds={seeds} />
             {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
-                ? <BirdAnimation startAnimation={ birdAnimationStep } />
+                ? <BirdAnimation startAnimation={ birdAnimationStep } adjustedX={adjustedX} />
                 : null
             }
             <View style={[styles.title, isFutureDate && styles.opacity]}>
