@@ -1,6 +1,7 @@
 // outsource dependencies
 import { useCallback, useState } from 'react';
 // local dependencies
+import type { PhaseItem } from 'types/overview';
 import { MessageService } from 'services/messages/service';
 import { buildMeasurementPayload } from 'utils/measurement';
 import type { MeasurementType, MeasurementSource, HealthSample } from 'types/health';
@@ -25,48 +26,49 @@ export interface UseMeasurementSubmitReturn {
 }
 
 export interface MeasurementItem {
-    id: number;
+    id: number | string;
     type: string;
     status: string;
-    phaseId: number;
+    phaseId?: number | string;
     measurement: {
         id: number;
         name: string;
-        description: string;
-        coverImage: { url: string };
-        category: {
+        description?: string;
+        coverImage?: { url?: string };
+        category?: {
             id: number;
             name: string;
             editable: boolean;
-        }
-        type: MeasurementType;
-        units: [{
+        };
+        type?: string;
+        units?: Array<{
             id: number;
             name: string;
-            unitType: string;
-        }],
-        numeric: boolean;
-        applicableTo: ['FEMALE', 'MALE'];
-        order: number;
-        status: string;
-        video: {
-            user: {
+            unitType?: string;
+            symbol?: string;
+        }>;
+        numeric?: boolean;
+        applicableTo?: ['FEMALE', 'MALE'];
+        order?: number;
+        status?: string;
+        video?: {
+            id: number | string;
+            embedUrl?: string;
+            status?: string;
+            user?: {
                 id: number;
-            },
-            id: number;
-        category: null | object;
-        title: null | string;
-        subject: null | string;
-        description: null | string;
-        mimeType: string;
-        fileName: null | string;
-        embedUrl: string;
-        contentLength: null | number;
-        timestamp: string;
-        status: string;
-        medicalTerm: null | object;
-        foodCategory: null | object;
-        }
+            };
+            category?: null | object;
+            title?: null | string;
+            subject?: null | string;
+            description?: null | string;
+            mimeType?: string;
+            fileName?: null | string;
+            contentLength?: null | number;
+            timestamp?: string;
+            medicalTerm?: null | object;
+            foodCategory?: null | object;
+        };
     };
 }
 
@@ -108,11 +110,11 @@ export const useMeasurementSubmit = (
                 }).unwrap();
                 await updatePhaseItem({
                     id: item.id,
-                    phaseId: item.phaseId,
+                    phaseId: item.phaseId ?? 0,
                     data: {
                         ...item,
                         status: 'DONE',
-                    },
+                    } as Partial<PhaseItem>,
                 }).unwrap();
                 MessageService.toastSuccess('Measurement successfully saved');
                 if (options?.onSuccess) {

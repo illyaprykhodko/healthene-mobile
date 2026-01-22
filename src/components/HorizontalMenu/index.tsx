@@ -1,6 +1,6 @@
 
 // outsource dependencies
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, FlatList, TouchableOpacity, View, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
@@ -96,6 +96,7 @@ const HorizontalMenu: React.FC<HorizontalMenuProps> = memo(
             <View style={styles.container}>
                 <Icon
                     size={24}
+                    iconStyle="solid"
                     name="chevron-left"
                     color={leftArrowColor}
                     style={styles.arrowBtn}
@@ -129,6 +130,7 @@ const HorizontalMenu: React.FC<HorizontalMenuProps> = memo(
 
                 <Icon
                     size={24}
+                    iconStyle="solid"
                     name="chevron-right"
                     color={rightArrowColor}
                     onPress={handleRightArrow}

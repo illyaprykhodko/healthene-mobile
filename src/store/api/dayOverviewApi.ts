@@ -427,6 +427,54 @@ export const dayOverviewApi = createApi({
             }),
             invalidatesTags: (result, error, { phaseId }) => [{ type: 'PhaseItems', id: phaseId }],
         }),
+        // Create new patient phase (ADDED_BY_PATIENT) with items
+        createPatientPhase: builder.mutation<Phase, {
+            dayOverviewId: number | string;
+            data: {
+                items: any[];
+                type: string;
+                order: number;
+                status: string;
+                dayOverview: { id: number | string };
+            };
+        }>({
+            query: ({ data }) => ({
+                url: '/patient-service/patients/day-overview/phase',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
+        // Create patient phase with recipe
+        createPatientPhaseWithRecipe: builder.mutation<Phase, {
+            dayOverviewId: number | string;
+            data: any;
+        }>({
+            query: ({ dayOverviewId, data }) => ({
+                url: `/patient-service/patients/day-overview/${dayOverviewId}/phase/previous-recipe`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
+        // Update patient phase (add items to existing ADDED_BY_PATIENT phase)
+        updatePatientPhase: builder.mutation<Phase, {
+            phaseId: number | string;
+            data: {
+                items?: any[];
+                type?: string;
+                order?: number;
+                status?: string;
+                dayOverview?: { id: number | string };
+            };
+        }>({
+            query: ({ phaseId, data }) => ({
+                url: `/patient-service/patients/day-overview/phase/${phaseId}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
         replacePhaseItem: builder.mutation<PhaseItem, ReplaceItemRequest>({
             query: ({ itemId, replacementId }) => ({
                 url: `/patient-service/patient/day-overview/rescue/phase-item/${itemId}/recipe-replacement`,
@@ -987,4 +1035,8 @@ export const {
     useGetRecipeCategoryTreeQuery,
     useGetRecipeCategoryItemsQuery,
     useReplaceRecipeItemMutation,
+    // Create patient phase (ADDED_BY_PATIENT)
+    useCreatePatientPhaseMutation,
+    useCreatePatientPhaseWithRecipeMutation,
+    useUpdatePatientPhaseMutation,
 } = dayOverviewApi;

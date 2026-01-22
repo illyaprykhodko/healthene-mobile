@@ -1,7 +1,7 @@
 // outsource dependencies
 import moment from 'moment';
+import Icon from '@react-native-vector-icons/feather';
 import React, { memo, useCallback, useMemo } from 'react';
-import FeatherIcon from '@react-native-vector-icons/feather';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
@@ -48,13 +48,14 @@ const TimeSwitcherComponent: React.FC<TimeSwitcherProps> = ({
         <View style={styles.header}>
             <TouchableOpacity
                 onPress={handleLeftBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 disabled={disabled || isHideLeftBtn || disabledLeftBtn}
+                style={(isHideLeftBtn || disabledLeftBtn) && styles.invisibleBtn}
             >
-                <FeatherIcon
+                <Icon
                     size={18}
                     name="chevron-left"
                     color={theme.colors.white}
-                    style={[styles.touchableArea, (isHideLeftBtn || disabledLeftBtn) && styles.invisibleBtn]}
                 />
             </TouchableOpacity>
             <Text
@@ -66,13 +67,14 @@ const TimeSwitcherComponent: React.FC<TimeSwitcherProps> = ({
             </Text>
             <TouchableOpacity
                 onPress={handleRightBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 disabled={disabled || isHideRightBtn || disabledRightBtn}
+                style={(isHideRightBtn || disabledRightBtn) && styles.invisibleBtn}
             >
-                <FeatherIcon
+                <Icon
                     size={18}
                     name="chevron-right"
                     color={theme.colors.white}
-                    style={[styles.touchableArea, (isHideRightBtn || disabledRightBtn) && styles.invisibleBtn]}
                 />
             </TouchableOpacity>
         </View>
@@ -83,20 +85,16 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
     },
     invisibleBtn: {
-        display: 'none',
+        opacity: 0,
     },
     headerTitle: {
         fontWeight: 'bold',
         paddingHorizontal: 12,
-    },
-    touchableArea: {
-        paddingVertical: 15,
-        paddingHorizontal: 10,
-    },
+    }
 });
 
 export const TimeSwitcher = memo(TimeSwitcherComponent);
 export default TimeSwitcher;
-

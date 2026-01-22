@@ -1,7 +1,7 @@
 // outsource dependencies
 import * as yup from 'yup';
 import { Formik, FormikHelpers } from 'formik';
-import Icon from 'react-native-vector-icons/Fontisto';
+import Icon from '@react-native-vector-icons/fontisto';
 import { useNavigation } from '@react-navigation/native';
 import React, { memo, useCallback, useLayoutEffect } from 'react';
 import { StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native';

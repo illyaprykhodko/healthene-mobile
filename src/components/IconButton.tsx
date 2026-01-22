@@ -85,8 +85,8 @@ export const IconButton: React.FC<IconButtonProps> = props => {
                 {props.icon != null
           && <Icon
               size={size}
-              name={props.icon}
               color={iconColor}
+              name={props.icon as any}
           />}
                 {textRight && (
                     <Text

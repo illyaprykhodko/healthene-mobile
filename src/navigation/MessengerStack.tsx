@@ -6,6 +6,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { ROUTES } from 'constants/routes.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
+import { Hamburger } from 'components/Hamburger';
 import BackButton from 'components/BackButton.tsx';
 import { MessageEntity } from 'types/common/interfaces.ts';
 import MessengerList from 'screens/privateScreens/Messenger';
@@ -25,6 +26,7 @@ const MessengerStack = () => {
                 drawerPosition: 'right',
                 gestureDirection: 'horizontal-inverted',
                 headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
+                headerRight: () => <Hamburger onPress={() => (navigation as any).openDrawer?.()} />,
                 headerStyle: {
                     backgroundColor: theme.colors.primary,
                 },

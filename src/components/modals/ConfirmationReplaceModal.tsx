@@ -1,6 +1,6 @@
 // outsource dependencies
 import React, { memo, useMemo, useCallback } from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { Modal, StyleSheet, TouchableOpacity, View, Platform, Image } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
@@ -55,7 +55,7 @@ const ConfirmationReplaceModal: React.FC<ConfirmationReplaceModalProps> = memo((
                         Replacement Options
                     </Text>
                     <TouchableOpacity style={styles.close} onPress={onClose}>
-                        <Icon name="times" color={COLORS.BLACK} size={24} />
+                        <Icon name="times" color={COLORS.BLACK} size={24} iconStyle="solid" />
                     </TouchableOpacity>
                 </View>
                 <View style={styles.container}>

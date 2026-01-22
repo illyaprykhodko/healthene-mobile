@@ -4,6 +4,7 @@ import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
+import FeatherIcon from '@react-native-vector-icons/feather';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
@@ -12,33 +13,46 @@ import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
+import { ROUTES } from 'constants/routes';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppDispatch, useAppSelector } from 'store';
+import { RootStackParamList } from 'services/navigation';
 import { DayOverviewSkeleton } from 'components/Skeleton';
 import type { AnytimeMeasurementItem } from 'types/anytime';
-import { useGetDayOverviewQuery, Phase } from 'store/api/dayOverviewApi';
+import { PhaseItem, AddPhaseItemData } from 'types/overview';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MeasurementInputModal } from 'components/AnytimeMenu/MeasurementInputModal';
 import { selectDayOverview, meta, setDateEntry } from 'store/slices/dayOverviewSlice';
+import { OVERVIEW_TYPE, PHASE_ITEM_STATUS, ENTITY_TYPE, SUBSTANCE_TYPE } from 'constants/spec';
+import {
+    Phase,
+    useGetDayOverviewQuery,
+    useCreatePatientPhaseMutation,
+    useUpdatePatientPhaseMutation,
+    useAddPhaseCustomRecipeMutation,
+    useCreatePatientPhaseWithRecipeMutation,
+} from 'store/api/dayOverviewApi';
+import { filters } from 'services/filter';
 
 // Temporary types
-export type PhaseType =
-  | 'MEAL'
-  | 'ANYTIME'
-  | 'QUESTION'
-  | 'SUPPLEMENT'
-  | 'MEDICATION'
-  | 'MEASUREMENT'
-  | 'ADDED_BY_PATIENT'
-  | 'PHYSICAL_ACTIVITY';
+// export type PhaseType =
+//   | 'MEAL'
+//   | 'ANYTIME'
+//   | 'QUESTION'
+//   | 'SUPPLEMENT'
+//   | 'MEDICATION'
+//   | 'MEASUREMENT'
+//   | 'ADDED_BY_PATIENT'
+//   | 'PHYSICAL_ACTIVITY';
 
-interface PhaseItem {
-  title: string;
-  type: PhaseType;
-  sortKey?: number;
-  id: string | number;
-  phaseId?: string | number;
-  status?: 'DONE' | 'PENDING' | 'INCOMPLETE';
-}
+// interface PhaseItem {
+//   title: string;
+//   type: PhaseType;
+//   sortKey?: number;
+//   id: string | number;
+//   phaseId?: string | number;
+//   status?: 'DONE' | 'PENDING' | 'INCOMPLETE';
+// }
 
 const DOT_SIZE = 8;
 const GAP_SIZE = 15;
@@ -56,7 +70,7 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
     const offsetLineX = mealIconX;
     const svgHeight = phases.length * ROW_HEIGHT;
 
-    const isMealPhase = (type: PhaseType) => type === 'MEAL';
+    const isMealPhase = (type: AddPhaseItemData['type']) => type === 'MEAL';
 
     const timelineElements = useMemo(() => {
         const elements: React.ReactElement[] = [];
@@ -354,6 +368,23 @@ const styles = StyleSheet.create({
         right: 20,
         bottom: 90,
     },
+    addBtn: {
+        position: 'absolute',
+        right: 20,
+        bottom: 170,
+        backgroundColor: '#4CAF50',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    addBtnText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        fontSize: 12,
+    },
+    disabledBtn: {
+        backgroundColor: '#CCCCCC',
+    },
     shadowBtn: {
         shadowColor: '#000000',
         ...Platform.select({
@@ -404,12 +435,12 @@ const styles = StyleSheet.create({
     },
 });
 
-const getIconColorByType = (type: PhaseType) => {
+const getIconColorByType = (type: AddPhaseItemData['type']) => {
     switch (type) {
         case 'MEAL':
             return { bg: '#FFD9B3', fg: '#C56A00', name: 'utensils' as const };
         case 'ADDED_BY_PATIENT':
-            return { bg: '#D4E09B', fg: '#647C2E', name: 'plus' as const };
+            return { bg: '#D4E09B', fg: '#647C2E', name: 'utensils' as const };
         case 'MEASUREMENT':
             return { bg: '#F3F3F3', fg: '#000000', name: 'ruler' as const };
         case 'SUPPLEMENT':
@@ -428,7 +459,7 @@ const getIconColorByType = (type: PhaseType) => {
 
 export const Overview: React.FC = () => {
     const theme = useTheme();
-    const navigation = useNavigation();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const dispatch = useAppDispatch();
     const bottomSheetRef = useRef<BottomSheet>(null);
     const { date, showCalendar, calendarDays } = useAppSelector(selectDayOverview);
@@ -439,6 +470,13 @@ export const Overview: React.FC = () => {
         skip: !currentDate,
         refetchOnMountOrArgChange: true,
     });
+
+    const [createPatientPhase] = useCreatePatientPhaseMutation();
+    const [createPatientPhaseWithRecipe] = useCreatePatientPhaseWithRecipeMutation();
+    const [updatePatientPhase] = useUpdatePatientPhaseMutation();
+    const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
+
+    const isFutureDateCheck = moment(currentDate).isAfter(moment(), 'day');
 
     const incompleteDay = useMemo(() => {
         const incompleteDays = data?.currentWeekIncompleteDays || [];
@@ -488,6 +526,106 @@ export const Overview: React.FC = () => {
         }
     }, [dispatch]);
 
+    const handleAddButtonPress = useCallback(() => {
+        if (!data?.id) { return; }
+
+        const patientPhase = data?.phases?.find(p => p.type === OVERVIEW_TYPE.ADDED_BY_PATIENT);
+        const phasesCount = data?.phases?.length || 0;
+
+        navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
+            prevItem: null,
+            date: currentDate,
+            substanceType: 'FOOD',
+            entityType: 'PATIENT_FOOD',
+            onApply: async (payload: any) => {
+                try {
+                    const selectedItemData = payload.item || payload;
+                    const selectedItem = { ...selectedItemData?.item };
+                    const itemEntityType = selectedItemData?.entityType || 'FOOD';
+                    const itemSubstanceType = selectedItemData?.substanceType || selectedItem?.substanceType || SUBSTANCE_TYPE.FOOD;
+
+                    if (itemEntityType === ENTITY_TYPE.FOOD || itemEntityType === 'PATIENT_FOOD' || itemEntityType === 'PATIENT_DRINK') {
+                        const defaultWeight = selectedItem.weights?.find((w: any) => w.isDefault) || selectedItem.weights?.[0];
+
+                        const newItem: any = {
+                            order: 0,
+                            section: 'Added',
+                            type: ENTITY_TYPE.FOOD,
+                            food: { id: selectedItem.id },
+                            substanceType: itemSubstanceType,
+                            amount: selectedItem?.amount || 1,
+                            status: PHASE_ITEM_STATUS.PENDING,
+                            initialAmount: selectedItem?.initialAmount || 1,
+                        };
+
+                        // Add weight as { id } reference
+                        if (defaultWeight?.id) {
+                            newItem.weight = { id: defaultWeight.id };
+                        }
+
+                        if (patientPhase?.id) {
+                            // Add to existing ADDED_BY_PATIENT phase - update phase with new items array
+                            const existingItems = patientPhase.items || [];
+                            await updatePatientPhase({
+                                phaseId: patientPhase.id,
+                                data: {
+                                    order: phasesCount,
+                                    dayOverview: { id: data.id },
+                                    status: PHASE_ITEM_STATUS.PENDING,
+                                    items: [...existingItems, newItem],
+                                    type: OVERVIEW_TYPE.ADDED_BY_PATIENT,
+                                },
+                            });
+                        } else {
+                            // Create new ADDED_BY_PATIENT phase
+                            await createPatientPhase({
+                                dayOverviewId: data.id,
+                                data: {
+                                    items: [newItem],
+                                    order: phasesCount + 1,
+                                    dayOverview: { id: data.id },
+                                    status: PHASE_ITEM_STATUS.PENDING,
+                                    type: OVERVIEW_TYPE.ADDED_BY_PATIENT,
+                                },
+                            });
+                        }
+                    } else if (itemEntityType === ENTITY_TYPE.RECIPE || itemEntityType === 'PATIENT_RECIPES' || itemEntityType === 'RESTAURANT') {
+                        const recipeItem: any = {
+                            order: 0,
+                            section: 'Added',
+                            type: ENTITY_TYPE.RECIPE,
+                            recipe: { id: selectedItem?.id },
+                            amount: selectedItem?.amount || 1,
+                            status: PHASE_ITEM_STATUS.PENDING,
+                            initialAmount: selectedItem?.initialAmount || 1,
+                        };
+
+                        if (patientPhase?.id) {
+                            // Add recipe to existing phase
+                            await addPhaseCustomRecipe({
+                                data: recipeItem,
+                                phaseId: patientPhase.id,
+                            });
+                        } else {
+                            // Create new phase with recipe
+                            await createPatientPhaseWithRecipe({
+                                dayOverviewId: data.id,
+                                data: {
+                                    items: [recipeItem],
+                                    order: phasesCount + 1,
+                                    status: PHASE_ITEM_STATUS.PENDING,
+                                    type: OVERVIEW_TYPE.ADDED_BY_PATIENT,
+                                },
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error adding item to patient phase:', error);
+                }
+            }
+        });
+    }, [data, currentDate, navigation, createPatientPhase, createPatientPhaseWithRecipe, updatePatientPhase, addPhaseCustomRecipe]);
+
     useEffect(() => {
         moment.updateLocale('en', { week: { dow: 1 } });
     }, []);
@@ -528,10 +666,20 @@ export const Overview: React.FC = () => {
                     rows.push({
                         id: item.id,
                         phaseId: p.id,
+                        phase: { id: p.id },
                         type: 'MEASUREMENT',
+                        order: item.order ?? 0,
+                        rating: item.rating ?? 0,
+                        recipe: item.recipe ?? null,
+                        section: item.section ?? '',
+                        modified: item.modified ?? false,
                         title: item.measurement?.name || 'Measurement',
+                        peopleEatingNumber: item.peopleEatingNumber ?? 1,
                         sortKey: (p.order ?? 0) + (item.order ?? 0) / 100,
                         status: item.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
+                        patientFoodCategoryQuestion: item.patientFoodCategoryQuestion ?? null,
+                        patientFoodCategoryAttachment: item.patientFoodCategoryAttachment ?? null,
+                        recipeOilyFishProteinReplaced: item.recipeOilyFishProteinReplaced ?? false,
                     });
                 });
             } else if (
@@ -539,8 +687,19 @@ export const Overview: React.FC = () => {
             ) {
                 rows.push({
                     id: p.id,
+                    phase: p,
+                    rating: 0,
+                    section: '',
+                    recipe: null,
+                    modified: false,
+                    order: p.order ?? 0,
+                    phaseId: p.id ?? null,
                     sortKey: p.order ?? 0,
-                    type: p.type as PhaseType,
+                    peopleEatingNumber: 1,
+                    patientFoodCategoryQuestion: null,
+                    patientFoodCategoryAttachment: null,
+                    recipeOilyFishProteinReplaced: false,
+                    type: p.type as AddPhaseItemData['type'],
                     status: p.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
                     title: p.meal?.name || p.name || (p.type === 'PHYSICAL_ACTIVITY' ? 'Exercise' : p.type.toLowerCase()),
                 });
@@ -550,13 +709,12 @@ export const Overview: React.FC = () => {
         return rows.sort((a, b) => (a.sortKey ?? 0) - (b.sortKey ?? 0));
     }, [data]);
 
-    const isMealPhase = (type: PhaseType) => type === 'MEAL';
+    const isMealPhase = (type: AddPhaseItemData['type']) => type === 'MEAL';
 
     const handlePhasePress = (phase: PhaseItem) => {
         if (phase.type === 'MEASUREMENT') {
             const measurementPhase = data?.phases?.find(p => p.type === 'MEASUREMENT');
             const measurementItem = measurementPhase?.items?.find((item: any) => item.id === phase.id);
-
             if (measurementItem) {
                 const measurementType = measurementItem.measurement?.type;
                 if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
@@ -642,7 +800,7 @@ export const Overview: React.FC = () => {
                             const iconMarginLeft = isMeal
                                 ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
                                 : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
-
+                            
                             return (
                                 <TouchableOpacity key={String(item.id)} style={styles.row} onPress={() => handlePhasePress(item)}>
                                     <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: iconMarginLeft }]}>
@@ -650,7 +808,7 @@ export const Overview: React.FC = () => {
                                     </View>
                                     <View style={styles.rightContent}>
                                         <Text variant="h4" style={{ color: theme.colors.text }}>
-                                            {item.title}
+                                            {item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title)}
                                         </Text>
                                         <Text style={{ color: theme.colors.text, fontSize: 12, marginTop: 4 }}>
                       Status: {item.status || 'Unknown'}
@@ -672,7 +830,24 @@ export const Overview: React.FC = () => {
                 date={currentDate}
                 disabled={isFetching || isLoading}
             />
-            {/* && data?.id */}
+
+            {!showCalendar && data?.id && !isFutureDateCheck && (
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={handleAddButtonPress}
+                    disabled={isFetching || isLoading}
+                    style={[
+                        styles.addBtn,
+                        styles.roundBtn,
+                        styles.shadowBtn,
+                        (isFetching || isLoading) && styles.disabledBtn,
+                    ]}
+                >
+                    <FeatherIcon name="plus" color="#FFFFFF" size={22} />
+                    <Text style={styles.addBtnText}>Add</Text>
+                </TouchableOpacity>
+            )}
+
             {/* Floating Calendar Button */}
             {!showCalendar && (
                 <TouchableOpacity
@@ -715,8 +890,8 @@ export const Overview: React.FC = () => {
                 enablePanDownToClose
                 ref={bottomSheetRef}
                 snapPoints={['60%']}
-                backdropComponent={renderBackdrop}
                 onChange={handleSheetChanges}
+                backdropComponent={renderBackdrop}
                 backgroundStyle={styles.bottomSheetBg}
                 handleIndicatorStyle={styles.bottomSheetIndicator}
             >
@@ -726,24 +901,24 @@ export const Overview: React.FC = () => {
                         markedDates={calendarDays}
                         onDayPress={handleDayPress}
                         theme={{
-                            backgroundColor: '#ffffff',
-                            calendarBackground: '#ffffff',
-                            textSectionTitleColor: '#7B7B7B',
-                            selectedDayBackgroundColor: '#2978A0',
-                            selectedDayTextColor: '#ffffff',
-                            todayTextColor: '#2978A0',
-                            dayTextColor: '#2d4150',
-                            textDisabledColor: '#d9e1e8',
                             dotColor: '#2978A0',
-                            selectedDotColor: '#ffffff',
-                            arrowColor: '#2978A0',
-                            monthTextColor: '#2d4150',
-                            textDayFontWeight: '400',
-                            textMonthFontWeight: '600',
-                            textDayHeaderFontWeight: '500',
                             textDayFontSize: 16,
                             textMonthFontSize: 18,
+                            arrowColor: '#2978A0',
+                            dayTextColor: '#2d4150',
+                            textDayFontWeight: '400',
                             textDayHeaderFontSize: 14,
+                            monthTextColor: '#2d4150',
+                            todayTextColor: '#2978A0',
+                            backgroundColor: '#ffffff',
+                            textMonthFontWeight: '600',
+                            selectedDotColor: '#ffffff',
+                            textDisabledColor: '#d9e1e8',
+                            calendarBackground: '#ffffff',
+                            textDayHeaderFontWeight: '500',
+                            selectedDayTextColor: '#ffffff',
+                            textSectionTitleColor: '#7B7B7B',
+                            selectedDayBackgroundColor: '#2978A0',
                         }}
                     />
                 </BottomSheetView>

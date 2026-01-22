@@ -1,5 +1,6 @@
+// outsource dependencies
 import React from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
@@ -19,7 +20,7 @@ const BackBtn: React.FC<BackBtnProps> = ({
 }) => {
     return (
         <TouchableOpacity style={styles.container} onPress={onPress}>
-            <Icon name="chevron-left" size={16} color={color} />
+            <Icon iconStyle="solid" name="chevron-left" size={16} color={color} />
             <Text style={[styles.text, { color }]}>{label}</Text>
         </TouchableOpacity>
     );

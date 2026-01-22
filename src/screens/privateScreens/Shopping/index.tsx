@@ -132,4 +132,3 @@ const Shopping: React.FC<ShoppingProps> = ({ route }) => {
 };
 
 export default memo(Shopping);
-

@@ -1,5 +1,5 @@
 // outsource dependencies
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '@react-native-vector-icons/feather';
 import React, { memo, useCallback, useRef, useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 // local dependencies
@@ -21,9 +21,9 @@ interface ShoppingItemProps {
 const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
     item,
     status,
+    onUpdate,
     disabled,
     isConfirmed,
-    onUpdate,
 }) => {
     const ref = useRef<TextInput>(null);
     const [editable, setEditable] = useState(false);
