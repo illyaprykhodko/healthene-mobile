@@ -106,6 +106,12 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         setLocalItems(items);
     }, [items]);
 
+    // Check if all items are DONE - used to enable/disable "Meal Done" button
+    const allItemsDone = useMemo(() => {
+        if (localItems.length === 0) { return false; }
+        return localItems.every(item => item.status === PHASE_ITEM_STATUS.DONE);
+    }, [localItems]);
+
     const computeExcludeIds = (): string[] => {
         switch (currentPhase?.type) {
             default:
@@ -327,14 +333,17 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     };
 
     const handlePhaseDone = async () => {
-        if (!targetPhaseId) { return; }
+        if (!targetPhaseId || !currentPhase) { return; }
     
         try {
             await updatePhase({
                 id: targetPhaseId,
-                data: { status: PHASE_ITEM_STATUS.DONE }
+                data: {
+                    ...currentPhase,
+                    status: PHASE_ITEM_STATUS.DONE
+                }
             });
-            (navigation as any).navigate('Overview');
+            navigation.navigate(ROUTES.DAY_OVERVIEW);
         } catch (error) {
             console.error('Error marking phase as done:', error);
         }
@@ -342,64 +351,41 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     const handleCheckboxStatus = async (item: PhaseItem) => {
         try {
-            // let newStatus: string;
-            // const status = isDidNotEatItem
-            // ? PHASE_ITEM_STATUS.DID_NOT_EAT
-            // : isItemChecked
-            //     ? PHASE_ITEM_STATUS.DONE
-            //     : PHASE_ITEM_STATUS.PENDING;
-            // switch (item.status) {
-            //     case PHASE_ITEM_STATUS.DID_NOT_EAT:
-            //         newStatus = PHASE_ITEM_STATUS.DID_NOT_EAT;
-            //         break;
-            //     case PHASE_ITEM_STATUS.DONE:
-            //         newStatus = PHASE_ITEM_STATUS.DONE;
-            //         break;
-            //     case PHASE_ITEM_STATUS.PENDING:
-            //         newStatus = PHASE_ITEM_STATUS.DONE;
-            //         break;
-            //     default:
-            //         newStatus = PHASE_ITEM_STATUS.DID_NOT_EAT;
-
-            // }
-            // switch (item.status) {
-            //     case PHASE_ITEM_STATUS.DONE:
-            //     case PHASE_ITEM_STATUS.DID_NOT_EAT:
-            //         newStatus = PHASE_ITEM_STATUS.PENDING;
-            //         break;
-            //     case PHASE_ITEM_STATUS.PENDING:
-            //         newStatus = PHASE_ITEM_STATUS.DONE;
-            //         break;
-            //     default:
-            //         newStatus = PHASE_ITEM_STATUS.DID_NOT_EAT;
-            // }
-            // await updatePhaseItem({
-            //     id: item.id,
-            //     data: {
-            //         ...item,
-            //         status: newStatus,
-            //         amount: item.amount || item.initialAmount
-            //     }
-            // });
-
-         
             await updatePhaseItem({
                 id: item.id,
                 phaseId: targetPhaseId,
                 data: {
                     ...item,
-                    // status: newStatus,
                     amount: item.amount || item.initialAmount
                 }
             });
-            setLocalItems(prevItems =>
-                prevItems.map(prevItem =>
-                    (prevItem.id === item.id
-                        ? { ...item }
-                        // ? { ...prevItem, status: newStatus }
-                        : prevItem)
-                )
+
+            const updatedItems = localItems.map(prevItem =>
+                (prevItem.id === item.id ? { ...item } : prevItem)
             );
+            setLocalItems(updatedItems);
+
+            // Check if all items are DONE - if so, automatically mark phase as DONE
+            const allItemsDone = updatedItems.every(
+                listItem => listItem.status === PHASE_ITEM_STATUS.DONE
+            );
+
+            if (currentPhase && targetPhaseId) {
+                const newPhaseStatus = allItemsDone
+                    ? PHASE_ITEM_STATUS.DONE
+                    : PHASE_ITEM_STATUS.PENDING;
+
+                // Only update phase if status actually changed
+                if (currentPhase.status !== newPhaseStatus) {
+                    await updatePhase({
+                        id: targetPhaseId,
+                        data: {
+                            ...currentPhase,
+                            status: newPhaseStatus
+                        }
+                    });
+                }
+            }
         } catch (error) {
             console.error('Error updating item status:', error);
             setLocalItems(items);
@@ -543,7 +529,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const handleNoReplaceItem = (item: PhaseItem) => {
         // return true if item should not be replaced
         // return !item.recipe || item.recipe?.surrogateRecipe || item.section !== SECTION.ADDED_BY_HEALTHENE;
-        return item?.recipe && item.section === SECTION.ADDED_BY_HEALTHENE;
+        return !!item?.recipe && item.section === SECTION.ADDED_BY_HEALTHENE;
 
     };
 
@@ -706,11 +692,13 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         <Button
                             title="Meal Done"
                             variant="secondary"
+                            disabled={!allItemsDone}
                             onPress={handlePhaseDone}
                             textStyle={styles.textMealDoneButton}
                             style={{
                                 ...styles.button,
                                 ...styles.mealDoneButton,
+                                ...(!allItemsDone && styles.mealDoneButtonDisabled),
                             }}
                         />
                     )}
@@ -816,7 +804,10 @@ const styles = StyleSheet.create({
         borderWidth: 0,
         backgroundColor: '#BCE8A6',
     },
-    mealDoneButtonDisabled: {},
+    mealDoneButtonDisabled: {
+        backgroundColor: '#E0E0E0',
+        opacity: 0.6,
+    },
     addButton: {
         width: '90%',
         borderColor: '#7BAAC2',

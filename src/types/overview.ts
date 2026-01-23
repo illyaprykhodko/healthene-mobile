@@ -67,6 +67,7 @@ export type AddPhaseItemData = {
     | 'RECIPE_TEMPLATE'
     | 'RESPONSE'
     | 'SUPPLEMENT'
+    | 'CUSTOM_RECIPE'
     | 'TEXT',
     weight: {
       id: number
@@ -117,10 +118,20 @@ export interface PhaseItem {
     phase: {
         id: number | string;
     };
-    // serving: ServingInfo;
+    serving: ServingInfo | null;
 
     recipe: {
         id: number;
+        name: string;
+        ingredients: Ingredient[];
+        steps: Step[];
+        serving: ServingInfo;
+        coverImage: CoverImage;
+        tags: Tag[];
+        states: StateTag[];
+        initialStates: InitialStateTag[];
+        rescueTags: RescueTag[];
+        surrogateRecipe: boolean;
     } | null;
 
     patientFoodCategoryAttachment: PatientFoodCategoryAttachment | null;

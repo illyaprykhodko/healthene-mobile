@@ -2,6 +2,7 @@ export const COLORS = {
     RED: '#F55454',
     PINK: '#FEB2B2',
     DARKER_PINK: '#dc73de',
+    LIGHT_PINK: '#e9a4ea', // DARKER_PINK lightened by 30%
     GREEN: '#61BD4F',
     PURPLE: '#C376E0',
     YELLOW: '#FFD83D',
@@ -10,6 +11,7 @@ export const COLORS = {
     LIGHTER_GREY: '#DADADA',
     GREY: '#B0B0B0',
     DARK_GREY: '#7B7B7B',
+    DARKENED_GRAY: '#151515',
     DARKER_GREY: '#C4C4C4',
     WHITE: '#FFFFFF',
     BLACK: '#000000',

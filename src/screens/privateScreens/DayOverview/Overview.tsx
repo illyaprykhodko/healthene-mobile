@@ -4,6 +4,7 @@ import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import FeatherIcon from '@react-native-vector-icons/feather';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
@@ -14,6 +15,8 @@ import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import { COLORS } from 'constants/colors';
+import { Highlight } from 'components/Highlight';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppDispatch, useAppSelector } from 'store';
 import { RootStackParamList } from 'services/navigation';
@@ -63,7 +66,7 @@ const TIMELINE_WIDTH = 50;
 const CONNECTOR_WIDTH = 1;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
+const TimelineSVG: React.FC<{ phases: PhaseItem[]; incompleteDay?: boolean }> = ({ phases, incompleteDay = false }) => {
     const theme = useTheme();
     const mainLineX = TIMELINE_WIDTH / 2;
     const mealIconX = TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE / 2;
@@ -287,7 +290,11 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
             const dotX = isMeal ? mainLineX : offsetLineX;
             const iconX = dotX + GAP_SIZE + ICON_SIZE / 2 + ICON_MARGIN;
 
-            elements.push(<Circle key={`dot-${index}`} cx={dotX} cy={y} r={DOT_SIZE / 2} fill={theme.colors.grey} />);
+            const isIncomplete = incompleteDay && phase.status === 'INCOMPLETE';
+            if (!isIncomplete) {
+                elements.push(<Circle key={`dot-${index}`} cx={dotX} cy={y} r={DOT_SIZE / 2} fill={theme.colors.grey} />);
+            }
+
             elements.push(
                 <Line
                     y1={y}
@@ -432,6 +439,37 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: OFFSET.HORIZONTAL,
         paddingTop: OFFSET.VERTICAL,
+    },
+    incompleteLabel: {
+        width: 180,
+        marginLeft: 5,
+        marginTop: 5,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+    },
+    incompleteText: {
+        marginLeft: 5,
+        fontWeight: '500',
+        fontSize: 16,
+    },
+    incompleteLabelContainer: {
+        position: 'absolute',
+        bottom: 100,
+        right: 0,
+        marginRight: Platform.OS === 'ios' ? -10 : -20,
+    },
+    statusIndicator: {
+        position: 'absolute',
+        zIndex: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        // Center vertically: ROW_HEIGHT/2 - iconSize/2 = 75/2 - 18/2 = 37.5 - 9 = 28.5
+        top: 28,
+    },
+    highlightText: {
+        marginLeft: 8,
+        fontWeight: '500',
+        color: '#4A4A4A',
     },
 });
 
@@ -672,6 +710,7 @@ export const Overview: React.FC = () => {
                         rating: item.rating ?? 0,
                         recipe: item.recipe ?? null,
                         section: item.section ?? '',
+                        serving: item.serving ?? null,
                         modified: item.modified ?? false,
                         title: item.measurement?.name || 'Measurement',
                         peopleEatingNumber: item.peopleEatingNumber ?? 1,
@@ -691,6 +730,7 @@ export const Overview: React.FC = () => {
                     rating: 0,
                     section: '',
                     recipe: null,
+                    serving: null,
                     modified: false,
                     order: p.order ?? 0,
                     phaseId: p.id ?? null,
@@ -793,32 +833,95 @@ export const Overview: React.FC = () => {
                         data={phases}
                         style={{ marginBottom: 35 }}
                         keyExtractor={item => String(item.id)}
-                        ListHeaderComponent={<TimelineSVG phases={phases} />}
+                        ListHeaderComponent={<TimelineSVG phases={phases} incompleteDay={incompleteDay} />}
                         renderItem={({ item }) => {
                             const { bg, fg, name } = getIconColorByType(item.type);
                             const isMeal = isMealPhase(item.type);
                             const iconMarginLeft = isMeal
                                 ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
                                 : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
-                            
+
+                            const isIncomplete = item.status === PHASE_ITEM_STATUS.INCOMPLETE;
+                            const isDone = item.status === PHASE_ITEM_STATUS.DONE;
+                            const shouldHighlight = incompleteDay && isIncomplete;
+                            const showArrowIcon = shouldHighlight && (item.type === 'MEAL' || item.type === 'ADDED_BY_PATIENT');
+
+                            const displayTitle = item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title);
+
+                            const renderStatusIndicator = () => {
+                                if (isDone) {
+                                    return (
+                                        <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
+                                    );
+                                }
+                                if (incompleteDay && isIncomplete) {
+                                    return (
+                                        <FeatherIcon name="info" size={18} color={COLORS.BROWN} />
+                                    );
+                                }
+                                return null;
+                            };
+
+                            // Status indicator left position - exactly where the dot would be
+                            // TIMELINE_WIDTH/2 = 25 for MEAL, offsetLineX = 105 for non-MEAL
+                            // Subtract half of icon size (18/2 = 9) to center it
+                            const statusLeftPosition = isMeal ? 16 : 96;
+
+                            if (shouldHighlight) {
+                                return (
+                                    <TouchableOpacity
+                                        key={String(item.id)}
+                                        style={styles.row}
+                                        onPress={() => handlePhasePress(item)}
+                                    >
+                                        <View style={[styles.statusIndicator, { left: statusLeftPosition }]}>
+                                            {renderStatusIndicator()}
+                                        </View>
+                                        <View style={{ marginLeft: iconMarginLeft }}>
+                                            <Highlight color={COLORS.LIGHT_PINK}>
+                                                {showArrowIcon ? (
+                                                    <Ionicons
+                                                        name="chevron-forward-circle-outline"
+                                                        color={COLORS.DARK_GREY}
+                                                        size={38}
+                                                    />
+                                                ) : (
+                                                    <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: 0 }]}>
+                                                        <Icon iconStyle="solid" name={name} color={fg} size={18} />
+                                                    </View>
+                                                )}
+                                                <Text variant="h4" style={styles.highlightText}>
+                                                    {displayTitle}
+                                                </Text>
+                                            </Highlight>
+                                        </View>
+                                    </TouchableOpacity>
+                                );
+                            }
+
+                            // Normal item (non-highlighted)
                             return (
-                                <TouchableOpacity key={String(item.id)} style={styles.row} onPress={() => handlePhasePress(item)}>
+                                <TouchableOpacity
+                                    key={String(item.id)}
+                                    style={styles.row}
+                                    onPress={() => handlePhasePress(item)}
+                                >
+                                    {isDone && (
+                                        <View style={[styles.statusIndicator, { left: statusLeftPosition }]}>
+                                            {renderStatusIndicator()}
+                                        </View>
+                                    )}
                                     <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: iconMarginLeft }]}>
                                         <Icon iconStyle="solid" name={name} color={fg} size={18} />
                                     </View>
                                     <View style={styles.rightContent}>
                                         <Text variant="h4" style={{ color: theme.colors.text }}>
-                                            {item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title)}
+                                            {displayTitle}
                                         </Text>
-                                        <Text style={{ color: theme.colors.text, fontSize: 12, marginTop: 4 }}>
-                      Status: {item.status || 'Unknown'}
+                                        <Text variant="h5">
+                                            {/* Status: {item.status || 'Unknown'} */}
                                         </Text>
                                     </View>
-                                    {/* {item.type === 'MEASUREMENT' && item.status === 'DONE' && (
-                                        <View style={styles.graphIconContainer}>
-                                            <Icon name="chart-line" color="#2978A0" size={20} />
-                                        </View>
-                                    )} */}
                                 </TouchableOpacity>
                             );
                         }}
@@ -846,6 +949,30 @@ export const Overview: React.FC = () => {
                     <FeatherIcon name="plus" color="#FFFFFF" size={22} />
                     <Text style={styles.addBtnText}>Add</Text>
                 </TouchableOpacity>
+            )}
+
+            {/* Incomplete Day Label */}
+            {Boolean(incompleteDay) && (
+                <View style={styles.incompleteLabelContainer}>
+                    <Highlight color={COLORS.DARKER_PINK}>
+                        <View style={styles.incompleteLabel}>
+                            <Text
+                                style={styles.incompleteText}
+                                color={COLORS.DARKENED_GRAY}
+                                textAlign="left"
+                            >
+                                Please
+                            </Text>
+                            <Text
+                                textAlign="left"
+                                color={COLORS.DARKENED_GRAY}
+                                style={[styles.incompleteText, { marginTop: Platform.OS === 'ios' ? -5 : 0 }]}
+                            >
+                                complete
+                            </Text>
+                        </View>
+                    </Highlight>
+                </View>
             )}
 
             {/* Floating Calendar Button */}
