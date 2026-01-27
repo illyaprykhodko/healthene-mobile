@@ -15,6 +15,7 @@ import { MEDICAL_TERM_TYPES } from 'constants/index.ts';
 import Separator from 'components/FlatListSeparator.tsx';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import HealthProfileListItem from './HealthProfileListItem.tsx';
+import SelectedItemsAccordion from './SelectedItemsAccordion.tsx';
 import { MedicalTermItem, MedicationAllergy } from 'types/healthProfile.ts';
 import ListHeaderComponent from 'components/Selector/components/ListHeader.tsx';
 import { useFindMedicalTermQuery, useAddMedicationAllergiesMutation, useDeleteMedicationAllergiesMutation } from 'store/api/healthProfileApi.ts';
@@ -38,6 +39,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
     const [page, setPage] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAccordionExpanded, setIsAccordionExpanded] = useState(false);
     const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
     
     const openModalSheet = () => {
@@ -97,8 +99,6 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
 
 
     const handleToggleItem = useCallback(async (id: number) => {
-        console.log('handleToggleItem', id);
-      
         if (type !== 'medicationAllergy') {
             return;
         }
@@ -153,6 +153,15 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
         }
     }, [type, selectedItems, addMedicationAllergy, deleteMedicationAllergy]);
 
+    const handleRemoveItem = useCallback(async (id: number) => {
+        await deleteMedicationAllergy({ id }).unwrap();
+        Toast.show({
+            type: 'success',
+            text1: 'Allergy removed',
+            text2: 'Medication allergy has been successfully removed.',
+        });
+    }, [deleteMedicationAllergy]);
+
     // Data source placeholder (will later be fed by RTK Query by `type`)
     // Important: keep UI logic unchanged for now.
     const items: any[] = (() => {
@@ -172,17 +181,33 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
     // Show overlay when searching (has search term) or when clearing search (fetching with empty term but not initial load)
     const isSearching = isFetchingMedicalTerms && page === 0 && !isLoadingData;
 
+    const toggleAccordion = useCallback(() => {
+        setIsAccordionExpanded(prev => !prev);
+    }, []);
+
+    const showAccordionToggle = type === 'medicationAllergy' && data.length > 0;
+
     return (
         <View>
             <ListHeader
                 title={title}
                 onAction={openModalSheet}
+                onToggleAccordion={toggleAccordion}
+                isAccordionExpanded={isAccordionExpanded}
+                showAccordionToggle={showAccordionToggle}
             />
+            {showAccordionToggle && (
+                <SelectedItemsAccordion
+                    data={data}
+                    onRemove={handleRemoveItem}
+                    isExpanded={isAccordionExpanded}
+                />
+            )}
             {
-                isEmpty
+                data.length === 0
                     ? <Text
-                        style={styles.emptyText}
                         textAlign="center"
+                        style={styles.emptyText}
                         color={theme.colors.grey}
                     >
                         {emptyText}

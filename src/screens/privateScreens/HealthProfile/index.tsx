@@ -10,12 +10,12 @@ import Screen from 'components/Screen.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import ProfileImage from 'components/ProfileImage.tsx';
+import { MedicationAllergy } from 'types/healthProfile';
 import { useGetPlanInfoQuery } from 'store/api/planApi.ts';
 import { useGetMedicationAllergiesQuery } from 'store/api/healthProfileApi.ts';
 import Stats from 'screens/privateScreens/HealthProfile/components/Stats.tsx';
 import Habits from 'screens/privateScreens/HealthProfile/components/Habits.tsx';
 import HealthProfileListSection, { HealthProfileSectionType } from 'screens/privateScreens/HealthProfile/components/HealthProfileListSection.tsx';
-import { MedicationAllergy } from 'types/healthProfile';
 
 const HealthProfile = () => {
     const theme = useTheme();
