@@ -24,8 +24,6 @@ const HealthProfile = () => {
     const { data: medications } = useGetMedicationsQuery();
     const { data: medicalProblems } = useGetMedicalProblemsQuery();
     const { data: medicationAllergies } = useGetMedicationAllergiesQuery();
-
-    console.log('medications', medications);
     
     return <Screen initialized={!isLoading} style={styles.container}>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
