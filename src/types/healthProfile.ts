@@ -18,3 +18,8 @@ export interface PatientHabit {
     id: number;
     habit: Habit;
 }
+
+export interface MedicalTermItem {
+  id: number;
+  name: string;
+}

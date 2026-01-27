@@ -3,8 +3,8 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 
 // local dependencies
 import { baseQuery } from 'store/api/baseApi.ts';
-import { PaginatedParams, PaginatedResponse } from 'types/common/interfaces.ts';
-import { MessageChain, Message, MessageItem, TransformData, MessageForm } from 'types/messenger.ts';
+import { PaginatedParams, PaginatedResponse, TransformData } from 'types/common/interfaces.ts';
+import { MessageChain, Message, MessageItem, MessageForm } from 'types/messenger.ts';
 
 export const messengerApi = createApi({
     baseQuery,

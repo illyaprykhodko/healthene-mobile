@@ -33,12 +33,6 @@ export interface Participant {
     }
 }
 
-export interface TransformData<T> {
-    data: T[];
-    page: number;
-    totalPages: number;
-}
-
 export interface Message {
     id: number;
     subject: string;

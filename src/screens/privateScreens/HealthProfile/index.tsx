@@ -13,6 +13,7 @@ import ProfileImage from 'components/ProfileImage.tsx';
 import { useGetPlanInfoQuery } from 'store/api/planApi.ts';
 import Stats from 'screens/privateScreens/HealthProfile/components/Stats.tsx';
 import Habits from 'screens/privateScreens/HealthProfile/components/Habits.tsx';
+import HealthProfileListSection, { HealthProfileSectionType } from 'screens/privateScreens/HealthProfile/components/HealthProfileListSection.tsx';
 
 const HealthProfile = () => {
     const theme = useTheme();
@@ -32,6 +33,24 @@ const HealthProfile = () => {
             </Text>
             <Stats />
             <Habits />
+            <HealthProfileListSection
+                title="Medication Allergies"
+                onAddPress={() => undefined}
+                emptyText="No known Medication Allergies"
+                type={'medicationAllergy' as HealthProfileSectionType}
+            />
+            <HealthProfileListSection
+                title="Medical Problems"
+                onAddPress={() => undefined}
+                emptyText="No known Medical Problems"
+                type={'medicalProblem' as HealthProfileSectionType}
+            />
+            <HealthProfileListSection
+                title="Medications"
+                onAddPress={() => undefined}
+                emptyText="No known Medications"
+                type={'medication' as HealthProfileSectionType}
+            />
         </ScrollView>
     </Screen>;
 };
