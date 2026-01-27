@@ -46,7 +46,7 @@ export const THEME = {
 export const THEME_PREFERENCE_KEY = 'theme_preference';
 
 export const MEDICAL_TERM_TYPES = [
-    'MEDICAL_PROBLEMS',
     'MEDICATION_ALLERGY',
+    'MEDICAL_PROBLEMS',
     'SURGICAL_PROBLEMS',
 ] as const;

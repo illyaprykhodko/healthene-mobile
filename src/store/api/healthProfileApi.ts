@@ -4,12 +4,12 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from 'store/api/baseApi.ts';
 import { PaginatedParams, PaginatedResponse, TransformData } from 'types/common/interfaces';
-import { Habit, MedicalTermItem, PatientHabit, MedicalTermType, MedicationAllergy } from 'types/healthProfile.ts';
+import { Habit, MedicalTermItem, PatientHabit, MedicalTermType, MedicalEntity } from 'types/healthProfile.ts';
 
 export const healthProfileApi = createApi({
     baseQuery,
     reducerPath: 'healthProfileApi',
-    tagTypes: ['PatientHabits', 'MedicationAllergies'],
+    tagTypes: ['PatientHabits', 'MedicationAllergies', 'MedicalProblems'],
     endpoints: builder => ({
         getHabits: builder.query<Habit[], void>({
             query: () => ({
@@ -32,7 +32,7 @@ export const healthProfileApi = createApi({
                 url: '/patient-service/patients/me/habit',
             }),
         }),
-        getMedicationAllergies: builder.query<MedicationAllergy[], void>({
+        getMedicationAllergies: builder.query<MedicalEntity[], void>({
             providesTags: ['MedicationAllergies'],
             query: () => ({
                 method: 'GET',
@@ -55,6 +55,29 @@ export const healthProfileApi = createApi({
                 url: '/patient-service/patients/me/medication-allergies',
             }),
         }),
+        getMedicalProblems: builder.query<MedicalEntity[], void>({
+            providesTags: ['MedicalProblems'],
+            query: () => ({
+                method: 'GET',
+                url: '/patient-service/patients/me/medical-problems',
+            }),
+        }),
+        addMedicalProblems: builder.mutation<void, { id: number }>({
+            invalidatesTags: ['MedicalProblems'],
+            query: ({ id }) => ({
+                body: { id },
+                method: 'POST',
+                url: '/patient-service/patients/me/medical-problems',
+            }),
+        }),
+        deleteMedicalProblems: builder.mutation<void, { id: number }>({
+            invalidatesTags: ['MedicalProblems'],
+            query: ({ id }) => ({
+                body: { id },
+                method: 'DELETE',
+                url: '/patient-service/patients/me/medical-problems',
+            }),
+        }),
         findMedicalTerm: builder.query<TransformData<MedicalTermItem>, {
             data: {name: string, type: MedicalTermType};
             params: PaginatedParams
@@ -67,7 +90,8 @@ export const healthProfileApi = createApi({
             }),
             serializeQueryArgs: ({ endpointName, queryArgs }) => {
                 const searchName = queryArgs.data.name ?? '';
-                return `${endpointName}-${searchName}`;
+                const type = queryArgs.data.type ?? '';
+                return `${endpointName}-${type}-${searchName}`;
             },
             transformResponse: (response: PaginatedResponse<MedicalTermItem>, _, args) => {
                 return {
@@ -91,10 +115,12 @@ export const healthProfileApi = createApi({
                 }
                 const currentName = currentArg.data.name ?? '';
                 const previousName = previousArg.data.name ?? '';
+                const currentType = currentArg.data.type ?? '';
+                const previousType = previousArg.data.type ?? '';
                 const currentPage = currentArg.params.page ?? 0;
                 const previousPage = previousArg.params.page ?? 0;
-                // Refetch if search term changes or page changes
-                return currentName !== previousName || currentPage !== previousPage;
+                // Refetch if search term changes, type changes, or page changes
+                return currentName !== previousName || currentType !== previousType || currentPage !== previousPage;
             },
         }),
     })
@@ -104,8 +130,11 @@ export const {
     useGetHabitsQuery,
     useFindMedicalTermQuery,
     useGetPatientHabitsQuery,
+    useGetMedicalProblemsQuery,
+    useAddMedicalProblemsMutation,
     useUpdatePatientHabitsMutation,
     useGetMedicationAllergiesQuery,
+    useDeleteMedicalProblemsMutation,
     useAddMedicationAllergiesMutation,
     useDeleteMedicationAllergiesMutation,
 } = healthProfileApi;

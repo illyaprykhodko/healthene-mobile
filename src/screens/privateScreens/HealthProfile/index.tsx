@@ -9,12 +9,12 @@ import Text from 'components/Text.tsx';
 import Screen from 'components/Screen.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
+import { MedicalEntity } from 'types/healthProfile';
 import ProfileImage from 'components/ProfileImage.tsx';
-import { MedicationAllergy } from 'types/healthProfile';
 import { useGetPlanInfoQuery } from 'store/api/planApi.ts';
-import { useGetMedicationAllergiesQuery } from 'store/api/healthProfileApi.ts';
 import Stats from 'screens/privateScreens/HealthProfile/components/Stats.tsx';
 import Habits from 'screens/privateScreens/HealthProfile/components/Habits.tsx';
+import { useGetMedicationAllergiesQuery, useGetMedicalProblemsQuery } from 'store/api/healthProfileApi.ts';
 import HealthProfileListSection, { HealthProfileSectionType } from 'screens/privateScreens/HealthProfile/components/HealthProfileListSection.tsx';
 
 const HealthProfile = () => {
@@ -22,8 +22,9 @@ const HealthProfile = () => {
     const styles = useMemo(() => createStyles(theme), [theme]);
     const user = useSelector((state: RootState) => state.app.user);
     const { data, isLoading } = useGetPlanInfoQuery();
+    const { data: medicalProblems } = useGetMedicalProblemsQuery();
     const { data: medicationAllergies } = useGetMedicationAllergiesQuery();
-  
+    
     return <Screen initialized={!isLoading} style={styles.container}>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             <ProfileImage style={styles.profileImg} uri={user?.coverImage?.url}/>
@@ -45,14 +46,14 @@ const HealthProfile = () => {
             />
             <HealthProfileListSection
                 title="Medical Problems"
-                data={[] as MedicationAllergy[]}
+                data={medicalProblems ?? []}
                 onAddPress={() => undefined}
                 emptyText="No known Medical Problems"
                 type={'medicalProblem' as HealthProfileSectionType}
             />
             <HealthProfileListSection
                 title="Medications"
-                data={[] as MedicationAllergy[]}
+                data={[] as MedicalEntity[]}
                 onAddPress={() => undefined}
                 emptyText="No known Medications"
                 type={'medication' as HealthProfileSectionType}

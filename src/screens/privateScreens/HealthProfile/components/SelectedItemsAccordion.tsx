@@ -6,7 +6,7 @@ import Animated, {
     useDerivedValue,
     useAnimatedStyle,
 } from 'react-native-reanimated';
-import React, { memo, useMemo, useCallback } from 'react';
+import React, { memo, useMemo, useCallback, useEffect } from 'react';
 import { StyleSheet, View, FlatList, ListRenderItemInfo } from 'react-native';
 
 // local dependencies
@@ -15,11 +15,11 @@ import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { Checkbox } from 'components/Checkbox.tsx';
 import Separator from 'components/FlatListSeparator';
-import { MedicationAllergy } from 'types/healthProfile.ts';
+import { MedicalEntity } from 'types/healthProfile.ts';
 
 interface SelectedItemsAccordionProps {
-    data: MedicationAllergy[];
     isExpanded: boolean;
+    data: MedicalEntity[];
     onRemove?: (id: number) => void;
 }
 
@@ -32,10 +32,10 @@ const SelectedItemsAccordion = ({ data, isExpanded, onRemove }: SelectedItemsAcc
     }, [data]);
 
     const expanded = useSharedValue(0);
-    const itemHeight = 48; // Approximate height per item
+    const itemHeight = 74; // Approximate height per item
     const contentHeight = selectedItemsList.length * itemHeight;
 
-    React.useEffect(() => {
+    useEffect(() => {
         expanded.value = withTiming(isExpanded ? 1 : 0, {
             duration: 300,
             easing: Easing.bezier(0.4, 0.0, 0.2, 1),

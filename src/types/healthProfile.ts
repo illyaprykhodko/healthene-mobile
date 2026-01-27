@@ -28,7 +28,7 @@ export interface MedicalTermItem {
   name: string;
 }
 
-export interface MedicationAllergy {
+export interface MedicalEntity {
     id: number;
     medicalTerm: MedicalTermItem;
 }
