@@ -268,3 +268,19 @@ export interface MessageEntity {
   subject?: string | null;
 }
 
+/**
+ * Represents transformed paginated data
+ * @interface TransformData
+ * @template T - Type of items in the data array
+ * @property {T[]} data - Array of data items
+ * @property {number} page - Current page number
+ * @property {number} totalPages - Total number of pages
+ */
+export interface TransformData<T> {
+  /** Array of data items */
+  data: T[];
+  /** Current page number */
+  page: number;
+  /** Total number of pages */
+  totalPages: number;
+}

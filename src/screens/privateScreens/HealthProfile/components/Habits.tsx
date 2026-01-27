@@ -7,6 +7,7 @@ import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gor
 
 // local dependencies
 import Text from 'components/Text.tsx';
+import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Habit } from 'types/healthProfile.ts';
 import Checkbox from 'components/Checkbox.tsx';
@@ -18,6 +19,7 @@ import ListHeader from 'screens/privateScreens/HealthProfile/components/ListHead
 import { useGetHabitsQuery, useGetPatientHabitsQuery, useUpdatePatientHabitsMutation } from 'store/api/healthProfileApi.ts';
 
 export const Habits = () => {
+    const theme = useTheme();
     const dispatch = useDispatch();
     const styles = useMemo(() => createStyles(), []);
     const { data: habits } = useGetHabitsQuery();
@@ -78,16 +80,17 @@ export const Habits = () => {
             });
         }
     };
-
+    
     return <>
         <FlatList
             data={patientHabits}
             scrollEnabled={false}
             ItemSeparatorComponent={Separator}
-            ListFooterComponent={<Separator />}
             keyExtractor={item => item?.id.toString()}
+            ListFooterComponent={patientHabits?.length ? <Separator /> : null}
             ListHeaderComponent={<ListHeader onAction={openModalSheet} title="Habits" />}
             renderItem={({ item }) => <Text style={styles.paddingVertical}>{item?.habit?.name}</Text>}
+            ListEmptyComponent={<Text textAlign="center" color={theme.colors.grey} style={styles.paddingVertical}>No habits found</Text>}
         />
         <BottomSheetModal
             ref={modalSheetRef}

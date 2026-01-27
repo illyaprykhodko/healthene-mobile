@@ -13,13 +13,18 @@ import ProfileImage from 'components/ProfileImage.tsx';
 import { useGetPlanInfoQuery } from 'store/api/planApi.ts';
 import Stats from 'screens/privateScreens/HealthProfile/components/Stats.tsx';
 import Habits from 'screens/privateScreens/HealthProfile/components/Habits.tsx';
+import { useGetMedicationAllergiesQuery, useGetMedicalProblemsQuery, useGetMedicationsQuery } from 'store/api/healthProfileApi.ts';
+import HealthProfileListSection, { HealthProfileSectionType } from 'screens/privateScreens/HealthProfile/components/HealthProfileListSection.tsx';
 
 const HealthProfile = () => {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const user = useSelector((state: RootState) => state.app.user);
     const { data, isLoading } = useGetPlanInfoQuery();
-
+    const { data: medications } = useGetMedicationsQuery();
+    const { data: medicalProblems } = useGetMedicalProblemsQuery();
+    const { data: medicationAllergies } = useGetMedicationAllergiesQuery();
+    
     return <Screen initialized={!isLoading} style={styles.container}>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             <ProfileImage style={styles.profileImg} uri={user?.coverImage?.url}/>
@@ -32,6 +37,28 @@ const HealthProfile = () => {
             </Text>
             <Stats />
             <Habits />
+            <HealthProfileListSection
+                title="Medication Allergies"
+                onAddPress={() => undefined}
+                data={medicationAllergies ?? []}
+                emptyText="No known Medication Allergies"
+                type={'medicationAllergy' as HealthProfileSectionType}
+            />
+            <HealthProfileListSection
+                title="Medical Problems"
+                data={medicalProblems ?? []}
+                onAddPress={() => undefined}
+                emptyText="No known Medical Problems"
+                type={'medicalProblem' as HealthProfileSectionType}
+            />
+            <HealthProfileListSection
+                title="Medications"
+                data={medications ?? []}
+                onAddPress={() => undefined}
+                emptyText="No known Medications"
+                type={'medication' as HealthProfileSectionType}
+            />
+            
         </ScrollView>
     </Screen>;
 };
@@ -45,7 +72,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>) => StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: OFFSET.HORIZONTAL,
-        paddingVertical: OFFSET.VERTICAL,
+        paddingTop: OFFSET.VERTICAL,
+        paddingBottom: OFFSET.VERTICAL * 2,
     },
     profileImg: {
         alignSelf: 'center',
