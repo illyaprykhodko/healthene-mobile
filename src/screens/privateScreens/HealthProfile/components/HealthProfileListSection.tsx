@@ -10,6 +10,7 @@ import Text from 'components/Text.tsx';
 import ListHeader from './ListHeader.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
+import { MEDICAL_TERM_TYPES } from 'constants/index.ts';
 import { MedicalTermItem } from 'types/healthProfile.ts';
 import Separator from 'components/FlatListSeparator.tsx';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
@@ -55,7 +56,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
     }, []);
 
     const { data: medicalTermData, isLoading: isLoadingMedicalTerms, isFetching: isFetchingMedicalTerms } = useFindMedicalTermQuery({
-        data: { name: searchTerm },
+        data: { name: searchTerm, type: MEDICAL_TERM_TYPES[0] },
         params: { page },
     }, {
         skip: type !== 'medicationAllergy' || !isModalOpen,

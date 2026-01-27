@@ -4,7 +4,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from 'store/api/baseApi.ts';
 import { PaginatedParams, PaginatedResponse, TransformData } from 'types/common/interfaces';
-import { Habit, MedicalTermItem, PatientHabit } from 'types/healthProfile.ts';
+import { Habit, MedicalTermItem, PatientHabit, MedicalTermType } from 'types/healthProfile.ts';
 
 export const healthProfileApi = createApi({
     baseQuery,
@@ -56,7 +56,7 @@ export const healthProfileApi = createApi({
             }),
         }),
         findMedicalTerm: builder.query<TransformData<MedicalTermItem>, {
-            data: {name: string};
+            data: {name: string, type: MedicalTermType};
             params: PaginatedParams
         }>({
             query: ({ data, params }) => ({

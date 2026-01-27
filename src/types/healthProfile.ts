@@ -1,3 +1,7 @@
+// local dependencies
+import { MEDICAL_TERM_TYPES } from 'constants/index.ts';
+
+// interfaces
 export interface Stats {
     heightFt: number;
     weightLb: number;
@@ -23,3 +27,5 @@ export interface MedicalTermItem {
   id: number;
   name: string;
 }
+
+export type MedicalTermType = typeof MEDICAL_TERM_TYPES[number];

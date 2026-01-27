@@ -44,3 +44,9 @@ export const THEME = {
 } as const;
 
 export const THEME_PREFERENCE_KEY = 'theme_preference';
+
+export const MEDICAL_TERM_TYPES = [
+    'MEDICAL_PROBLEMS',
+    'MEDICATION_ALLERGY',
+    'SURGICAL_PROBLEMS',
+] as const;
