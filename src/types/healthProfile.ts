@@ -23,14 +23,15 @@ export interface PatientHabit {
     habit: Habit;
 }
 
-export interface MedicalTermItem {
+export interface MedicalEntityItem {
   id: number;
   name: string;
 }
 
 export interface MedicalEntity {
     id: number;
-    medicalTerm: MedicalTermItem;
+    medicalTerm?: MedicalEntityItem;
+    medication?: MedicalEntityItem;
 }
 
 export type MedicalTermType = typeof MEDICAL_TERM_TYPES[number];

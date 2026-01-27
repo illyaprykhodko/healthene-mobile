@@ -9,12 +9,11 @@ import Text from 'components/Text.tsx';
 import Screen from 'components/Screen.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
-import { MedicalEntity } from 'types/healthProfile';
 import ProfileImage from 'components/ProfileImage.tsx';
 import { useGetPlanInfoQuery } from 'store/api/planApi.ts';
 import Stats from 'screens/privateScreens/HealthProfile/components/Stats.tsx';
 import Habits from 'screens/privateScreens/HealthProfile/components/Habits.tsx';
-import { useGetMedicationAllergiesQuery, useGetMedicalProblemsQuery } from 'store/api/healthProfileApi.ts';
+import { useGetMedicationAllergiesQuery, useGetMedicalProblemsQuery, useGetMedicationsQuery } from 'store/api/healthProfileApi.ts';
 import HealthProfileListSection, { HealthProfileSectionType } from 'screens/privateScreens/HealthProfile/components/HealthProfileListSection.tsx';
 
 const HealthProfile = () => {
@@ -22,8 +21,11 @@ const HealthProfile = () => {
     const styles = useMemo(() => createStyles(theme), [theme]);
     const user = useSelector((state: RootState) => state.app.user);
     const { data, isLoading } = useGetPlanInfoQuery();
+    const { data: medications } = useGetMedicationsQuery();
     const { data: medicalProblems } = useGetMedicalProblemsQuery();
     const { data: medicationAllergies } = useGetMedicationAllergiesQuery();
+
+    console.log('medications', medications);
     
     return <Screen initialized={!isLoading} style={styles.container}>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -53,7 +55,7 @@ const HealthProfile = () => {
             />
             <HealthProfileListSection
                 title="Medications"
-                data={[] as MedicalEntity[]}
+                data={medications ?? []}
                 onAddPress={() => undefined}
                 emptyText="No known Medications"
                 type={'medication' as HealthProfileSectionType}

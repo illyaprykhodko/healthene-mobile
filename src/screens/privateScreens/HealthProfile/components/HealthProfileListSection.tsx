@@ -9,10 +9,13 @@ import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gor
 import Footer from './Footer.tsx';
 import {
     useFindMedicalTermQuery,
+    useFindMedicationsQuery,
     useAddMedicalProblemsMutation,
     useDeleteMedicalProblemsMutation,
     useAddMedicationAllergiesMutation,
     useDeleteMedicationAllergiesMutation,
+    useAddMedicationsMutation,
+    useDeleteMedicationsMutation,
 } from 'store/api/healthProfileApi.ts';
 import Text from 'components/Text.tsx';
 import ListHeader from './ListHeader.tsx';
@@ -23,7 +26,7 @@ import Separator from 'components/FlatListSeparator.tsx';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import HealthProfileListItem from './HealthProfileListItem.tsx';
 import SelectedItemsAccordion from './SelectedItemsAccordion.tsx';
-import { MedicalTermItem, MedicalEntity } from 'types/healthProfile.ts';
+import { MedicalEntityItem, MedicalEntity } from 'types/healthProfile.ts';
 import ListHeaderComponent from 'components/Selector/components/ListHeader.tsx';
 
 export type HealthProfileSectionType = 'medication' | 'medicationAllergy' | 'medicalProblem';
@@ -53,21 +56,39 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
         onAddPress?.();
     };
 
+    // Helper to get the item from MedicalEntity based on type
+    const getEntityItem = useCallback((entity: MedicalEntity): MedicalEntityItem | undefined => {
+        if (type === 'medication') {
+            return entity.medication;
+        }
+        return entity.medicalTerm;
+    }, [type]);
+
     // Sync selectedItems with data prop when it changes (e.g., after mutations)
     useEffect(() => {
-        if ((type === 'medicationAllergy' || type === 'medicalProblem') && data && isModalOpen) {
-            const entityIds = new Set<number>(data.map((entity: MedicalEntity) => entity.medicalTerm.id));
+        if ((type === 'medicationAllergy' || type === 'medicalProblem' || type === 'medication') && data && isModalOpen) {
+            const entityIds = new Set<number>(
+                data
+                    .map((entity: MedicalEntity) => getEntityItem(entity))
+                    .filter((item): item is MedicalEntityItem => item !== undefined)
+                    .map((item: MedicalEntityItem) => item.id)
+            );
             setSelectedItems(entityIds);
         }
-    }, [data, type, isModalOpen]);
+    }, [data, type, isModalOpen, getEntityItem]);
 
     const handleSheetChange = useCallback((index: number) => {
         // Index > -1 means modal is open (snap point index)
         // Index -1 means modal is closed
         setIsModalOpen(index > -1);
         // Initialize selectedItems from entities when modal opens
-        if (index > -1 && (type === 'medicationAllergy' || type === 'medicalProblem') && data) {
-            const entityIds = new Set<number>(data.map((entity: MedicalEntity) => entity.medicalTerm.id));
+        if (index > -1 && (type === 'medicationAllergy' || type === 'medicalProblem' || type === 'medication') && data) {
+            const entityIds = new Set<number>(
+                data
+                    .map((entity: MedicalEntity) => getEntityItem(entity))
+                    .filter((item): item is MedicalEntityItem => item !== undefined)
+                    .map((item: MedicalEntityItem) => item.id)
+            );
             setSelectedItems(entityIds);
         }
         // Reset search and page when modal closes
@@ -76,7 +97,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
             setPage(0);
             setSelectedItems(new Set());
         }
-    }, [type, data]);
+    }, [type, data, getEntityItem]);
 
     // Get the correct medical term type based on section type
     const medicalTermType = useMemo(() => {
@@ -96,11 +117,21 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
         skip: (type !== 'medicationAllergy' && type !== 'medicalProblem') || !isModalOpen,
     });
 
+    const { data: medicationsData, isLoading: isLoadingMedications, isFetching: isFetchingMedications } = useFindMedicationsQuery({
+        data: { name: searchTerm },
+        params: { page },
+    }, {
+        skip: type !== 'medication' || !isModalOpen,
+    });
+
     const [addMedicationAllergy] = useAddMedicationAllergiesMutation();
     const [deleteMedicationAllergy] = useDeleteMedicationAllergiesMutation();
     
     const [addMedicalProblem] = useAddMedicalProblemsMutation();
     const [deleteMedicalProblem] = useDeleteMedicalProblemsMutation();
+
+    const [addMedication] = useAddMedicationsMutation();
+    const [deleteMedication] = useDeleteMedicationsMutation();
 
     // Get type-specific labels
     const typeLabels = useMemo(() => {
@@ -124,6 +155,16 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                 removeError: 'Failed to remove medical problem',
             };
         }
+        if (type === 'medication') {
+            return {
+                addSuccess: 'Medication added',
+                addMessage: 'Medication has been successfully added.',
+                removeSuccess: 'Medication removed',
+                removeMessage: 'Medication has been successfully removed.',
+                addError: 'Failed to add medication',
+                removeError: 'Failed to remove medication',
+            };
+        }
         return {
             addSuccess: 'Item added',
             addMessage: 'Item has been successfully added.',
@@ -140,18 +181,25 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
     }, []);
 
     const loadMore = useCallback(() => {
-        // Only load more for types that use medicalTermData
+        // Load more for medicationAllergy and medicalProblem using medicalTermData
         if ((type === 'medicationAllergy' || type === 'medicalProblem')
             && medicalTermData
             && medicalTermData.page < medicalTermData.totalPages - 1
         ) {
             setPage(medicalTermData.page + 1);
         }
-    }, [medicalTermData, type]);
+        // Load more for medication using medicationsData
+        if (type === 'medication'
+            && medicationsData
+            && medicationsData.page < medicationsData.totalPages - 1
+        ) {
+            setPage(medicationsData.page + 1);
+        }
+    }, [medicalTermData, medicationsData, type]);
 
 
     const handleToggleItem = useCallback(async (id: number) => {
-        if (type !== 'medicationAllergy' && type !== 'medicalProblem') {
+        if (type !== 'medicationAllergy' && type !== 'medicalProblem' && type !== 'medication') {
             return;
         }
 
@@ -175,6 +223,8 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                     await deleteMedicationAllergy({ id }).unwrap();
                 } else if (type === 'medicalProblem') {
                     await deleteMedicalProblem({ id }).unwrap();
+                } else if (type === 'medication') {
+                    await deleteMedication({ id }).unwrap();
                 }
                 Toast.show({
                     type: 'success',
@@ -187,6 +237,8 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                     await addMedicationAllergy({ id }).unwrap();
                 } else if (type === 'medicalProblem') {
                     await addMedicalProblem({ id }).unwrap();
+                } else if (type === 'medication') {
+                    await addMedication({ id }).unwrap();
                 }
                 Toast.show({
                     type: 'success',
@@ -211,7 +263,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                 text2: 'Something went wrong. Please try again later.',
             });
         }
-    }, [type, selectedItems, addMedicationAllergy, deleteMedicationAllergy, addMedicalProblem, deleteMedicalProblem, typeLabels]);
+    }, [type, selectedItems, addMedicationAllergy, deleteMedicationAllergy, addMedicalProblem, deleteMedicalProblem, addMedication, deleteMedication, typeLabels]);
 
     const handleRemoveItem = useCallback(async (id: number) => {
         try {
@@ -219,6 +271,8 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                 await deleteMedicationAllergy({ id }).unwrap();
             } else if (type === 'medicalProblem') {
                 await deleteMedicalProblem({ id }).unwrap();
+            } else if (type === 'medication') {
+                await deleteMedication({ id }).unwrap();
             }
             Toast.show({
                 type: 'success',
@@ -232,14 +286,14 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                 text2: 'Something went wrong. Please try again later.',
             });
         }
-    }, [type, deleteMedicationAllergy, deleteMedicalProblem, typeLabels]);
+    }, [type, deleteMedicationAllergy, deleteMedicalProblem, deleteMedication, typeLabels]);
 
     // Data source placeholder (will later be fed by RTK Query by `type`)
     // Important: keep UI logic unchanged for now.
     const items: any[] = (() => {
         switch (type) {
             case 'medication':
-                return [];
+                return medicationsData?.data ?? [];
             case 'medicalProblem':
             case 'medicationAllergy':
                 return medicalTermData?.data ?? [];
@@ -248,16 +302,32 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
     })();
   
     const isEmpty = items.length === 0;
-    const isLoadingData = isLoadingMedicalTerms && page === 0 && searchTerm === '';
-    const isLoadingMore = isFetchingMedicalTerms && page > 0 && !isEmpty;
+    // Loading states for different types
+    const isLoadingData = (() => {
+        if (type === 'medication') {
+            return isLoadingMedications && page === 0 && searchTerm === '';
+        }
+        return isLoadingMedicalTerms && page === 0 && searchTerm === '';
+    })();
+    const isLoadingMore = (() => {
+        if (type === 'medication') {
+            return isFetchingMedications && page > 0 && !isEmpty;
+        }
+        return isFetchingMedicalTerms && page > 0 && !isEmpty;
+    })();
     // Show overlay when searching (has search term) or when clearing search (fetching with empty term but not initial load)
-    const isSearching = isFetchingMedicalTerms && page === 0 && !isLoadingData;
+    const isSearching = (() => {
+        if (type === 'medication') {
+            return isFetchingMedications && page === 0 && !isLoadingData;
+        }
+        return isFetchingMedicalTerms && page === 0 && !isLoadingData;
+    })();
 
     const toggleAccordion = useCallback(() => {
         setIsAccordionExpanded(prev => !prev);
     }, []);
 
-    const showAccordionToggle = (type === 'medicationAllergy' || type === 'medicalProblem') && data.length > 0;
+    const showAccordionToggle = (type === 'medicationAllergy' || type === 'medicalProblem' || type === 'medication') && data.length > 0;
 
     return (
         <View>
@@ -271,6 +341,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
             {showAccordionToggle && (
                 <SelectedItemsAccordion
                     data={data}
+                    type={type}
                     onRemove={handleRemoveItem}
                     isExpanded={isAccordionExpanded}
                 />
@@ -314,7 +385,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                             stickyHeaderIndices={[0]}
                             onEndReachedThreshold={0.6}
                             ItemSeparatorComponent={Separator}
-                            keyExtractor={(item: MedicalTermItem) => `${item?.id}`}
+                            keyExtractor={(item: MedicalEntityItem) => `${item?.id}`}
                             ListFooterComponent={<Footer isLoading={isLoadingMore} />}
                             ListHeaderComponent={<ListHeaderComponent
                                 value={value}
@@ -322,7 +393,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                                 onSearch={handleSearch}
                                 searchValue={searchTerm}
                             />}
-                            renderItem={({ item }: ListRenderItemInfo<MedicalTermItem>) => (
+                            renderItem={({ item }: ListRenderItemInfo<MedicalEntityItem>) => (
                                 <HealthProfileListItem
                                     item={item}
                                     onToggle={handleToggleItem}

@@ -6,11 +6,11 @@ import { StyleSheet, View } from 'react-native';
 import Text from 'components/Text.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { Checkbox } from 'components/Checkbox.tsx';
-import { MedicalTermItem } from 'types/healthProfile.ts';
+import { MedicalEntityItem } from 'types/healthProfile.ts';
 
 interface HealthProfileListItemProps {
     isChecked: boolean;
-    item: MedicalTermItem;
+    item: MedicalEntityItem;
     onToggle: (id: number) => void;
 }
 
