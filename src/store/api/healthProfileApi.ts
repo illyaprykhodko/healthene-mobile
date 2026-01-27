@@ -24,7 +24,7 @@ export const healthProfileApi = createApi({
                 url: '/patient-service/patients/me/habit',
             }),
         }),
-        updatePatientHabits: builder.mutation<any, any>({
+        updatePatientHabits: builder.mutation<void, Array<{ id: number | null; entity: { id: number } }>>({
             invalidatesTags: ['PatientHabits'],
             query: body => ({
                 body,
@@ -39,7 +39,7 @@ export const healthProfileApi = createApi({
                 url: '/patient-service/patients/me/medication-allergies',
             }),
         }),
-        addMedicationAllergies: builder.mutation<any, { id: number }>({
+        addMedicationAllergies: builder.mutation<void, { id: number }>({
             invalidatesTags: ['MedicationAllergies'],
             query: ({ id }) => ({
                 body: { id },
@@ -47,7 +47,7 @@ export const healthProfileApi = createApi({
                 url: '/patient-service/patients/me/medication-allergies',
             }),
         }),
-        deleteMedicationAllergies: builder.mutation<any, { id: number }>({
+        deleteMedicationAllergies: builder.mutation<void, { id: number }>({
             invalidatesTags: ['MedicationAllergies'],
             query: ({ id }) => ({
                 body: { id },
