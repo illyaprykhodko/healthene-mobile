@@ -4,7 +4,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from 'store/api/baseApi.ts';
 import { PaginatedParams, PaginatedResponse, TransformData } from 'types/common/interfaces';
-import { Habit, MedicalTermItem, PatientHabit, MedicalTermType } from 'types/healthProfile.ts';
+import { Habit, MedicalTermItem, PatientHabit, MedicalTermType, MedicationAllergy } from 'types/healthProfile.ts';
 
 export const healthProfileApi = createApi({
     baseQuery,
@@ -32,27 +32,27 @@ export const healthProfileApi = createApi({
                 url: '/patient-service/patients/me/habit',
             }),
         }),
-        getMedicationAllergies: builder.query<any[], void>({
+        getMedicationAllergies: builder.query<MedicationAllergy[], void>({
             providesTags: ['MedicationAllergies'],
             query: () => ({
                 method: 'GET',
                 url: '/patient-service/patients/me/medication-allergies',
             }),
         }),
-        addMedicationAllergies: builder.mutation<any, { id: number | string }>({
+        addMedicationAllergies: builder.mutation<any, { id: number }>({
             invalidatesTags: ['MedicationAllergies'],
             query: ({ id }) => ({
+                body: { id },
                 method: 'POST',
                 url: '/patient-service/patients/me/medication-allergies',
-                body: { id },
             }),
         }),
-        deleteMedicationAllergies: builder.mutation<any, { id: number | string }>({
+        deleteMedicationAllergies: builder.mutation<any, { id: number }>({
             invalidatesTags: ['MedicationAllergies'],
             query: ({ id }) => ({
+                body: { id },
                 method: 'DELETE',
                 url: '/patient-service/patients/me/medication-allergies',
-                body: { id },
             }),
         }),
         findMedicalTerm: builder.query<TransformData<MedicalTermItem>, {

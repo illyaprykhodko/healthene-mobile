@@ -1,7 +1,8 @@
 // outsource dependencies
+import Toast from 'react-native-toast-message';
 import { MaterialIndicator } from 'react-native-indicators';
 import { ListRenderItemInfo, StyleSheet, View } from 'react-native';
-import React, { memo, useMemo, useRef, useState, useCallback } from 'react';
+import React, { memo, useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal } from '@gorhom/bottom-sheet';
 
 // local dependencies
@@ -11,12 +12,12 @@ import ListHeader from './ListHeader.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { MEDICAL_TERM_TYPES } from 'constants/index.ts';
-import { MedicalTermItem } from 'types/healthProfile.ts';
 import Separator from 'components/FlatListSeparator.tsx';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import HealthProfileListItem from './HealthProfileListItem.tsx';
-import { useFindMedicalTermQuery } from 'store/api/healthProfileApi.ts';
+import { MedicalTermItem, MedicationAllergy } from 'types/healthProfile.ts';
 import ListHeaderComponent from 'components/Selector/components/ListHeader.tsx';
+import { useFindMedicalTermQuery, useAddMedicationAllergiesMutation, useDeleteMedicationAllergiesMutation } from 'store/api/healthProfileApi.ts';
 
 export type HealthProfileSectionType = 'medication' | 'medicationAllergy' | 'medicalProblem';
 
@@ -25,10 +26,11 @@ interface HealthProfileListSectionProps {
     value?: string;
     emptyText: string;
     onAddPress: () => void;
+    data: MedicationAllergy[];
     type: HealthProfileSectionType;
 }
 
-const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPress }: HealthProfileListSectionProps) => {
+const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPress, data }: HealthProfileListSectionProps) => {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(), []);
     const modalSheetRef = useRef<BottomSheetModal>(null);
@@ -43,17 +45,30 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
         onAddPress?.();
     };
 
+    // Sync selectedItems with data prop when it changes (e.g., after mutations)
+    useEffect(() => {
+        if (type === 'medicationAllergy' && data && isModalOpen) {
+            const allergyIds = new Set<number>(data.map((allergy: MedicationAllergy) => allergy.medicalTerm.id));
+            setSelectedItems(allergyIds);
+        }
+    }, [data, type, isModalOpen]);
+
     const handleSheetChange = useCallback((index: number) => {
         // Index > -1 means modal is open (snap point index)
         // Index -1 means modal is closed
         setIsModalOpen(index > -1);
+        // Initialize selectedItems from medicationAllergies when modal opens
+        if (index > -1 && type === 'medicationAllergy' && data) {
+            const allergyIds = new Set<number>(data.map((allergy: MedicationAllergy) => allergy.medicalTerm.id));
+            setSelectedItems(allergyIds);
+        }
         // Reset search and page when modal closes
         if (index === -1) {
             setSearchTerm('');
             setPage(0);
             setSelectedItems(new Set());
         }
-    }, []);
+    }, [type, data]);
 
     const { data: medicalTermData, isLoading: isLoadingMedicalTerms, isFetching: isFetchingMedicalTerms } = useFindMedicalTermQuery({
         data: { name: searchTerm, type: MEDICAL_TERM_TYPES[0] },
@@ -61,6 +76,9 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
     }, {
         skip: type !== 'medicationAllergy' || !isModalOpen,
     });
+
+    const [addMedicationAllergy] = useAddMedicationAllergiesMutation();
+    const [deleteMedicationAllergy] = useDeleteMedicationAllergiesMutation();
 
     const handleSearch = useCallback((term: string) => {
         setSearchTerm(term);
@@ -77,17 +95,63 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
         }
     }, [medicalTermData, type]);
 
-    const handleToggleItem = useCallback((id: number) => {
+
+    const handleToggleItem = useCallback(async (id: number) => {
+        console.log('handleToggleItem', id);
+      
+        if (type !== 'medicationAllergy') {
+            return;
+        }
+
+        const isCurrentlySelected = selectedItems.has(id);
+
+        // Optimistically update UI
         setSelectedItems(prev => {
             const newSet = new Set(prev);
-            if (newSet.has(id)) {
+            if (isCurrentlySelected) {
                 newSet.delete(id);
             } else {
                 newSet.add(id);
             }
             return newSet;
         });
-    }, []);
+
+        try {
+            if (isCurrentlySelected) {
+                // Remove allergy
+                await deleteMedicationAllergy({ id }).unwrap();
+                Toast.show({
+                    type: 'success',
+                    text1: 'Allergy removed',
+                    text2: 'Medication allergy has been successfully removed.',
+                });
+            } else {
+                // Add allergy
+                await addMedicationAllergy({ id }).unwrap();
+                Toast.show({
+                    type: 'success',
+                    text1: 'Allergy added',
+                    text2: 'Medication allergy has been successfully added.',
+                });
+            }
+        } catch (error) {
+            // Revert on error
+            setSelectedItems(prev => {
+                const newSet = new Set(prev);
+                if (isCurrentlySelected) {
+                    newSet.add(id);
+                } else {
+                    newSet.delete(id);
+                }
+                return newSet;
+            });
+            Toast.show({
+                type: 'error',
+                text1: isCurrentlySelected ? 'Failed to remove allergy' : 'Failed to add allergy',
+                text2: 'Something went wrong. Please try again later.',
+            });
+        }
+    }, [type, selectedItems, addMedicationAllergy, deleteMedicationAllergy]);
 
     // Data source placeholder (will later be fed by RTK Query by `type`)
     // Important: keep UI logic unchanged for now.

@@ -28,4 +28,9 @@ export interface MedicalTermItem {
   name: string;
 }
 
+export interface MedicationAllergy {
+    id: number;
+    medicalTerm: MedicalTermItem;
+}
+
 export type MedicalTermType = typeof MEDICAL_TERM_TYPES[number];
