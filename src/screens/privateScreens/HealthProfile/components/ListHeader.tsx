@@ -1,11 +1,11 @@
 // outsource dependencies
-import React from 'react';
 import Animated, {
     Easing,
     withTiming,
     useSharedValue,
     useAnimatedStyle,
 } from 'react-native-reanimated';
+import React, { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 
@@ -28,7 +28,7 @@ const ListHeader = ({ onAction, title, onToggleAccordion, isAccordionExpanded = 
     const theme = useTheme();
     const rotation = useSharedValue(0);
 
-    React.useEffect(() => {
+    useEffect(() => {
         rotation.value = withTiming(isAccordionExpanded ? 180 : 0, {
             duration: 300,
             easing: Easing.bezier(0.4, 0.0, 0.2, 1),

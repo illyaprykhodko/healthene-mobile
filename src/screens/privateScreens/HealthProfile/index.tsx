@@ -58,6 +58,7 @@ const HealthProfile = () => {
                 emptyText="No known Medications"
                 type={'medication' as HealthProfileSectionType}
             />
+            
         </ScrollView>
     </Screen>;
 };
@@ -71,7 +72,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>) => StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: OFFSET.HORIZONTAL,
-        paddingVertical: OFFSET.VERTICAL,
+        paddingTop: OFFSET.VERTICAL,
+        paddingBottom: OFFSET.VERTICAL * 2,
     },
     profileImg: {
         alignSelf: 'center',

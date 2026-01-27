@@ -10,12 +10,12 @@ import Footer from './Footer.tsx';
 import {
     useFindMedicalTermQuery,
     useFindMedicationsQuery,
+    useAddMedicationsMutation,
+    useDeleteMedicationsMutation,
     useAddMedicalProblemsMutation,
     useDeleteMedicalProblemsMutation,
     useAddMedicationAllergiesMutation,
     useDeleteMedicationAllergiesMutation,
-    useAddMedicationsMutation,
-    useDeleteMedicationsMutation,
 } from 'store/api/healthProfileApi.ts';
 import Text from 'components/Text.tsx';
 import ListHeader from './ListHeader.tsx';
@@ -66,7 +66,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
 
     // Sync selectedItems with data prop when it changes (e.g., after mutations)
     useEffect(() => {
-        if ((type === 'medicationAllergy' || type === 'medicalProblem' || type === 'medication') && data && isModalOpen) {
+        if (data && isModalOpen) {
             const entityIds = new Set<number>(
                 data
                     .map((entity: MedicalEntity) => getEntityItem(entity))
@@ -82,7 +82,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
         // Index -1 means modal is closed
         setIsModalOpen(index > -1);
         // Initialize selectedItems from entities when modal opens
-        if (index > -1 && (type === 'medicationAllergy' || type === 'medicalProblem' || type === 'medication') && data) {
+        if (index > -1 && data) {
             const entityIds = new Set<number>(
                 data
                     .map((entity: MedicalEntity) => getEntityItem(entity))
@@ -199,7 +199,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
 
 
     const handleToggleItem = useCallback(async (id: number) => {
-        if (type !== 'medicationAllergy' && type !== 'medicalProblem' && type !== 'medication') {
+        if (!type) {
             return;
         }
 
@@ -430,5 +430,5 @@ const createStyles = () => StyleSheet.create({
     },
     handleStylePreloader: {
         backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    }
+    },
 });

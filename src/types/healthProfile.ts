@@ -24,8 +24,9 @@ export interface PatientHabit {
 }
 
 export interface MedicalEntityItem {
-  id: number;
-  name: string;
+    id: number;
+    type: string;
+    name: string;
 }
 
 export interface MedicalEntity {
