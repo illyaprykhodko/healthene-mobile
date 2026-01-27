@@ -10,7 +10,10 @@ import Text from 'components/Text.tsx';
 import ListHeader from './ListHeader.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
+import { MedicalTermItem } from 'types/healthProfile.ts';
+import Separator from 'components/FlatListSeparator.tsx';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
+import HealthProfileListItem from './HealthProfileListItem.tsx';
 import { useFindMedicalTermQuery } from 'store/api/healthProfileApi.ts';
 import ListHeaderComponent from 'components/Selector/components/ListHeader.tsx';
 
@@ -32,6 +35,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
     const [page, setPage] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
     
     const openModalSheet = () => {
         modalSheetRef.current?.present();
@@ -46,6 +50,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
         if (index === -1) {
             setSearchTerm('');
             setPage(0);
+            setSelectedItems(new Set());
         }
     }, []);
 
@@ -70,6 +75,18 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
             setPage(medicalTermData.page + 1);
         }
     }, [medicalTermData, type]);
+
+    const handleToggleItem = useCallback((id: number) => {
+        setSelectedItems(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    }, []);
 
     // Data source placeholder (will later be fed by RTK Query by `type`)
     // Important: keep UI logic unchanged for now.
@@ -134,7 +151,8 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                             onEndReached={loadMore}
                             stickyHeaderIndices={[0]}
                             onEndReachedThreshold={0.6}
-                            keyExtractor={(item: any) => `${item.id}`}
+                            ItemSeparatorComponent={Separator}
+                            keyExtractor={(item: MedicalTermItem) => `${item?.id}`}
                             ListFooterComponent={<Footer isLoading={isLoadingMore} />}
                             ListHeaderComponent={<ListHeaderComponent
                                 value={value}
@@ -142,8 +160,12 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                                 onSearch={handleSearch}
                                 searchValue={searchTerm}
                             />}
-                            renderItem={({ item }: ListRenderItemInfo<any>) => (
-                                <Text style={styles.itemText}>{String(item?.name ?? item?.value ?? item)}</Text>
+                            renderItem={({ item }: ListRenderItemInfo<MedicalTermItem>) => (
+                                <HealthProfileListItem
+                                    item={item}
+                                    onToggle={handleToggleItem}
+                                    isChecked={selectedItems.has(item.id)}
+                                />
                             )}
                         />
                     </View>
