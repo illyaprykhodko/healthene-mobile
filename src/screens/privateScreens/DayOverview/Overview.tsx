@@ -918,9 +918,9 @@ export const Overview: React.FC = () => {
                                         <Text variant="h4" style={{ color: theme.colors.text }}>
                                             {displayTitle}
                                         </Text>
-                                        <Text variant="h5">
-                                            {/* Status: {item.status || 'Unknown'} */}
-                                        </Text>
+                                        {/* <Text variant="h5">
+                                            Status: {item.status || 'Unknown'}
+                                        </Text> */}
                                     </View>
                                 </TouchableOpacity>
                             );

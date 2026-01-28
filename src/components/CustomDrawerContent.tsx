@@ -1,5 +1,7 @@
 // outsource dependencies
-import React from 'react';
+import _ from 'lodash';
+import moment from 'moment';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
@@ -13,10 +15,23 @@ import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
+import { navigate } from 'services/navigation';
 import ProfileImage from 'components/ProfileImage.tsx';
-import { navigate, RootStackParamList } from 'services/navigation';
+import {
+    useGetMedicalProblemsQuery,
+    useGetMedicationAllergiesQuery,
+    useGetLibraryItemsTotalTreeQuery,
+    useGetIncompleteQuestionsVideosQuery,
+} from 'store/api/dayOverviewApi';
 
-type RouteName = keyof RootStackParamList;
+const DESTINATIONS = {
+    MESSAGES: 'MESSAGES',
+    DAILY_PLAN: 'DAILY_PLAN',
+    ABOUT_PLAN: 'ABOUT_PLAN',
+    SHOPPING_LIST: 'SHOPPING_LIST',
+    MY_HEALTH_PROFILE: 'MY_HEALTH_PROFILE',
+};
+
 type DrawerIconName =
     | 'file'
     | 'book'
@@ -31,10 +46,10 @@ type DrawerIconName =
 
 interface DrawerItemProps {
     title: string;
-    badge?: number;
     focused: boolean;
     onPress: () => void;
     icon: DrawerIconName;
+    badge?: number | null;
 }
 
 const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, badge }) => {
@@ -50,7 +65,8 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                 name={icon}
                 iconStyle="solid"
                 style={styles.menuIcon}
-                color={focused ? theme.colors.primary : theme.colors.textSecondary}
+                color={theme.colors.primary}
+                // color={focused ? theme.colors.primary : theme.colors.textSecondary}
             />
             <Text
                 variant="h5"
@@ -59,11 +75,12 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
             >
                 {title}
             </Text>
-            {badge && (
-                <View style={[styles.badgeContainer, { backgroundColor: theme.colors.error }]}>
+            {!!badge && badge > 0 && (
+                <View style={styles.badgeContainer}>
                     <Text
                         variant="bold"
                         style={styles.badgeText}
+                        // color="#FFFFFF"
                         color={theme.colors.white}
                     >
                         {badge > 99 ? '99+' : badge}
@@ -73,6 +90,14 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
         </TouchableOpacity>
     );
 };
+
+const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
+    <View style={styles.sectionHeader}>
+        <Text variant="h5" style={styles.sectionHeaderText}>
+            {title}
+        </Text>
+    </View>
+);
 
 interface CustomDrawerContentProps {
     state: any;
@@ -85,62 +110,95 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     const { signOut } = useAuth();
     const user = useSelector((state: RootState) => state.app.user);
 
+    // Fetch badge data
+    const currentDate = useMemo(() => moment().format('YYYY-MM-DD'), []);
+    const { data: dailyPlanCounter } = useGetIncompleteQuestionsVideosQuery(currentDate);
+    const { data: libraryItemsTree } = useGetLibraryItemsTotalTreeQuery();
+    const { data: medicalProblems } = useGetMedicalProblemsQuery();
+    const { data: medicationAllergies } = useGetMedicationAllergiesQuery();
+
+    const badges = useMemo(() => {
+        // Get list from library items tree
+        const list = _.get(_.first(libraryItemsTree), 'list', []) as any[];
+
+        // Calculate health profile badge
+        const medicalProblemsCount = _.size(
+            _.flatMap(medicalProblems || [], ({ readyToSeeAttachments }) => readyToSeeAttachments)
+        );
+        const medicationAllergiesCount = _.size(
+            _.flatMap(medicationAllergies || [], ({ readyToSeeAttachments }) => readyToSeeAttachments)
+        );
+        const healthProfileBadge = medicalProblemsCount + medicationAllergiesCount;
+
+        // Get badges from list by destination
+        const getBadgeByDestination = (destination: string): number | null => {
+            const item = list.find((i: any) => i.categoryDestination === destination);
+            return item?.totalItemsCountWithInnerElements || null;
+        };
+
+        return {
+            dailyPlan: dailyPlanCounter || null,
+            shoppingList: getBadgeByDestination(DESTINATIONS.SHOPPING_LIST),
+            messages: getBadgeByDestination(DESTINATIONS.MESSAGES),
+            aboutPlan: getBadgeByDestination(DESTINATIONS.ABOUT_PLAN),
+            healthProfile: healthProfileBadge > 0 ? healthProfileBadge : null,
+        };
+    }, [dailyPlanCounter, libraryItemsTree, medicalProblems, medicationAllergies]);
+
     const handleLogout = async () => {
         await signOut();
     };
-
-    const menuItems: {
-        title: string,
-        route: RouteName,
-        icon: DrawerIconName,
-    }[] = [
-        {
-            icon: 'file',
-            title: 'My Daily Plan',
-            route: ROUTES.DAILY_PLAN,
-        },
-        {
-            icon: 'shopping-cart',
-            title: 'Shopping List',
-            route: ROUTES.SHOPPING,
-        },
-        {
-            icon: 'comments',
-            title: 'Messages',
-            route: ROUTES.MESSENGER,
-        },
-        {
-            icon: 'chart-bar',
-            title: 'My Results',
-            route: ROUTES.MY_RESULTS,
-        },
-        {
-            icon: 'clipboard',
-            title: 'About Plan',
-            route: ROUTES.ABOUT_PLAN,
-        },
-        {
-            icon: 'heartbeat',
-            title: 'My Health Profile',
-            route: ROUTES.HEALTH_PROFILE,
-        },
-        {
-            icon: 'book',
-            title: 'Library',
-            route: ROUTES.LIBRARY,
-        },
-        {
-            title: 'Info',
-            icon: 'info-circle',
-            route: ROUTES.INFO,
-        },
-        {
-            icon: 'award',
-            title: 'Cuisine Distribution',
-            route: ROUTES.CUISINE_DISTRIBUTION,
-        },
-    ];
-
+    // const menuItems: {
+    //     title: string,
+    //     route: RouteName,
+    //     icon: DrawerIconName,
+    // }[] = [
+    //     {
+    //         icon: 'file',
+    //         title: 'My Daily Plan',
+    //         route: ROUTES.DAILY_PLAN,
+    //     },
+    //     {
+    //         icon: 'shopping-cart',
+    //         title: 'Shopping List',
+    //         route: ROUTES.SHOPPING,
+    //     },
+    //     {
+    //         icon: 'comments',
+    //         title: 'Messages',
+    //         route: ROUTES.MESSENGER,
+    //     },
+    //     {
+    //         icon: 'chart-bar',
+    //         title: 'My Results',
+    //         route: ROUTES.MY_RESULTS,
+    //     },
+    //     {
+    //         icon: 'clipboard',
+    //         title: 'About Plan',
+    //         route: ROUTES.ABOUT_PLAN,
+    //     },
+    //     {
+    //         icon: 'heartbeat',
+    //         title: 'My Health Profile',
+    //         route: ROUTES.HEALTH_PROFILE,
+    //     },
+    //     {
+    //         icon: 'book',
+    //         title: 'Library',
+    //         route: ROUTES.LIBRARY,
+    //     },
+    //     {
+    //         title: 'Info',
+    //         icon: 'info-circle',
+    //         route: ROUTES.INFO,
+    //     },
+    //     {
+    //         icon: 'award',
+    //         title: 'Cuisine Distribution',
+    //         route: ROUTES.CUISINE_DISTRIBUTION,
+    //     },
+    // ];
     const getFocusedRoute = () => {
         return props.state?.routes[props.state?.index]?.name;
     };
@@ -156,13 +214,13 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                         <Text variant="h4" color={theme.colors.text}>
                             {user?.firstName} {user?.lastName}
                         </Text>
-                        <Text variant="body" color={theme.colors.textSecondary}>
+                        {/* <Text variant="body" color={theme.colors.textSecondary}>
                             {user?.email}
-                        </Text>
-                        <Text color={theme.colors.primary}>Account Settings</Text>
+                        </Text> */}
+                        <Text color={theme.colors.primary}>Account Setting</Text>
                     </View>
                 </Pressable>
-                {menuItems.map(item => {
+                {/* {menuItems.map(item => {
                     const focused = getFocusedRoute() === item.route;
                     return (
                         <DrawerItem
@@ -179,14 +237,78 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                     title="Meal Preferences"
                     onPress={() => navigate(ROUTES.MEAL_PREFERENCES)}
                     focused={getFocusedRoute() === ROUTES.MEAL_PREFERENCES}
-                />}
+                />} */}
+                <DrawerItem
+                    icon="file"
+                    title="My Daily Plan"
+                    badge={badges.dailyPlan}
+                    onPress={() => navigate(ROUTES.DAILY_PLAN)}
+                    focused={getFocusedRoute() === ROUTES.DAILY_PLAN}
+                />
+                <DrawerItem
+                    icon="shopping-cart"
+                    title="Shopping List"
+                    badge={badges.shoppingList}
+                    onPress={() => navigate(ROUTES.SHOPPING)}
+                    focused={getFocusedRoute() === ROUTES.SHOPPING}
+                />
+                <DrawerItem
+                    icon="comments"
+                    title="Messages"
+                    badge={badges.messages}
+                    onPress={() => navigate(ROUTES.MESSENGER)}
+                    focused={getFocusedRoute() === ROUTES.MESSENGER}
+                />
+                <DrawerItem
+                    icon="chart-bar"
+                    title="My Results"
+                    onPress={() => navigate(ROUTES.MY_RESULTS)}
+                    focused={getFocusedRoute() === ROUTES.MY_RESULTS}
+                />
 
-                {/* <DrawerItem
+                <SectionHeader title="PREFERENCES" />
+                <DrawerItem
                     icon="award"
-                    title="Cuisine Distribution"
+                    title="International Cuisine"
                     onPress={() => navigate(ROUTES.CUISINE_DISTRIBUTION)}
                     focused={getFocusedRoute() === ROUTES.CUISINE_DISTRIBUTION}
-                /> */}
+                />
+                {user?.preferenceTemplatesExist && (
+                    <DrawerItem
+                        icon="utensils"
+                        title="Meal Preferences"
+                        onPress={() => navigate(ROUTES.MEAL_PREFERENCES)}
+                        focused={getFocusedRoute() === ROUTES.MEAL_PREFERENCES}
+                    />
+                )}
+
+                <SectionHeader title="ADDITIONAL INFORMATION" />
+                <DrawerItem
+                    icon="clipboard"
+                    title="About Plan"
+                    badge={badges.aboutPlan}
+                    onPress={() => navigate(ROUTES.ABOUT_PLAN)}
+                    focused={getFocusedRoute() === ROUTES.ABOUT_PLAN}
+                />
+                <DrawerItem
+                    icon="heartbeat"
+                    title="My Health Profile"
+                    badge={badges.healthProfile}
+                    onPress={() => navigate(ROUTES.HEALTH_PROFILE)}
+                    focused={getFocusedRoute() === ROUTES.HEALTH_PROFILE}
+                />
+                <DrawerItem
+                    icon="book"
+                    title="Library"
+                    onPress={() => navigate(ROUTES.LIBRARY)}
+                    focused={getFocusedRoute() === ROUTES.LIBRARY}
+                />
+                <DrawerItem
+                    title="Info"
+                    icon="info-circle"
+                    onPress={() => navigate(ROUTES.INFO)}
+                    focused={getFocusedRoute() === ROUTES.INFO}
+                />
             </DrawerContentScrollView>
             <Button
                 title="LOGOUT"
@@ -217,11 +339,11 @@ const styles = StyleSheet.create({
         borderWidth: 1
     },
     menuItem: {
-        paddingVertical: OFFSET.VERTICAL - 5,
+        paddingVertical: 15,
         flexDirection: 'row',
         alignItems: 'center',
         borderBottomWidth: 1,
-        paddingHorizontal: OFFSET.HORIZONTAL + 4,
+        paddingHorizontal: 20,
         borderBottomColor: '#E5E5E5',
     },
     menuItemFocused: {
@@ -235,20 +357,33 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         fontWeight: '500',
+        marginLeft: 10,
     },
     badgeContainer: {
         minWidth: 20,
         height: 20,
+        paddingHorizontal: 5,
         borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 10,
+        backgroundColor: '#E74C3C',
     },
     badgeText: {
         fontSize: 10,
     },
+    sectionHeader: {
+        padding: 10,
+        backgroundColor: '#F0F1F5',
+    },
+    sectionHeaderText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#666666',
+    },
     logoutButton: {
         margin: OFFSET.VERTICAL,
         borderRadius: 30,
+        borderColor: '#E74C3C',
     },
 });

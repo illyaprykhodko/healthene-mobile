@@ -11,6 +11,7 @@ import { OFFSET } from 'constants/offset';
 import BackButton from 'components/BackButton';
 import Shopping from 'screens/privateScreens/Shopping';
 import MessengerStack from 'navigation/MessengerStack';
+import MyResultsStack from 'navigation/MyResultsStack';
 import DayOverview from 'screens/privateScreens/DayOverview';
 import { MainScreen } from 'screens/privateScreens/MainScreen';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
@@ -102,8 +103,9 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.MY_RESULTS}
-                component={PlaceholderScreen}
+                component={MyResultsStack}
                 options={{
+                    headerShown: false,
                     title: 'My Results',
                     drawerIcon: ({ color }) => (
                         <Icon name="chart-bar" size={24} color={color} />

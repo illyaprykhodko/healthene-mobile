@@ -689,6 +689,26 @@ export const dayOverviewApi = createApi({
             }),
             invalidatesTags: ['DayOverview', 'PhaseItems'],
         }),
+
+        // Menu badges - incomplete questions/videos count for daily plan
+        getIncompleteQuestionsVideos: builder.query<number, string>({
+            query: date => `/patient-service/patients/me/day-overview/${date}/questions-videos`,
+        }),
+
+        // Menu badges - library items with total count
+        getLibraryItemsTotalTree: builder.query<any[], void>({
+            query: () => '/patient-service/patients/me/items-from-library-destination/total-tree',
+        }),
+
+        // Menu badges - medical problems for health profile
+        getMedicalProblems: builder.query<any[], void>({
+            query: () => '/patient-service/patients/me/medical-problems',
+        }),
+
+        // Menu badges - medication allergies for health profile
+        getMedicationAllergies: builder.query<any[], void>({
+            query: () => '/patient-service/patients/me/medication-allergies',
+        }),
     }),
 });
 
@@ -999,44 +1019,49 @@ export const {
     useAddPhaseMealItemMutation,
     useAddPhaseCustomRecipeMutation,
     // useGetAvailableItemsQuery,
+    useGetFoodsQuery,
     useUpdatePhaseItemMutation,
     useDeletePhaseItemMutation,
-    useReplacePhaseItemMutation,
-    useGetCategoryTreeNodesQuery,
-    useGetCatalogPrototypeTreeNodesQuery,
-    useGetRecipePrototypesQuery,
     useGetRecipePrototypeQuery,
-    useRecalculateRecipeStepsMutation,
-    useGetIngredientsBySiblingQuery,
-    useGetFoodsQuery,
-    useGetPhysicalActivityItemQuery,
-    useGetStretchingExerciseQuery,
-    useUpdateStretchingStepsMutation,
     useGetAerobicExerciseQuery,
+    useReplacePhaseItemMutation,
+    useGetRecipePrototypesQuery,
+    useGetCategoryTreeNodesQuery,
+    useGetStretchingExerciseQuery,
     useUpdateAerobicStepsMutation,
     useGetResistanceExerciseQuery,
-    useUpdateResistanceStepsMutation,
     useAddMeasurementRecordMutation,
+    useGetIngredientsBySiblingQuery,
+    useGetPhysicalActivityItemQuery,
+    useUpdateStretchingStepsMutation,
+    useUpdateResistanceStepsMutation,
+    useRecalculateRecipeStepsMutation,
+    useGetCatalogPrototypeTreeNodesQuery,
     // Measurement Chart
-    useGetAggregateMeasurementDataQuery,
-    useGetLoggedMeasurementDataMutation,
-    useGetMeasurementTypesQuery,
-    useGetLastMeasurementQuery,
-    useDeleteMeasurementsMutation,
-    useUpdateIncludeRescueFoodsMutation,
+    useGetRescueMealsQuery,
     useReplacePhaseMutation,
     useGetRescueVideosQuery,
     useGetRescueCatalogQuery,
-    useGetRestaurantCatalogQuery,
-    useGetRescueMealsQuery,
     useRevertPhaseItemMutation,
+    useGetLastMeasurementQuery,
+    useGetMeasurementTypesQuery,
+    useGetRestaurantCatalogQuery,
+    useDeleteMeasurementsMutation,
     useUpdatePhaseWithRescueMutation,
+    useUpdateIncludeRescueFoodsMutation,
+    useGetAggregateMeasurementDataQuery,
+    useGetLoggedMeasurementDataMutation,
     // Recipe replacement
+    useReplaceRecipeItemMutation,
     useGetRecipeCategoryTreeQuery,
     useGetRecipeCategoryItemsQuery,
-    useReplaceRecipeItemMutation,
     // Create patient phase (ADDED_BY_PATIENT)
     useCreatePatientPhaseMutation,
-    useCreatePatientPhaseWithRecipeMutation,
     useUpdatePatientPhaseMutation,
+    useCreatePatientPhaseWithRecipeMutation,
+    // Menu badges
+    useGetMedicalProblemsQuery,
+    useGetMedicationAllergiesQuery,
+    useGetLibraryItemsTotalTreeQuery,
+    useGetIncompleteQuestionsVideosQuery,
 } = dayOverviewApi;
