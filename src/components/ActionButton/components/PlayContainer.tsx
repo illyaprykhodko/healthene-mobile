@@ -9,7 +9,6 @@ import { Button } from 'components/Button.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import YoutubeVideo from 'components/YoutubeVideo';
 import { PatientFoodCategoryAttachment } from 'types/overview.ts';
-import PrivateVideo from 'components/PrivateVideo';
 
 interface PlayContainerProps {
     data: PatientFoodCategoryAttachment;
@@ -18,13 +17,12 @@ interface PlayContainerProps {
 
 export const PlayContainer = memo(({ data, onClose }: PlayContainerProps) => {
     const theme = useTheme();
-    console.log('data', data);
     const embedUrl = data.attachment?.embedUrl;
     const isYoutube = embedUrl ? 'youtube' : 'attachment';
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={styles.content}>
-                <Text variant="h4" style={{ color: theme.colors.text }}>
+                <Text variant="h3" color={theme.colors.text} style={styles.title}>
                     {data.attachment?.title}
                 </Text>
                 {isYoutube === 'youtube' && embedUrl ? <YoutubeVideo url={embedUrl} /> : null}
@@ -48,13 +46,15 @@ PlayContainer.displayName = 'PlayContainer';
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'space-between',
+    },
+    title: {
+        marginBottom: OFFSET.VERTICAL,
     },
     content: {
-        flex: 1,
         justifyContent: 'center',
     },
     closeButtonContainer: {
+        marginTop: 'auto',
         paddingTop: OFFSET.VERTICAL,
         paddingBottom: OFFSET.VERTICAL,
     },
