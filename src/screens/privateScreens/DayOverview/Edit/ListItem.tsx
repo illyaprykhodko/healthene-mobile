@@ -7,8 +7,10 @@ import Text from 'components/Text';
 import { filters } from 'services/filter';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
-import Checkbox from 'components/Checkbox';
+import { PlayBtn } from 'components/LibrariesButtons/BaseBtn';
+import Checkbox, { PhaseItemStatus } from 'components/Checkbox';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE } from 'constants/spec';
+
 interface ListItemProps {
   item: any;
   date?: string;
@@ -52,10 +54,10 @@ export const ListItem: React.FC<ListItemProps> = ({
         <Checkbox
             size={22}
             isDayOverview
-            status={item.status}
             editable={!disabled}
             onChange={handleCheckboxPress}
             style={styles.checkboxContainer}
+            status={item.status as PhaseItemStatus}
             value={item.status === PHASE_ITEM_STATUS.DONE}
         />
     );
@@ -72,34 +74,6 @@ export const ListItem: React.FC<ListItemProps> = ({
                 );
         }
     };
-
-    // const prepareIngredientNameWithUnit = (item: any, options: { withoutName?: boolean } = {}) => {
-    //     const amount = item.amount || item.initialAmount;
-    //     const serving = item.serving;
-    //     const useServing = item.useServing;
-    //     const ingredient = item.recipe?.ingredients?.[0];
-
-    //     if (!amount) { return ''; }
-
-    //     let result = '';
-    //     let unitSingularName,
-    //     unitPluralName;
-        
-    //     if (useServing && serving) {
-    //         result += `${serving} serving`;
-    //     } else {
-    //         result += amount;
-    //         if (item.weight?.unit?.name) {
-    //             result += ` ${item.weight.unit.name}`;
-    //         }
-    //     }
-
-    //     if (!options.withoutName && ingredient?.entity?.name) {
-    //         result += ` ${ingredient.entity.name}`;
-    //     }
-
-    //     return result;
-    // };
 
     const getImageUrl = () => {
         if (isRecipe) {
@@ -182,7 +156,6 @@ export const ListItem: React.FC<ListItemProps> = ({
                         {amount && (
                             <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
                                 {prepareIngredientNameWithUnit(item)}
-                                {/* {prepareIngredientNameWithUnit(item, { withoutName: true })} */}
                             </Text>
                         )}
                         {item?.recipe?.modified && (
@@ -243,40 +216,43 @@ export const ListItem: React.FC<ListItemProps> = ({
     };
 
     return (
-        <View style={[styles.wrapper, { backgroundColor: theme.colors.surface },
-            nextSection && [styles.divider, { borderBottomColor: theme.colors.lightGrey }]]}>
+        <View
+            style={[
+                styles.wrapper,
+                { backgroundColor: theme.colors.surface },
+                nextSection && [styles.divider, { borderBottomColor: theme.colors.lightGrey }]
+            ]}
+        >
             <View style={styles.listItem}>
-                <TouchableOpacity
-                    style={styles.listItemLink}
-                    onPress={handleItemPress}
-                    disabled={disabled}
-                    activeOpacity={0.7}
-                >
-                    {renderItemContent()}
-                    {renderStatusText()}
-                </TouchableOpacity>
-                {renderCheckbox()}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <TouchableOpacity
+                        style={styles.listItemLink}
+                        onPress={handleItemPress}
+                        disabled={disabled}
+                        activeOpacity={0.7}
+                    >
+                        {renderItemContent()}
+                        {renderStatusText()}
+                    </TouchableOpacity>
+                    {renderCheckbox()}
+                </View>
+                <PlayBtn style={{ marginLeft: 0, marginRight: 'auto', marginVertical: OFFSET.VERTICAL }} navigationAttr={{ }}/>
             </View>
+          
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     wrapper: {
-        paddingLeft: OFFSET.POINT
+        paddingLeft: OFFSET.POINT,
     },
     divider: {
         borderBottomWidth: 1,
     },
     listItem: {
-        width: '100%',
-        display: 'flex',
         borderBottomWidth: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginRight: 0,
-        justifyContent: 'space-between',
-        paddingVertical: OFFSET.VERTICAL,
+        paddingTop: OFFSET.VERTICAL,
         paddingLeft: 20,
         paddingRight: 5,
         borderBottomColor: '#E9E9E9',
@@ -288,8 +264,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
-        // marginRight: 16, // OFFSET.HORIZONTAL
-        // marginBottom: 20, // OFFSET.VERTICAL
     },
     checkboxContainer: {
         borderWidth: 2,

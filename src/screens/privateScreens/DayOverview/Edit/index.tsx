@@ -72,13 +72,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const [updatePhase] = useUpdatePhaseMutation();
     const [addPhaseMealItem] = useAddPhaseMealItemMutation();
     const [addPhaseItem] = useAddPhaseItemMutation();
-    // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
-    //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
   
     const getItemTitle = (item: any) =>
@@ -625,7 +623,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             }
                         }}>
                             <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
-                Change Meal
+                    Change Meal
                             </Text>
                         </TouchableOpacity>
                     </View>
