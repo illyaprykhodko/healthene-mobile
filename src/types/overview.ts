@@ -265,8 +265,16 @@ export interface RecipeServingMeta {
 
 export interface PatientFoodCategoryAttachment {
     id: number | null;
-    attachment: unknown | null;
+    attachment: Attachment | null;
     relatedToDayOverviewItemAttachmentExists: boolean;
+}
+
+export interface Attachment {
+    id: number;
+    title: string;
+    mimeType: string;
+    fileName: string | null;
+    embedUrl: string | null;
 }
 
 export interface PatientFoodCategoryQuestion {

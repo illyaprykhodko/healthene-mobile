@@ -7,7 +7,7 @@ import Text from 'components/Text';
 import { filters } from 'services/filter';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
-import { PlayBtn } from 'components/LibrariesButtons/BaseBtn';
+import { ActionButton } from 'components/ActionButton';
 import Checkbox, { PhaseItemStatus } from 'components/Checkbox';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE } from 'constants/spec';
 
@@ -36,6 +36,8 @@ export const ListItem: React.FC<ListItemProps> = ({
     const isIngredients = item.type === ENTITY_TYPE.INGREDIENTS;
     const isCustomRecipe = item.type === ENTITY_TYPE.CUSTOM_RECIPE;
     const isDidNotEat = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
+
+    console.log('item', item);
 
     const handleCheckboxPress = (next: boolean) => {
         if (handleCheckboxStatus && !disabled) {
@@ -236,9 +238,19 @@ export const ListItem: React.FC<ListItemProps> = ({
                     </TouchableOpacity>
                     {renderCheckbox()}
                 </View>
-                <PlayBtn style={{ marginLeft: 0, marginRight: 'auto', marginVertical: OFFSET.VERTICAL }} navigationAttr={{ }}/>
+                <View style={styles.actionButtonWrapper}>
+                    {item?.patientFoodCategoryAttachment?.relatedToDayOverviewItemAttachmentExists ? <ActionButton
+                        type="play"
+                        data={item.patientFoodCategoryAttachment}
+                        disabled={disabled || !item.patientFoodCategoryAttachment}
+                    /> : null}
+                    {item?.patientFoodCategoryQuestion?.relatedToDayOverviewItemQuestionExists ? <ActionButton
+                        type="question"
+                        data={item.patientFoodCategoryQuestion}
+                        disabled={disabled || !item.patientFoodCategoryQuestion}
+                    /> : null}
+                </View>
             </View>
-          
         </View>
     );
 };
@@ -296,6 +308,16 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: 'bold',
     },
+    actionButtonWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginVertical: OFFSET.VERTICAL,
+    },
+    actionButtonContainer: {
+        marginLeft: 0,
+        marginRight: 'auto',
+    },
     recipeContainer: {
         alignItems: 'center',
         flexDirection: 'row',
@@ -312,7 +334,6 @@ const styles = StyleSheet.create({
     },
     title: {
         paddingTop: OFFSET.VERTICAL,
-        // marginBottom: OFFSET.VERTICAL,
         fontSize: 16,
         fontWeight: '600',
     },
