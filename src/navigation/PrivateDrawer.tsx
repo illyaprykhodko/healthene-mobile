@@ -14,8 +14,10 @@ import MessengerStack from 'navigation/MessengerStack';
 import MyResultsStack from 'navigation/MyResultsStack';
 import DayOverview from 'screens/privateScreens/DayOverview';
 import { MainScreen } from 'screens/privateScreens/MainScreen';
+import MealPreferencesStack from 'navigation/MealPreferencesStack';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
 import AboutPlanScreen from 'screens/privateScreens/AboutPlanScreen';
+import CuisineDistributionStack from 'navigation/CuisineDistributionStack';
 import { PlaceholderScreen } from 'screens/privateScreens/PlaceholderScreen';
 
 const Drawer = createDrawerNavigator();
@@ -159,20 +161,22 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.MEAL_PREFERENCES}
-                component={PlaceholderScreen}
+                component={MealPreferencesStack}
                 options={{
+                    headerShown: false,
                     title: 'Meal Preferences',
                     drawerIcon: ({ color }) => (
-                        <Icon iconStyle="solid" name="glasses" size={24} color={color} />
+                        <Icon iconStyle="solid" name="utensils" size={24} color={color} />
                     ),
                 }}
             />
 
             <Drawer.Screen
                 name={ROUTES.CUISINE_DISTRIBUTION}
-                component={PlaceholderScreen}
+                component={CuisineDistributionStack}
                 options={{
-                    title: 'Cuisine Distribution',
+                    headerShown: false,
+                    title: 'International Cuisine',
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="award" size={24} color={color} />
                     ),

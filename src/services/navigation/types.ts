@@ -52,6 +52,7 @@ export type RootStackParamList = {
   [ROUTES.BIOMETRIC_SETTINGS]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
+  [ROUTES.MEAL_PREFERENCES_MEALS_LIST]: undefined;
 
   // Example of a screen that requires params
   [ROUTES.SMART_SCALE]: {
@@ -62,9 +63,9 @@ export type RootStackParamList = {
     title: string;
   };
   [ROUTES.MEASUREMENT_CHART]: {
+    measurementName?: string;
     measurementType: string;
-    measurementName: string;
-    date: string;
+    date?: string;
   };
   [ROUTES.EDIT]: {
     phaseId: number;
@@ -113,6 +114,11 @@ export type RootStackParamList = {
     entityType?: string;
     substanceType?: string;
     onApply?: (data: any) => void;
+  };
+  [ROUTES.MEAL_PREFERENCES_LIST]: {
+    item: {
+      name: string;
+    };
   };
 };
 

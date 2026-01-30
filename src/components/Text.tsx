@@ -80,26 +80,26 @@ const textStyles: Record<TextVariant, TextStyle> = {
     h3: {
         fontSize: 20,
         lineHeight: 28,
-        letterSpacing: 0,
-        fontFamily: 'Outfit-SemiBold',
+        letterSpacing: 0.15,
+        fontFamily: 'Outfit-Medium',
     },
     h4: {
         fontSize: 18,
         lineHeight: 24,
-        fontFamily: 'Outfit-SemiBold',
+        fontFamily: 'Outfit-Regular',
         letterSpacing: 0.15,
     },
     h5: {
         fontSize: 16,
         lineHeight: 22,
-        fontFamily: 'Outfit-Medium',
-        letterSpacing: 0.15,
+        fontFamily: 'Outfit-Regular',
+        letterSpacing: 0.44,
     },
     h6: {
         fontSize: 14,
         lineHeight: 20,
-        fontFamily: 'Outfit-Medium',
-        letterSpacing: 0.1,
+        fontFamily: 'Outfit-Regular',
+        letterSpacing: 0.44,
     },
     body: {
         fontSize: 16,

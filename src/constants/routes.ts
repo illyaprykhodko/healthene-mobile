@@ -30,6 +30,10 @@ export const ROUTES = {
     ADD_REPLACE_RECIPE: 'AddReplaceRecipe',
     TREE_ADD_REPLACE_ITEM: 'TreeAddReplaceItem',
     CUISINE_DISTRIBUTION: 'CuisineDistribution',
+    MEAL_PREFERENCES_LIST: 'MealPreferencesList',
+    CUISINE_DISTRIBUTION_LIST: 'CuisineDistributionList',
+    MEAL_PREFERENCES_MEALS_LIST: 'MealPreferencesMealsList',
+    CUISINE_DISTRIBUTION_FAVORITES: 'CuisineDistributionFavorites',
 
     // Account Settings
     ADDRESS: 'Address',
