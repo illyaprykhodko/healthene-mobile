@@ -230,4 +230,10 @@ export const ORIENTATION = {
     LANDSCAPE: 'LANDSCAPE',
 } as const;
 
+export const QUESTION_TYPE = {
+    FOOD_QUESTION: 'FOOD_QUESTION',
+    DISEASE_QUESTION: 'DISEASE_QUESTION',
+    GENERAL_QUESTION: 'GENERAL_QUESTION',
+} as const;
+
 export type Orientation = typeof ORIENTATION[keyof typeof ORIENTATION];

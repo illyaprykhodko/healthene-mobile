@@ -13,20 +13,22 @@ import { StyleSheet, Pressable, View, ViewStyle } from 'react-native';
 import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
+import { QUESTION_TYPE } from 'constants/spec.ts';
 import { PlayContainer } from './components/PlayContainer.tsx';
 import { QuestionContainer } from './components/QuestionContainer.tsx';
 import { PatientFoodCategoryAttachment, PatientFoodCategoryQuestion } from 'types/overview.ts';
 
 type ModalType = 'play' | 'question';
-
+export type QuestionType = typeof QUESTION_TYPE[keyof typeof QUESTION_TYPE];
 interface ActionButtonProps {
     type: ModalType;
     style?: ViewStyle;
     disabled?: boolean;
+    questionType?: QuestionType;
     data: PatientFoodCategoryAttachment | PatientFoodCategoryQuestion;
 }
 
-export const ActionButton = memo(({ type, disabled = false, style, data }: ActionButtonProps) => {
+export const ActionButton = memo(({ type, disabled = false, style, data, questionType }: ActionButtonProps) => {
     const theme = useTheme();
     const bottomSheetRef = useRef<BottomSheetModal>(null);
     const [modalType, setModalType] = useState<ModalType | null>(null);
@@ -70,8 +72,8 @@ export const ActionButton = memo(({ type, disabled = false, style, data }: Actio
         if (modalType === 'play') {
             return <PlayContainer data={data as PatientFoodCategoryAttachment} onClose={closeModal} />;
         }
-        if (modalType === 'question') {
-            return <QuestionContainer data={data as PatientFoodCategoryQuestion} onClose={closeModal} />;
+        if (modalType === 'question' && questionType) {
+            return <QuestionContainer questionType={questionType} data={data as PatientFoodCategoryQuestion} onClose={closeModal} />;
         }
         return null;
     };

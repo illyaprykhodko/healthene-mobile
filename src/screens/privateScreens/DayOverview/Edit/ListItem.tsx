@@ -9,7 +9,7 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ActionButton } from 'components/ActionButton';
 import Checkbox, { PhaseItemStatus } from 'components/Checkbox';
-import { PHASE_ITEM_STATUS, ENTITY_TYPE } from 'constants/spec';
+import { PHASE_ITEM_STATUS, ENTITY_TYPE, QUESTION_TYPE } from 'constants/spec';
 
 interface ListItemProps {
   item: any;
@@ -247,6 +247,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                     {item?.patientFoodCategoryQuestion?.relatedToDayOverviewItemQuestionExists ? <ActionButton
                         type="question"
                         data={item.patientFoodCategoryQuestion}
+                        questionType={QUESTION_TYPE.FOOD_QUESTION}
                         disabled={disabled || !item.patientFoodCategoryQuestion}
                     /> : null}
                 </View>

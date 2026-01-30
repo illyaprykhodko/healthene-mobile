@@ -9,14 +9,16 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { PatientFoodCategoryQuestion } from 'types/overview.ts';
 import { useAppDispatch, useAppSelector } from 'store/index.ts';
+import { QuestionType } from 'components/ActionButton/index.tsx';
 import { setResponseText, reset } from 'store/slices/questionSlice.ts';
 
 interface QuestionContainerProps {
   onClose?: () => void;
+  questionType: QuestionType;
   data: PatientFoodCategoryQuestion;
 }
 
-export const QuestionContainer = memo(({ onClose, data }: QuestionContainerProps) => {
+export const QuestionContainer = memo(({ onClose, data, questionType }: QuestionContainerProps) => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
     const responseText = useAppSelector(state => state.question.responseText);
@@ -43,7 +45,7 @@ export const QuestionContainer = memo(({ onClose, data }: QuestionContainerProps
                 </Pressable>
             </View>
             <View style={styles.content}>
-                <Text variant="h6" color={theme.colors.text}>
+                <Text variant="h5" color={theme.colors.text}>
                     {data.question.title}
                 </Text>
             </View>
