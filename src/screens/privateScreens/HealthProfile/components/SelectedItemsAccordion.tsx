@@ -4,10 +4,11 @@ import Animated, {
     withTiming,
     useSharedValue,
     useDerivedValue,
+    LinearTransition,
     useAnimatedStyle,
 } from 'react-native-reanimated';
+import { StyleSheet, ListRenderItemInfo, View } from 'react-native';
 import React, { memo, useMemo, useCallback, useEffect } from 'react';
-import { StyleSheet, View, FlatList, ListRenderItemInfo } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text.tsx';
@@ -29,16 +30,14 @@ const SelectedItemsAccordion = ({ data, isExpanded, type, onRemove }: SelectedIt
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
 
-    const selectedItemsList = useMemo(() => {
-        return data
-            .map((item: MedicalEntity) => {
-                if (type === 'medication') {
-                    return item.medication;
-                }
-                return item.medicalTerm;
-            })
-            .filter((item): item is MedicalEntityItem => item !== undefined);
-    }, [data, type]);
+    const selectedItemsList: MedicalEntity[] = useMemo(() => [...data], [data]);
+
+    const getEntityItem = useCallback((entity: MedicalEntity): MedicalEntityItem | undefined => {
+        if (type === 'medication') {
+            return entity.medication;
+        }
+        return entity.medicalTerm;
+    }, [type]);
 
     const expanded = useSharedValue(0);
     const itemHeight = 74; // Approximate height per item
@@ -62,26 +61,30 @@ const SelectedItemsAccordion = ({ data, isExpanded, type, onRemove }: SelectedIt
         };
     });
 
-    const handleCheckboxChange = useCallback((itemId: number, value: boolean) => {
+    const handleCheckboxChange = useCallback((entityId: number, value: boolean) => {
         if (!value && onRemove) {
-            onRemove(itemId);
+            onRemove(entityId);
         }
     }, [onRemove]);
 
-    const renderItem = useCallback(({ item }: ListRenderItemInfo<{ id: number; name: string }>) => {
+    const renderItem = useCallback(({ item }: ListRenderItemInfo<MedicalEntity>) => {
+        const entityItem = getEntityItem(item);
+        const displayName = entityItem?.name ?? '';
         return (
             <View style={styles.item}>
-                <Text style={styles.itemText} numberOfLines={1}>{item?.name}</Text>
+                <Text style={styles.itemText} numberOfLines={1}>{displayName}</Text>
                 <Checkbox
                     size={12}
                     value={true}
-                    onChange={value => handleCheckboxChange(item?.id, value)}
+                    onChange={value => {
+                        handleCheckboxChange(item.id, value);
+                    }}
                 />
             </View>
         );
-    }, [styles, handleCheckboxChange]);
+    }, [styles, getEntityItem, handleCheckboxChange]);
 
-    const keyExtractor = useCallback((item: { id: number; name: string }) => item?.id.toString(), []);
+    const keyExtractor = useCallback((entity: MedicalEntity) => entity.id.toString(), []);
 
     if (selectedItemsList.length === 0) {
         return null;
@@ -89,11 +92,12 @@ const SelectedItemsAccordion = ({ data, isExpanded, type, onRemove }: SelectedIt
 
     return (
         <Animated.View style={[styles.accordionContainer, animatedStyle]}>
-            <FlatList
+            <Animated.FlatList
                 scrollEnabled={false}
                 renderItem={renderItem}
                 data={selectedItemsList}
                 keyExtractor={keyExtractor}
+                itemLayoutAnimation={LinearTransition}
                 ItemSeparatorComponent={Separator}
                 contentContainerStyle={styles.listContent}
             />

@@ -11,14 +11,14 @@ import { MedicalEntityItem } from 'types/healthProfile.ts';
 interface HealthProfileListItemProps {
     isChecked: boolean;
     item: MedicalEntityItem;
-    onToggle: (id: number) => void;
+    onToggle: (item: MedicalEntityItem) => void;
 }
 
 const HealthProfileListItem = ({ item, isChecked, onToggle }: HealthProfileListItemProps) => {
     const styles = useMemo(() => createStyles(), []);
 
     const handleCheckboxChange = (value: boolean) => {
-        onToggle(item.id);
+        onToggle(item);
     };
 
     return (
