@@ -71,7 +71,7 @@ export const ActionButton = memo(({ type, disabled = false, style, data }: Actio
             return <PlayContainer data={data as PatientFoodCategoryAttachment} onClose={closeModal} />;
         }
         if (modalType === 'question') {
-            return <QuestionContainer onClose={closeModal} />;
+            return <QuestionContainer data={data as PatientFoodCategoryQuestion} onClose={closeModal} />;
         }
         return null;
     };
@@ -107,10 +107,10 @@ export const ActionButton = memo(({ type, disabled = false, style, data }: Actio
             </Pressable>
             <BottomSheetModal
                 ref={bottomSheetRef}
-                snapPoints={['100%']}
                 enablePanDownToClose
                 enableDynamicSizing={false}
                 backdropComponent={renderBackdrop}
+                snapPoints={[type === 'play' ? '100%' : '95%']}
                 backgroundStyle={[
                     styles.bottomSheetBackground,
                     { backgroundColor: theme.colors.surface },
@@ -119,7 +119,7 @@ export const ActionButton = memo(({ type, disabled = false, style, data }: Actio
                     backgroundColor: theme.colors.grey,
                 }}
             >
-                <BottomSheetView style={styles.contentContainer}>
+                <BottomSheetView style={[styles.contentContainer, type === 'play' && styles.playWrapper]}>
                     {renderModalContent()}
                 </BottomSheetView>
             </BottomSheetModal>
@@ -152,8 +152,10 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         minHeight: '100%',
-        paddingHorizontal: OFFSET.HORIZONTAL,
-        paddingTop: OFFSET.VERTICAL,
         paddingBottom: OFFSET.VERTICAL,
+    },
+    playWrapper: {
+        paddingTop: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL,
     },
 });

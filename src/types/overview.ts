@@ -284,7 +284,6 @@ export interface PatientFoodCategoryQuestion {
     answeredTime: string | null; // Date, parsed from string
 
     question: FoodCategoryQuestion;
-    response: QuestionResponse;
     foodCategory: FoodCategory;
 }
 
@@ -294,7 +293,8 @@ export interface FoodCategoryQuestion {
     title: string;            // "water question"
     question: string;         // "do you like water"
     onCondition: unknown[];   // [] 0 items
-    children: unknown[];      // [] 0 items
+    children: unknown[];
+    response: QuestionResponse;    // [] 0 items
 }
 
 export interface QuestionResponse {
@@ -302,8 +302,8 @@ export interface QuestionResponse {
     checked: boolean;
     used: boolean;
     deleted: boolean;
-    type: 'TWO_POINTS_SCALE' | string;
     responseItems: unknown[]; // [] 2 items
+    type: 'USER_ENTERED_RESPONSE';
 }
 
 export interface FoodCategory {

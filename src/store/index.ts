@@ -12,6 +12,7 @@ import signInReducer from './slices/signInSlice';
 import { publicApi } from 'store/api/publicApi.ts';
 import exerciseReducer from './slices/exerciseSlice';
 import shoppingReducer from './slices/shoppingSlice';
+import questionReducer from './slices/questionSlice';
 import { dayOverviewApi } from './api/dayOverviewApi';
 import { settingsApi } from 'store/api/settingsApi.ts';
 import { s3ServiceApi } from 'store/api/s3ServiceApi.ts';
@@ -31,6 +32,7 @@ export const store = configureStore({
         shopping: shoppingReducer,
         exercise: exerciseReducer,
         messenger: messengerSlice,
+        question: questionReducer,
         dayOverview: dayOverviewReducer,
         healthProfile: healthProfileSlice,
         forgotPassword: forgotPasswordReducer,

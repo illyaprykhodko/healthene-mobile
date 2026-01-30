@@ -1,7 +1,7 @@
 // outsource dependencies
 import React, { useState } from 'react';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { StyleSheet, View, TextInput as RNInput } from 'react-native';
+import { StyleSheet, View, TextInput as RNInput, ViewStyle } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text.tsx';
@@ -16,6 +16,7 @@ interface TextInputProps {
     disabled: boolean;
     [key: string]: any;
     multiline?: boolean;
+    styleWrapper?: ViewStyle;
     secureTextEntry?: boolean;
     trailing?: React.ReactNode;
     accessibilityHint?: string;
@@ -36,6 +37,7 @@ const TextInput: React.FC<TextInputProps> = ({
     error = {},
     touched = {},
     onChangeText,
+    styleWrapper,
     multiline = false,
     textAlign = 'right',
     secureTextEntry = false,
@@ -61,6 +63,7 @@ const TextInput: React.FC<TextInputProps> = ({
                 : null
             }
             <View style={[
+                styleWrapper,
                 styles.inputWrapper,
                 {
                     borderBottomColor: isShowError ? theme.colors.error : theme.colors.grey
