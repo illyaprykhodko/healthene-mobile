@@ -49,7 +49,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAccordionExpanded, setIsAccordionExpanded] = useState(false);
-    const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+    const [selectedItems, setSelectedItems] = useState<Set<MedicalEntity>>(new Set());
     
     const openModalSheet = () => {
         modalSheetRef.current?.present();
@@ -64,18 +64,19 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
         return entity.medicalTerm;
     }, [type]);
 
+    // Check if list item (by id) is in selectedItems
+    const isItemSelected = useCallback((itemId: number) => {
+        return Array.from(selectedItems).some(
+            entity => getEntityItem(entity)?.id === itemId
+        );
+    }, [selectedItems, getEntityItem]);
+    
     // Sync selectedItems with data prop when it changes (e.g., after mutations)
     useEffect(() => {
         if (data && isModalOpen) {
-            const entityIds = new Set<number>(
-                data
-                    .map((entity: MedicalEntity) => getEntityItem(entity))
-                    .filter((item): item is MedicalEntityItem => item !== undefined)
-                    .map((item: MedicalEntityItem) => item.id)
-            );
-            setSelectedItems(entityIds);
+            setSelectedItems(new Set<MedicalEntity>(data));
         }
-    }, [data, type, isModalOpen, getEntityItem]);
+    }, [data, isModalOpen]);
 
     const handleSheetChange = useCallback((index: number) => {
         // Index > -1 means modal is open (snap point index)
@@ -83,13 +84,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
         setIsModalOpen(index > -1);
         // Initialize selectedItems from entities when modal opens
         if (index > -1 && data) {
-            const entityIds = new Set<number>(
-                data
-                    .map((entity: MedicalEntity) => getEntityItem(entity))
-                    .filter((item): item is MedicalEntityItem => item !== undefined)
-                    .map((item: MedicalEntityItem) => item.id)
-            );
-            setSelectedItems(entityIds);
+            setSelectedItems(new Set<MedicalEntity>(data));
         }
         // Reset search and page when modal closes
         if (index === -1) {
@@ -198,33 +193,40 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
     }, [medicalTermData, medicationsData, type]);
 
 
-    const handleToggleItem = useCallback(async (id: number) => {
+    const handleToggleItem = useCallback(async (item: MedicalEntityItem) => {
         if (!type) {
             return;
         }
 
-        const isCurrentlySelected = selectedItems.has(id);
+        const itemId = item.id;
+        const foundEntity = Array.from(selectedItems).find(
+            entity => getEntityItem(entity)?.id === itemId
+        );
+        const isCurrentlySelected = !!foundEntity;
+        const entityIdToDelete = foundEntity?.id;
 
         // Optimistically update UI
         setSelectedItems(prev => {
             const newSet = new Set(prev);
-            if (isCurrentlySelected) {
-                newSet.delete(id);
+            if (isCurrentlySelected && foundEntity) {
+                newSet.delete(foundEntity);
             } else {
-                newSet.add(id);
+                const stubEntity: MedicalEntity = type === 'medication'
+                    ? { id: itemId, medication: item }
+                    : { id: itemId, medicalTerm: item };
+                newSet.add(stubEntity);
             }
             return newSet;
         });
 
         try {
-            if (isCurrentlySelected) {
-                // Remove entity
+            if (isCurrentlySelected && entityIdToDelete != null) {
                 if (type === 'medicationAllergy') {
-                    await deleteMedicationAllergy({ id }).unwrap();
+                    await deleteMedicationAllergy({ id: entityIdToDelete }).unwrap();
                 } else if (type === 'medicalProblem') {
-                    await deleteMedicalProblem({ id }).unwrap();
+                    await deleteMedicalProblem({ id: entityIdToDelete }).unwrap();
                 } else if (type === 'medication') {
-                    await deleteMedication({ id }).unwrap();
+                    await deleteMedication({ id: entityIdToDelete }).unwrap();
                 }
                 Toast.show({
                     type: 'success',
@@ -232,13 +234,12 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                     text2: typeLabels.removeMessage,
                 });
             } else {
-                // Add entity
                 if (type === 'medicationAllergy') {
-                    await addMedicationAllergy({ id }).unwrap();
+                    await addMedicationAllergy({ id: itemId }).unwrap();
                 } else if (type === 'medicalProblem') {
-                    await addMedicalProblem({ id }).unwrap();
+                    await addMedicalProblem({ id: itemId }).unwrap();
                 } else if (type === 'medication') {
-                    await addMedication({ id }).unwrap();
+                    await addMedication({ id: itemId }).unwrap();
                 }
                 Toast.show({
                     type: 'success',
@@ -250,10 +251,15 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
             // Revert on error
             setSelectedItems(prev => {
                 const newSet = new Set(prev);
-                if (isCurrentlySelected) {
-                    newSet.add(id);
+                if (isCurrentlySelected && foundEntity) {
+                    newSet.add(foundEntity);
                 } else {
-                    newSet.delete(id);
+                    const toRemove = Array.from(newSet).find(
+                        entity => getEntityItem(entity)?.id === itemId
+                    );
+                    if (toRemove) {
+                        newSet.delete(toRemove);
+                    }
                 }
                 return newSet;
             });
@@ -263,7 +269,7 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                 text2: 'Something went wrong. Please try again later.',
             });
         }
-    }, [type, selectedItems, addMedicationAllergy, deleteMedicationAllergy, addMedicalProblem, deleteMedicalProblem, addMedication, deleteMedication, typeLabels]);
+    }, [type, selectedItems, getEntityItem, addMedicationAllergy, deleteMedicationAllergy, addMedicalProblem, deleteMedicalProblem, addMedication, deleteMedication, typeLabels]);
 
     const handleRemoveItem = useCallback(async (id: number) => {
         try {
@@ -302,6 +308,13 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
     })();
   
     const isEmpty = items.length === 0;
+    // Disable search input while any list request is in flight (initial load or after typing)
+    const isSearchInputDisabled = (() => {
+        if (type === 'medication') {
+            return isLoadingMedications || isFetchingMedications;
+        }
+        return isLoadingMedicalTerms || isFetchingMedicalTerms;
+    })();
     // Loading states for different types
     const isLoadingData = (() => {
         if (type === 'medication') {
@@ -392,12 +405,13 @@ const HealthProfileListSection = ({ title, value = '', type, emptyText, onAddPre
                                 placeholder="Search..."
                                 onSearch={handleSearch}
                                 searchValue={searchTerm}
+                                disabled={isSearchInputDisabled}
                             />}
                             renderItem={({ item }: ListRenderItemInfo<MedicalEntityItem>) => (
                                 <HealthProfileListItem
                                     item={item}
                                     onToggle={handleToggleItem}
-                                    isChecked={selectedItems.has(item.id)}
+                                    isChecked={isItemSelected(item.id)}
                                 />
                             )}
                         />
