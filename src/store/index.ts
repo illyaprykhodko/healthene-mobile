@@ -15,6 +15,7 @@ import shoppingReducer from './slices/shoppingSlice';
 import questionReducer from './slices/questionSlice';
 import { dayOverviewApi } from './api/dayOverviewApi';
 import { settingsApi } from 'store/api/settingsApi.ts';
+import { questionApi } from 'store/api/questionApi.ts';
 import { s3ServiceApi } from 'store/api/s3ServiceApi.ts';
 import { messengerApi } from 'store/api/messengerApi.ts';
 import messengerSlice from 'store/slices/messengerSlice.ts';
@@ -42,6 +43,7 @@ export const store = configureStore({
         [publicApi.reducerPath]: publicApi.reducer,
         [settingsApi.reducerPath]: settingsApi.reducer,
         [shoppingApi.reducerPath]: shoppingApi.reducer,
+        [questionApi.reducerPath]: questionApi.reducer,
         [s3ServiceApi.reducerPath]: s3ServiceApi.reducer,
         [messengerApi.reducerPath]: messengerApi.reducer,
         [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
@@ -56,6 +58,7 @@ export const store = configureStore({
                 publicApi.middleware,
                 settingsApi.middleware,
                 shoppingApi.middleware,
+                questionApi.middleware,
                 messengerApi.middleware,
                 s3ServiceApi.middleware,
                 dayOverviewApi.middleware,
