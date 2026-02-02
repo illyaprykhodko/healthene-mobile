@@ -35,6 +35,13 @@ export const ROUTES = {
     MEAL_PREFERENCES_MEALS_LIST: 'MealPreferencesMealsList',
     CUISINE_DISTRIBUTION_FAVORITES: 'CuisineDistributionFavorites',
 
+    // Health Profile
+    HEALTH_PROFILE_MAIN: 'HealthProfileMain',
+    HEALTH_PROFILE_STATS: 'HealthProfileStats',
+    HEALTH_PROFILE_MEDICATIONS: 'HealthProfileMedications',
+    HEALTH_PROFILE_MEDICAL_PROBLEMS: 'HealthProfileMedicalProblems',
+    HEALTH_PROFILE_MEDICATION_ALLERGIES: 'HealthProfileMedicationAllergies',
+
     // Account Settings
     ADDRESS: 'Address',
     SETTINGS: 'Settings',

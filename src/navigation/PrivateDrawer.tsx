@@ -14,6 +14,7 @@ import MessengerStack from 'navigation/MessengerStack';
 import MyResultsStack from 'navigation/MyResultsStack';
 import DayOverview from 'screens/privateScreens/DayOverview';
 import { MainScreen } from 'screens/privateScreens/MainScreen';
+import HealthProfileStack from 'navigation/HealthProfileStack';
 import MealPreferencesStack from 'navigation/MealPreferencesStack';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
 import AboutPlanScreen from 'screens/privateScreens/AboutPlanScreen';
@@ -128,8 +129,9 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.HEALTH_PROFILE}
-                component={PlaceholderScreen}
+                component={HealthProfileStack}
                 options={{
+                    headerShown: false,
                     title: 'My Health Profile',
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="heartbeat" size={24} color={color} />

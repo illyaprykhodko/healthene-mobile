@@ -17,5 +17,6 @@ export * from './flavonoid';
 export * from './supplement';
 export * from './measurement';
 export * from './common/enums';
+export * from './healthProfile';
 export * from './mealPreferences';
 export * from './cuisineDistribution';
