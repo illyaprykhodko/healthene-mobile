@@ -16,6 +16,7 @@ export const COLORS = {
     WHITE: '#FFFFFF',
     BLACK: '#000000',
     BLUE: '#2978A0',
+    LIGHT_BLUE: '#BBDEFB',
     DARK_BLUE: '#156F93',
     BROWN: '#8B3030',
     TRANSPARENT: 'transparent',

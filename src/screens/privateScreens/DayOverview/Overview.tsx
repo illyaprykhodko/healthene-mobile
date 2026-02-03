@@ -21,6 +21,7 @@ import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppDispatch, useAppSelector } from 'store';
 import { RootStackParamList } from 'services/navigation';
 import { DayOverviewSkeleton } from 'components/Skeleton';
+import { HealthQuestion } from 'components/HealthQuestion';
 import type { AnytimeMeasurementItem } from 'types/anytime';
 import { PhaseItem, AddPhaseItemData } from 'types/overview';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -826,6 +827,9 @@ export const Overview: React.FC = () => {
     return (
         <Screen initialized style={styles.container}>
             <View style={styles.content}>
+                {/* Health Question Section */}
+                <HealthQuestion date={currentDate} isFutureDate={isFutureDateCheck} />
+
                 <Text style={styles.title}>My Daily Plan</Text>
 
                 <View style={styles.timelineContainer}>

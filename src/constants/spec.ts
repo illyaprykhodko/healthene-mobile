@@ -213,3 +213,55 @@ export const ORIENTATION = {
 } as const;
 
 export type Orientation = typeof ORIENTATION[keyof typeof ORIENTATION];
+
+// Question types
+export const QUESTION_TYPE = {
+    FOOD_QUESTION: 'FOOD_QUESTION',
+    DISEASE_QUESTION: 'DISEASE_QUESTION',
+    GENERAL_QUESTION: 'GENERAL_QUESTION',
+} as const;
+
+export type QuestionType = typeof QUESTION_TYPE[keyof typeof QUESTION_TYPE];
+
+// Response types for questions
+export const QUESTION_RESPONSE_TYPE = {
+    USER_ENTERED_RESPONSE: 'USER_ENTERED_RESPONSE',
+    FINAL_MESSAGE: 'FINAL_MESSAGE',
+} as const;
+
+export type QuestionResponseType = typeof QUESTION_RESPONSE_TYPE[keyof typeof QUESTION_RESPONSE_TYPE];
+
+// Video library types
+export const VIDEO_LIBRARY_TYPE = {
+    GENERAL_VIDEO: 'GENERAL_VIDEO',
+    HEALTH_PROFILE: 'HEALTH_PROFILE',
+    OVERVIEW_VIDEO: 'OVERVIEW_VIDEO',
+} as const;
+
+export type VideoLibraryType = typeof VIDEO_LIBRARY_TYPE[keyof typeof VIDEO_LIBRARY_TYPE];
+
+// Library destinations (for getting questions/videos by destination)
+export const DESTINATIONS = {
+    GAMES: 'GAMES',
+    GOALS: 'GOALS',
+    DISEASE: 'DISEASE',
+    RESULTS: 'RESULTS',
+    FLY_OUT: 'FLY_OUT',
+    SUMMARY: 'SUMMARY',
+    MY_STATS: 'MY_STATS',
+    MESSAGES: 'MESSAGES',
+    BLACKJACK: 'BLACKJACK',
+    DAILY_PLAN: 'DAILY_PLAN',
+    ABOUT_PLAN: 'ABOUT_PLAN',
+    MEDICATIONS: 'MEDICATIONS',
+    SUPPLEMENTS: 'SUPPLEMENTS',
+    SLOT_MACHINE: 'SLOT_MACHINE',
+    SHOPPING_LIST: 'SHOPPING_LIST',
+    PLAN_REFERENCES: 'PLAN_REFERENCES',
+    MEDICAL_PROBLEMS: 'MEDICAL_PROBLEMS',
+    SOFTWARE_VERSION: 'SOFTWARE_VERSION',
+    MY_HEALTH_PROFILE: 'MY_HEALTH_PROFILE',
+    MEDICATION_ALLERGIES: 'MEDICATION_ALLERGIES',
+} as const;
+
+export type Destination = typeof DESTINATIONS[keyof typeof DESTINATIONS];

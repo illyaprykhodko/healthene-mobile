@@ -13,6 +13,7 @@ import UPCScan from './UPCScan';
 import EditFood from './EditFood';
 import { Overview } from './Overview';
 import BackBtn from 'components/BackBtn';
+import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import AddReplaceItem from './AddReplaceItem';
@@ -32,6 +33,11 @@ import WeightMeasurementScreen from '../WeightMeasurementScreen';
 import { ReplacementScreen, ReplaceItemsScreen } from './Replacement';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
 import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
+import {
+    QuestionScreen,
+    QuestionListScreen,
+    QuestionCategoryScreen,
+} from '../Question';
 
 const Stack = createNativeStackNavigator();
 
@@ -260,6 +266,32 @@ const DayOverviewStack: React.FC = () => {
                     title: (route.params as any)?.title || 'Replacement Options',
                     headerTitleStyle: { fontSize: 18 },
                 })}
+            />
+
+            {/* Question Screens */}
+            <Stack.Screen
+                name={ROUTES.QUESTION}
+                component={QuestionScreen}
+                options={{
+                    headerShown: false,
+                    gestureEnabled: false,
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.QUESTION_CATEGORY}
+                component={QuestionCategoryScreen}
+                options={{
+                    title: 'Questions',
+                    header: renderCustomHeader(),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.QUESTION_LIST}
+                component={QuestionListScreen}
+                options={{
+                    title: 'Questions',
+                    header: renderCustomHeader(),
+                }}
             />
         </Stack.Navigator>
     );

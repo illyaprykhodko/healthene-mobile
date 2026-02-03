@@ -12,6 +12,7 @@ export * from './medical';
 export * from './business';
 export * from './shopping';
 export * from './taxonomy';
+export * from './question';
 export * from './algorithm';
 export * from './flavonoid';
 export * from './supplement';

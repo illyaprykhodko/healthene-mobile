@@ -12,7 +12,9 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import { useAppDispatch, useAppSelector } from 'store';
-import { SHOPPING_STEP, SHOPPING_STATUS, SHOPPING_ITEM_TYPE, SHOPPING_CONFIRMED_ITEM_TYPE } from 'constants/spec';
+import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
+import { useGetCurrentLibraryElementsQuery } from 'store/api/questionApi';
+import { SHOPPING_STEP, SHOPPING_STATUS, SHOPPING_ITEM_TYPE, SHOPPING_CONFIRMED_ITEM_TYPE, DESTINATIONS, QUESTION_TYPE, VIDEO_LIBRARY_TYPE } from 'constants/spec';
 import {
     setItemType,
     selectShopping,
@@ -99,6 +101,14 @@ const ShoppingList: React.FC = () => {
 
     const [updateItem] = useUpdateShoppingItemMutation();
     const [confirmShopOnMyOwn] = useConfirmShopOnMyOwnMutation();
+
+    // Get questions and videos for shopping list
+    const { data: libraryElements } = useGetCurrentLibraryElementsQuery([DESTINATIONS.SHOPPING_LIST]);
+    const firstElement = libraryElements?.[0];
+    const patientVideos = firstElement?.patientVideos || [];
+    const patientQuestions = firstElement?.patientQuestions || [];
+    const video = patientVideos?.[0]?.libraryItem;
+    const question = patientQuestions?.[0];
 
     const isLoading = isCategoriesLoading || isListLoading;
 
@@ -322,6 +332,40 @@ const ShoppingList: React.FC = () => {
                     getOriginal={handleGetOriginal}
                 />
             )}
+
+            {/* Library buttons (Video / Question) */}
+            {(video || question) && (
+                <View style={styles.libraryBtnContainer}>
+                    {video && (
+                        <PlayBtn
+                            style={styles.btnOffset}
+                            change={!patientVideos?.[0]?.alreadySeen}
+                            disabled={patientVideos?.[0]?.alreadySeen}
+                            navigationAttr={{
+                                video,
+                                id: patientVideos?.[0]?.id,
+                                backLink: ROUTES.SHOPPING_LIST,
+                                library: VIDEO_LIBRARY_TYPE.GENERAL_VIDEO,
+                            }}
+                        />
+                    )}
+                    {question && (
+                        <QuestionBtn
+                            style={styles.btnOffset}
+                            change={!question?.alreadyAnswered}
+                            disabled={question?.alreadyAnswered}
+                            navigationAttr={{
+                                backLink: ROUTES.SHOPPING_LIST,
+                                question: {
+                                    ...question,
+                                    questionType: QUESTION_TYPE.GENERAL_QUESTION,
+                                },
+                            }}
+                        />
+                    )}
+                </View>
+            )}
+
             {status === SHOPPING_STATUS.SHOP_ON_MY_OWN && (
                 <TouchableOpacity onPress={handlePrint} style={styles.printContainer}>
                     <Icon name="printer" color={COLORS.GREY} size={18} />
@@ -462,6 +506,14 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.WHITE,
         marginTop: 2,
+    },
+    libraryBtnContainer: {
+        flexDirection: 'row',
+        padding: 8,
+    },
+    btnOffset: {
+        marginLeft: 0,
+        marginRight: 10,
     },
     printContainer: {
         flexDirection: 'row',
