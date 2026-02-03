@@ -5,6 +5,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 // local dependencies
 import { authApi } from './api/authApi';
 import appReducer from './slices/appSlice';
+import { videoApi } from 'store/api/videoApi';
 import { planApi } from 'store/api/planApi.ts';
 import reactotron from '../../ReactotronConfig';
 import { shoppingApi } from './api/shoppingApi';
@@ -38,6 +39,7 @@ export const store = configureStore({
         foodPreferences: foodPreferencesSlice,
         [authApi.reducerPath]: authApi.reducer,
         [planApi.reducerPath]: planApi.reducer,
+        [videoApi.reducerPath]: videoApi.reducer,
         [publicApi.reducerPath]: publicApi.reducer,
         [questionApi.reducerPath]: questionApi.reducer,
         [settingsApi.reducerPath]: settingsApi.reducer,
@@ -55,6 +57,7 @@ export const store = configureStore({
             .concat(
                 authApi.middleware,
                 planApi.middleware,
+                videoApi.middleware,
                 publicApi.middleware,
                 questionApi.middleware,
                 settingsApi.middleware,

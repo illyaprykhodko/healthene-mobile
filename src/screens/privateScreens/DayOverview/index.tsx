@@ -13,6 +13,7 @@ import UPCScan from './UPCScan';
 import EditFood from './EditFood';
 import { Overview } from './Overview';
 import BackBtn from 'components/BackBtn';
+import { VideoScreen } from '../Library';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
@@ -290,6 +291,14 @@ const DayOverviewStack: React.FC = () => {
                 component={QuestionListScreen}
                 options={{
                     title: 'Questions',
+                    header: renderCustomHeader(),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.VIDEO}
+                component={VideoScreen}
+                options={{
+                    title: 'Video',
                     header: renderCustomHeader(),
                 }}
             />

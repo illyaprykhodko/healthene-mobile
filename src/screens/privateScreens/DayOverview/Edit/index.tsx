@@ -642,6 +642,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                         item={item}
                                         disabled={false}
                                         date={targetDate}
+                                        isFutureDate={isFutureDate}
                                         updateData={updatePhaseItem}
                                         nextSection={item?.section || ''}
                                         handleCheckboxStatus={handleCheckboxStatus}

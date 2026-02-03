@@ -8,18 +8,19 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
+import InfoStack from 'navigation/InfoStack';
 import BackButton from 'components/BackButton';
+import LibraryStack from 'navigation/LibraryStack';
 import Shopping from 'screens/privateScreens/Shopping';
 import MessengerStack from 'navigation/MessengerStack';
 import MyResultsStack from 'navigation/MyResultsStack';
+import AboutPlanStack from 'navigation/AboutPlanStack';
 import DayOverview from 'screens/privateScreens/DayOverview';
 import { MainScreen } from 'screens/privateScreens/MainScreen';
 import HealthProfileStack from 'navigation/HealthProfileStack';
 import MealPreferencesStack from 'navigation/MealPreferencesStack';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
-import AboutPlanScreen from 'screens/privateScreens/AboutPlanScreen';
 import CuisineDistributionStack from 'navigation/CuisineDistributionStack';
-import { PlaceholderScreen } from 'screens/privateScreens/PlaceholderScreen';
 
 const Drawer = createDrawerNavigator();
 const { width } = Dimensions.get('window');
@@ -118,8 +119,9 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.ABOUT_PLAN}
-                component={AboutPlanScreen}
+                component={AboutPlanStack}
                 options={{
+                    headerShown: false,
                     title: 'About Plan',
                     drawerIcon: ({ color }) => (
                         <Icon name="clipboard" size={24} color={color} />
@@ -141,8 +143,9 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.LIBRARY}
-                component={PlaceholderScreen}
+                component={LibraryStack}
                 options={{
+                    headerShown: false,
                     title: 'Library',
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="book" size={24} color={color} />
@@ -152,8 +155,9 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.INFO}
-                component={PlaceholderScreen}
+                component={InfoStack}
                 options={{
+                    headerShown: false,
                     title: 'Info',
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="info-circle" size={24} color={color} />

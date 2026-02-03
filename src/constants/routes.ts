@@ -40,6 +40,13 @@ export const ROUTES = {
     QUESTION_LIST: 'QuestionList',
     QUESTION_CATEGORY: 'QuestionCategory',
 
+    // Video Library
+    VIDEO: 'Video',
+    VIDEO_LIST: 'VideoList',
+    VIDEO_LIBRARY: 'VideoLibrary',
+    VIDEO_CATEGORY: 'VideoCategory',
+    ROOT_VIDEO_LIBRARY: 'RootVideoLibrary',
+
     // Health Profile
     HEALTH_PROFILE_MAIN: 'HealthProfileMain',
     HEALTH_PROFILE_STATS: 'HealthProfileStats',

@@ -1,64 +1,92 @@
 // outsource dependencies
-import { ActivityIndicator, View } from 'react-native';
-import React, { useCallback, useMemo, useState } from 'react';
-import YoutubePlayer, {
-    YoutubeIframeProps,
-} from 'react-native-youtube-iframe';
+import React, { memo, useState, useCallback } from 'react';
+import { StyleSheet, View, Dimensions, Alert } from 'react-native';
+import YoutubePlayer from 'react-native-youtube-iframe';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
-import { MessageService } from 'services/messages';
 
-const YOUTUBE_ID_REGEX
-    = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const VIDEO_HEIGHT = (SCREEN_WIDTH * 9) / 16; // 16:9 aspect ratio
 
+// Extract YouTube video ID from various URL formats
 const prepareYoutubeId = (url: string): string | null => {
-    const match = YOUTUBE_ID_REGEX.exec(url);
-    return match && match[1] ? match[1] : null;
-};
-
-export interface YoutubeVideoProps
-    extends Omit<YoutubeIframeProps, 'videoId' | 'height'> {
-    url: string;
-    height?: number;
-}
-
-const YoutubeVideo: React.FC<YoutubeVideoProps> = props => {
-    const theme = useTheme();
-    const { url, height, ...rest } = props;
-
-    const videoId = useMemo(() => prepareYoutubeId(url), [url]);
-    const [isReady, setIsReady] = useState(false);
-    const handleError = useCallback(
-        (error: string) => {
-            MessageService.error({
-                message: error ?? 'Youtube player error',
-                title: 'Youtube player error',
-            });
-        },
-        []
-    );
-
-    if (!videoId) {
+    try {
+        // Regex to parse YouTube URLs (including shorts, embed, full, and short URLs)
+        const regex = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|&v(?:i)?=))([^#&?]*).*/;
+        const match = regex.exec(url);
+        return match ? match[1] : null;
+    } catch {
         return null;
     }
+};
 
-    const handleReady = useCallback(() => {
-        setIsReady(true);
+interface YoutubeVideoProps {
+    url: string;
+    controls?: boolean;
+    autoPlay?: boolean;
+    onEnd?: () => void;
+    onReady?: () => void;
+}
+
+const YoutubeVideo: React.FC<YoutubeVideoProps> = memo(({
+    url,
+    onEnd,
+    onReady,
+    controls = true,
+    autoPlay = false,
+}) => {
+    const theme = useTheme();
+    const [isPlaying, setIsPlaying] = useState(autoPlay);
+
+    const videoId = prepareYoutubeId(url);
+
+    const handleError = useCallback((error: string) => {
+        console.error('YouTube Player Error:', error);
+        Alert.alert('Video Error', 'Failed to load video. Please try again.');
     }, []);
 
+    const handleStateChange = useCallback((state: string) => {
+        if (state === 'ended') {
+            setIsPlaying(false);
+            onEnd?.();
+        }
+    }, [onEnd]);
+
+    if (!videoId) {
+        return (
+            <View style={[styles.wrapper, { backgroundColor: theme.colors.background }]}>
+                <View style={styles.errorContainer}>
+                    {/* Error placeholder */}
+                </View>
+            </View>
+        );
+    }
+
     return (
-        <View style={{ backgroundColor: theme.colors.background, position: 'relative' }}>
-            {!isReady ? <ActivityIndicator style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }} size="large" color={theme.colors.primary} /> : null}
+        <View style={[styles.wrapper, { backgroundColor: theme.colors.primary }]}>
             <YoutubePlayer
+                play={isPlaying}
                 videoId={videoId}
+                onReady={onReady}
+                height={VIDEO_HEIGHT}
                 onError={handleError}
-                onReady={handleReady}
-                height={height ?? 200}
-                {...rest}
+                onChangeState={handleStateChange}
             />
         </View>
     );
-};
+});
 
 export default YoutubeVideo;
+
+const styles = StyleSheet.create({
+    wrapper: {
+        width: '100%',
+        overflow: 'hidden',
+    },
+    errorContainer: {
+        height: VIDEO_HEIGHT,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+});

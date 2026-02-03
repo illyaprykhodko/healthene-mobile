@@ -1,12 +1,13 @@
 // outsource dependencies
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // local dependencies
+import BackBtn from 'components/BackBtn';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
-import BackButton from 'components/BackButton';
 import { Hamburger } from 'components/Hamburger';
 import { FavoritesScreen, CuisineListScreen } from 'screens/privateScreens/CuisineDistribution';
 
@@ -14,6 +15,7 @@ const Stack = createNativeStackNavigator();
 
 const CuisineDistributionStack: React.FC = () => {
     const theme = useTheme();
+    const drawerNavigation = useNavigation<any>();
 
     return (
         <Stack.Navigator
@@ -34,10 +36,10 @@ const CuisineDistributionStack: React.FC = () => {
                     paddingRight: OFFSET.HORIZONTAL,
                 },
                 headerLeft: () => (
-                    <BackButton navigation={navigation} theme={theme} />
+                    <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />
                 ),
                 headerRight: () => (
-                    <Hamburger onPress={() => (navigation as any).openDrawer?.()} /> // TODO: fix this
+                    <Hamburger onPress={() => drawerNavigation.openDrawer?.()} />
                 ),
             })}
         >
@@ -60,4 +62,3 @@ const CuisineDistributionStack: React.FC = () => {
 };
 
 export default CuisineDistributionStack;
-

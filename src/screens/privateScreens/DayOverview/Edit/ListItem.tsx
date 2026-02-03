@@ -7,13 +7,16 @@ import Text from 'components/Text';
 import { filters } from 'services/filter';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
+import { ROUTES } from 'constants/routes';
 import Checkbox from 'components/Checkbox';
-import { PHASE_ITEM_STATUS, ENTITY_TYPE } from 'constants/spec';
+import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
+import { PHASE_ITEM_STATUS, ENTITY_TYPE, VIDEO_LIBRARY_TYPE, QUESTION_TYPE } from 'constants/spec';
 interface ListItemProps {
   item: any;
   date?: string;
   disabled?: boolean;
   nextSection?: string;
+  isFutureDate?: boolean;
   updateData?: (item: any) => void;
   handleCheckboxStatus?: (item: any) => void;
 }
@@ -24,6 +27,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     updateData,
     nextSection,
     disabled = false,
+    isFutureDate = false,
     handleCheckboxStatus,
 }) => {
     const theme = useTheme();
@@ -34,6 +38,10 @@ export const ListItem: React.FC<ListItemProps> = ({
     const isIngredients = item.type === ENTITY_TYPE.INGREDIENTS;
     const isCustomRecipe = item.type === ENTITY_TYPE.CUSTOM_RECIPE;
     const isDidNotEat = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
+
+    // Video and Question data from item
+    const currentVideo = item?.patientFoodCategoryAttachment;
+    const currentQuestion = item?.patientFoodCategoryQuestion;
 
     const handleCheckboxPress = (next: boolean) => {
         if (handleCheckboxStatus && !disabled) {
@@ -170,52 +178,113 @@ export const ListItem: React.FC<ListItemProps> = ({
         }
 
         if (isRecipe) {
+            const hasVideoOrQuestion = currentVideo?.relatedToDayOverviewItemAttachmentExists
+                || currentQuestion?.relatedToDayOverviewItemQuestionExists;
+
             return (
-                <View style={styles.recipeContainer}>
-                    {imageUrl && (
-                        <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
-                    )}
-                    <View style={styles.main}>
-                        <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
-                            {item.recipe?.name || 'Recipe'}
-                        </Text>
-                        {amount && (
-                            <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
-                                {prepareIngredientNameWithUnit(item)}
-                                {/* {prepareIngredientNameWithUnit(item, { withoutName: true })} */}
-                            </Text>
+                <View style={styles.recipeContentContainer}>
+                    <View style={styles.recipeContainer}>
+                        {imageUrl && (
+                            <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                         )}
-                        {item?.recipe?.modified && (
-                            <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                edited by me
+                        <View style={styles.main}>
+                            <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
+                                {item.recipe?.name || 'Recipe'}
                             </Text>
-                        )}
+                            {amount && (
+                                <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
+                                    {prepareIngredientNameWithUnit(item)}
+                                </Text>
+                            )}
+                            {item?.recipe?.modified && (
+                                <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
+                                    edited by me
+                                </Text>
+                            )}
+                        </View>
                     </View>
+                    {hasVideoOrQuestion && (
+                        <View style={styles.buttonContainer}>
+                            {currentVideo?.relatedToDayOverviewItemAttachmentExists && (
+                                <PlayBtn
+                                    style={styles.btnOffset}
+                                    change={Boolean(currentVideo?.attachment) || !currentVideo?.relatedToDayOverviewItemAttachmentExists}
+                                    disabled={disabled || !currentVideo?.attachment || isFutureDate}
+                                    navigationAttr={{
+                                        backLink: ROUTES.EDIT,
+                                        id: currentVideo?.id,
+                                        library: VIDEO_LIBRARY_TYPE.OVERVIEW_VIDEO,
+                                        video: currentVideo?.attachment,
+                                    }}
+                                />
+                            )}
+                            {currentQuestion?.relatedToDayOverviewItemQuestionExists && (
+                                <QuestionBtn
+                                    style={styles.btnOffset}
+                                    change={Boolean(currentQuestion?.question)}
+                                    disabled={disabled || !currentQuestion?.question || isFutureDate}
+                                    navigationAttr={{
+                                        backLink: ROUTES.EDIT,
+                                        question: { ...currentQuestion, questionType: QUESTION_TYPE.FOOD_QUESTION },
+                                    }}
+                                />
+                            )}
+                        </View>
+                    )}
                 </View>
             );
         }
 
         if (isFood) {
+            const hasVideoOrQuestion = currentVideo?.relatedToDayOverviewItemAttachmentExists
+                || currentQuestion?.questionToAnswer
+                || currentQuestion?.relatedToDayOverviewItemQuestionExists;
+
             return (
-                <View style={styles.foodContainer}>
-                    {imageUrl && (
-                        <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
-                    )}
-                    <View style={styles.main}>
-                        <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
-                            {item.food?.name || 'Food'}
-                        </Text>
-                        {amount && (
-                            <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
-                                {`${amount} ${item.weight?.unit?.name || ''}`}
-                            </Text>
+                <View style={styles.foodContentContainer}>
+                    <View style={styles.foodContainer}>
+                        {imageUrl && (
+                            <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                         )}
-                        {/* {item.modified && (
-                            <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
-                                added by me
+                        <View style={styles.main}>
+                            <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
+                                {item.food?.name || 'Food'}
                             </Text>
-                        )} */}
+                            {amount && (
+                                <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
+                                    {`${amount} ${item.weight?.unit?.name || ''}`}
+                                </Text>
+                            )}
+                        </View>
                     </View>
+                    {hasVideoOrQuestion && (
+                        <View style={styles.buttonContainer}>
+                            {currentVideo?.relatedToDayOverviewItemAttachmentExists && (
+                                <PlayBtn
+                                    style={styles.btnOffset}
+                                    change={Boolean(currentVideo?.attachment) || !currentVideo?.relatedToDayOverviewItemAttachmentExists}
+                                    disabled={disabled || !currentVideo?.attachment || isFutureDate}
+                                    navigationAttr={{
+                                        id: currentVideo?.id,
+                                        backLink: ROUTES.EDIT,
+                                        video: currentVideo?.attachment,
+                                        library: VIDEO_LIBRARY_TYPE.OVERVIEW_VIDEO,
+                                    }}
+                                />
+                            )}
+                            {(currentQuestion?.questionToAnswer || currentQuestion?.relatedToDayOverviewItemQuestionExists) && (
+                                <QuestionBtn
+                                    style={styles.btnOffset}
+                                    change={Boolean(currentQuestion?.questionToAnswer) || !currentQuestion?.relatedToDayOverviewItemQuestionExists}
+                                    disabled={disabled || !currentQuestion?.questionToAnswer || isFutureDate}
+                                    navigationAttr={{
+                                        backLink: ROUTES.EDIT,
+                                        question: { ...currentQuestion, questionType: QUESTION_TYPE.FOOD_QUESTION },
+                                    }}
+                                />
+                            )}
+                        </View>
+                    )}
                 </View>
             );
         }
@@ -288,8 +357,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
-        // marginRight: 16, // OFFSET.HORIZONTAL
-        // marginBottom: 20, // OFFSET.VERTICAL
     },
     checkboxContainer: {
         borderWidth: 2,
@@ -306,7 +373,7 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     checkbox: {
-        width: 25, // checkboxSize
+        width: 25,
         height: 25,
         borderRadius: 4,
         borderWidth: 2,
@@ -326,9 +393,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row',
     },
+    recipeContentContainer: {
+        flex: 1,
+    },
     foodContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    foodContentContainer: {
+        flex: 1,
     },
     defaultContainer: {
         flex: 1,
@@ -338,7 +411,6 @@ const styles = StyleSheet.create({
     },
     title: {
         paddingTop: OFFSET.VERTICAL,
-        // marginBottom: OFFSET.VERTICAL,
         fontSize: 16,
         fontWeight: '600',
     },
@@ -351,6 +423,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 15,
+    },
+    buttonContainer: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        marginTop: 5,
+        marginBottom: 5,
+    },
+    btnOffset: {
+        marginRight: 10,
     },
 });
 

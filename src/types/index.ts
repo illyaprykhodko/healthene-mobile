@@ -4,6 +4,7 @@ export * from './food';
 export * from './plan';
 export * from './habit';
 export * from './store';
+export * from './video';
 export * from './recipe';
 export * from './common';
 export * from './health';

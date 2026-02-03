@@ -1,13 +1,14 @@
 // outsource dependencies
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // local dependencies
+import BackBtn from 'components/BackBtn';
 import { ROUTES } from 'constants/routes.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Hamburger } from 'components/Hamburger';
-import BackButton from 'components/BackButton.tsx';
 import { MessageEntity } from 'types/common/interfaces.ts';
 import MessengerList from 'screens/privateScreens/Messenger';
 import AudioScreen from 'screens/privateScreens/Messenger/AudioScreen.tsx';
@@ -18,6 +19,8 @@ import WriteMessageScreen from 'screens/privateScreens/Messenger/WriteMessageScr
 const Stack = createStackNavigator();
 const MessengerStack = () => {
     const theme = useTheme();
+    const drawerNavigation = useNavigation<any>();
+
     return (
         <Stack.Navigator
             initialRouteName={ROUTES.MESSAGE_LIST}
@@ -25,8 +28,8 @@ const MessengerStack = () => {
                 headerShown: true,
                 drawerPosition: 'right',
                 gestureDirection: 'horizontal-inverted',
-                headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
-                headerRight: () => <Hamburger onPress={() => (navigation as any).openDrawer?.()} />,
+                headerLeft: () => <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />,
+                headerRight: () => <Hamburger onPress={() => drawerNavigation.openDrawer?.()} />,
                 headerStyle: {
                     backgroundColor: theme.colors.primary,
                 },

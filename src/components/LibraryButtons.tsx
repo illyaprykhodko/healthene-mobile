@@ -56,10 +56,8 @@ export const PlayBtn: React.FC<PlayBtnProps> = memo(({
     const navigation = useNavigation<any>();
 
     const handlePress = useCallback(() => {
-        // TODO: Navigate to video screen when implemented
-        // navigation.navigate(ROUTES.VIDEO, navigationAttr);
-        console.log('Navigate to video:', navigationAttr);
-    }, [navigationAttr]);
+        navigation.navigate(ROUTES.VIDEO, navigationAttr);
+    }, [navigation, navigationAttr]);
 
     return (
         <TouchableOpacity
