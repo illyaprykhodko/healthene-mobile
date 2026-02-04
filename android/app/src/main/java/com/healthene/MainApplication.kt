@@ -1,4 +1,4 @@
-package com.intelliceed_patientapp_mobile_v2
+package com.healthene
 import com.lugg.RNCConfig.RNCConfigPackage;
 import android.app.Application
 import com.facebook.react.PackageList

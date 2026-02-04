@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1210"
+   LastUpgradeVersion = "1620"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
-      buildImplicitDependencies = "YES">
+      buildImplicitDependencies = "YES"
+      buildArchitectures = "Automatic">
       <PreActions>
          <ExecutionAction
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
@@ -15,9 +16,9 @@
                   <BuildableReference
                      BuildableIdentifier = "primary"
                      BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-                     BuildableName = "intelliceed_patientapp_mobile_v2.app"
-                     BlueprintName = "intelliceed_patientapp_mobile_v2"
-                     ReferencedContainer = "container:intelliceed_patientapp_mobile_v2.xcodeproj">
+                     BuildableName = "Healthene.app"
+                     BlueprintName = "Healthene"
+                     ReferencedContainer = "container:Healthene.xcodeproj">
                   </BuildableReference>
                </EnvironmentBuildable>
             </ActionContent>
@@ -33,9 +34,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "intelliceed_patientapp_mobile_v2.app"
-               BlueprintName = "intelliceed_patientapp_mobile_v2"
-               ReferencedContainer = "container:intelliceed_patientapp_mobile_v2.xcodeproj">
+               BuildableName = "Healthene.app"
+               BlueprintName = "Healthene"
+               ReferencedContainer = "container:Healthene.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -44,24 +45,13 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
-      <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "intelliceed_patientapp_mobile_v2Tests.xctest"
-               BlueprintName = "intelliceed_patientapp_mobile_v2Tests"
-               ReferencedContainer = "container:intelliceed_patientapp_mobile_v2.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-      </Testables>
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      shouldAutocreateTestPlan = "YES">
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Release"
-      selectedDebuggerIdentifier = ""
-      selectedLauncherIdentifier = "Xcode.IDEFoundation.Launcher.PosixSpawn"
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
@@ -73,9 +63,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "intelliceed_patientapp_mobile_v2.app"
-            BlueprintName = "intelliceed_patientapp_mobile_v2"
-            ReferencedContainer = "container:intelliceed_patientapp_mobile_v2.xcodeproj">
+            BuildableName = "Healthene.app"
+            BlueprintName = "Healthene"
+            ReferencedContainer = "container:Healthene.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -90,9 +80,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "intelliceed_patientapp_mobile_v2.app"
-            BlueprintName = "intelliceed_patientapp_mobile_v2"
-            ReferencedContainer = "container:intelliceed_patientapp_mobile_v2.xcodeproj">
+            BuildableName = "Healthene.app"
+            BlueprintName = "Healthene"
+            ReferencedContainer = "container:Healthene.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

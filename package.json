@@ -1,5 +1,5 @@
 {
-  "name": "intelliceed_patientapp_mobile_v2",
+  "name": "healthene",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -11,6 +11,7 @@
     "ios": "react-native run-ios",
     "android-reactotron-start": "adb reverse tcp:9090 tcp:9090",
     "android-development-unix": "react-native run-android --mode=developmentdebug",
+    "android-production-unix": "react-native run-android --mode=productiondebug",
     "emulator": "adb devices | grep emulator || (emulator -avd $(emulator -list-avds | head -n 1) -no-snapshot -no-boot-anim & sleep 30)",
     "android-local": "npm run emulator && cd android && ./gradlew clean installLocalDebug && cd ../",
     "android-local:apk": "cd android && ./gradlew clean assembleLocalRelease && cd ../",
@@ -21,9 +22,9 @@
     "android-production": "npm run emulator && cd android && ./gradlew clean installProductionDebug && cd ../",
     "android-production:apk": "cd android && ./gradlew clean assembleProductionRelease && cd ../",
     "android-production:aab": "cd android && ./gradlew clean bundleProductionRelease && cd ../",
-    "ios-local": "cd ios && xcodebuild -workspace intelliceed_patientapp_mobile_v2.xcworkspace -scheme local -configuration Debug -sdk iphonesimulator",
-    "ios-development": "cd ios && xcodebuild -workspace intelliceed_patientapp_mobile_v2.xcworkspace -scheme development -configuration Debug -sdk iphonesimulator",
-    "ios-production": "cd ios && xcodebuild -workspace intelliceed_patientapp_mobile_v2.xcworkspace -scheme production -configuration Debug -sdk iphonesimulator"
+    "ios-local": "cd ios && xcodebuild -workspace healthene.xcworkspace -scheme local -configuration Debug -sdk iphonesimulator",
+    "ios-development": "cd ios && xcodebuild -workspace healthene.xcworkspace -scheme development -configuration Debug -sdk iphonesimulator",
+    "ios-production": "cd ios && xcodebuild -workspace healthene.xcworkspace -scheme production -configuration Debug -sdk iphonesimulator"
   },
   "dependencies": {
     "@eslint/js": "^9.38.0",
