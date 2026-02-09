@@ -10,7 +10,7 @@ import { Message, MessagesState } from './types';
 // import { RootState } from '../../store/types';
 
 function * removeMessageSaga ({ payload }: PayloadAction<{ uid: string }>): Generator<Effect | SelectEffect, void, unknown> {
-    const messages = (yield select((state: RootState) => state.messages)) as MessagesState;
+    const messages = (yield select((state: any) => state.messages)) as MessagesState; // TODO: fix type
     const list = messages.list.filter((item: Message) => item.uid !== payload.uid);
     yield put(updateMeta({ list }));
 }
@@ -39,7 +39,7 @@ function * addMessageSaga ({ payload }: PayloadAction<Message>): Generator<Effec
 
     // Debug mode handling
     if (Config.APP_DEBUG) {
-        const messages = (yield select((state: RootState) => state.messages)) as MessagesState;
+        const messages = (yield select((state: any) => state.messages)) as MessagesState; // TODO: fix type
         if (!messages.list.find((item: Message) => item.uid === payload.uid)) {
             const list = [...messages.list];
             list.unshift(payload);

@@ -1,38 +1,111 @@
-// local dependencies
-import { MEDICAL_TERM_TYPES } from 'constants/index.ts';
+// Types for Health Profile feature
 
-// interfaces
-export interface Stats {
-    heightFt: number;
-    weightLb: number;
-    heightInches: number;
-    additionalInfo: string;
-    gender: string | undefined;
-    patientPreferredGender: string;
-}
+// export interface Habit {
+//     id: number;
+//     name: string;
+//     group: 'ALL' | 'MALE' | 'FEMALE';
+//     record?: {
+//         id?: number;
+//         entity: { id: number };
+//     } | null;
+// }
 
-export interface Habit {
+// export interface Medication {
+//     id: number;
+//     name: string;
+// }
+
+// export interface PatientMedication {
+//     id: number;
+//     medication: Medication;
+// }
+
+// export interface MedicalTerm {
+//     id: number;
+//     name: string;
+// }
+
+export interface VideoAttachment {
     id: number;
-    name: string;
-    icon: { url: string };
-    group: 'ALL' | 'FEMALE';
+    url?: string;
+    name?: string;
 }
 
-export interface PatientHabit {
-    id: number;
-    habit: Habit;
+// export interface MedicalProblem {
+//     id: number;
+//     medicalTerm: MedicalTerm;
+//     seenAttachments?: Array<{
+//         alreadySeen: boolean;
+//         attachment?: VideoAttachment;
+//     }>;
+//     readyToSeeAttachments?: Array<{
+//         id: number;
+//         attachment?: VideoAttachment;
+//     }>;
+// }
+
+// export interface MedicationAllergy {
+//     id: number;
+//     medicalTerm: MedicalTerm;
+//     seenAttachments?: Array<{
+//         alreadySeen: boolean;
+//         attachment?: VideoAttachment;
+//     }>;
+//     readyToSeeAttachments?: Array<{
+//         id: number;
+//         attachment?: VideoAttachment;
+//     }>;
+// }
+
+// export interface Supplement {
+//     id: number;
+//     supplement: {
+//         id: number;
+//         name: string;
+//     };
+// }
+
+export interface PatientPreferredGender {
+    preferredGender: 'MALE' | 'FEMALE' | 'OTHER' | null;
+    additionalInfo?: string;
 }
 
-export interface MedicalEntityItem {
-    id: number;
-    type: string;
-    name: string;
+export interface UserStats {
+    heightFt?: number;
+    heightInches?: number;
+    weightLb?: number;
+    gender?: 'MALE' | 'FEMALE';
+    bmi?: number;
+    patientPreferredGender?: PatientPreferredGender;
 }
 
-export interface MedicalEntity {
-    id: number;
-    medicalTerm?: MedicalEntityItem;
-    medication?: MedicalEntityItem;
+export interface StatsFormData {
+    heightFt: string;
+    heightInches: string;
+    weightLb: string;
+    gender: 'MALE' | 'FEMALE';
+    patientPreferredGender: PatientPreferredGender;
 }
 
-export type MedicalTermType = typeof MEDICAL_TERM_TYPES[number];
+export interface FilterParams {
+    page?: number;
+    size?: number;
+    sort?: string;
+}
+
+export interface FilteredResponse<T> {
+    content: T[];
+    pageNumber: number;
+    totalPages: number;
+    totalElements: number;
+}
+
+export interface MedicationFilterRequest {
+    name?: string;
+    excludeIds?: number[];
+}
+
+export interface MedicalTermFilterRequest {
+    name?: string;
+    excludeIds?: number[];
+}

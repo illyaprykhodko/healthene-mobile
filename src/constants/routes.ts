@@ -32,6 +32,29 @@ export const ROUTES = {
     HEALTH_PROFILE_STACK: 'HealthProfileStack',
     TREE_ADD_REPLACE_ITEM: 'TreeAddReplaceItem',
     CUISINE_DISTRIBUTION: 'CuisineDistribution',
+    MEAL_PREFERENCES_LIST: 'MealPreferencesList',
+    CUISINE_DISTRIBUTION_LIST: 'CuisineDistributionList',
+    MEAL_PREFERENCES_MEALS_LIST: 'MealPreferencesMealsList',
+    CUISINE_DISTRIBUTION_FAVORITES: 'CuisineDistributionFavorites',
+
+    // Questions
+    QUESTION: 'Question',
+    QUESTION_LIST: 'QuestionList',
+    QUESTION_CATEGORY: 'QuestionCategory',
+
+    // Video Library
+    VIDEO: 'Video',
+    VIDEO_LIST: 'VideoList',
+    VIDEO_LIBRARY: 'VideoLibrary',
+    VIDEO_CATEGORY: 'VideoCategory',
+    ROOT_VIDEO_LIBRARY: 'RootVideoLibrary',
+
+    // Health Profile
+    HEALTH_PROFILE_MAIN: 'HealthProfileMain',
+    HEALTH_PROFILE_STATS: 'HealthProfileStats',
+    HEALTH_PROFILE_MEDICATIONS: 'HealthProfileMedications',
+    HEALTH_PROFILE_MEDICAL_PROBLEMS: 'HealthProfileMedicalProblems',
+    HEALTH_PROFILE_MEDICATION_ALLERGIES: 'HealthProfileMedicationAllergies',
 
     // Account Settings
     ADDRESS: 'Address',

@@ -29,10 +29,10 @@ const Ingredients: React.FC<IngredientsProps> = ({ item }) => {
 
     const { recipe } = item;
     const ingredients = recipe?.ingredients || [];
-    const serving = recipe?.serving || {};
+    const serving = recipe?.serving || null;
     const peopleEatingNumber = item.peopleEatingNumber || 1;
     const servingAmount = recipe?.servingAmount || item.amount || 1;
-    const servingName = serving.name || 'serving';
+    const servingName = serving?.name || 'serving';
 
     const [localIngredients, setLocalIngredients] = useState<Ingredient[]>(ingredients);
     const [localRecipe, setLocalRecipe] = useState(recipe);
@@ -53,10 +53,12 @@ const Ingredients: React.FC<IngredientsProps> = ({ item }) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         const newList = localIngredients.filter(i => i.id !== ing?.item?.id);
         setLocalIngredients(newList);
-        setLocalRecipe({
-            ...localRecipe,
-            ingredients: newList
-        });
+        if (localRecipe) {
+            setLocalRecipe({
+                ...localRecipe,
+                ingredients: newList
+            });
+        }
     }, [localIngredients, localRecipe]);
 
     const handleNavigateToModifyIngredient = useCallback((ing: Ingredient) => {
@@ -69,6 +71,9 @@ const Ingredients: React.FC<IngredientsProps> = ({ item }) => {
     }, [navigation, item, localIngredients, route]);
 
     const handleSave = useCallback(async () => {
+        if (!localRecipe) {
+            return;
+        }
         try {
             await updatePhaseItem({
                 id: item.id,
@@ -79,7 +84,7 @@ const Ingredients: React.FC<IngredientsProps> = ({ item }) => {
                         ...localRecipe,
                         ingredients: localIngredients,
                         modified: true
-                    },
+                    } as any,
                 },
             }).unwrap();
             navigation.goBack();
@@ -292,6 +297,8 @@ const styles = StyleSheet.create({
     // For editable ingredients (patient recipes)
     listItemWrapper: {
         backgroundColor: COLORS.WHITE,
+        borderRightWidth: 7,
+        borderRightColor: '#8EF9F3',
     },
     listItem: {
         alignItems: 'center',

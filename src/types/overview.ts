@@ -10,6 +10,20 @@ enum Status {
 }
 // DayOverviewRecipeItem
 
+export interface DayOverviewMeal extends Meal {
+    // base Meal: id, name, order
+    coverImage: CoverImage | null;
+    type: 'MEAL';
+    status: Status;
+    peopleEatingNumber: number;
+  }
+  
+export interface Phase {
+    id: number;
+    order: number;
+    meal: DayOverviewMeal;
+    items: PhaseItem[];
+  }
 
 export type AddPhaseItemData = {
     activityCount: number,
@@ -38,7 +52,23 @@ export type AddPhaseItemData = {
     supplement: {
       id: number
     },
-    type: 'ATTACHMENT' | 'FOOD' | 'ITEMS_CATEGORY' |'ADDED_BY_PATIENT' | 'MEASUREMENT' | 'MEDICATION' | 'PHYSICAL_ACTIVITY' | 'QUESTION' | 'RECIPE' | 'RECIPE_TEMPLATE' | 'RESPONSE' | 'SUPPLEMENT' | 'TEXT',
+    type:
+    'ATTACHMENT'
+    | 'MEAL'
+    | 'ANYTIME'
+    | 'FOOD'
+    | 'ITEMS_CATEGORY'
+    |'ADDED_BY_PATIENT'
+    | 'MEASUREMENT'
+    | 'MEDICATION'
+    | 'PHYSICAL_ACTIVITY'
+    | 'QUESTION'
+    | 'RECIPE'
+    | 'RECIPE_TEMPLATE'
+    | 'RESPONSE'
+    | 'SUPPLEMENT'
+    | 'CUSTOM_RECIPE'
+    | 'TEXT',
     weight: {
       id: number
     },
@@ -51,13 +81,23 @@ export type AddPhaseItemData = {
         id: number
       },
   }
+export type PhaseType =
+  | 'MEAL'
+  | 'ANYTIME'
+  | 'QUESTION'
+  | 'SUPPLEMENT'
+  | 'MEDICATION'
+  | 'MEASUREMENT'
+  | 'ADDED_BY_PATIENT'
+  | 'PHYSICAL_ACTIVITY';
 export interface PhaseItem {
     food?: any;
-    // type: EntityType;
-    type: string;
+    type: AddPhaseItemData['type'];
+    sortKey?: number;
     title: string;
     amount?: number;
     rating: number | null;
+    phaseId?: string | number;
     measurement?: any;
     medication?: any;
     supplement?: any;
@@ -70,18 +110,33 @@ export interface PhaseItem {
         };
     };
     useServing?: boolean;
-    id: number;
+    id: number | string;
     order: number;
-    status?: Omit<Status, 'DID_NOT_EAT'>;
+    status: AddPhaseItemData['status'];
     section: string | null; // "Cold Beverage"
 
-    phase: PhaseInfo;
-    serving: ServingInfo;
+    phase: {
+        id: number | string;
+    };
+    serving: ServingInfo | null;
 
-    recipe: PatientRecipe
+    recipe: {
+        id: number;
+        name: string;
+        ingredients: Ingredient[];
+        steps: Step[];
+        serving: ServingInfo;
+        coverImage: CoverImage;
+        tags: Tag[];
+        states: StateTag[];
+        initialStates: InitialStateTag[];
+        rescueTags: RescueTag[];
+        surrogateRecipe: boolean;
+        servingAmount: number | null;
+    } | null;
 
-    patientFoodCategoryAttachment: PatientFoodCategoryAttachment;
-    patientFoodCategoryQuestion: PatientFoodCategoryQuestion;
+    patientFoodCategoryAttachment: PatientFoodCategoryAttachment | null;
+    patientFoodCategoryQuestion: PatientFoodCategoryQuestion | null;
 
     peopleEatingNumber: number;
     modified: boolean;
@@ -89,9 +144,20 @@ export interface PhaseItem {
 }
 
 /** phase */
-export interface PhaseInfo {
-    id: number;
-}
+// export interface PhaseInfo {
+//     id: number;
+// }
+
+// export interface Phase {
+//     type: string;
+//     name?: string;
+//     items?: any[];
+//     order?: number;
+//     status?: string;
+//     id: number | string;
+//     meal?: { name: string };
+//     measurement?: { measurement: { name: string } };
+// }
 
 export interface ServingInfo {
     id: number | null;
@@ -171,8 +237,9 @@ dishes: Dish[];
 cuisines: Cuisine[];
 serving: RecipeServingMeta;
 cookMethod: {
-    id:10596
-name: string;
+    // id:10596
+    id: number;
+    name: string;
 order: number;
 type: CookingMethodType | string;
 disabled: boolean;
@@ -185,7 +252,8 @@ type: PreparationTimeType | string;
 disabled: boolean;
 }
 difficulty: {
-    id:9387
+    // id:9387
+    id: number;
 name: string;
 order: number;
 type: DifficultyType | string;
