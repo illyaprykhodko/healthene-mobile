@@ -313,11 +313,16 @@ const ShoppingList: React.FC = () => {
     const renderSectionHeader = useCallback(({ section: { title } }: { section: GroupedItem }) => (
         <View style={styles.section}>
             <Text variant="h3" style={styles.sectionTitle}>{title}</Text>
-            {currentStep === SHOPPING_STEP.MAIN && status !== SHOPPING_STATUS.CONFIRMED && (
-                <Text variant="bold" color={COLORS.THEME_COLOR}>Remove Items</Text>
-            )}
         </View>
-    ), [currentStep, status]);
+    ), []);
+    // const renderSectionHeader = useCallback(({ section: { title } }: { section: GroupedItem }) => (
+    //     <View style={styles.section}>
+    //         <Text variant="h3" style={styles.sectionTitle}>{title}</Text>
+    //         {currentStep === SHOPPING_STEP.MAIN && status !== SHOPPING_STATUS.CONFIRMED && (
+    //             <Text variant="bold" color={COLORS.THEME_COLOR}>Remove Items</Text>
+    //         )}
+    //     </View>
+    // ), [currentStep, status]);
     if (isLoading) {
         return <ShoppingListSkeleton />;
     }

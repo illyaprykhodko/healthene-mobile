@@ -39,10 +39,18 @@ const VideoLibraryScreen: React.FC = () => {
     const theme = useTheme();
     const navigation = useNavigation<any>();
 
-    const { data: medicalProblems = [], isLoading: isLoadingDisease } = useGetMedicalProblemsQuery();
-    const { data: medicationAllergies = [], isLoading: isLoadingAllergies } = useGetMedicationAllergiesQuery();
-    const { data: foodTree = [], isLoading: isLoadingFood } = useGetFoodTreeQuery();
-    const { data: destinationTree = [], isLoading: isLoadingGeneral } = useGetDestinationTreeQuery();
+    const { data: medicalProblems = [], isLoading: isLoadingDisease } = useGetMedicalProblemsQuery(undefined, {
+        refetchOnMountOrArgChange: true,
+    });
+    const { data: medicationAllergies = [], isLoading: isLoadingAllergies } = useGetMedicationAllergiesQuery(undefined, {
+        refetchOnMountOrArgChange: true,
+    });
+    const { data: foodTree = [], isLoading: isLoadingFood } = useGetFoodTreeQuery(undefined, {
+        refetchOnMountOrArgChange: true,
+    });
+    const { data: destinationTree = [], isLoading: isLoadingGeneral } = useGetDestinationTreeQuery(undefined, {
+        refetchOnMountOrArgChange: true,
+    });
 
     const isLoading = isLoadingDisease || isLoadingAllergies || isLoadingFood || isLoadingGeneral;
 
@@ -158,7 +166,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     item: {
-        height: 60,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',

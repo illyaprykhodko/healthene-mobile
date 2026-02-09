@@ -222,15 +222,13 @@ export default memo(VideoCategoryScreen);
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 20,
-        paddingRight: 0,
+        paddingTop: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL,
     },
     item: {
-        height: 60,
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: OFFSET.VERTICAL,
-        marginRight: 20,
         borderBottomWidth: 1,
     },
     title: {
@@ -244,6 +242,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     noDataText: {
-        marginLeft: -20,
+        marginVertical: OFFSET.VERTICAL,
     },
 });

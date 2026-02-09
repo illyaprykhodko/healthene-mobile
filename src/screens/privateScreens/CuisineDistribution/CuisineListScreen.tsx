@@ -193,6 +193,7 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
 
                 <FlatList
                     data={allTags}
+                    style={styles.list}
                     initialNumToRender={15}
                     renderItem={renderItem}
                     keyExtractor={keyExtractor}
@@ -246,6 +247,9 @@ const styles = StyleSheet.create({
         marginBottom: OFFSET.VERTICAL,
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
+    list: {
+        backgroundColor: '#FFFFFF',
+    },
     listContent: {
         paddingBottom: OFFSET.VERTICAL * 2,
     },
@@ -278,6 +282,7 @@ const styles = StyleSheet.create({
     submitBtnText: {
         fontSize: 18,
         fontWeight: Platform.OS === 'ios' ? '600' : '700',
+        color: '#333333',
     },
 });
 

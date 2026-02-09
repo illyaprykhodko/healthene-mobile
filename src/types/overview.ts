@@ -132,6 +132,7 @@ export interface PhaseItem {
         initialStates: InitialStateTag[];
         rescueTags: RescueTag[];
         surrogateRecipe: boolean;
+        servingAmount: number | null;
     } | null;
 
     patientFoodCategoryAttachment: PatientFoodCategoryAttachment | null;

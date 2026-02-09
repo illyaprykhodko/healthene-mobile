@@ -2,11 +2,19 @@
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
-import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import FeatherIcon from '@react-native-vector-icons/feather';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSequence,
+    withTiming,
+    withDelay,
+    Easing,
+} from 'react-native-reanimated';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 // local dependencies
@@ -26,7 +34,12 @@ import type { AnytimeMeasurementItem } from 'types/anytime';
 import { PhaseItem, AddPhaseItemData } from 'types/overview';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MeasurementInputModal } from 'components/AnytimeMenu/MeasurementInputModal';
-import { selectDayOverview, meta, setDateEntry } from 'store/slices/dayOverviewSlice';
+import {
+    meta,
+    setDateEntry,
+    selectDayOverview,
+    removeRecentlyCompletedPhase,
+} from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, PHASE_ITEM_STATUS, ENTITY_TYPE, SUBSTANCE_TYPE } from 'constants/spec';
 import {
     Phase,
@@ -37,26 +50,6 @@ import {
     useCreatePatientPhaseWithRecipeMutation,
 } from 'store/api/dayOverviewApi';
 import { filters } from 'services/filter';
-
-// Temporary types
-// export type PhaseType =
-//   | 'MEAL'
-//   | 'ANYTIME'
-//   | 'QUESTION'
-//   | 'SUPPLEMENT'
-//   | 'MEDICATION'
-//   | 'MEASUREMENT'
-//   | 'ADDED_BY_PATIENT'
-//   | 'PHYSICAL_ACTIVITY';
-
-// interface PhaseItem {
-//   title: string;
-//   type: PhaseType;
-//   sortKey?: number;
-//   id: string | number;
-//   phaseId?: string | number;
-//   status?: 'DONE' | 'PENDING' | 'INCOMPLETE';
-// }
 
 const DOT_SIZE = 8;
 const GAP_SIZE = 15;
@@ -292,10 +285,10 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[]; incompleteDay?: boolean }> = 
             const iconX = dotX + GAP_SIZE + ICON_SIZE / 2 + ICON_MARGIN;
 
             const isIncomplete = incompleteDay && phase.status === 'INCOMPLETE';
-            if (!isIncomplete) {
+            const isDone = phase.status === PHASE_ITEM_STATUS.DONE;
+            if (!isIncomplete && !isDone) {
                 elements.push(<Circle key={`dot-${index}`} cx={dotX} cy={y} r={DOT_SIZE / 2} fill={theme.colors.grey} />);
             }
-
             elements.push(
                 <Line
                     y1={y}
@@ -317,6 +310,83 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[]; incompleteDay?: boolean }> = 
         <Svg width={SCREEN_WIDTH} height={svgHeight} style={{ position: 'absolute', top: 0, left: 0 }}>
             {timelineElements}
         </Svg>
+    );
+};
+
+interface AnimatedCheckmarkProps {
+    isDone: boolean;
+    isFocused: boolean; // Screen is visible
+    phaseId: number | string;
+    isRecentlyCompleted: boolean;
+    onAnimationComplete?: () => void;
+}
+
+const AnimatedCheckmark: React.FC<AnimatedCheckmarkProps> = ({
+    isDone,
+    phaseId,
+    isFocused,
+    isRecentlyCompleted,
+    onAnimationComplete,
+}) => {
+    const scale = useSharedValue(isRecentlyCompleted ? 0 : 1);
+    const opacity = useSharedValue(isRecentlyCompleted ? 0 : 1);
+    const rotation = useSharedValue(0);
+    const hasAnimatedRef = useRef(false);
+
+    useEffect(() => {
+        if (!isDone) {
+            scale.value = 0;
+            opacity.value = 0;
+            rotation.value = 0;
+            hasAnimatedRef.current = false;
+            return;
+        }
+        if (isRecentlyCompleted && isFocused && !hasAnimatedRef.current) {
+            hasAnimatedRef.current = true;
+            scale.value = 0;
+            opacity.value = 0;
+            rotation.value = 0;
+            opacity.value = withTiming(1, { duration: 1350, easing: Easing.out(Easing.ease) });
+            scale.value = withSequence(
+                withTiming(1.3, { duration: 500, easing: Easing.out(Easing.back(2)) }),
+                withTiming(1, { duration: 350, easing: Easing.out(Easing.ease) })
+            );
+            rotation.value = withDelay(100,
+                withSequence(
+                    withTiming(-8, { duration: 180 }),
+                    withTiming(6, { duration: 180 }),
+                    withTiming(-3, { duration: 160 }),
+                    withTiming(0, { duration: 160 })
+                )
+            );
+            if (onAnimationComplete) {
+                setTimeout(() => {
+                    onAnimationComplete();
+                }, 1000);
+            }
+        } else if (!isRecentlyCompleted && !hasAnimatedRef.current) {
+            scale.value = 1;
+            opacity.value = 1;
+            rotation.value = 0;
+        }
+    }, [isDone, isRecentlyCompleted, isFocused, phaseId]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [
+            { scale: scale.value },
+            { rotate: `${rotation.value}deg` },
+        ],
+        opacity: opacity.value,
+    }));
+
+    if (!isDone) {
+        return null;
+    }
+
+    return (
+        <Animated.View style={animatedStyle}>
+            <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
+        </Animated.View>
     );
 };
 
@@ -464,8 +534,17 @@ const styles = StyleSheet.create({
         zIndex: 10,
         justifyContent: 'center',
         alignItems: 'center',
-        // Center vertically: ROW_HEIGHT/2 - iconSize/2 = 75/2 - 18/2 = 37.5 - 9 = 28.5
         top: 28,
+    },
+    doneStatusIndicator: {
+        position: 'absolute',
+        zIndex: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        top: 28,
+    },
+    donePhaseContent: {
+        opacity: 0.5,
     },
     highlightText: {
         marginLeft: 8,
@@ -501,8 +580,9 @@ export const Overview: React.FC = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const dispatch = useAppDispatch();
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const { date, showCalendar, calendarDays } = useAppSelector(selectDayOverview);
+    const { date, showCalendar, calendarDays, recentlyCompletedPhases } = useAppSelector(selectDayOverview);
     const currentDate = date || moment().format('YYYY-MM-DD');
+    const isFocused = useIsFocused();
     const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
 
     const { data, isLoading, isFetching } = useGetDayOverviewQuery(currentDate, {
@@ -712,6 +792,7 @@ export const Overview: React.FC = () => {
                         recipe: item.recipe ?? null,
                         section: item.section ?? '',
                         serving: item.serving ?? null,
+                        measurement: item.measurement,
                         modified: item.modified ?? false,
                         title: item.measurement?.name || 'Measurement',
                         peopleEatingNumber: item.peopleEatingNumber ?? 1,
@@ -754,35 +835,38 @@ export const Overview: React.FC = () => {
 
     const handlePhasePress = (phase: PhaseItem) => {
         if (phase.type === 'MEASUREMENT') {
-            const measurementPhase = data?.phases?.find(p => p.type === 'MEASUREMENT');
-            const measurementItem = measurementPhase?.items?.find((item: any) => item.id === phase.id);
-            if (measurementItem) {
-                const measurementType = measurementItem.measurement?.type;
-                if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
-                    (navigation as any).navigate('WeightMeasurement', {
-                        measurementPhaseItem: measurementItem,
-                        date: currentDate,
-                    });
-                    return;
-                }
-                if (phase.status === 'DONE') {
-                    (navigation as any).navigate('SaveValue', {
-                        measurementType: measurementItem.measurement?.type,
-                        measurementName: measurementItem.measurement?.name,
-                        measurementPhaseItem: measurementItem,
-                        date: currentDate,
-                    });
-                    return;
-                }
-                const anytimeMeasurement: AnytimeMeasurementItem = {
-                    type: 'MEASUREMENT',
-                    id: measurementItem.id,
-                    phaseId: measurementPhase!.id,
-                    measurement: measurementItem.measurement,
-                    status: measurementItem.status || 'PENDING',
-                };
-                setSelectedMeasurement(anytimeMeasurement);
+            const measurement = (phase as any).measurement;
+            const phaseId = phase.phaseId || phase.phase?.id;
+
+            if (!measurement) {
+                console.warn('No measurement data found for phase:', phase);
+                return;
             }
+            const measurementType = measurement?.type;
+            if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
+                (navigation as any).navigate('WeightMeasurement', {
+                    measurementPhaseItem: { ...phase, measurement },
+                    date: currentDate,
+                });
+                return;
+            }
+            if (phase.status === 'DONE') {
+                (navigation as any).navigate('SaveValue', {
+                    measurementType: measurement?.type,
+                    measurementName: measurement?.name,
+                    measurementPhaseItem: { ...phase, measurement },
+                    date: currentDate,
+                });
+                return;
+            }
+            const anytimeMeasurement: AnytimeMeasurementItem = {
+                id: phase.id,
+                phaseId: phaseId,
+                status: 'PENDING',
+                type: 'MEASUREMENT',
+                measurement: measurement,
+            };
+            setSelectedMeasurement(anytimeMeasurement);
             return;
         }
 
@@ -911,20 +995,27 @@ export const Overview: React.FC = () => {
                                     onPress={() => handlePhasePress(item)}
                                 >
                                     {isDone && (
-                                        <View style={[styles.statusIndicator, { left: statusLeftPosition }]}>
-                                            {renderStatusIndicator()}
+                                        <View style={[styles.doneStatusIndicator, { left: isMeal ? 16 : 96 }]}>
+                                            <AnimatedCheckmark
+                                                isDone={isDone}
+                                                phaseId={item.id}
+                                                isFocused={isFocused}
+                                                isRecentlyCompleted={recentlyCompletedPhases.includes(item.id)}
+                                                onAnimationComplete={() => dispatch(removeRecentlyCompletedPhase(item.id))}
+                                            />
                                         </View>
                                     )}
-                                    <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: iconMarginLeft }]}>
+                                    <View style={[
+                                        styles.iconWrapper,
+                                        { backgroundColor: bg, marginLeft: iconMarginLeft },
+                                        isDone && styles.donePhaseContent
+                                    ]}>
                                         <Icon iconStyle="solid" name={name} color={fg} size={18} />
                                     </View>
-                                    <View style={styles.rightContent}>
-                                        <Text variant="h4" style={{ color: theme.colors.text }}>
+                                    <View style={[styles.rightContent, isDone && styles.donePhaseContent]}>
+                                        <Text variant="h4" style={{ color: isDone ? theme.colors.grey : theme.colors.text }}>
                                             {displayTitle}
                                         </Text>
-                                        {/* <Text variant="h5">
-                                            Status: {item.status || 'Unknown'}
-                                        </Text> */}
                                     </View>
                                 </TouchableOpacity>
                             );

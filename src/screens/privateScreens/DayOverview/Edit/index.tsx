@@ -7,7 +7,6 @@ import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 // local dependencies
 import ListItem from './ListItem';
 import Text from 'components/Text';
-import { useAppSelector } from 'store';
 import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
@@ -16,12 +15,13 @@ import { Button } from 'components/Button';
 import { PhaseItem } from 'types/overview';
 import { groupBy, isEmpty } from 'utils/general';
 import { AnytimeMenu } from 'components/AnytimeMenu';
+import { useAppSelector, useAppDispatch } from 'store';
 import { RootStackParamList } from 'services/navigation';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
-import { selectDayOverview } from 'store/slices/dayOverviewSlice';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
+import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
 import { useGetDayOverviewQuery, useGetPhaseItemsQuery, useUpdatePhaseItemMutation,
     useDeletePhaseItemMutation, useAddPhaseMealItemMutation, useAddPhaseCustomRecipeMutation,
@@ -42,6 +42,7 @@ const convertTypeToTitle = (type: string, capitalize = false) => {
 export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const theme = useTheme();
     const route = useRoute<any>();
+    const dispatch = useAppDispatch();
     const { date: currentDate } = useAppSelector(selectDayOverview);
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   
@@ -64,20 +65,17 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     const { data: phaseItems, isLoading: isPhaseItemsLoading } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
-        refetchOnFocus: true,
-        refetchOnReconnect: true,
-        // refetchOnMountOrArgChange: true,
     });
     // mutations
     const [updatePhase] = useUpdatePhaseMutation();
-    const [addPhaseMealItem] = useAddPhaseMealItemMutation();
     const [addPhaseItem] = useAddPhaseItemMutation();
+    const [addPhaseMealItem] = useAddPhaseMealItemMutation();
     // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
-    const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
-    const [replacePhaseItem] = useReplacePhaseItemMutation();
-    const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
+    const [replacePhaseItem] = useReplacePhaseItemMutation();
+    const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
+    const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
     //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
   
@@ -101,15 +99,16 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             }))
             .sort((a, b) => (a.order || 0) - (b.order || 0));
     }, [phaseItems]);
-
     useEffect(() => {
-        setLocalItems(items);
+        if (items.length > 0) {
+            setLocalItems(items);
+        }
     }, [items]);
-
-    // Check if all items are DONE - used to enable/disable "Meal Done" button
     const allItemsDone = useMemo(() => {
         if (localItems.length === 0) { return false; }
-        return localItems.every(item => item.status === PHASE_ITEM_STATUS.DONE);
+        return localItems.every(item =>
+            item.status === PHASE_ITEM_STATUS.DONE || item.status === PHASE_ITEM_STATUS.DID_NOT_EAT
+        );
     }, [localItems]);
 
     const computeExcludeIds = (): string[] => {
@@ -336,13 +335,15 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         if (!targetPhaseId || !currentPhase) { return; }
     
         try {
+            const { items, ...phaseWithoutItems } = currentPhase as any;
             await updatePhase({
                 id: targetPhaseId,
                 data: {
-                    ...currentPhase,
+                    ...phaseWithoutItems,
                     status: PHASE_ITEM_STATUS.DONE
                 }
             });
+            dispatch(addRecentlyCompletedPhase(targetPhaseId));
             navigation.navigate(ROUTES.DAY_OVERVIEW);
         } catch (error) {
             console.error('Error marking phase as done:', error);
@@ -350,6 +351,12 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     };
 
     const handleCheckboxStatus = async (item: PhaseItem) => {
+        setLocalItems(prevItems =>
+            prevItems.map(prevItem =>
+                (prevItem.id === item.id ? { ...item } : prevItem)
+            )
+        );
+
         try {
             await updatePhaseItem({
                 id: item.id,
@@ -357,35 +364,35 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 data: {
                     ...item,
                     amount: item.amount || item.initialAmount
-                }
+                },
+                date: targetDate,
             });
+            setLocalItems(currentItems => {
+                const allItemsDoneNow = currentItems.every(
+                    listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
+                );
 
-            const updatedItems = localItems.map(prevItem =>
-                (prevItem.id === item.id ? { ...item } : prevItem)
-            );
-            setLocalItems(updatedItems);
-
-            // Check if all items are DONE - if so, automatically mark phase as DONE
-            const allItemsDone = updatedItems.every(
-                listItem => listItem.status === PHASE_ITEM_STATUS.DONE
-            );
-
-            if (currentPhase && targetPhaseId) {
-                const newPhaseStatus = allItemsDone
-                    ? PHASE_ITEM_STATUS.DONE
-                    : PHASE_ITEM_STATUS.PENDING;
-
-                // Only update phase if status actually changed
-                if (currentPhase.status !== newPhaseStatus) {
-                    await updatePhase({
-                        id: targetPhaseId,
-                        data: {
-                            ...currentPhase,
-                            status: newPhaseStatus
-                        }
-                    });
+                if (currentPhase && targetPhaseId) {
+                    const newPhaseStatus = allItemsDoneNow
+                        ? PHASE_ITEM_STATUS.DONE
+                        : PHASE_ITEM_STATUS.PENDING;
+                    if (currentPhase.status !== newPhaseStatus) {
+                        const { items, ...phaseWithoutItems } = currentPhase as any;
+                        updatePhase({
+                            id: targetPhaseId,
+                            data: {
+                                ...phaseWithoutItems,
+                                status: newPhaseStatus
+                            }
+                        }).then(() => {
+                            if (newPhaseStatus === PHASE_ITEM_STATUS.DONE) {
+                                dispatch(addRecentlyCompletedPhase(targetPhaseId));
+                            }
+                        });
+                    }
                 }
-            }
+                return currentItems;
+            });
         } catch (error) {
             console.error('Error updating item status:', error);
             setLocalItems(items);
@@ -428,35 +435,13 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 break;
             }
             case ENTITY_TYPE.RECIPE: {
-                if (prevItem.recipe?.surrogateRecipe) {
-                    navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
-                        date: targetDate,
-                        entityType: 'PATIENT_FOOD',
-                        prevItem: prevItemWithoutRating,
-                        substanceType: prevItem.substanceType || 'FOOD',
-                        onApply: (data: any) => {
-                            setReplacementData({
-                                prevItem: prevItemWithoutRating,
-                                nextItem: data.item || data,
-                            });
-                            setShowConfirmationModal(true);
-                        },
-                    });
-                } else {
-                    navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
-                        date: targetDate,
-                        entityType: 'PATIENT_RECIPES',
-                        prevItem: prevItemWithoutRating,
-                        substanceType: prevItem.substanceType || 'FOOD',
-                        onApply: (data: any) => {
-                            setReplacementData({
-                                prevItem: prevItemWithoutRating,
-                                nextItem: data.item || data,
-                            });
-                            setShowConfirmationModal(true);
-                        },
-                    });
-                }
+                navigation.navigate(ROUTES.ADD_REPLACE_RECIPE, {
+                    date: targetDate,
+                    phaseId: targetPhaseId,
+                    prevItem: prevItemWithoutRating,
+                    title: currentPhase?.meal?.name || 'Replace Recipe',
+                    entityType: prevItem.recipe?.surrogateRecipe ? 'SURROGATE_RECIPE' : 'RECIPE',
+                });
                 break;
             }
             case ENTITY_TYPE.MEASUREMENT:
@@ -581,6 +566,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         );
     }
     const groupedBySection = groupBy(localItems, 'section');
+    const sortedSections = Object.entries(groupedBySection).sort(([sectionA], [sectionB]) => {
+        if (sectionA === 'Added') { return 1; }
+        if (sectionB === 'Added') { return -1; }
+        return 0;
+    });
     const title = currentPhase?.meal?.name
                   || (currentPhase?.type === 'QUESTION' ? 'Health Question'
                       : currentPhase?.type === 'ANYTIME' ? 'Anytime'
@@ -621,7 +611,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             <View style={styles.list}>
                 <ScrollView style={isFutureDate && styles.opacity} scrollEnabled={scrollEnabled}>
                     {!isEmpty(localItems) ? (
-                        Object.entries(groupedBySection).map(([section, sectionItems]) => (
+                        sortedSections.map(([section, sectionItems]) => (
                             <SwipeList
                                 key={section}
                                 data={sectionItems}

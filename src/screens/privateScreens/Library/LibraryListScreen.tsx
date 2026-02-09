@@ -49,7 +49,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     item: {
-        height: 60,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',

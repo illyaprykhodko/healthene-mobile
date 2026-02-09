@@ -44,9 +44,8 @@ export const ListItem: React.FC<ListItemProps> = ({
     const currentQuestion = item?.patientFoodCategoryQuestion;
 
     const handleCheckboxPress = (next: boolean) => {
-        if (handleCheckboxStatus && !disabled) {
+        if (handleCheckboxStatus && !disabled && !isFutureDate) {
             handleCheckboxStatus({ ...item, status: (isDone || isDidNotEat) ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
-            // handleCheckboxStatus(item);
         }
     };
 
@@ -61,9 +60,9 @@ export const ListItem: React.FC<ListItemProps> = ({
             size={22}
             isDayOverview
             status={item.status}
-            editable={!disabled}
             onChange={handleCheckboxPress}
             style={styles.checkboxContainer}
+            editable={!disabled && !isFutureDate}
             value={item.status === PHASE_ITEM_STATUS.DONE}
         />
     );
@@ -189,7 +188,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                         )}
                         <View style={styles.main}>
                             <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
-                                {item.recipe?.name || 'Recipe'}
+                                {item.recipe?.name || item.title || 'Recipe'}
                             </Text>
                             {amount && (
                                 <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>

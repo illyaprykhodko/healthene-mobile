@@ -285,12 +285,13 @@ export const dayOverviewApi = createApi({
               method: 'PUT',
               body: data,
           }),
-          invalidatesTags: (result, error, { id, phaseId }) => [
-              { type: 'PhaseItem', id },
-              { type: 'PhaseItems', id: phaseId },
-              'DayOverview',
-          ],
+          //   invalidatesTags: (result, error, { id, phaseId }) => [
+          //       { type: 'PhaseItem', id },
+          //       { type: 'PhaseItems', id: phaseId },
+          //       'DayOverview',
+          //   ],
           async onQueryStarted ({ id, phaseId, data, date }, { dispatch, queryFulfilled }) {
+              // Optimistic update - apply immediately
               const patch = dispatch(
                   dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
                       for (const arr of Object.values(draft) as any[][]) {
@@ -326,9 +327,23 @@ export const dayOverviewApi = createApi({
                       /* ignore */
                   }
               }
+
               try {
-                  await queryFulfilled;
+                  const { data: serverItem } = await queryFulfilled;
+                  dispatch(
+                      dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
+                          for (const arr of Object.values(draft) as any[][]) {
+                              const found = arr.find(x => x.id === id);
+                              if (found) {
+                                  Object.assign(found, serverItem);
+                                  arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                                  break;
+                              }
+                          }
+                      })
+                  );
               } catch {
+                  // Revert optimistic updates on error
                   patch.undo();
                   if (dayOverviewPatched) { dayOverviewPatched.undo(); }
               }

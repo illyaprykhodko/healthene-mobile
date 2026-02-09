@@ -293,10 +293,11 @@ export const EditFood: React.FC = () => {
     }, [navigation, item, localIngredients]);
 
     const renderOverviewTab = () => (
-        <View style={[styles.main,
-            !isRecipe && { marginTop: OFFSET.VERTICAL / 2 }
-        // !isRecipe && { marginTop: OFFSET.VERTICAL * 3 }
-        ]}>
+        <View
+            style={[styles.main, !isRecipe && { marginTop: OFFSET.VERTICAL / 2 }]}
+            // contentContainerStyle={styles.overviewContent}
+            // showsVerticalScrollIndicator={false}
+        >
             <View style={styles.nameContainer}>
                 <Text
                     numberOfLines={2}
@@ -306,13 +307,11 @@ export const EditFood: React.FC = () => {
                 </Text>
             </View>
             <View style={styles.imageContainer}>
-                {/* {item?.coverImage?.url ? ( */}
                 <Image
                     source={{ uri: item?.coverImage?.url }}
                     style={styles.image}
                     resizeMode="contain"
                 />
-                {/* ) : null} */}
             </View>
             <View style={styles.controlsWrapper}>
                 <Controls
@@ -326,6 +325,7 @@ export const EditFood: React.FC = () => {
                 unit={getCurrentUnit()}
                 handleUnit={handleUnit}
             />}
+            <View style={styles.bottomPadding} />
         </View>
     );
 
@@ -632,6 +632,12 @@ const styles = StyleSheet.create({
     },
     main: {
         flex: 1,
+    },
+    overviewContent: {
+        paddingBottom: 20,
+    },
+    bottomPadding: {
+        height: 100,
     },
     nameContainer: {
         marginBottom: OFFSET.VERTICAL,

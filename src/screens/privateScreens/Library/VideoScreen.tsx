@@ -122,13 +122,13 @@ const VideoScreen: React.FC = () => {
                     </Text>
                 )}
                 {renderVideoPlayer()}
-                {video?.description && (
+                {/* {video?.description && (
                     <Text
                         style={[styles.description, { color: theme.colors.text }]}
                     >
                         {video.description}
                     </Text>
-                )}
+                )} */}
             </ScrollView>
             <View style={styles.buttonContainer}>
                 <Button

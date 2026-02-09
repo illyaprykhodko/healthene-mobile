@@ -192,6 +192,7 @@ const styles = StyleSheet.create({
     submitBtnText: {
         fontSize: 18,
         fontWeight: Platform.OS === 'ios' ? '600' : '700',
+        color: '#333333',
     },
 });
 

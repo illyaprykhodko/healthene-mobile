@@ -154,7 +154,8 @@ const DayOverviewStack: React.FC = () => {
                 name="Item"
                 component={Item}
                 options={{
-                    title: 'Item Details',
+                    title: 'Recipe',
+                    header: renderCustomHeader(),
                 }}
             />
             <Stack.Screen
