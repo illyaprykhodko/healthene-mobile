@@ -4,6 +4,11 @@ import { useNavigation } from '@react-navigation/native';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View, FlatList, TouchableOpacity } from 'react-native';
 // local dependencies
+import {
+    useGetShoppingPreferencesQuery,
+    useGenerateShoppingListMutation,
+    useUpdateShoppingPreferencesMutation,
+} from 'store/api/shoppingApi';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { useAppDispatch } from 'store';

@@ -41,7 +41,20 @@ export const settingsApi = createApi({
                 url: '/patient-service/user/account/password',
             }),
         }),
+        changeEmailRequest: builder.mutation<void, { newEmail: string; verificationUrl: string }>({
+            query: body => ({
+                body,
+                method: 'POST',
+                url: '/patient-service/patients/me/email/change-request',
+            }),
+        }),
     })
 });
 
-export const { useUpdateUserDataMutation, useFilterCountryMutation, useFilterStateMutation, useChangePasswordMutation } = settingsApi;
+export const {
+    useFilterStateMutation,
+    useFilterCountryMutation,
+    useUpdateUserDataMutation,
+    useChangePasswordMutation,
+    useChangeEmailRequestMutation
+} = settingsApi;

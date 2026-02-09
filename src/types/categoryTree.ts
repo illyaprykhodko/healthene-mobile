@@ -1,5 +1,5 @@
 // local dependencies
-import { PaginatedParams } from 'types/common/interfaces.ts';
+import { PaginatedParams, TransformData } from 'types/common/interfaces.ts';
 import { CATEGORY_STATUS, TREE_TYPE } from 'constants/spec.ts';
 
 export type TreeType = keyof typeof TREE_TYPE;
@@ -20,11 +20,7 @@ export interface RequestData {
     params: PaginatedParams
 }
 
-export interface TransformData {
-    page: number;
-    totalPages: number;
-    data: CategoryItem[];
-}
+export type CategoryTransformData = TransformData<CategoryItem>;
 
 export interface PatientCategory {
     patientId: number;

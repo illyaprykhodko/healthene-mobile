@@ -4,14 +4,14 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from 'store/api/baseApi.ts';
 import { PaginatedResponse } from 'types/common/interfaces.ts';
-import { CategoryItem, PatientCategories, PatientCategory, RequestData, TransformData } from 'types/categoryTree.ts';
+import { CategoryItem, PatientCategories, PatientCategory, RequestData, CategoryTransformData } from 'types/categoryTree.ts';
 
 export const categoryTreeApi = createApi({
     baseQuery,
     reducerPath: 'categoryTreeApi',
     tagTypes: ['PatientCategories'],
     endpoints: builder => ({
-        getAllCategories: builder.query<TransformData, RequestData >({
+        getAllCategories: builder.query<CategoryTransformData, RequestData >({
             query: ({ body, params }) => {
                 return {
                     method: 'POST',

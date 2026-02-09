@@ -40,6 +40,7 @@ export type RootStackParamList = {
   [ROUTES.MESSAGE_LIST]: undefined;
   [ROUTES.READ_MESSAGE]: undefined;
   [ROUTES.WRITE_MESSAGE]: undefined;
+  [ROUTES.PROFILE_STATS]: undefined;
   [ROUTES.SETTINGS_STACK]: undefined;
   [ROUTES.HEALTH_PROFILE]: undefined;
   [ROUTES.FOOD_ALLERGIES]: undefined;
@@ -50,6 +51,7 @@ export type RootStackParamList = {
   [ROUTES.MEAL_PREFERENCES]: undefined;
   [ROUTES.FOOD_PREFERENCES]: undefined;
   [ROUTES.BIOMETRIC_SETTINGS]: undefined;
+  [ROUTES.HEALTH_PROFILE_STACK]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
   [ROUTES.MEAL_PREFERENCES_MEALS_LIST]: undefined;

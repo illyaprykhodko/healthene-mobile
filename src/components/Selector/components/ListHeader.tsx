@@ -1,36 +1,54 @@
 // outsource dependencies
-import React, { memo } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import Icon from '@react-native-vector-icons/material-icons';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 
 // local dependencies
 import Text from 'components/Text.tsx';
+import { debounce } from 'utils/general.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
-import Separator from 'components/Selector/components/Separator.tsx';
-
-// local dependencies
+import Separator from 'components/FlatListSeparator.tsx';
 
 interface ListHeaderProps {
     value?: string,
     disabled?: boolean;
+    throttleMs?: number;
     searchValue?: string;
     placeholder?: string;
     onSearch: (item: string) => void;
 }
 
-const ListHeader = ({ searchValue, disabled, placeholder, value, onSearch }: ListHeaderProps) => {
-    console.log('Cvalue', value);
+const ListHeader = ({ searchValue = '', disabled, placeholder, value, onSearch, throttleMs = 500 }: ListHeaderProps) => {
     const theme = useTheme();
+    const [localValue, setLocalValue] = useState(searchValue);
+
+    useEffect(() => {
+        setLocalValue(searchValue);
+    }, [searchValue]);
+
+    const debouncedSearch = useMemo(() => debounce((v: string) => {
+        onSearch(v);
+    }, throttleMs), [onSearch, throttleMs]);
+
+    useEffect(() => {
+        return () => {
+            debouncedSearch.cancel();
+        };
+    }, [debouncedSearch]);
+    
     return (
         <>
-            <View style={[styles.inputWrapper, { borderBottomColor: theme.colors.grey }]}>
+            <View style={[styles.inputWrapper, { borderBottomColor: theme.colors.grey, backgroundColor: theme.colors.background }]}>
                 <TextInput
-                    value={searchValue}
+                    value={localValue}
                     editable={!disabled}
                     autoCapitalize="none"
-                    onChangeText={onSearch}
                     placeholder={placeholder}
+                    onChangeText={(v: string) => {
+                        setLocalValue(v);
+                        debouncedSearch(v);
+                    }}
                     selectionColor={theme.colors.info}
                     style={[styles.inputStyle, { color: theme.colors.black }]}
                 />

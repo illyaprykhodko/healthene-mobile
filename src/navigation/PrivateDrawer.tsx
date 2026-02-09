@@ -22,6 +22,7 @@ import MealPreferencesStack from 'navigation/MealPreferencesStack';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
 import CuisineDistributionStack from 'navigation/CuisineDistributionStack';
 
+
 const Drawer = createDrawerNavigator();
 const { width } = Dimensions.get('window');
 
