@@ -8,18 +8,17 @@
 import React from 'react';
 import { Provider } from 'react-redux';
 import Toast from 'react-native-toast-message';
-import { StatusBar, StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets, EdgeInsets } from 'react-native-safe-area-context';
 // local dependencies
-import { store } from './src/store';
-import { config } from './src/constants';
-import { useTheme } from 'hooks/useTheme';
-import { ThemeProvider } from './src/providers/ThemeProvider';
-import { RootNavigator } from './src/navigation/RootNavigator';
+import { store } from 'store';
+import { config } from 'constants';
+import { ThemeProvider } from 'providers/ThemeProvider.tsx';
+import { RootNavigator } from 'navigation/RootNavigator.tsx';
 import { BoxHolder, MaintenanceHolder } from 'components/preloader';
-import { useAppInitialization } from './src/hooks/useAppInitialization';
+import { useAppInitialization } from 'hooks/useAppInitialization.ts';
 
 if (config.DEBUG) {
     require('./ReactotronConfig');
@@ -38,7 +37,6 @@ function AppContent (): React.JSX.Element {
 }
 
 function App (): React.JSX.Element {
-    const theme = useTheme();
     const styles = createStyles();
     return (
         <Provider store={store}>
@@ -46,11 +44,6 @@ function App (): React.JSX.Element {
                 <GestureHandlerRootView style={styles.flex}>
                     <BottomSheetModalProvider>
                         <ThemeProvider>
-                            <StatusBar
-                                animated={false}
-                                barStyle="light-content"
-                                backgroundColor={theme.colors.primary}
-                            />
                             <AppContent />
                         </ThemeProvider>
                     </BottomSheetModalProvider>
@@ -69,5 +62,6 @@ const createStyles = (insets?: EdgeInsets) => StyleSheet.create({
     },
     safeArea: {
         paddingTop: - (insets?.top ?? 0),
+        paddingBottom: Platform.OS === 'ios' ? - (insets?.bottom ?? 0) : 0
     }
 });
