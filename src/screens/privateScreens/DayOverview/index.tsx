@@ -7,10 +7,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // local dependencies
+import {
+    QuestionScreen,
+    QuestionListScreen,
+    QuestionCategoryScreen,
+} from '../Question';
 import Item from './Item';
 import Edit from './Edit';
 import UPCScan from './UPCScan';
 import EditFood from './EditFood';
+import Text from 'components/Text';
 import { Overview } from './Overview';
 import BackBtn from 'components/BackBtn';
 import { VideoScreen } from '../Library';
@@ -34,11 +40,6 @@ import WeightMeasurementScreen from '../WeightMeasurementScreen';
 import { ReplacementScreen, ReplaceItemsScreen } from './Replacement';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
 import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
-import {
-    QuestionScreen,
-    QuestionListScreen,
-    QuestionCategoryScreen,
-} from '../Question';
 
 const Stack = createNativeStackNavigator();
 
@@ -67,13 +68,14 @@ const DayOverviewStack: React.FC = () => {
     };
 
     const renderCustomHeader = (options?: {
+        title?: string;
         disabled?: boolean;
         showBackButton?: boolean;
         showDateButtons?: boolean;
     }) => (headerProps: any) => (
         <View style={[styles.customHeader, { paddingTop: insets.top + OFFSET.POINT, backgroundColor: theme.colors.primary }]}>
             <View style={[styles.headerSide, styles.headerSideLeft]}>
-                <BackBtn label={headerProps.back?.title} onPress={() => headerProps.navigation.goBack()} color={theme.colors.white}/>
+                <BackBtn onPress={() => headerProps.navigation.goBack()} color={theme.colors.white}/>
                 {/* {(options?.showBackButton !== false) && headerProps.back && (
                     <TouchableOpacity
                         style={styles.backButton}
@@ -86,7 +88,11 @@ const DayOverviewStack: React.FC = () => {
                     </TouchableOpacity>
                 )} */}
             </View>
-            <View style={styles.headerCenter}>
+            {options?.title ? <View style={styles.headerCenter}>
+                <Text variant="h3" style={{ color: theme.colors.white }}>
+                    {options.title}
+                </Text>
+            </View> : <View style={styles.headerCenter}>
                 <TimeSwitcher
                     date={currentDate}
                     disabled={options?.disabled ?? true}
@@ -94,7 +100,7 @@ const DayOverviewStack: React.FC = () => {
                     isHideRightBtn={!options?.showDateButtons}
                     init={({ date: nextDate }) => handleDateChange(nextDate)}
                 />
-            </View>
+            </View>}
             <View style={[styles.headerSide, styles.headerSideRight]}>
                 <Hamburger onPress={() => (navigation as any).openDrawer?.()} />
             </View>
@@ -239,8 +245,8 @@ const DayOverviewStack: React.FC = () => {
                 name="WeightMeasurement"
                 component={WeightMeasurementScreen}
                 options={{
-                    title: 'Measurement',
                     headerTitleStyle: { fontSize: 18 },
+                    header: renderCustomHeader({ title: 'Measurement' }),
                 }}
             />
             

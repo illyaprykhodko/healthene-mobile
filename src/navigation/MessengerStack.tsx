@@ -29,16 +29,20 @@ const MessengerStack = () => {
                 drawerPosition: 'right',
                 gestureDirection: 'horizontal-inverted',
                 headerLeft: () => <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />,
-                headerRight: () => <Hamburger onPress={() => drawerNavigation.openDrawer?.()} />,
+                headerRight: () => <Hamburger style={{ marginRight: OFFSET.HORIZONTAL / 2 }} onPress={() => drawerNavigation.openDrawer?.()} />,
                 headerStyle: {
                     backgroundColor: theme.colors.primary,
                 },
                 headerTintColor: theme.colors.white,
-                headerLeftContainerStyle: {
-                    paddingLeft: OFFSET.HORIZONTAL,
-                },
                 headerTitleStyle: {
                     fontWeight: '600'
+                },
+                headerTitleAlign: 'center',
+                headerLeftContainerStyle: {
+                    minWidth: 70,
+                },
+                headerRightContainerStyle: {
+                    minWidth: 70,
                 },
             })}
         >

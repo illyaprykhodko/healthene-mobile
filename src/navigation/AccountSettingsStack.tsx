@@ -20,6 +20,7 @@ const Stack = createStackNavigator();
 
 export const AccountSettingsStack = () => {
     const theme = useTheme();
+
     return (
         <Stack.Navigator
             screenOptions={({ navigation }) => ({
@@ -31,11 +32,12 @@ export const AccountSettingsStack = () => {
                 headerStyle: {
                     backgroundColor: theme.colors.primary,
                 },
-                headerLeftContainerStyle: {
-                    paddingLeft: OFFSET.HORIZONTAL,
-                },
                 headerTitleStyle: {
                     fontWeight: '600'
+                },
+                headerTitleAlign: 'center',
+                headerLeftContainerStyle: {
+                    paddingLeft: OFFSET.HORIZONTAL,
                 },
             })}
         >
