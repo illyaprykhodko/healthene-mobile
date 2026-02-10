@@ -21,10 +21,10 @@ interface TextInputProps {
     accessibilityHint?: string;
     accessibilityLabel?: string;
     textAlign?: 'left' | 'right';
-    error?: Record<string, string>;
-    touched?: Record<string, boolean>;
     onChangeText?: (text: string) => void;
     leading?: (props: any) => React.ReactNode;
+    error?: Record<string, string | undefined>;
+    touched?: Record<string, boolean | undefined>;
 }
 
 const TextInput: React.FC<TextInputProps> = ({
@@ -72,8 +72,8 @@ const TextInput: React.FC<TextInputProps> = ({
                     multiline={multiline}
                     onChangeText={onChangeText}
                     secureTextEntry={isSecureText}
-                    selectionColor={theme.colors.info}
                     numberOfLines={multiline ? 6 : 1}
+                    selectionColor={theme.colors.info}
                     onBlur={() => value && setIsBlur(true)}
                     textAlignVertical={multiline ? 'top' : 'center'}
                     style={[

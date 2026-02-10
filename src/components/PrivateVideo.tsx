@@ -1,183 +1,162 @@
 // outsource dependencies
+import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
 import {
     View,
-    ViewStyle,
     StyleSheet,
+    Dimensions,
     TouchableOpacity,
     ActivityIndicator,
 } from 'react-native';
+import Video from 'react-native-video';
 import Icon from '@react-native-vector-icons/ionicons';
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import Video, { OnLoadData, OnProgressData } from 'react-native-video';
 
 // local dependencies
 import Text from './Text';
 import { config } from 'constants';
-import { useAppSelector } from 'store';
-import { debounce } from 'utils/general';
+import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
-import { OFFSET } from 'constants/offset';
+import { useAppSelector } from 'store';
 import { ATTACHMENT_STATUS } from 'constants/spec';
-import { useRefreshSessionMutation } from 'store/api/authApi';
+import type { Attachment } from 'types/video';
 
-const DEFAULT_VIDEO_HEIGHT = 250;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const VIDEO_HEIGHT = (SCREEN_WIDTH * 9) / 16; // 16:9 aspect ratio
 
-// Buffer configuration for smooth playback (Android only)
-const BUFFER_CONFIG = {
+// Construct video URL with authentication
+const getVideoUrl = (videoId: number, accessToken: string) => {
+    const baseUrl = `${config.serviceUrl}/${config.apiPath}`;
+    return `${baseUrl}/s3-service/attachment/${videoId}/video.mp4?access_token=${accessToken}`;
+};
+
+// Buffer configuration for smoother playback
+const bufferConfig = {
     minBufferMs: 5000,
     maxBufferMs: 25000,
     bufferForPlaybackMs: 1500,
     bufferForPlaybackAfterRebufferMs: 3000,
 };
 
-interface Attachment {
-    id: string | number;
-    status?: string;
-    url?: string;
-}
-
-export interface PrivateVideoProps {
-    height?: number;
-    muted?: boolean;
+interface PrivateVideoProps {
+    style?: object;
     paused?: boolean;
-    repeat?: boolean;
     video: Attachment;
-    style?: ViewStyle;
-    onError?: (error: any) => void;
-    onLoad?: (data: OnLoadData) => void;
-    onProgress?: (data: OnProgressData) => void;
+    onEnd?: () => void;
 }
 
-interface VideoState {
-    uri: string;
-    isPaused: boolean;
-    isLoading: boolean;
-    isFirstStart: boolean;
-    videoId: string | number;
-    currentToken: string | null;
-}
-
-export const PrivateVideo: React.FC<PrivateVideoProps> = ({
+const PrivateVideo: React.FC<PrivateVideoProps> = memo(({
     video,
     style,
-    onLoad,
-    onError,
-    onProgress,
-    muted = false,
-    paused = true,
-    repeat = false,
-    height = DEFAULT_VIDEO_HEIGHT,
+    onEnd,
+    paused: initialPaused = true,
 }) => {
     const theme = useTheme();
     const accessToken = useAppSelector(state => state.app.accessToken);
-    const [refreshSession] = useRefreshSessionMutation();
 
-    const getVideoUrl = useCallback(
-        (videoId: string | number, token: string | null): string => {
-            if (!token) {
-                console.warn('PrivateVideo: No access token available');
-                return '';
-            }
-            return `${config.serviceUrl}/${config.apiPath}/s3-service/attachment/${videoId}/video.mp4?access_token=${token}`;
-        },
-        []
-    );
-
-    const [videoState, setVideoState] = useState<VideoState>({
+    const [state, setState] = useState({
         isLoading: true,
-        isPaused: paused,
-        videoId: video?.id,
-        isFirstStart: !paused,
-        currentToken: accessToken,
-        uri: getVideoUrl(video?.id, accessToken),
+        isPaused: initialPaused,
+        fallbackTriggered: false,
     });
 
-    // Update video URL when token or video changes
-    useEffect(() => {
-        if (video?.id && accessToken && videoState.videoId !== video.id) {
-            setVideoState(prevState => ({
-                ...prevState,
-                isLoading: true,
-                videoId: video.id,
-                isFirstStart: true,
-                currentToken: accessToken,
-                uri: getVideoUrl(video.id, accessToken),
-            }));
-        }
-    }, [video?.id, accessToken, getVideoUrl, videoState.videoId]);
+    const videoUri = useMemo(() => {
+        if (!video?.id || !accessToken) { return null; }
+        return getVideoUrl(video.id, accessToken);
+    }, [video?.id, accessToken]);
 
-    const updateVideoState = useCallback((updates: Partial<VideoState>) => {
-        setVideoState(prevState => ({ ...prevState, ...updates }));
+    const handleUpdate = useCallback((newState: Partial<typeof state>) => {
+        setState(prev => ({ ...prev, ...newState }));
     }, []);
 
-    const handleVideoError = useMemo(
-        () =>
-            debounce(
-                (error: any) => {
-                    console.error('PrivateVideo ERROR:', error);
+    // Fallback: if iOS doesn't call onReadyForDisplay
+    useEffect(() => {
+        if (!state.isLoading || state.fallbackTriggered) {
+            return;
+        }
 
-                    // Try to refresh session
-                    refreshSession()
-                        .unwrap()
-                        .then(() => {
-                            // eslint-disable-next-line no-console
-                            console.log('Session refreshed successfully');
-                        })
-                        .catch(error => {
-                            console.error('Failed to refresh session:', error);
-                        });
+        const fallback = setTimeout(() => {
+            console.log('Fallback triggered — iOS did NOT call onReadyForDisplay');
+            handleUpdate({ isLoading: false, fallbackTriggered: true });
+        }, 3000);
 
-                    // Call custom error handler if provided
-                    onError?.(error);
-                },
-                2000,
-                { leading: true, trailing: false }
-            ),
-        [refreshSession, onError]
-    );
+        return () => clearTimeout(fallback);
+    }, [state.isLoading, state.fallbackTriggered, handleUpdate]);
 
-    const handleLoad = useCallback(
-        (data: OnLoadData) => {
-            updateVideoState({ isFirstStart: true });
-            onLoad?.(data);
-        },
-        [updateVideoState, onLoad]
-    );
+    const handlePlayToggle = useCallback(() => {
+        handleUpdate({ isPaused: !state.isPaused });
+    }, [state.isPaused, handleUpdate]);
+
+    const handleError = useCallback((error: any) => {
+        console.error('PrivateVideo ERROR:', error);
+        handleUpdate({ isLoading: false });
+    }, [handleUpdate]);
+
+    const handleLoad = useCallback(() => {
+        handleUpdate({ isLoading: false });
+    }, [handleUpdate]);
 
     const handleLoadStart = useCallback(() => {
-        updateVideoState({ isLoading: true });
-    }, [updateVideoState]);
+        handleUpdate({ isLoading: true });
+    }, [handleUpdate]);
 
     const handleReadyForDisplay = useCallback(() => {
-        updateVideoState({ isLoading: false });
-    }, [updateVideoState]);
+        handleUpdate({ isLoading: false });
+    }, [handleUpdate]);
 
-    const handlePlayPress = useCallback(() => {
-        updateVideoState({
-            isLoading: false,
-            isFirstStart: false,
-            isPaused: !videoState.isPaused,
-        });
-    }, [updateVideoState, videoState.isPaused]);
+    const handleEnd = useCallback(() => {
+        handleUpdate({ isPaused: true });
+        onEnd?.();
+    }, [handleUpdate, onEnd]);
 
     const renderVideo = useCallback(() => {
-        const videoStatus = video?.status || ATTACHMENT_STATUS.COMPLETED;
+        switch (video?.status) {
+            case ATTACHMENT_STATUS.COMPLETED:
+                return (
+                    <View style={[styles.wrapper, style]}>
+                        <Video
+                            resizeMode="cover"
+                            onEnd={handleEnd}
+                            onLoad={handleLoad}
+                            style={styles.video}
+                            onError={handleError}
+                            paused={state.isPaused}
+                            posterResizeMode="cover"
+                            ignoreSilentSwitch="ignore"
+                            source={{ uri: videoUri! }}
+                            bufferConfig={bufferConfig}
+                            controls={!state.isLoading}
+                            poster={video?.thumbnailUrl}
+                            onLoadStart={handleLoadStart}
+                            onReadyForDisplay={handleReadyForDisplay}
+                        />
 
-        switch (videoStatus) {
+                        {state.isLoading && (
+                            <ActivityIndicator
+                                animating
+                                size="large"
+                                color={COLORS.BLUE}
+                                style={styles.activityIndicator}
+                            />
+                        )}
+
+                        {state.isPaused && !state.isLoading && (
+                            <TouchableOpacity
+                                onPress={handlePlayToggle}
+                                style={styles.playButton}
+                            >
+                                <Icon
+                                    size={64}
+                                    color="white"
+                                    name="play-circle"
+                                />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                );
+
             case ATTACHMENT_STATUS.ERROR:
                 return (
-                    <View
-                        style={[
-                            styles.messageContainer,
-                            { backgroundColor: theme.colors.surface, height },
-                            style,
-                        ]}
-                    >
-                        <Icon name="alert-circle" size={48} color={theme.colors.error} />
-                        <Text
-                            style={[styles.messageText, { color: theme.colors.error }]}
-                            textAlign="center"
-                        >
+                    <View style={[styles.wrapper, styles.errorWrapper]}>
+                        <Text color={COLORS.RED} textAlign="center" style={styles.statusText}>
                             There is some error with the video transcoding
                         </Text>
                     </View>
@@ -185,123 +164,31 @@ export const PrivateVideo: React.FC<PrivateVideoProps> = ({
 
             case ATTACHMENT_STATUS.PENDING:
                 return (
-                    <View
-                        style={[
-                            styles.messageContainer,
-                            { backgroundColor: theme.colors.surface, height },
-                            style,
-                        ]}
-                    >
-                        <ActivityIndicator size="large" color={theme.colors.primary} />
+                    <View style={[styles.wrapper, styles.pendingWrapper]}>
                         <Text
-                            style={[styles.messageText, { color: theme.colors.text }]}
                             textAlign="center"
+                            style={styles.statusText}
+                            color={theme.colors.text}
                         >
                             The video will be available soon
                         </Text>
                     </View>
                 );
 
-            case ATTACHMENT_STATUS.COMPLETED:
             default:
-                if (!videoState.uri) {
-                    return (
-                        <View
-                            style={[
-                                styles.messageContainer,
-                                { backgroundColor: theme.colors.surface, height },
-                                style,
-                            ]}
-                        >
-                            <Icon name="videocam-off" size={48} color={theme.colors.grey} />
-                            <Text
-                                style={[styles.messageText, { color: theme.colors.grey }]}
-                                textAlign="center"
-                            >
-                                Video not available
-                            </Text>
-                        </View>
-                    );
-                }
-
-                return (
-                    <View
-                        style={[
-                            styles.wrapper,
-                            videoState.isFirstStart && {
-                                backgroundColor: theme.colors.blue,
-                            },
-                            { height },
-                            style,
-                        ]}
-                    >
-                        <Video
-                            muted={muted}
-                            repeat={repeat}
-                            fullscreen={false}
-                            onLoad={handleLoad}
-                            resizeMode="contain"
-                            onProgress={onProgress}
-                            onError={handleVideoError}
-                            ignoreSilentSwitch="ignore"
-                            paused={videoState.isPaused}
-                            bufferConfig={BUFFER_CONFIG}
-                            onLoadStart={handleLoadStart}
-                            source={{ uri: videoState.uri }}
-                            controls={!videoState.isFirstStart}
-                            onReadyForDisplay={handleReadyForDisplay}
-                            style={[
-                                styles.video,
-                                {
-                                    backgroundColor: theme.colors.black,
-                                    opacity:
-                                        videoState.isLoading || videoState.isFirstStart
-                                            ? 0
-                                            : 1,
-                                },
-                            ]}
-                        />
-
-                        {videoState.isLoading && (
-                            <ActivityIndicator
-                                animating
-                                size="large"
-                                color={theme.colors.cerulean300}
-                                style={styles.activityIndicator}
-                            />
-                        )}
-
-                        {!videoState.isLoading && videoState.isFirstStart && (
-                            <TouchableOpacity
-                                activeOpacity={0.7}
-                                onPress={handlePlayPress}
-                                style={styles.playButton}
-                            >
-                                {videoState.isPaused && (
-                                    <Icon
-                                        size={64}
-                                        name="play-circle"
-                                        color={theme.colors.white}
-                                    />
-                                )}
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                );
+                return null;
         }
     }, [
         video,
-        theme,
         style,
-        height,
-        muted,
-        repeat,
-        onProgress,
-        videoState,
+        state,
+        videoUri,
+        theme.colors.text,
+        handleEnd,
         handleLoad,
-        handleVideoError,
-        handlePlayPress,
+        handleError,
         handleLoadStart,
+        handlePlayToggle,
         handleReadyForDisplay,
     ]);
 
@@ -310,47 +197,45 @@ export const PrivateVideo: React.FC<PrivateVideoProps> = ({
     }
 
     return renderVideo();
-};
+});
 
 export default PrivateVideo;
 
 const styles = StyleSheet.create({
     wrapper: {
         width: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
+        height: VIDEO_HEIGHT,
         position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#000',
     },
     video: {
         position: 'absolute',
         top: 0,
         left: 0,
-        bottom: 0,
         right: 0,
-    },
-    messageContainer: {
-        width: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 8,
-        paddingHorizontal: OFFSET.HORIZONTAL,
-        paddingVertical: OFFSET.VERTICAL,
-    },
-    messageText: {
-        marginTop: OFFSET.VERTICAL,
-        fontSize: 16,
-        fontWeight: '500',
+        bottom: 0,
     },
     activityIndicator: {
         position: 'absolute',
         top: '40%',
-        left: 0,
-        right: 0,
+        left: 70,
+        right: 70,
+        height: 50,
     },
     playButton: {
-        justifyContent: 'center',
-        alignItems: 'center',
+        position: 'absolute',
+        zIndex: 20,
+    },
+    statusText: {
+        marginVertical: 20,
+        marginHorizontal: 20,
+    },
+    errorWrapper: {
+        backgroundColor: '#FFF0F0',
+    },
+    pendingWrapper: {
+        backgroundColor: '#F5F5F5',
     },
 });

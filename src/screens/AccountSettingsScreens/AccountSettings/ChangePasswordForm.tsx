@@ -47,6 +47,7 @@ const ChangePasswordForm = (props: ChangePasswordFormProps) => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100}
     >
         <Formik
+            initialValues={{}}
             onSubmit={onSubmit}
             // initialValues={initialValues}
             // validationSchema={validationSchema}

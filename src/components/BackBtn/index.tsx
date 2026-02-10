@@ -1,3 +1,4 @@
+// outsource dependencies
 import React from 'react';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { StyleSheet, TouchableOpacity } from 'react-native';

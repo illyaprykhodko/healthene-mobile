@@ -70,7 +70,7 @@ export const CloseIcon: React.FC<{ size?: number; color?: string }> = ({ size = 
 // outsource dependencies
 // import React from 'react';
 // import { View, StyleSheet } from 'react-native';
-// import Icon from 'react-native-vector-icons/FontAwesome5';
+// import Icon from '@react-native-vector-icons/fontawesome5';
 // // local dependencies
 // import { useTheme } from 'hooks/useTheme';
 

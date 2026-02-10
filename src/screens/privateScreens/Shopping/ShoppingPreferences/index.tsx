@@ -46,12 +46,6 @@ const ShoppingPreferences: React.FC = () => {
         }
     }, [preferences]);
 
-    // useLayoutEffect(() => {
-    //     navigation.setOptions({
-    //         headerLeft: () => <BackBtn onPress={() => navigation.navigate(ROUTES.DAY_OVERVIEW)} />,
-    //     });
-    // }, [navigation]);
-
     const handleAmountChange = useCallback((id: number, delta: number) => {
         setLocalPreferences(prev =>
             prev.map(item =>
@@ -79,7 +73,6 @@ const ShoppingPreferences: React.FC = () => {
 
     const handleBack = useCallback(() => {
         navigation.goBack();
-        // navigation.navigate(ROUTES.DAY_OVERVIEW);
     }, [navigation]);
 
     const disabled = isLoading || isUpdating || isGenerating;

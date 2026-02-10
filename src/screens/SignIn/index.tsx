@@ -3,7 +3,7 @@ import { Text } from '@react-native-material/core';
 import Icon from '@react-native-vector-icons/ionicons';
 import type { BiometryType } from 'react-native-biometrics';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, TouchableWithoutFeedback, Pressable, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, Animated, Pressable, TouchableOpacity, Alert } from 'react-native';
 
 // local dependencies
 import { LoginData } from 'types';
@@ -43,8 +43,6 @@ export const SignIn: React.FC = (): React.ReactElement => {
     const [biometryType, setBiometryType] = useState<BiometryType | null>(null);
     const [isBiometricLoading, setIsBiometricLoading] = useState(false);
 
-    // const fadeAnim = new Animated.Value(0);
-    // const slideAnim = new Animated.Value(50);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(50)).current;
 
@@ -190,7 +188,6 @@ export const SignIn: React.FC = (): React.ReactElement => {
                 <BackgroundImage>
                     <Text color={theme.colors.background}>Welcome to</Text>
                     <TextLogo />
-                    {/* <LogoAnimate size={150} /> */}
                 </BackgroundImage>
 
                 <Animated.View
@@ -202,13 +199,6 @@ export const SignIn: React.FC = (): React.ReactElement => {
                         }
                     ]}
                 >
-                    {/* <Text
-            variant="h4"
-            color={theme.colors.text}
-            style={styles.title}
-          >
-            Sign In
-          </Text> */}
                     <TextInput
                         name="email"
                         label="Email"
@@ -243,17 +233,9 @@ export const SignIn: React.FC = (): React.ReactElement => {
 
                     <Button
                         title="Sign In"
-                        onPress={handleSubmit}
-                        // disabled={isLoading}
-                        // loading={isLoading}
-                        style={styles.button}
-
-                        // fullWidth
-                        // title="LOGIN"
-                        // type="submit"
                         variant="outline"
-                        // onPress={handleSubmit}
-                        // style={{ marginTop: 30 }}
+                        style={styles.button}
+                        onPress={handleSubmit}
                         color={theme.colors.primary}
                     />
 
@@ -275,27 +257,20 @@ export const SignIn: React.FC = (): React.ReactElement => {
                     )}
 
                     <View style={styles.linksContainer}>
-                        <TouchableWithoutFeedback onPress={() => navigate(ROUTES.FORGOT_PASSWORD)}>
-                            <View style={styles.link}>
-                                <Text
-                                    variant="h6"
-                                    color={theme.colors.primary}
-                                    style={styles.forgotPassword}
-                                >
-                  Forgot Password?
-                                </Text>
-                            </View>
-                        </TouchableWithoutFeedback>
-
-                        <TouchableWithoutFeedback
-                            // onPress={() => navigate(ROUTES.TERMS_AND_CONDITIONS)}
-                        >
-                            <Pressable onPress={() => navigate(ROUTES.TERMS_AND_CONDITIONS)} style={styles.link}>
-                                <Text variant="caption" color={theme.colors.textSecondary}>
+                        <Pressable onPress={() => navigate(ROUTES.FORGOT_PASSWORD)}>
+                            <Text
+                                variant="h6"
+                                color={theme.colors.primary}
+                                style={styles.forgotPassword}
+                            >
+                                    Forgot Password?
+                            </Text>
+                        </Pressable>
+                        <Pressable onPress={() => navigate(ROUTES.TERMS_AND_CONDITIONS)}>
+                            <Text variant="caption" color={theme.colors.textSecondary}>
                                     Terms and conditions
-                                </Text>
-                            </Pressable>
-                        </TouchableWithoutFeedback>
+                            </Text>
+                        </Pressable>
                     </View>
                 </Animated.View>
             </Screen>
@@ -329,15 +304,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: OFFSET.VERTICAL,
     },
-    link: {
-        marginTop: OFFSET.VERTICAL,
-        alignItems: 'center',
-    },
     title: {
         marginBottom: OFFSET.VERTICAL,
     },
     forgotPassword: {
-        marginTop: OFFSET.VERTICAL,
+        marginTop: OFFSET.VERTICAL * 2,
+        marginBottom: OFFSET.VERTICAL,
         alignItems: 'center',
     },
     signUp: {

@@ -285,12 +285,13 @@ export const dayOverviewApi = createApi({
               method: 'PUT',
               body: data,
           }),
-          invalidatesTags: (result, error, { id, phaseId }) => [
-              { type: 'PhaseItem', id },
-              { type: 'PhaseItems', id: phaseId },
-              'DayOverview',
-          ],
+          //   invalidatesTags: (result, error, { id, phaseId }) => [
+          //       { type: 'PhaseItem', id },
+          //       { type: 'PhaseItems', id: phaseId },
+          //       'DayOverview',
+          //   ],
           async onQueryStarted ({ id, phaseId, data, date }, { dispatch, queryFulfilled }) {
+              // Optimistic update - apply immediately
               const patch = dispatch(
                   dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
                       for (const arr of Object.values(draft) as any[][]) {
@@ -326,9 +327,23 @@ export const dayOverviewApi = createApi({
                       /* ignore */
                   }
               }
+
               try {
-                  await queryFulfilled;
+                  const { data: serverItem } = await queryFulfilled;
+                  dispatch(
+                      dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
+                          for (const arr of Object.values(draft) as any[][]) {
+                              const found = arr.find(x => x.id === id);
+                              if (found) {
+                                  Object.assign(found, serverItem);
+                                  arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+                                  break;
+                              }
+                          }
+                      })
+                  );
               } catch {
+                  // Revert optimistic updates on error
                   patch.undo();
                   if (dayOverviewPatched) { dayOverviewPatched.undo(); }
               }
@@ -426,6 +441,54 @@ export const dayOverviewApi = createApi({
                 body: data,
             }),
             invalidatesTags: (result, error, { phaseId }) => [{ type: 'PhaseItems', id: phaseId }],
+        }),
+        // Create new patient phase (ADDED_BY_PATIENT) with items
+        createPatientPhase: builder.mutation<Phase, {
+            dayOverviewId: number | string;
+            data: {
+                items: any[];
+                type: string;
+                order: number;
+                status: string;
+                dayOverview: { id: number | string };
+            };
+        }>({
+            query: ({ data }) => ({
+                url: '/patient-service/patients/day-overview/phase',
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
+        // Create patient phase with recipe
+        createPatientPhaseWithRecipe: builder.mutation<Phase, {
+            dayOverviewId: number | string;
+            data: any;
+        }>({
+            query: ({ dayOverviewId, data }) => ({
+                url: `/patient-service/patients/day-overview/${dayOverviewId}/phase/previous-recipe`,
+                method: 'POST',
+                body: data,
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
+        // Update patient phase (add items to existing ADDED_BY_PATIENT phase)
+        updatePatientPhase: builder.mutation<Phase, {
+            phaseId: number | string;
+            data: {
+                items?: any[];
+                type?: string;
+                order?: number;
+                status?: string;
+                dayOverview?: { id: number | string };
+            };
+        }>({
+            query: ({ phaseId, data }) => ({
+                url: `/patient-service/patients/day-overview/phase/${phaseId}`,
+                method: 'PUT',
+                body: data,
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
         }),
         replacePhaseItem: builder.mutation<PhaseItem, ReplaceItemRequest>({
             query: ({ itemId, replacementId }) => ({
@@ -640,6 +703,26 @@ export const dayOverviewApi = createApi({
                 data: []
             }),
             invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
+
+        // Menu badges - incomplete questions/videos count for daily plan
+        getIncompleteQuestionsVideos: builder.query<number, string>({
+            query: date => `/patient-service/patients/me/day-overview/${date}/questions-videos`,
+        }),
+
+        // Menu badges - library items with total count
+        getLibraryItemsTotalTree: builder.query<any[], void>({
+            query: () => '/patient-service/patients/me/items-from-library-destination/total-tree',
+        }),
+
+        // Menu badges - medical problems for health profile
+        getMedicalProblems: builder.query<any[], void>({
+            query: () => '/patient-service/patients/me/medical-problems',
+        }),
+
+        // Menu badges - medication allergies for health profile
+        getMedicationAllergies: builder.query<any[], void>({
+            query: () => '/patient-service/patients/me/medication-allergies',
         }),
     }),
 });
@@ -951,40 +1034,49 @@ export const {
     useAddPhaseMealItemMutation,
     useAddPhaseCustomRecipeMutation,
     // useGetAvailableItemsQuery,
+    useGetFoodsQuery,
     useUpdatePhaseItemMutation,
     useDeletePhaseItemMutation,
-    useReplacePhaseItemMutation,
-    useGetCategoryTreeNodesQuery,
-    useGetCatalogPrototypeTreeNodesQuery,
-    useGetRecipePrototypesQuery,
     useGetRecipePrototypeQuery,
-    useRecalculateRecipeStepsMutation,
-    useGetIngredientsBySiblingQuery,
-    useGetFoodsQuery,
-    useGetPhysicalActivityItemQuery,
-    useGetStretchingExerciseQuery,
-    useUpdateStretchingStepsMutation,
     useGetAerobicExerciseQuery,
+    useReplacePhaseItemMutation,
+    useGetRecipePrototypesQuery,
+    useGetCategoryTreeNodesQuery,
+    useGetStretchingExerciseQuery,
     useUpdateAerobicStepsMutation,
     useGetResistanceExerciseQuery,
-    useUpdateResistanceStepsMutation,
     useAddMeasurementRecordMutation,
+    useGetIngredientsBySiblingQuery,
+    useGetPhysicalActivityItemQuery,
+    useUpdateStretchingStepsMutation,
+    useUpdateResistanceStepsMutation,
+    useRecalculateRecipeStepsMutation,
+    useGetCatalogPrototypeTreeNodesQuery,
     // Measurement Chart
-    useGetAggregateMeasurementDataQuery,
-    useGetLoggedMeasurementDataMutation,
-    useGetMeasurementTypesQuery,
-    useGetLastMeasurementQuery,
-    useDeleteMeasurementsMutation,
-    useUpdateIncludeRescueFoodsMutation,
+    useGetRescueMealsQuery,
     useReplacePhaseMutation,
     useGetRescueVideosQuery,
     useGetRescueCatalogQuery,
-    useGetRestaurantCatalogQuery,
-    useGetRescueMealsQuery,
     useRevertPhaseItemMutation,
+    useGetLastMeasurementQuery,
+    useGetMeasurementTypesQuery,
+    useGetRestaurantCatalogQuery,
+    useDeleteMeasurementsMutation,
     useUpdatePhaseWithRescueMutation,
+    useUpdateIncludeRescueFoodsMutation,
+    useGetAggregateMeasurementDataQuery,
+    useGetLoggedMeasurementDataMutation,
     // Recipe replacement
+    useReplaceRecipeItemMutation,
     useGetRecipeCategoryTreeQuery,
     useGetRecipeCategoryItemsQuery,
-    useReplaceRecipeItemMutation,
+    // Create patient phase (ADDED_BY_PATIENT)
+    useCreatePatientPhaseMutation,
+    useUpdatePatientPhaseMutation,
+    useCreatePatientPhaseWithRecipeMutation,
+    // Menu badges
+    useGetMedicalProblemsQuery,
+    useGetMedicationAllergiesQuery,
+    useGetLibraryItemsTotalTreeQuery,
+    useGetIncompleteQuestionsVideosQuery,
 } = dayOverviewApi;

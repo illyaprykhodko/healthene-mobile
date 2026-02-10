@@ -5,9 +5,11 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 // local dependencies
 import { authApi } from './api/authApi';
 import appReducer from './slices/appSlice';
+import { videoApi } from 'store/api/videoApi';
 import { planApi } from 'store/api/planApi.ts';
 import reactotron from '../../ReactotronConfig';
 import { shoppingApi } from './api/shoppingApi';
+import { questionApi } from './api/questionApi';
 import signInReducer from './slices/signInSlice';
 import { publicApi } from 'store/api/publicApi.ts';
 import exerciseReducer from './slices/exerciseSlice';
@@ -19,10 +21,12 @@ import { messengerApi } from 'store/api/messengerApi.ts';
 import messengerSlice from 'store/slices/messengerSlice.ts';
 import { dayOverviewReducer } from './slices/dayOverviewSlice';
 import { categoryTreeApi } from 'store/api/categoryTreeApi.ts';
-import { healthProfileApi } from 'store/api/healthProfileApi.ts';
 import forgotPasswordReducer from './slices/forgotPasswordSlice';
+import { healthProfileApi } from 'store/api/healthProfileApi.ts';
 import healthProfileSlice from 'store/slices/healthProfileSlice.ts';
+import { mealPreferencesApi } from 'store/api/mealPreferencesApi.ts';
 import foodPreferencesSlice from 'store/slices/foodPreferrencesSlice.ts';
+import { cuisineDistributionApi } from 'store/api/cuisineDistributionApi.ts';
 
 export const store = configureStore({
     reducer: {
@@ -37,7 +41,9 @@ export const store = configureStore({
         foodPreferences: foodPreferencesSlice,
         [authApi.reducerPath]: authApi.reducer,
         [planApi.reducerPath]: planApi.reducer,
+        [videoApi.reducerPath]: videoApi.reducer,
         [publicApi.reducerPath]: publicApi.reducer,
+        [questionApi.reducerPath]: questionApi.reducer,
         [settingsApi.reducerPath]: settingsApi.reducer,
         [shoppingApi.reducerPath]: shoppingApi.reducer,
         [s3ServiceApi.reducerPath]: s3ServiceApi.reducer,
@@ -45,13 +51,17 @@ export const store = configureStore({
         [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
         [categoryTreeApi.reducerPath]: categoryTreeApi.reducer,
         [healthProfileApi.reducerPath]: healthProfileApi.reducer,
+        [mealPreferencesApi.reducerPath]: mealPreferencesApi.reducer,
+        [cuisineDistributionApi.reducerPath]: cuisineDistributionApi.reducer,
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({ serializableCheck: false })
             .concat(
                 authApi.middleware,
                 planApi.middleware,
+                videoApi.middleware,
                 publicApi.middleware,
+                questionApi.middleware,
                 settingsApi.middleware,
                 shoppingApi.middleware,
                 messengerApi.middleware,
@@ -59,6 +69,8 @@ export const store = configureStore({
                 dayOverviewApi.middleware,
                 categoryTreeApi.middleware,
                 healthProfileApi.middleware,
+                mealPreferencesApi.middleware,
+                cuisineDistributionApi.middleware,
             ),
     enhancers: getDefaultEnhancers =>
         getDefaultEnhancers().concat(reactotron.createEnhancer()),

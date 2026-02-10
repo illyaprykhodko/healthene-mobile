@@ -1,42 +1,91 @@
 // outsource dependencies
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // local dependencies
-import { ROUTES } from 'constants/routes.ts';
-import { useTheme } from 'hooks/useTheme.ts';
-import { OFFSET } from 'constants/offset.ts';
-import BackButton from 'components/BackButton.tsx';
-import HealthProfile from 'screens/privateScreens/HealthProfile';
-import ProfileStatsScreen from 'screens/privateScreens/HealthProfile/ProfileStatsScreen.tsx';
+import BackBtn from 'components/BackBtn';
+import { ROUTES } from 'constants/routes';
+import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
+import { Hamburger } from 'components/Hamburger';
+import {
+    StatsScreen,
+    MainInfoScreen,
+    MedicationsScreen,
+    MedicalProblemsScreen,
+    MedicationAllergiesScreen,
+} from 'screens/privateScreens/HealthProfile';
 
-const Stack = createStackNavigator();
-const HealthProfileStack = () => {
+const Stack = createNativeStackNavigator();
+
+const HealthProfileStack: React.FC = () => {
     const theme = useTheme();
+    const drawerNavigation = useNavigation<any>();
+
     return (
         <Stack.Navigator
-            initialRouteName={ROUTES.HEALTH_PROFILE}
+            initialRouteName={ROUTES.HEALTH_PROFILE_MAIN}
             screenOptions={({ navigation }) => ({
                 headerShown: true,
-                gestureDirection: 'horizontal-inverted',
-                headerLeft: () => <BackButton navigation={navigation} theme={theme} />,
                 headerStyle: {
                     backgroundColor: theme.colors.primary,
                 },
                 headerTintColor: theme.colors.white,
+                headerTitleStyle: {
+                    fontWeight: '600',
+                },
                 headerLeftContainerStyle: {
                     paddingLeft: OFFSET.HORIZONTAL,
                 },
-                headerTitleStyle: {
-                    fontWeight: '600'
+                headerRightContainerStyle: {
+                    paddingRight: OFFSET.HORIZONTAL,
                 },
+                headerLeft: () => (
+                    <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />
+                ),
+                headerRight: () => (
+                    <Hamburger onPress={() => drawerNavigation.openDrawer?.()} />
+                ),
             })}
         >
-            <Stack.Screen options={{ title: 'My Health Profile' }} name={ROUTES.HEALTH_PROFILE} component={HealthProfile} />
-            <Stack.Screen options={{ title: 'My Stats' }} name={ROUTES.PROFILE_STATS} component={ProfileStatsScreen} />
+            <Stack.Screen
+                component={MainInfoScreen}
+                name={ROUTES.HEALTH_PROFILE_MAIN}
+                options={{
+                    title: 'My Health Profile',
+                }}
+            />
+            <Stack.Screen
+                component={StatsScreen}
+                name={ROUTES.HEALTH_PROFILE_STATS}
+                options={{
+                    title: 'My Stats',
+                }}
+            />
+            <Stack.Screen
+                component={MedicationsScreen}
+                name={ROUTES.HEALTH_PROFILE_MEDICATIONS}
+                options={{
+                    title: 'Medications',
+                }}
+            />
+            <Stack.Screen
+                component={MedicalProblemsScreen}
+                name={ROUTES.HEALTH_PROFILE_MEDICAL_PROBLEMS}
+                options={{
+                    title: 'Medical Problem',
+                }}
+            />
+            <Stack.Screen
+                component={MedicationAllergiesScreen}
+                name={ROUTES.HEALTH_PROFILE_MEDICATION_ALLERGIES}
+                options={{
+                    title: 'Medication Allergies',
+                }}
+            />
         </Stack.Navigator>
     );
 };
 
 export default HealthProfileStack;
-

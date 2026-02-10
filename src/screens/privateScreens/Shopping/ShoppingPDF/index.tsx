@@ -102,7 +102,7 @@ const ShoppingPDF: React.FC = () => {
     return (
         <Screen initialized style={styles.container}>
             <View style={styles.content}>
-                <Icon name="file-pdf" color={COLORS.DARK_GREY} size={150} style={styles.icon} />
+                <Icon name="file-pdf" color={COLORS.DARK_GREY} size={150} iconStyle="solid" style={styles.icon} />
 
                 <View style={styles.metaInfoBlock}>
                     <Text style={styles.metaInfoTitle}>

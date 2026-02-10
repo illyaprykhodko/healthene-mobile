@@ -16,11 +16,11 @@ type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text' | 'success';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends TouchableOpacityProps {
+  style?: ViewStyle | ViewStyle[];
   variant?: ButtonVariant;
   textStyle?: TextStyle;
   size?: ButtonSize;
   loading?: boolean;
-  style?: ViewStyle;
   color?: string;
   title: string;
   icon?: string;

@@ -68,7 +68,7 @@ const Overview: React.FC<OverviewProps> = ({
                         <View style={[styles.center, styles.marginBottom]}>
                             <Controls
                                 disabled={disabled}
-                                amount={amount || initialAmount}
+                                amount={amount || initialAmount || 1}
                                 isSurrogateRecipe={isSurrogateRecipe}
                                 updateData={amount => updateItem({ ...item, amount })}
                                 unit={

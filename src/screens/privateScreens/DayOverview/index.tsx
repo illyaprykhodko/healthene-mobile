@@ -1,8 +1,9 @@
 // outsource dependencies
 import React from 'react';
 import moment from 'moment';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // local dependencies
@@ -11,10 +12,12 @@ import Edit from './Edit';
 import UPCScan from './UPCScan';
 import EditFood from './EditFood';
 import { Overview } from './Overview';
+import BackBtn from 'components/BackBtn';
+import { VideoScreen } from '../Library';
+import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import AddReplaceItem from './AddReplaceItem';
-import BackButton from 'components/BackButton';
 import { Hamburger } from 'components/Hamburger';
 import SaveValueScreen from '../SaveValueScreen';
 import AddReplaceRecipe from './AddReplaceRecipe';
@@ -31,27 +34,91 @@ import WeightMeasurementScreen from '../WeightMeasurementScreen';
 import { ReplacementScreen, ReplaceItemsScreen } from './Replacement';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
 import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
+import {
+    QuestionScreen,
+    QuestionListScreen,
+    QuestionCategoryScreen,
+} from '../Question';
 
 const Stack = createNativeStackNavigator();
 
 const DayOverviewStack: React.FC = () => {
     const navigation = useNavigation<RootStackParamList>();
     const theme = useTheme();
+    const insets = useSafeAreaInsets();
 
     const dispatch = useAppDispatch();
     const { date, expectAnswer } = useAppSelector(selectDayOverview);
     const currentDate = date || moment().format('YYYY-MM-DD');
 
+    const handleDateChange = (nextDate: string) => {
+        const isCurrent = moment(nextDate).isSame(moment(), 'day');
+        const isFuture = moment(nextDate).isAfter(moment(), 'day');
+        const isPast = moment(nextDate).isBefore(moment(), 'day');
+        dispatch(
+            meta({
+                date: nextDate,
+                isPastDate: isPast,
+                isFutureDate: isFuture,
+                isCurrentDate: isCurrent,
+                calendarDays: { [nextDate]: { selected: true } },
+            })
+        );
+    };
+
+    const renderCustomHeader = (options?: {
+        disabled?: boolean;
+        showBackButton?: boolean;
+        showDateButtons?: boolean;
+    }) => (headerProps: any) => (
+        <View style={[styles.customHeader, { paddingTop: insets.top + OFFSET.POINT, backgroundColor: theme.colors.primary }]}>
+            <View style={[styles.headerSide, styles.headerSideLeft]}>
+                <BackBtn label={headerProps.back?.title} onPress={() => headerProps.navigation.goBack()} color={theme.colors.white}/>
+                {/* {(options?.showBackButton !== false) && headerProps.back && (
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => headerProps.navigation.goBack()}
+                    >
+                        <Icon iconStyle="solid" name="chevron-left" size={16} color={theme.colors.white} />
+                        <Text style={[styles.backText, { color: theme.colors.white }]}>
+                            {headerProps.back.title || 'Back'}
+                        </Text>
+                    </TouchableOpacity>
+                )} */}
+            </View>
+            <View style={styles.headerCenter}>
+                <TimeSwitcher
+                    date={currentDate}
+                    disabled={options?.disabled ?? true}
+                    isHideLeftBtn={!options?.showDateButtons}
+                    isHideRightBtn={!options?.showDateButtons}
+                    init={({ date: nextDate }) => handleDateChange(nextDate)}
+                />
+            </View>
+            <View style={[styles.headerSide, styles.headerSideRight]}>
+                <Hamburger onPress={() => (navigation as any).openDrawer?.()} />
+            </View>
+        </View>
+    );
+
     return (
         <Stack.Navigator initialRouteName="DayOverview" screenOptions={() => ({
             // title: currentDate,
-            headerStyle: {
-                backgroundColor: theme.colors.primary,
-            },
-            headerTintColor: theme.colors.white,
-            headerTitleStyle: {
-                fontWeight: '600',
-            },
+            // headerStyle: {
+            //     backgroundColor: theme.colors.primary,
+            // },
+            // headerTintColor: theme.colors.white,
+            // headerTitleStyle: {
+            //     fontWeight: '600',
+            //     fontSize: 18,
+            // },
+            // headerTitleAlign: 'center',
+            // headerLeftContainerStyle: {
+            //     paddingLeft: OFFSET.HORIZONTAL,
+            // },
+            // headerRightContainerStyle: {
+            //     paddingRight: OFFSET.HORIZONTAL,
+            // },
             headerRight: () => (
                 <Hamburger onPress={() => (navigation as any).openDrawer?.()} style={styles.menuButton} />
             ),
@@ -59,37 +126,36 @@ const DayOverviewStack: React.FC = () => {
             <Stack.Screen
                 name="DayOverview"
                 component={Overview}
-                options={() => ({ title: 'Day Overview', headerTitle: () => (
-                    <TimeSwitcher
-                        date={currentDate}
-                        isHideLeftBtn={false}
-                        isHideRightBtn={false}
-                        disabled={Boolean(expectAnswer)}
-                        init={({ date: nextDate }) => {
-                            const isCurrent = moment(nextDate).isSame(moment(), 'day');
-                            const isFuture = moment(nextDate).isAfter(moment(), 'day');
-                            const isPast = moment(nextDate).isBefore(moment(), 'day');
-                            dispatch(
-                                meta({
-                                    date: nextDate,
-                                    isPastDate: isPast,
-                                    isFutureDate: isFuture,
-                                    isCurrentDate: isCurrent,
-                                    calendarDays: { [nextDate]: { selected: true } },
-                                })
-                            );
-                        }}
-                    />
-                ),
-                headerLeft: () => (
-                    <BackButton navigation={navigation} theme={theme} />
-                ), })}
+                options={() => ({
+                    title: 'Day Overview',
+                    header: renderCustomHeader({ showDateButtons: true, disabled: Boolean(expectAnswer) }),
+                    // header: () => (
+                    //     <View style={[styles.customHeader, { paddingTop: insets.top, backgroundColor: theme.colors.primary }]}>
+                    //         <View style={styles.headerSide}>
+                    //             <BackButton navigation={navigation} theme={theme} />
+                    //         </View>
+                    //         <View style={styles.headerCenter}>
+                    //             <TimeSwitcher
+                    //                 date={currentDate}
+                    //                 isHideLeftBtn={false}
+                    //                 isHideRightBtn={false}
+                    //                 disabled={Boolean(expectAnswer)}
+                    //                 init={({ date: nextDate }) => handleDateChange(nextDate)}
+                    //             />
+                    //         </View>
+                    //         <View style={styles.headerSide}>
+                    //             <Hamburger onPress={() => (navigation as any).openDrawer?.()} />
+                    //         </View>
+                    //     </View>
+                    // ),
+                })}
             />
             <Stack.Screen
                 name="Item"
                 component={Item}
                 options={{
-                    title: 'Item Details',
+                    title: 'Recipe',
+                    header: renderCustomHeader(),
                 }}
             />
             <Stack.Screen
@@ -97,199 +163,75 @@ const DayOverviewStack: React.FC = () => {
                 component={Edit}
                 options={() => ({
                     title: 'Edit',
-                    headerTitle: () => (
-                        <TimeSwitcher
-                            date={currentDate}
-                            isHideLeftBtn={false}
-                            isHideRightBtn={false}
-                            disabled={Boolean(expectAnswer)}
-                            init={({ date: nextDate }) => {
-                                const isCurrent = moment(nextDate).isSame(moment(), 'day');
-                                const isFuture = moment(nextDate).isAfter(moment(), 'day');
-                                const isPast = moment(nextDate).isBefore(moment(), 'day');
-                                dispatch(
-                                    meta({
-                                        date: nextDate,
-                                        isPastDate: isPast,
-                                        isFutureDate: isFuture,
-                                        isCurrentDate: isCurrent,
-                                        calendarDays: { [nextDate]: { selected: true } },
-                                    })
-                                );
-                            }}
-                        />
-                    )
+                    header: renderCustomHeader({ showDateButtons: true, disabled: Boolean(expectAnswer) }),
                 })}
             />
             <Stack.Screen
                 name="AddReplaceItem"
                 component={AddReplaceItem}
-                options={({ route, navigation }) => ({
-                    title: 'Select Item',
-                    headerTitle: () =>
-                        <TimeSwitcher
-                            disabled
-                            isHideLeftBtn
-                            isHideRightBtn
-                            init={() => {}}
-                            date={currentDate}
-                        />
-                })}
+                options={{ title: 'Select Item', header: renderCustomHeader() }}
             />
             <Stack.Screen
                 name="AddReplaceRecipe"
                 component={AddReplaceRecipe}
-                options={({ route, navigation }) => ({
-                    title: 'Select Recipe',
-                    headerTitle: () =>
-                        <TimeSwitcher
-                            disabled
-                            isHideLeftBtn
-                            isHideRightBtn
-                            init={() => {}}
-                            date={currentDate}
-                        />
-                })}
+                options={{ title: 'Select Recipe', header: renderCustomHeader() }}
             />
             <Stack.Screen
                 name="TreeAddReplaceItem"
                 component={TreeAddReplaceItem}
-                options={({ route, navigation }) => ({
-                    title: 'Select Item',
-                    headerTitle: () =>
-                        <TimeSwitcher
-                            disabled
-                            isHideLeftBtn
-                            isHideRightBtn
-                            init={() => {}}
-                            date={currentDate}
-                        />
-                })}
+                options={{ title: 'Select Item', header: renderCustomHeader() }}
             />
             <Stack.Screen
                 name="EditFood"
                 component={EditFood}
-                options={({ route, navigation }) => ({
-                    title: 'Edit Food',
-                    headerTitle: () =>
-                        <TimeSwitcher
-                            disabled
-                            isHideLeftBtn
-                            isHideRightBtn
-                            init={() => {}}
-                            date={currentDate}
-                        />
-                })}
+                options={{ title: 'Edit Food', header: renderCustomHeader() }}
             />
             <Stack.Screen
                 name="ModifyIngredient"
                 component={ModifyIngredient}
-                options={({ route, navigation }) => ({
-                    title: 'Ingredients',
-                    headerTitle: () =>
-                        <TimeSwitcher
-                            disabled
-                            isHideLeftBtn
-                            isHideRightBtn
-                            init={() => {}}
-                            date={currentDate}
-                        />
-                })}
+                options={{ title: 'Ingredients', header: renderCustomHeader() }}
             />
             <Stack.Screen
                 name="ModifyTypeIngredient"
                 component={ModifyTypeIngredient}
-                options={({ route, navigation }) => ({
-                    title: 'Modify',
-                    headerTitle: () =>
-                        <TimeSwitcher
-                            disabled
-                            isHideLeftBtn
-                            isHideRightBtn
-                            init={() => {}}
-                            date={currentDate}
-                        />
-                })}
+                options={{ title: 'Modify', header: renderCustomHeader() }}
             />
             <Stack.Screen
                 name="UPCScan"
                 component={UPCScan}
                 options={{ title: 'Scan UPC Code' }}
             />
-            <Stack.Screen name="ExerciseCategories" component={ExerciseCategories} options={{ title: 'Exercise', headerTitle: () =>
-                <TimeSwitcher
-                    disabled
-                    isHideLeftBtn
-                    isHideRightBtn
-                    init={() => {}}
-                    date={currentDate}
-                /> }} />
-            <Stack.Screen name="ExerciseDetails" component={ExerciseDetails} options={{ title: 'Exercise Details', headerTitle: () =>
-                <TimeSwitcher
-                    disabled
-                    isHideLeftBtn
-                    isHideRightBtn
-                    init={() => {}}
-                    date={currentDate}
-                /> }} />
-            <Stack.Screen name="EditExercise" component={ExerciseEdit} options={{ title: 'Edit Exercise', headerTitle: () =>
-                <TimeSwitcher
-                    disabled
-                    isHideLeftBtn
-                    isHideRightBtn
-                    init={() => {}}
-                    date={currentDate}
-                /> }} />
+            <Stack.Screen
+                name="ExerciseCategories"
+                component={ExerciseCategories}
+                options={{ title: 'Exercise', header: renderCustomHeader() }}
+            />
+            <Stack.Screen
+                name="ExerciseDetails"
+                component={ExerciseDetails}
+                options={{ title: 'Exercise Details', header: renderCustomHeader() }}
+            />
+            <Stack.Screen
+                name="EditExercise"
+                component={ExerciseEdit}
+                options={{ title: 'Edit Exercise', header: renderCustomHeader() }}
+            />
 
             <Stack.Screen
                 name="SaveValue"
                 component={SaveValueScreen}
-                options={({ route }) => ({
-                    title: (route.params as any)?.measurementName || 'Measurement',
-                    headerTitle: () => (
-                        <TimeSwitcher
-                            disabled
-                            isHideLeftBtn
-                            isHideRightBtn
-                            init={() => {}}
-                            date={currentDate}
-                        />
-                    ),
-                })}
+                options={{ title: 'Measurement', header: renderCustomHeader() }}
             />
-
             <Stack.Screen
                 name="MeasurementChart"
                 component={MeasurementChartScreen}
-                options={({ route }) => ({
-                    title: (route.params as any)?.measurementName || 'Measurement',
-                    headerTitle: () => (
-                        <TimeSwitcher
-                            disabled
-                            isHideLeftBtn
-                            isHideRightBtn
-                            init={() => {}}
-                            date={currentDate}
-                        />
-                    ),
-                })}
+                options={{ title: 'Measurement', header: renderCustomHeader() }}
             />
 
             <Stack.Screen
                 name="AllRecordedData"
                 component={AllRecordedDataScreen}
-                options={{
-                    title: 'All Recorded Data',
-                    headerTitle: () => (
-                        <TimeSwitcher
-                            disabled
-                            isHideLeftBtn
-                            isHideRightBtn
-                            init={() => {}}
-                            date={currentDate}
-                        />
-                    ),
-                }}
+                options={{ title: 'All Recorded Data', header: renderCustomHeader() }}
             />
 
             {/* WEIGHT-SPECIFIC SCREENS: Smart Scale and Manual Input */}
@@ -327,6 +269,40 @@ const DayOverviewStack: React.FC = () => {
                     headerTitleStyle: { fontSize: 18 },
                 })}
             />
+
+            {/* Question Screens */}
+            <Stack.Screen
+                name={ROUTES.QUESTION}
+                component={QuestionScreen}
+                options={{
+                    headerShown: false,
+                    gestureEnabled: false,
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.QUESTION_CATEGORY}
+                component={QuestionCategoryScreen}
+                options={{
+                    title: 'Questions',
+                    header: renderCustomHeader(),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.QUESTION_LIST}
+                component={QuestionListScreen}
+                options={{
+                    title: 'Questions',
+                    header: renderCustomHeader(),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.VIDEO}
+                component={VideoScreen}
+                options={{
+                    title: 'Video',
+                    header: renderCustomHeader(),
+                }}
+            />
         </Stack.Navigator>
     );
 };
@@ -334,10 +310,32 @@ const DayOverviewStack: React.FC = () => {
 export default DayOverviewStack;
 
 const styles = StyleSheet.create({
+    customHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        // paddingTop: OFFSET.VERTICAL * 2,
+        paddingBottom: OFFSET.POINT * 3,
+        justifyContent: 'space-between',
+        paddingHorizontal: OFFSET.HORIZONTAL,
+    },
+    headerSide: {
+        minWidth: 60,
+        justifyContent: 'center',
+    },
+    headerSideLeft: {
+        alignItems: 'flex-start',
+    },
+    headerSideRight: {
+        alignItems: 'flex-end',
+    },
+    headerCenter: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     backButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
     },
     backText: {
         fontSize: 16,

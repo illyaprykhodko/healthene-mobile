@@ -76,7 +76,7 @@ const Recipe: React.FC<RecipeProps> = ({ recipe }) => {
 
     const renderFooter = () => (
         <View>
-            <Text style={styles.listFooter} variant="h1" textAlign="center">
+            <Text style={styles.listFooter} variant="h4" textAlign="center">
                 {lastItem.content}
             </Text>
         </View>
