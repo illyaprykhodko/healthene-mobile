@@ -16,6 +16,8 @@ import { SHOPPING_STATUS } from 'constants/spec';
 import ChooseGroceryStore from './ChooseGroceryStore';
 import { useAppDispatch, useAppSelector } from 'store';
 import ShoppingPreferences from './ShoppingPreferences';
+import { VideoScreen } from 'screens/privateScreens/Library';
+import { QuestionScreen } from 'screens/privateScreens/Question';
 import { useGetShoppingListStatusQuery } from 'store/api/shoppingApi';
 import { resetShopping, selectShopping } from 'store/slices/shoppingSlice';
 
@@ -127,9 +129,24 @@ const Shopping: React.FC<ShoppingProps> = ({ route }) => {
                     headerTitleStyle: { fontSize: 18 },
                 }}
             />
+            <Stack.Screen
+                name={ROUTES.QUESTION}
+                component={QuestionScreen}
+                options={{
+                    headerShown: false,
+                    gestureEnabled: false,
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.VIDEO}
+                component={VideoScreen}
+                options={{
+                    title: 'Video',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
+            />
         </Stack.Navigator>
     );
 };
 
 export default memo(Shopping);
-

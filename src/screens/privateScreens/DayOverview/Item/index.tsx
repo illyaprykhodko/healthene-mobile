@@ -85,9 +85,12 @@ const Item: React.FC = () => {
         if (!item || !item.type) {
             return [];
         }
+        if (item.type === ENTITY_TYPE.FOOD) {
+            return [ITEM_TABS.OVERVIEW];
+        }
 
         if (
-            [ENTITY_TYPE.RECIPE, ENTITY_TYPE.FOOD, ENTITY_TYPE.CUSTOM_RECIPE].includes(
+            [ENTITY_TYPE.RECIPE, ENTITY_TYPE.CUSTOM_RECIPE].includes(
                 item.type as any
             )
         ) {
@@ -133,7 +136,7 @@ const Item: React.FC = () => {
                     />
                 );
             case ITEM_TABS.RECIPE:
-                return <Recipe recipe={item.recipe} />;
+                return item.recipe ? <Recipe recipe={item.recipe as any} /> : null;
             case ITEM_TABS.INGREDIENTS:
                 return <Ingredients item={item} />;
             default:

@@ -30,6 +30,8 @@ export interface DayOverviewState {
     phaseId: number | string | null;
   };
   byDate: Record<string, DayOverviewByDateEntry>;
+  // Track recently completed phases for animation
+  recentlyCompletedPhases: (number | string)[];
 }
 
 const TODAY = moment().format('YYYY-MM-DD');
@@ -50,6 +52,7 @@ const initialState: DayOverviewState = {
         phaseId: null,
     },
     byDate: {},
+    recentlyCompletedPhases: [],
 };
 
 const dayOverviewSlice = createSlice({
@@ -68,11 +71,31 @@ const dayOverviewSlice = createSlice({
             const prev = state.byDate[date] || { countPhases: null, overview: null } as DayOverviewByDateEntry;
             state.byDate[date] = { ...prev, ...entry } as DayOverviewByDateEntry;
         },
+        addRecentlyCompletedPhase: (state, action: PayloadAction<number | string>) => {
+            if (!state.recentlyCompletedPhases.includes(action.payload)) {
+                state.recentlyCompletedPhases.push(action.payload);
+            }
+        },
+        removeRecentlyCompletedPhase: (state, action: PayloadAction<number | string>) => {
+            state.recentlyCompletedPhases = state.recentlyCompletedPhases.filter(
+                id => id !== action.payload
+            );
+        },
+        clearRecentlyCompletedPhases: state => {
+            state.recentlyCompletedPhases = [];
+        },
     },
 });
 
 export const dayOverviewReducer = dayOverviewSlice.reducer;
-export const { clear, meta, setDateEntry } = dayOverviewSlice.actions;
+export const {
+    meta,
+    clear,
+    setDateEntry,
+    addRecentlyCompletedPhase,
+    removeRecentlyCompletedPhase,
+    clearRecentlyCompletedPhases,
+} = dayOverviewSlice.actions;
 
 // Selectors
 export const selectDayOverview = (state: RootState) => state.dayOverview;

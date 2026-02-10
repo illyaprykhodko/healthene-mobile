@@ -7,16 +7,20 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 // local dependencies
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
-import { OFFSET } from 'constants/offset.ts';
-import BackButton from 'components/BackButton.tsx';
+import { OFFSET } from 'constants/offset';
+import InfoStack from 'navigation/InfoStack';
+import BackButton from 'components/BackButton';
+import LibraryStack from 'navigation/LibraryStack';
 import Shopping from 'screens/privateScreens/Shopping';
-import MessengerStack from 'navigation/MessengerStack.tsx';
+import MessengerStack from 'navigation/MessengerStack';
+import MyResultsStack from 'navigation/MyResultsStack';
+import AboutPlanStack from 'navigation/AboutPlanStack';
 import DayOverview from 'screens/privateScreens/DayOverview';
 import { MainScreen } from 'screens/privateScreens/MainScreen';
-import HealthProfileStack from 'navigation/HealthProfileStack.tsx';
+import HealthProfileStack from 'navigation/HealthProfileStack';
+import MealPreferencesStack from 'navigation/MealPreferencesStack';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
-import AboutPlanScreen from 'screens/privateScreens/AboutPlanScreen.tsx';
-import { PlaceholderScreen } from 'screens/privateScreens/PlaceholderScreen';
+import CuisineDistributionStack from 'navigation/CuisineDistributionStack';
 
 
 const Drawer = createDrawerNavigator();
@@ -104,8 +108,9 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.MY_RESULTS}
-                component={PlaceholderScreen}
+                component={MyResultsStack}
                 options={{
+                    headerShown: false,
                     title: 'My Results',
                     drawerIcon: ({ color }) => (
                         <Icon name="chart-bar" size={24} color={color} />
@@ -115,8 +120,9 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.ABOUT_PLAN}
-                component={AboutPlanScreen}
+                component={AboutPlanStack}
                 options={{
+                    headerShown: false,
                     title: 'About Plan',
                     drawerIcon: ({ color }) => (
                         <Icon name="clipboard" size={24} color={color} />
@@ -125,10 +131,11 @@ export const PrivateDrawer: React.FC = () => {
             />
 
             <Drawer.Screen
+                name={ROUTES.HEALTH_PROFILE}
                 component={HealthProfileStack}
-                name={ROUTES.HEALTH_PROFILE_STACK}
                 options={{
                     headerShown: false,
+                    title: 'My Health Profile',
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="heartbeat" size={24} color={color} />
                     ),
@@ -137,8 +144,9 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.LIBRARY}
-                component={PlaceholderScreen}
+                component={LibraryStack}
                 options={{
+                    headerShown: false,
                     title: 'Library',
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="book" size={24} color={color} />
@@ -148,8 +156,9 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.INFO}
-                component={PlaceholderScreen}
+                component={InfoStack}
                 options={{
+                    headerShown: false,
                     title: 'Info',
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="info-circle" size={24} color={color} />
@@ -159,20 +168,22 @@ export const PrivateDrawer: React.FC = () => {
 
             <Drawer.Screen
                 name={ROUTES.MEAL_PREFERENCES}
-                component={PlaceholderScreen}
+                component={MealPreferencesStack}
                 options={{
+                    headerShown: false,
                     title: 'Meal Preferences',
                     drawerIcon: ({ color }) => (
-                        <Icon iconStyle="solid" name="glasses" size={24} color={color} />
+                        <Icon iconStyle="solid" name="utensils" size={24} color={color} />
                     ),
                 }}
             />
 
             <Drawer.Screen
                 name={ROUTES.CUISINE_DISTRIBUTION}
-                component={PlaceholderScreen}
+                component={CuisineDistributionStack}
                 options={{
-                    title: 'Cuisine Distribution',
+                    headerShown: false,
+                    title: 'International Cuisine',
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="award" size={24} color={color} />
                     ),

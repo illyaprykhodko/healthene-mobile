@@ -2,9 +2,19 @@
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
-import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import FeatherIcon from '@react-native-vector-icons/feather';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSequence,
+    withTiming,
+    withDelay,
+    Easing,
+} from 'react-native-reanimated';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 // local dependencies
@@ -12,33 +22,34 @@ import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
+import { ROUTES } from 'constants/routes';
+import { COLORS } from 'constants/colors';
+import { Highlight } from 'components/Highlight';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppDispatch, useAppSelector } from 'store';
+import { RootStackParamList } from 'services/navigation';
 import { DayOverviewSkeleton } from 'components/Skeleton';
+import { HealthQuestion } from 'components/HealthQuestion';
 import type { AnytimeMeasurementItem } from 'types/anytime';
-import { useGetDayOverviewQuery, Phase } from 'store/api/dayOverviewApi';
+import { PhaseItem, AddPhaseItemData } from 'types/overview';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MeasurementInputModal } from 'components/AnytimeMenu/MeasurementInputModal';
-import { selectDayOverview, meta, setDateEntry } from 'store/slices/dayOverviewSlice';
-
-// Temporary types
-export type PhaseType =
-  | 'MEAL'
-  | 'ANYTIME'
-  | 'QUESTION'
-  | 'SUPPLEMENT'
-  | 'MEDICATION'
-  | 'MEASUREMENT'
-  | 'ADDED_BY_PATIENT'
-  | 'PHYSICAL_ACTIVITY';
-
-interface PhaseItem {
-  title: string;
-  type: PhaseType;
-  sortKey?: number;
-  id: string | number;
-  phaseId?: string | number;
-  status?: 'DONE' | 'PENDING' | 'INCOMPLETE';
-}
+import {
+    meta,
+    setDateEntry,
+    selectDayOverview,
+    removeRecentlyCompletedPhase,
+} from 'store/slices/dayOverviewSlice';
+import { OVERVIEW_TYPE, PHASE_ITEM_STATUS, ENTITY_TYPE, SUBSTANCE_TYPE } from 'constants/spec';
+import {
+    Phase,
+    useGetDayOverviewQuery,
+    useCreatePatientPhaseMutation,
+    useUpdatePatientPhaseMutation,
+    useAddPhaseCustomRecipeMutation,
+    useCreatePatientPhaseWithRecipeMutation,
+} from 'store/api/dayOverviewApi';
+import { filters } from 'services/filter';
 
 const DOT_SIZE = 8;
 const GAP_SIZE = 15;
@@ -49,14 +60,14 @@ const TIMELINE_WIDTH = 50;
 const CONNECTOR_WIDTH = 1;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
+const TimelineSVG: React.FC<{ phases: PhaseItem[]; incompleteDay?: boolean }> = ({ phases, incompleteDay = false }) => {
     const theme = useTheme();
     const mainLineX = TIMELINE_WIDTH / 2;
     const mealIconX = TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE / 2;
     const offsetLineX = mealIconX;
     const svgHeight = phases.length * ROW_HEIGHT;
 
-    const isMealPhase = (type: PhaseType) => type === 'MEAL';
+    const isMealPhase = (type: AddPhaseItemData['type']) => type === 'MEAL';
 
     const timelineElements = useMemo(() => {
         const elements: React.ReactElement[] = [];
@@ -273,7 +284,11 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
             const dotX = isMeal ? mainLineX : offsetLineX;
             const iconX = dotX + GAP_SIZE + ICON_SIZE / 2 + ICON_MARGIN;
 
-            elements.push(<Circle key={`dot-${index}`} cx={dotX} cy={y} r={DOT_SIZE / 2} fill={theme.colors.grey} />);
+            const isIncomplete = incompleteDay && phase.status === 'INCOMPLETE';
+            const isDone = phase.status === PHASE_ITEM_STATUS.DONE;
+            if (!isIncomplete && !isDone) {
+                elements.push(<Circle key={`dot-${index}`} cx={dotX} cy={y} r={DOT_SIZE / 2} fill={theme.colors.grey} />);
+            }
             elements.push(
                 <Line
                     y1={y}
@@ -295,6 +310,83 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[] }> = ({ phases }) => {
         <Svg width={SCREEN_WIDTH} height={svgHeight} style={{ position: 'absolute', top: 0, left: 0 }}>
             {timelineElements}
         </Svg>
+    );
+};
+
+interface AnimatedCheckmarkProps {
+    isDone: boolean;
+    isFocused: boolean; // Screen is visible
+    phaseId: number | string;
+    isRecentlyCompleted: boolean;
+    onAnimationComplete?: () => void;
+}
+
+const AnimatedCheckmark: React.FC<AnimatedCheckmarkProps> = ({
+    isDone,
+    phaseId,
+    isFocused,
+    isRecentlyCompleted,
+    onAnimationComplete,
+}) => {
+    const scale = useSharedValue(isRecentlyCompleted ? 0 : 1);
+    const opacity = useSharedValue(isRecentlyCompleted ? 0 : 1);
+    const rotation = useSharedValue(0);
+    const hasAnimatedRef = useRef(false);
+
+    useEffect(() => {
+        if (!isDone) {
+            scale.value = 0;
+            opacity.value = 0;
+            rotation.value = 0;
+            hasAnimatedRef.current = false;
+            return;
+        }
+        if (isRecentlyCompleted && isFocused && !hasAnimatedRef.current) {
+            hasAnimatedRef.current = true;
+            scale.value = 0;
+            opacity.value = 0;
+            rotation.value = 0;
+            opacity.value = withTiming(1, { duration: 1350, easing: Easing.out(Easing.ease) });
+            scale.value = withSequence(
+                withTiming(1.3, { duration: 500, easing: Easing.out(Easing.back(2)) }),
+                withTiming(1, { duration: 350, easing: Easing.out(Easing.ease) })
+            );
+            rotation.value = withDelay(100,
+                withSequence(
+                    withTiming(-8, { duration: 180 }),
+                    withTiming(6, { duration: 180 }),
+                    withTiming(-3, { duration: 160 }),
+                    withTiming(0, { duration: 160 })
+                )
+            );
+            if (onAnimationComplete) {
+                setTimeout(() => {
+                    onAnimationComplete();
+                }, 1000);
+            }
+        } else if (!isRecentlyCompleted && !hasAnimatedRef.current) {
+            scale.value = 1;
+            opacity.value = 1;
+            rotation.value = 0;
+        }
+    }, [isDone, isRecentlyCompleted, isFocused, phaseId]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [
+            { scale: scale.value },
+            { rotate: `${rotation.value}deg` },
+        ],
+        opacity: opacity.value,
+    }));
+
+    if (!isDone) {
+        return null;
+    }
+
+    return (
+        <Animated.View style={animatedStyle}>
+            <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
+        </Animated.View>
     );
 };
 
@@ -354,6 +446,23 @@ const styles = StyleSheet.create({
         right: 20,
         bottom: 90,
     },
+    addBtn: {
+        position: 'absolute',
+        right: 20,
+        bottom: 170,
+        backgroundColor: '#4CAF50',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    addBtnText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        fontSize: 12,
+    },
+    disabledBtn: {
+        backgroundColor: '#CCCCCC',
+    },
     shadowBtn: {
         shadowColor: '#000000',
         ...Platform.select({
@@ -402,14 +511,54 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
         paddingTop: OFFSET.VERTICAL,
     },
+    incompleteLabel: {
+        width: 180,
+        marginLeft: 5,
+        marginTop: 5,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+    },
+    incompleteText: {
+        marginLeft: 5,
+        fontWeight: '500',
+        fontSize: 16,
+    },
+    incompleteLabelContainer: {
+        position: 'absolute',
+        bottom: 100,
+        right: 0,
+        marginRight: Platform.OS === 'ios' ? -10 : -20,
+    },
+    statusIndicator: {
+        position: 'absolute',
+        zIndex: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        top: 28,
+    },
+    doneStatusIndicator: {
+        position: 'absolute',
+        zIndex: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        top: 28,
+    },
+    donePhaseContent: {
+        opacity: 0.5,
+    },
+    highlightText: {
+        marginLeft: 8,
+        fontWeight: '500',
+        color: '#4A4A4A',
+    },
 });
 
-const getIconColorByType = (type: PhaseType) => {
+const getIconColorByType = (type: AddPhaseItemData['type']) => {
     switch (type) {
         case 'MEAL':
             return { bg: '#FFD9B3', fg: '#C56A00', name: 'utensils' as const };
         case 'ADDED_BY_PATIENT':
-            return { bg: '#D4E09B', fg: '#647C2E', name: 'plus' as const };
+            return { bg: '#D4E09B', fg: '#647C2E', name: 'utensils' as const };
         case 'MEASUREMENT':
             return { bg: '#F3F3F3', fg: '#000000', name: 'ruler' as const };
         case 'SUPPLEMENT':
@@ -428,17 +577,25 @@ const getIconColorByType = (type: PhaseType) => {
 
 export const Overview: React.FC = () => {
     const theme = useTheme();
-    const navigation = useNavigation();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const dispatch = useAppDispatch();
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const { date, showCalendar, calendarDays } = useAppSelector(selectDayOverview);
+    const { date, showCalendar, calendarDays, recentlyCompletedPhases } = useAppSelector(selectDayOverview);
     const currentDate = date || moment().format('YYYY-MM-DD');
+    const isFocused = useIsFocused();
     const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
 
     const { data, isLoading, isFetching } = useGetDayOverviewQuery(currentDate, {
         skip: !currentDate,
         refetchOnMountOrArgChange: true,
     });
+
+    const [createPatientPhase] = useCreatePatientPhaseMutation();
+    const [createPatientPhaseWithRecipe] = useCreatePatientPhaseWithRecipeMutation();
+    const [updatePatientPhase] = useUpdatePatientPhaseMutation();
+    const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
+
+    const isFutureDateCheck = moment(currentDate).isAfter(moment(), 'day');
 
     const incompleteDay = useMemo(() => {
         const incompleteDays = data?.currentWeekIncompleteDays || [];
@@ -488,6 +645,106 @@ export const Overview: React.FC = () => {
         }
     }, [dispatch]);
 
+    const handleAddButtonPress = useCallback(() => {
+        if (!data?.id) { return; }
+
+        const patientPhase = data?.phases?.find(p => p.type === OVERVIEW_TYPE.ADDED_BY_PATIENT);
+        const phasesCount = data?.phases?.length || 0;
+
+        navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
+            prevItem: null,
+            date: currentDate,
+            substanceType: 'FOOD',
+            entityType: 'PATIENT_FOOD',
+            onApply: async (payload: any) => {
+                try {
+                    const selectedItemData = payload.item || payload;
+                    const selectedItem = { ...selectedItemData?.item };
+                    const itemEntityType = selectedItemData?.entityType || 'FOOD';
+                    const itemSubstanceType = selectedItemData?.substanceType || selectedItem?.substanceType || SUBSTANCE_TYPE.FOOD;
+
+                    if (itemEntityType === ENTITY_TYPE.FOOD || itemEntityType === 'PATIENT_FOOD' || itemEntityType === 'PATIENT_DRINK') {
+                        const defaultWeight = selectedItem.weights?.find((w: any) => w.isDefault) || selectedItem.weights?.[0];
+
+                        const newItem: any = {
+                            order: 0,
+                            section: 'Added',
+                            type: ENTITY_TYPE.FOOD,
+                            food: { id: selectedItem.id },
+                            substanceType: itemSubstanceType,
+                            amount: selectedItem?.amount || 1,
+                            status: PHASE_ITEM_STATUS.PENDING,
+                            initialAmount: selectedItem?.initialAmount || 1,
+                        };
+
+                        // Add weight as { id } reference
+                        if (defaultWeight?.id) {
+                            newItem.weight = { id: defaultWeight.id };
+                        }
+
+                        if (patientPhase?.id) {
+                            // Add to existing ADDED_BY_PATIENT phase - update phase with new items array
+                            const existingItems = patientPhase.items || [];
+                            await updatePatientPhase({
+                                phaseId: patientPhase.id,
+                                data: {
+                                    order: phasesCount,
+                                    dayOverview: { id: data.id },
+                                    status: PHASE_ITEM_STATUS.PENDING,
+                                    items: [...existingItems, newItem],
+                                    type: OVERVIEW_TYPE.ADDED_BY_PATIENT,
+                                },
+                            });
+                        } else {
+                            // Create new ADDED_BY_PATIENT phase
+                            await createPatientPhase({
+                                dayOverviewId: data.id,
+                                data: {
+                                    items: [newItem],
+                                    order: phasesCount + 1,
+                                    dayOverview: { id: data.id },
+                                    status: PHASE_ITEM_STATUS.PENDING,
+                                    type: OVERVIEW_TYPE.ADDED_BY_PATIENT,
+                                },
+                            });
+                        }
+                    } else if (itemEntityType === ENTITY_TYPE.RECIPE || itemEntityType === 'PATIENT_RECIPES' || itemEntityType === 'RESTAURANT') {
+                        const recipeItem: any = {
+                            order: 0,
+                            section: 'Added',
+                            type: ENTITY_TYPE.RECIPE,
+                            recipe: { id: selectedItem?.id },
+                            amount: selectedItem?.amount || 1,
+                            status: PHASE_ITEM_STATUS.PENDING,
+                            initialAmount: selectedItem?.initialAmount || 1,
+                        };
+
+                        if (patientPhase?.id) {
+                            // Add recipe to existing phase
+                            await addPhaseCustomRecipe({
+                                data: recipeItem,
+                                phaseId: patientPhase.id,
+                            });
+                        } else {
+                            // Create new phase with recipe
+                            await createPatientPhaseWithRecipe({
+                                dayOverviewId: data.id,
+                                data: {
+                                    items: [recipeItem],
+                                    order: phasesCount + 1,
+                                    status: PHASE_ITEM_STATUS.PENDING,
+                                    type: OVERVIEW_TYPE.ADDED_BY_PATIENT,
+                                },
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error adding item to patient phase:', error);
+                }
+            }
+        });
+    }, [data, currentDate, navigation, createPatientPhase, createPatientPhaseWithRecipe, updatePatientPhase, addPhaseCustomRecipe]);
+
     useEffect(() => {
         moment.updateLocale('en', { week: { dow: 1 } });
     }, []);
@@ -528,10 +785,22 @@ export const Overview: React.FC = () => {
                     rows.push({
                         id: item.id,
                         phaseId: p.id,
+                        phase: { id: p.id },
                         type: 'MEASUREMENT',
+                        order: item.order ?? 0,
+                        rating: item.rating ?? 0,
+                        recipe: item.recipe ?? null,
+                        section: item.section ?? '',
+                        serving: item.serving ?? null,
+                        measurement: item.measurement,
+                        modified: item.modified ?? false,
                         title: item.measurement?.name || 'Measurement',
+                        peopleEatingNumber: item.peopleEatingNumber ?? 1,
                         sortKey: (p.order ?? 0) + (item.order ?? 0) / 100,
                         status: item.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
+                        patientFoodCategoryQuestion: item.patientFoodCategoryQuestion ?? null,
+                        patientFoodCategoryAttachment: item.patientFoodCategoryAttachment ?? null,
+                        recipeOilyFishProteinReplaced: item.recipeOilyFishProteinReplaced ?? false,
                     });
                 });
             } else if (
@@ -539,8 +808,20 @@ export const Overview: React.FC = () => {
             ) {
                 rows.push({
                     id: p.id,
+                    phase: p,
+                    rating: 0,
+                    section: '',
+                    recipe: null,
+                    serving: null,
+                    modified: false,
+                    order: p.order ?? 0,
+                    phaseId: p.id ?? null,
                     sortKey: p.order ?? 0,
-                    type: p.type as PhaseType,
+                    peopleEatingNumber: 1,
+                    patientFoodCategoryQuestion: null,
+                    patientFoodCategoryAttachment: null,
+                    recipeOilyFishProteinReplaced: false,
+                    type: p.type as AddPhaseItemData['type'],
                     status: p.status as 'DONE' | 'PENDING' | 'INCOMPLETE',
                     title: p.meal?.name || p.name || (p.type === 'PHYSICAL_ACTIVITY' ? 'Exercise' : p.type.toLowerCase()),
                 });
@@ -550,40 +831,42 @@ export const Overview: React.FC = () => {
         return rows.sort((a, b) => (a.sortKey ?? 0) - (b.sortKey ?? 0));
     }, [data]);
 
-    const isMealPhase = (type: PhaseType) => type === 'MEAL';
+    const isMealPhase = (type: AddPhaseItemData['type']) => type === 'MEAL';
 
     const handlePhasePress = (phase: PhaseItem) => {
         if (phase.type === 'MEASUREMENT') {
-            const measurementPhase = data?.phases?.find(p => p.type === 'MEASUREMENT');
-            const measurementItem = measurementPhase?.items?.find((item: any) => item.id === phase.id);
+            const measurement = (phase as any).measurement;
+            const phaseId = phase.phaseId || phase.phase?.id;
 
-            if (measurementItem) {
-                const measurementType = measurementItem.measurement?.type;
-                if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
-                    (navigation as any).navigate('WeightMeasurement', {
-                        measurementPhaseItem: measurementItem,
-                        date: currentDate,
-                    });
-                    return;
-                }
-                if (phase.status === 'DONE') {
-                    (navigation as any).navigate('SaveValue', {
-                        measurementType: measurementItem.measurement?.type,
-                        measurementName: measurementItem.measurement?.name,
-                        measurementPhaseItem: measurementItem,
-                        date: currentDate,
-                    });
-                    return;
-                }
-                const anytimeMeasurement: AnytimeMeasurementItem = {
-                    type: 'MEASUREMENT',
-                    id: measurementItem.id,
-                    phaseId: measurementPhase!.id,
-                    measurement: measurementItem.measurement,
-                    status: measurementItem.status || 'PENDING',
-                };
-                setSelectedMeasurement(anytimeMeasurement);
+            if (!measurement) {
+                console.warn('No measurement data found for phase:', phase);
+                return;
             }
+            const measurementType = measurement?.type;
+            if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
+                (navigation as any).navigate('WeightMeasurement', {
+                    measurementPhaseItem: { ...phase, measurement },
+                    date: currentDate,
+                });
+                return;
+            }
+            if (phase.status === 'DONE') {
+                (navigation as any).navigate('SaveValue', {
+                    measurementType: measurement?.type,
+                    measurementName: measurement?.name,
+                    measurementPhaseItem: { ...phase, measurement },
+                    date: currentDate,
+                });
+                return;
+            }
+            const anytimeMeasurement: AnytimeMeasurementItem = {
+                id: phase.id,
+                phaseId: phaseId,
+                status: 'PENDING',
+                type: 'MEASUREMENT',
+                measurement: measurement,
+            };
+            setSelectedMeasurement(anytimeMeasurement);
             return;
         }
 
@@ -628,6 +911,9 @@ export const Overview: React.FC = () => {
     return (
         <Screen initialized style={styles.container}>
             <View style={styles.content}>
+                {/* Health Question Section */}
+                <HealthQuestion date={currentDate} isFutureDate={isFutureDateCheck} />
+
                 <Text style={styles.title}>My Daily Plan</Text>
 
                 <View style={styles.timelineContainer}>
@@ -635,7 +921,7 @@ export const Overview: React.FC = () => {
                         data={phases}
                         style={{ marginBottom: 35 }}
                         keyExtractor={item => String(item.id)}
-                        ListHeaderComponent={<TimelineSVG phases={phases} />}
+                        ListHeaderComponent={<TimelineSVG phases={phases} incompleteDay={incompleteDay} />}
                         renderItem={({ item }) => {
                             const { bg, fg, name } = getIconColorByType(item.type);
                             const isMeal = isMealPhase(item.type);
@@ -643,24 +929,94 @@ export const Overview: React.FC = () => {
                                 ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
                                 : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
 
+                            const isIncomplete = item.status === PHASE_ITEM_STATUS.INCOMPLETE;
+                            const isDone = item.status === PHASE_ITEM_STATUS.DONE;
+                            const shouldHighlight = incompleteDay && isIncomplete;
+                            const showArrowIcon = shouldHighlight && (item.type === 'MEAL' || item.type === 'ADDED_BY_PATIENT');
+
+                            const displayTitle = item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title);
+
+                            const renderStatusIndicator = () => {
+                                if (isDone) {
+                                    return (
+                                        <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
+                                    );
+                                }
+                                if (incompleteDay && isIncomplete) {
+                                    return (
+                                        <FeatherIcon name="info" size={18} color={COLORS.BROWN} />
+                                    );
+                                }
+                                return null;
+                            };
+
+                            // Status indicator left position - exactly where the dot would be
+                            // TIMELINE_WIDTH/2 = 25 for MEAL, offsetLineX = 105 for non-MEAL
+                            // Subtract half of icon size (18/2 = 9) to center it
+                            const statusLeftPosition = isMeal ? 16 : 96;
+
+                            if (shouldHighlight) {
+                                return (
+                                    <TouchableOpacity
+                                        key={String(item.id)}
+                                        style={styles.row}
+                                        onPress={() => handlePhasePress(item)}
+                                    >
+                                        <View style={[styles.statusIndicator, { left: statusLeftPosition }]}>
+                                            {renderStatusIndicator()}
+                                        </View>
+                                        <View style={{ marginLeft: iconMarginLeft }}>
+                                            <Highlight color={COLORS.LIGHT_PINK}>
+                                                {showArrowIcon ? (
+                                                    <Ionicons
+                                                        name="chevron-forward-circle-outline"
+                                                        color={COLORS.DARK_GREY}
+                                                        size={38}
+                                                    />
+                                                ) : (
+                                                    <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: 0 }]}>
+                                                        <Icon iconStyle="solid" name={name} color={fg} size={18} />
+                                                    </View>
+                                                )}
+                                                <Text variant="h4" style={styles.highlightText}>
+                                                    {displayTitle}
+                                                </Text>
+                                            </Highlight>
+                                        </View>
+                                    </TouchableOpacity>
+                                );
+                            }
+
+                            // Normal item (non-highlighted)
                             return (
-                                <TouchableOpacity key={String(item.id)} style={styles.row} onPress={() => handlePhasePress(item)}>
-                                    <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: iconMarginLeft }]}>
+                                <TouchableOpacity
+                                    key={String(item.id)}
+                                    style={styles.row}
+                                    onPress={() => handlePhasePress(item)}
+                                >
+                                    {isDone && (
+                                        <View style={[styles.doneStatusIndicator, { left: isMeal ? 16 : 96 }]}>
+                                            <AnimatedCheckmark
+                                                isDone={isDone}
+                                                phaseId={item.id}
+                                                isFocused={isFocused}
+                                                isRecentlyCompleted={recentlyCompletedPhases.includes(item.id)}
+                                                onAnimationComplete={() => dispatch(removeRecentlyCompletedPhase(item.id))}
+                                            />
+                                        </View>
+                                    )}
+                                    <View style={[
+                                        styles.iconWrapper,
+                                        { backgroundColor: bg, marginLeft: iconMarginLeft },
+                                        isDone && styles.donePhaseContent
+                                    ]}>
                                         <Icon iconStyle="solid" name={name} color={fg} size={18} />
                                     </View>
-                                    <View style={styles.rightContent}>
-                                        <Text variant="h4" style={{ color: theme.colors.text }}>
-                                            {item.title}
-                                        </Text>
-                                        <Text style={{ color: theme.colors.text, fontSize: 12, marginTop: 4 }}>
-                      Status: {item.status || 'Unknown'}
+                                    <View style={[styles.rightContent, isDone && styles.donePhaseContent]}>
+                                        <Text variant="h4" style={{ color: isDone ? theme.colors.grey : theme.colors.text }}>
+                                            {displayTitle}
                                         </Text>
                                     </View>
-                                    {/* {item.type === 'MEASUREMENT' && item.status === 'DONE' && (
-                                        <View style={styles.graphIconContainer}>
-                                            <Icon name="chart-line" color="#2978A0" size={20} />
-                                        </View>
-                                    )} */}
                                 </TouchableOpacity>
                             );
                         }}
@@ -672,7 +1028,48 @@ export const Overview: React.FC = () => {
                 date={currentDate}
                 disabled={isFetching || isLoading}
             />
-            {/* && data?.id */}
+
+            {!showCalendar && data?.id && !isFutureDateCheck && (
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={handleAddButtonPress}
+                    disabled={isFetching || isLoading}
+                    style={[
+                        styles.addBtn,
+                        styles.roundBtn,
+                        styles.shadowBtn,
+                        (isFetching || isLoading) && styles.disabledBtn,
+                    ]}
+                >
+                    <FeatherIcon name="plus" color="#FFFFFF" size={22} />
+                    <Text style={styles.addBtnText}>Add</Text>
+                </TouchableOpacity>
+            )}
+
+            {/* Incomplete Day Label */}
+            {Boolean(incompleteDay) && (
+                <View style={styles.incompleteLabelContainer}>
+                    <Highlight color={COLORS.DARKER_PINK}>
+                        <View style={styles.incompleteLabel}>
+                            <Text
+                                style={styles.incompleteText}
+                                color={COLORS.DARKENED_GRAY}
+                                textAlign="left"
+                            >
+                                Please
+                            </Text>
+                            <Text
+                                textAlign="left"
+                                color={COLORS.DARKENED_GRAY}
+                                style={[styles.incompleteText, { marginTop: Platform.OS === 'ios' ? -5 : 0 }]}
+                            >
+                                complete
+                            </Text>
+                        </View>
+                    </Highlight>
+                </View>
+            )}
+
             {/* Floating Calendar Button */}
             {!showCalendar && (
                 <TouchableOpacity
@@ -715,8 +1112,8 @@ export const Overview: React.FC = () => {
                 enablePanDownToClose
                 ref={bottomSheetRef}
                 snapPoints={['60%']}
-                backdropComponent={renderBackdrop}
                 onChange={handleSheetChanges}
+                backdropComponent={renderBackdrop}
                 backgroundStyle={styles.bottomSheetBg}
                 handleIndicatorStyle={styles.bottomSheetIndicator}
             >
@@ -726,24 +1123,24 @@ export const Overview: React.FC = () => {
                         markedDates={calendarDays}
                         onDayPress={handleDayPress}
                         theme={{
-                            backgroundColor: '#ffffff',
-                            calendarBackground: '#ffffff',
-                            textSectionTitleColor: '#7B7B7B',
-                            selectedDayBackgroundColor: '#2978A0',
-                            selectedDayTextColor: '#ffffff',
-                            todayTextColor: '#2978A0',
-                            dayTextColor: '#2d4150',
-                            textDisabledColor: '#d9e1e8',
                             dotColor: '#2978A0',
-                            selectedDotColor: '#ffffff',
-                            arrowColor: '#2978A0',
-                            monthTextColor: '#2d4150',
-                            textDayFontWeight: '400',
-                            textMonthFontWeight: '600',
-                            textDayHeaderFontWeight: '500',
                             textDayFontSize: 16,
                             textMonthFontSize: 18,
+                            arrowColor: '#2978A0',
+                            dayTextColor: '#2d4150',
+                            textDayFontWeight: '400',
                             textDayHeaderFontSize: 14,
+                            monthTextColor: '#2d4150',
+                            todayTextColor: '#2978A0',
+                            backgroundColor: '#ffffff',
+                            textMonthFontWeight: '600',
+                            selectedDotColor: '#ffffff',
+                            textDisabledColor: '#d9e1e8',
+                            calendarBackground: '#ffffff',
+                            textDayHeaderFontWeight: '500',
+                            selectedDayTextColor: '#ffffff',
+                            textSectionTitleColor: '#7B7B7B',
+                            selectedDayBackgroundColor: '#2978A0',
                         }}
                     />
                 </BottomSheetView>

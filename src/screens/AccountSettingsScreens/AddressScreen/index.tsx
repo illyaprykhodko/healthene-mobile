@@ -83,7 +83,7 @@ export const AddressScreen = () => {
     // handle country & state filters
     const [filterCountry, { data: countryData }] = useFilterCountryMutation();
     useEffect(() => {
-        filterCountry({});
+        filterCountry();
     }, [filterCountry]);
 
     const initialValues = useMemo(() => ({ addresses: user?.addresses ?? [] }), [user]);

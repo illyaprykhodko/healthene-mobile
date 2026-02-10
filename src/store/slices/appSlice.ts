@@ -14,6 +14,7 @@ const initialState: AppState = {
     accessToken: null,
     refreshToken: null,
     initialized: false,
+    includeRescueFoodsInShoppingList: false,
 };
 
 export const appSlice = createSlice({

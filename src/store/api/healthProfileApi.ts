@@ -2,208 +2,212 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
 // local dependencies
-import { baseQuery } from 'store/api/baseApi.ts';
-import { PaginatedParams, PaginatedResponse, TransformData } from 'types/common/interfaces';
-import { Habit, MedicalEntityItem, PatientHabit, MedicalTermType, MedicalEntity } from 'types/healthProfile.ts';
+import { baseQuery } from './baseApi';
+import {
+    Habit,
+    UserStats,
+    Supplement,
+    MedicalProblem,
+    FilterParams,
+    FilteredResponse,
+    PatientMedication,
+    MedicationAllergy,
+    MedicationFilterRequest,
+    MedicalTermFilterRequest,
+} from 'types/healthProfile';
 
 export const healthProfileApi = createApi({
-    baseQuery,
     reducerPath: 'healthProfileApi',
-    tagTypes: ['PatientHabits', 'MedicationAllergies', 'MedicalProblems', 'Medications'],
+    baseQuery,
+    tagTypes: ['Profile', 'Medications', 'MedicalProblems', 'MedicationAllergies', 'Supplements', 'Habits'],
     endpoints: builder => ({
+        // Get patient's medications
+        getPatientMedications: builder.query<PatientMedication[], void>({
+            query: () => ({
+                method: 'GET',
+                url: '/patient-service/patients/me/medications',
+            }),
+            providesTags: ['Medications'],
+        }),
+
+        // Get patient's medical problems
+        getPatientMedicalProblems: builder.query<MedicalProblem[], void>({
+            query: () => ({
+                method: 'GET',
+                url: '/patient-service/patients/me/medical-problems',
+            }),
+            providesTags: ['MedicalProblems'],
+        }),
+
+        // Get patient's medication allergies
+        getPatientMedicationAllergies: builder.query<MedicationAllergy[], void>({
+            query: () => ({
+                method: 'GET',
+                url: '/patient-service/patients/me/medication-allergies',
+            }),
+            providesTags: ['MedicationAllergies'],
+        }),
+
+        // Get patient's supplements
+        getPatientSupplements: builder.query<Supplement[], void>({
+            query: () => ({
+                method: 'GET',
+                url: '/patient-service/patients/me/supplements',
+            }),
+            providesTags: ['Supplements'],
+        }),
+
+        // Get all habits
         getHabits: builder.query<Habit[], void>({
             query: () => ({
                 method: 'GET',
                 url: '/patient-service/habit',
             }),
+            providesTags: ['Habits'],
         }),
-        getPatientHabits: builder.query<PatientHabit[], void>({
-            providesTags: ['PatientHabits'],
+
+        // Get patient's habits
+        getPatientHabits: builder.query<Array<{ id: number; habit: { id: number } }>, void>({
             query: () => ({
                 method: 'GET',
                 url: '/patient-service/patients/me/habit',
             }),
+            providesTags: ['Habits'],
         }),
-        updatePatientHabits: builder.mutation<void, Array<{ id: number | null; entity: { id: number } }>>({
-            invalidatesTags: ['PatientHabits'],
-            query: body => ({
-                body,
+
+        // Update patient stats
+        updatePatientStats: builder.mutation<void, UserStats>({
+            query: data => ({
+                body: data,
+                method: 'PUT',
+                url: '/patient-service/patients/me',
+            }),
+            invalidatesTags: ['Profile'],
+        }),
+
+        // Update patient habits
+        updatePatientHabits: builder.mutation<void, Array<{ entity: { id: number } }>>({
+            query: data => ({
+                body: data,
                 method: 'PUT',
                 url: '/patient-service/patients/me/habit',
             }),
+            invalidatesTags: ['Habits'],
         }),
-        getMedicationAllergies: builder.query<MedicalEntity[], void>({
-            providesTags: ['MedicationAllergies'],
-            query: () => ({
-                method: 'GET',
-                url: '/patient-service/patients/me/medication-allergies',
-            }),
-        }),
-        addMedicationAllergies: builder.mutation<void, { id: number }>({
-            invalidatesTags: ['MedicationAllergies'],
-            query: ({ id }) => ({
-                body: { id },
-                method: 'POST',
-                url: '/patient-service/patients/me/medication-allergies',
-            }),
-        }),
-        deleteMedicationAllergies: builder.mutation<void, { id: number }>({
-            invalidatesTags: ['MedicationAllergies'],
-            query: ({ id }) => ({
-                body: { id },
-                method: 'DELETE',
-                url: '/patient-service/patients/me/medication-allergies',
-            }),
-        }),
-        getMedicalProblems: builder.query<MedicalEntity[], void>({
-            providesTags: ['MedicalProblems'],
-            query: () => ({
-                method: 'GET',
-                url: '/patient-service/patients/me/medical-problems',
-            }),
-        }),
-        addMedicalProblems: builder.mutation<void, { id: number }>({
-            invalidatesTags: ['MedicalProblems'],
-            query: ({ id }) => ({
-                body: { id },
-                method: 'POST',
-                url: '/patient-service/patients/me/medical-problems',
-            }),
-        }),
-        deleteMedicalProblems: builder.mutation<void, { id: number }>({
-            invalidatesTags: ['MedicalProblems'],
-            query: ({ id }) => ({
-                body: { id },
-                method: 'DELETE',
-                url: '/patient-service/patients/me/medical-problems',
-            }),
-        }),
-        getMedications: builder.query<MedicalEntity[], void>({
-            providesTags: ['Medications'],
-            query: () => ({
-                method: 'GET',
-                url: '/patient-service/patients/me/medications',
-            }),
-        }),
-        addMedications: builder.mutation<void, { id: number }>({
-            invalidatesTags: ['Medications'],
-            query: ({ id }) => ({
-                body: { id },
-                method: 'POST',
-                url: '/patient-service/patients/me/medications',
-            }),
-        }),
-        deleteMedications: builder.mutation<void, { id: number }>({
-            invalidatesTags: ['Medications'],
-            query: ({ id }) => ({
-                body: { id },
-                method: 'DELETE',
-                url: '/patient-service/patients/me/medications',
-            }),
-        }),
-        findMedications: builder.query<TransformData<MedicalEntityItem>, {
-            data: { name: string };
-            params: PaginatedParams;
+
+        // Filter medications (for selection)
+        filterMedications: builder.query<FilteredResponse<{ id: number; name: string }>, {
+            filter: MedicationFilterRequest;
+            params?: FilterParams;
         }>({
-            query: ({ data, params }) => ({
-                body: data,
+            query: ({ filter, params = {} }) => ({
+                body: { name: filter.name ?? '' },
                 method: 'POST',
                 url: '/patient-service/medications/filter',
-                params: { sort: 'name,ASC', size: 20, ...params },
+                params: {
+                    page: params.page ?? 0,
+                    size: params.size ?? 10,
+                    sort: params.sort ?? 'name,ASC',
+                },
             }),
-            serializeQueryArgs: ({ endpointName, queryArgs }) => {
-                const searchName = queryArgs.data.name ?? '';
-                return `${endpointName}-${searchName}`;
-            },
-            transformResponse: (response: PaginatedResponse<MedicalEntityItem>, _, args) => {
-                return {
-                    data: response.content,
-                    page: args.params.page ?? 0,
-                    totalPages: response.totalPages,
-                };
-            },
-            merge: (currentCache, newResponse) => {
-                if (newResponse.page === 0) {
-                    currentCache.data = newResponse.data;
-                } else {
-                    currentCache.data = [...currentCache.data, ...newResponse.data];
-                }
-                currentCache.page = newResponse.page;
-                currentCache.totalPages = newResponse.totalPages;
-            },
-            forceRefetch: ({ currentArg, previousArg }) => {
-                if (!currentArg || !previousArg) {
-                    return true;
-                }
-                const currentName = currentArg.data.name ?? '';
-                const previousName = previousArg.data.name ?? '';
-                const currentPage = currentArg.params.page ?? 0;
-                const previousPage = previousArg.params.page ?? 0;
-                // Refetch if search term changes or page changes
-                return currentName !== previousName || currentPage !== previousPage;
-            },
+            keepUnusedDataFor: 0,
         }),
-        findMedicalTerm: builder.query<TransformData<MedicalEntityItem>, {
-            data: {name: string, type: MedicalTermType};
-            params: PaginatedParams
+
+        // Filter medical terms (for medical problems and medication allergies)
+        filterMedicalTerms: builder.query<FilteredResponse<{ id: number; name: string }>, {
+            filter: { name?: string; types?: string[] };
+            params?: FilterParams;
         }>({
-            query: ({ data, params }) => ({
-                body: data,
+            query: ({ filter, params = {} }) => ({
+                body: { name: filter.name ?? '', types: filter.types ?? [] },
                 method: 'POST',
                 url: '/patient-service/medical-terms/filter',
-                params: { sort: 'name,ASC', size: 20, ...params },
+                params: {
+                    page: params.page ?? 0,
+                    size: params.size ?? 10,
+                    sort: params.sort ?? 'name,ASC',
+                },
             }),
-            serializeQueryArgs: ({ endpointName, queryArgs }) => {
-                const searchName = queryArgs.data.name ?? '';
-                const type = queryArgs.data.type ?? '';
-                return `${endpointName}-${type}-${searchName}`;
-            },
-            transformResponse: (response: PaginatedResponse<MedicalEntityItem>, _, args) => {
-                return {
-                    data: response.content,
-                    page: args.params.page ?? 0,
-                    totalPages: response.totalPages,
-                };
-            },
-            merge: (currentCache, newResponse) => {
-                if (newResponse.page === 0) {
-                    currentCache.data = newResponse.data;
-                } else {
-                    currentCache.data = [...currentCache.data, ...newResponse.data];
-                }
-                currentCache.page = newResponse.page;
-                currentCache.totalPages = newResponse.totalPages;
-            },
-            forceRefetch: ({ currentArg, previousArg }) => {
-                if (!currentArg || !previousArg) {
-                    return true;
-                }
-                const currentName = currentArg.data.name ?? '';
-                const previousName = previousArg.data.name ?? '';
-                const currentType = currentArg.data.type ?? '';
-                const previousType = previousArg.data.type ?? '';
-                const currentPage = currentArg.params.page ?? 0;
-                const previousPage = previousArg.params.page ?? 0;
-                // Refetch if search term changes, type changes, or page changes
-                return currentName !== previousName || currentType !== previousType || currentPage !== previousPage;
-            },
+            keepUnusedDataFor: 0,
         }),
-    })
+
+        // Add medication
+        addPatientMedication: builder.mutation<PatientMedication, { id: number }>({
+            query: data => ({
+                body: data,
+                method: 'POST',
+                url: '/patient-service/patients/me/medications',
+            }),
+            invalidatesTags: ['Medications'],
+        }),
+
+        // Remove medication
+        removePatientMedication: builder.mutation<void, { id: number }>({
+            query: data => ({
+                body: data,
+                method: 'DELETE',
+                url: '/patient-service/patients/me/medications',
+            }),
+            invalidatesTags: ['Medications'],
+        }),
+
+        // Add medical problem
+        addPatientMedicalProblem: builder.mutation<MedicalProblem, { id: number }>({
+            query: data => ({
+                body: data,
+                method: 'POST',
+                url: '/patient-service/patients/me/medical-problems',
+            }),
+            invalidatesTags: ['MedicalProblems'],
+        }),
+
+        // Remove medical problem
+        removePatientMedicalProblem: builder.mutation<void, { id: number }>({
+            query: data => ({
+                body: data,
+                method: 'DELETE',
+                url: '/patient-service/patients/me/medical-problems',
+            }),
+            invalidatesTags: ['MedicalProblems'],
+        }),
+
+        // Add medication allergy
+        addPatientMedicationAllergy: builder.mutation<MedicationAllergy, { id: number }>({
+            query: data => ({
+                body: data,
+                method: 'POST',
+                url: '/patient-service/patients/me/medication-allergies',
+            }),
+            invalidatesTags: ['MedicationAllergies'],
+        }),
+
+        // Remove medication allergy
+        removePatientMedicationAllergy: builder.mutation<void, { id: number }>({
+            query: data => ({
+                body: data,
+                method: 'DELETE',
+                url: '/patient-service/patients/me/medication-allergies',
+            }),
+            invalidatesTags: ['MedicationAllergies'],
+        }),
+    }),
 });
 
 export const {
     useGetHabitsQuery,
-    useGetMedicationsQuery,
-    useFindMedicalTermQuery,
-    useFindMedicationsQuery,
     useGetPatientHabitsQuery,
-    useAddMedicationsMutation,
-    useGetMedicalProblemsQuery,
-    useDeleteMedicationsMutation,
-    useAddMedicalProblemsMutation,
+    useFilterMedicationsQuery,
+    useFilterMedicalTermsQuery,
+    useGetPatientMedicationsQuery,
+    useGetPatientSupplementsQuery,
+    useUpdatePatientStatsMutation,
     useUpdatePatientHabitsMutation,
-    useGetMedicationAllergiesQuery,
-    useDeleteMedicalProblemsMutation,
-    useAddMedicationAllergiesMutation,
-    useDeleteMedicationAllergiesMutation,
+    useAddPatientMedicationMutation,
+    useGetPatientMedicalProblemsQuery,
+    useRemovePatientMedicationMutation,
+    useAddPatientMedicalProblemMutation,
+    useGetPatientMedicationAllergiesQuery,
+    useRemovePatientMedicalProblemMutation,
+    useAddPatientMedicationAllergyMutation,
+    useRemovePatientMedicationAllergyMutation,
 } = healthProfileApi;
