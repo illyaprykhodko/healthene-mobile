@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     screen: {
         flex: 1,
         display: 'flex',
-        backgroundColor: '#F7F8FA', // COLOR.THEME_BG.hex()
+        backgroundColor: '#F7F8FA',
     },
 });
 
