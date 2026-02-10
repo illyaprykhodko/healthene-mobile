@@ -18,12 +18,6 @@ import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import { SHOPPING_STEP } from 'constants/spec';
 import { setCurrentStep } from 'store/slices/shoppingSlice';
-import {
-    useGetShoppingPreferencesQuery,
-    useUpdateShoppingPreferencesMutation,
-    useGenerateShoppingListMutation,
-} from 'store/api/shoppingApi';
-// import { ShoppingListSkeleton } from 'components/Skeleton/ShoppingListSkeleton';
 import GenerateShoppingListSkeleton from 'components/Skeleton/GenerateShoppingListSkeleton';
 import { ShoppingPreferencesSkeleton } from 'components/Skeleton/ShoppingPreferencesSkeleton';
 
