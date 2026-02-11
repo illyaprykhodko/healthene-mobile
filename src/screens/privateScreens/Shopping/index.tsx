@@ -27,6 +27,7 @@ const screenOptions = {
     headerStyle: { backgroundColor: COLORS.THEME_COLOR },
     headerTintColor: COLORS.WHITE,
     headerTitleStyle: { fontWeight: '600' as const },
+    headerTitleAlign: 'center' as const,
 };
 
 interface ShoppingProps {

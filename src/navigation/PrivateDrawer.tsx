@@ -7,7 +7,6 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 // local dependencies
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
-import { OFFSET } from 'constants/offset';
 import InfoStack from 'navigation/InfoStack';
 import BackButton from 'components/BackButton';
 import LibraryStack from 'navigation/LibraryStack';
@@ -45,12 +44,10 @@ export const PrivateDrawer: React.FC = () => {
                     backgroundColor: theme.colors.primary,
                 },
                 headerTintColor: theme.colors.white,
-                headerLeftContainerStyle: {
-                    paddingLeft: OFFSET.HORIZONTAL,
-                },
                 headerTitleStyle: {
                     fontWeight: '600'
                 },
+                headerTitleAlign: 'center',
                 drawerActiveBackgroundColor: 'transparent',
                 drawerLabelStyle: {
                     fontSize: 16,
