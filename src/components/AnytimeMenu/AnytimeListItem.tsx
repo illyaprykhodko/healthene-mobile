@@ -68,9 +68,7 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
     const isCompleted = item.status === 'DONE';
     const canToggle = !disabled && !isFutureDate;
     const isMeasurement = item.type === 'MEASUREMENT';
-
     const isFoodOrDrink = item.type === 'FOOD' || item.type === 'DRINK';
-    // const multiAmount = isFoodOrDrink ? (item.amount || 0) > 1 : false;
     const [expanded, setExpanded] = useState(false);
 
     const handleToggleParent = () => {
@@ -176,68 +174,12 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
                     </View>
                 )}
             </TouchableOpacity>
-
-            {/* {expanded && isDetailsEnabled && (
-                <FlatList
-                    data={childItems}
-                    keyExtractor={i => i.id}
-                    renderItem={({ item: unitItem, index }) => {
-                        const state = { integerConsumed, decimalConsumed };
-                        const checkboxEnabled = isServingEnabled(index, unitItem.amount, state);
-                        const isItemDone = isServingDone(index, unitItem.amount, state);
-
-                        const toggleChild = () => {
-                            if (disabled || !canToggle || !isFoodOrDrink) { return; }
-                            const nextConsumed = applyServingToggle(consumedAmount, unitItem.amount, item.amount || 0, isItemDone);
-                            const willBeDone = nextConsumed === (item.amount || 0);
-                            onUpdateItem({
-                                ...item,
-                                status: willBeDone ? 'DONE' : 'PENDING',
-                                consumedAmount: nextConsumed,
-                            } as AnytimeItem);
-                        };
-
-                        return (
-                            <View style={[styles.detailRow, isItemDone && styles.detailRowDone, { borderTopColor: theme.colors.border }]}>
-                                {image ? (
-                                    <Image style={styles.detailImage} resizeMode="cover" source={{ uri: unitItem.img }} />
-                                ) : <View style={[styles.detailImage, { backgroundColor: theme.colors.lightGrey }]} />}
-                                <View style={styles.detailTextContainer}>
-                                    <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>
-                                        {`${filters.decimalsToFractions(unitItem.amount)} ${unitName}`}
-                                    </Text>
-                                </View>
-                                <View style={[styles.checkboxContainer, !checkboxEnabled && { opacity: 0.5 }] }>
-                                    <Checkbox
-                                        size={14}
-                                        value={isItemDone}
-                                        editable={checkboxEnabled && !disabled}
-                                        onChange={toggleChild}
-                                    />
-                                </View>
-                            </View>
-                        );
-                    }}
-                />
-            )} */}
             {expanded && isDetailsEnabled && (
                 <View>
                     {childItems.map((unitItem, index) => {
                         const state = { integerConsumed, decimalConsumed };
                         const checkboxEnabled = isServingEnabled(index, unitItem.amount, state);
                         const isItemDone = isServingDone(index, unitItem.amount, state);
-
-                        // const onToggle = () => {
-                        //     if (disabled || !canToggle || !isFoodOrDrink) { return; }
-                        //     const nextConsumed = applyServingToggle(consumedAmount, unitItem.amount, item.amount || 0, isItemDone);
-                        //     const willBeDone = nextConsumed === (item.amount || 0);
-                        //     onUpdateItem({
-                        //         ...item,
-                        //         status: willBeDone ? 'DONE' : 'PENDING',
-                        //         consumedAmount: nextConsumed,
-                        //     } as AnytimeItem);
-                        // };
-
                         return (
                             <View
                                 key={unitItem.id}

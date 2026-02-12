@@ -67,11 +67,15 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
 
     const handleUpdateItem = async (data: AnytimeItem) => {
         if (disabled || !data.phaseId) { return; }
+        const preparedData = {
+            ...data,
+            type: data.type === 'DRINK' ? 'FOOD' : data.type,
+        };
         try {
             await updatePhaseItem({
                 id: data.id,
+                data: preparedData,
                 phaseId: data.phaseId,
-                data,
             }).unwrap();
         } catch (error) {
             console.error('Failed to update anytime item:', error);
