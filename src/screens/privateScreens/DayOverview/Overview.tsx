@@ -16,7 +16,7 @@ import FeatherIcon from '@react-native-vector-icons/feather';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
-import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
+import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, Platform, ScrollView } from 'react-native';
 
 // local dependencies
 import {
@@ -906,119 +906,122 @@ export const Overview: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            <View style={styles.content}>
-                {/* Health Question Section */}
-                <HealthQuestion date={currentDate} isFutureDate={isFutureDateCheck} />
+            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                <View style={styles.content}>
+                    {/* Health Question Section */}
+                    <HealthQuestion date={currentDate} isFutureDate={isFutureDateCheck} />
 
-                <Text style={styles.title}>My Daily Plan</Text>
+                    <Text style={styles.title}>My Daily Plan</Text>
 
-                <View style={styles.timelineContainer}>
-                    <TimelineSVG phases={phases} incompleteDay={incompleteDay} />
-                    <FlatList
-                        data={phases}
-                        style={{ marginBottom: 35 }}
-                        keyExtractor={item => String(item.id)}
-                        renderItem={({ item }) => {
-                            const { bg, fg, name } = getIconColorByType(item.type);
-                            const isMeal = isMealPhase(item.type);
-                            const iconMarginLeft = isMeal
-                                ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
-                                : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
+                    <View style={styles.timelineContainer}>
+                        <TimelineSVG phases={phases} incompleteDay={incompleteDay} />
+                        <FlatList
+                            data={phases}
+                            scrollEnabled={false}
+                            style={{ marginBottom: 35 }}
+                            keyExtractor={item => String(item.id)}
+                            renderItem={({ item }) => {
+                                const { bg, fg, name } = getIconColorByType(item.type);
+                                const isMeal = isMealPhase(item.type);
+                                const iconMarginLeft = isMeal
+                                    ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
+                                    : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
 
-                            const isIncomplete = item.status === PHASE_ITEM_STATUS.INCOMPLETE;
-                            const isDone = item.status === PHASE_ITEM_STATUS.DONE;
-                            const shouldHighlight = incompleteDay && isIncomplete;
-                            const showArrowIcon = shouldHighlight && (item.type === 'MEAL' || item.type === 'ADDED_BY_PATIENT');
+                                const isIncomplete = item.status === PHASE_ITEM_STATUS.INCOMPLETE;
+                                const isDone = item.status === PHASE_ITEM_STATUS.DONE;
+                                const shouldHighlight = incompleteDay && isIncomplete;
+                                const showArrowIcon = shouldHighlight && (item.type === 'MEAL' || item.type === 'ADDED_BY_PATIENT');
 
-                            const displayTitle = item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title);
+                                const displayTitle = item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title);
 
-                            const renderStatusIndicator = () => {
-                                if (isDone) {
+                                const renderStatusIndicator = () => {
+                                    if (isDone) {
+                                        return (
+                                            <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
+                                        );
+                                    }
+                                    if (incompleteDay && isIncomplete) {
+                                        return (
+                                            <FeatherIcon name="info" size={18} color={COLORS.BROWN} />
+                                        );
+                                    }
+                                    return null;
+                                };
+
+                                // Status indicator left position - exactly where the dot would be
+                                // TIMELINE_WIDTH/2 = 25 for MEAL, offsetLineX = 105 for non-MEAL
+                                // Subtract half of icon size (18/2 = 9) to center it
+                                const statusLeftPosition = isMeal ? 16 : 96;
+
+                                if (shouldHighlight) {
                                     return (
-                                        <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
+                                        <TouchableOpacity
+                                            key={String(item.id)}
+                                            style={styles.row}
+                                            onPress={() => handlePhasePress(item)}
+                                        >
+                                            <View style={[styles.statusIndicator, { left: statusLeftPosition }]}>
+                                                {renderStatusIndicator()}
+                                            </View>
+                                            <View style={{ marginLeft: iconMarginLeft }}>
+                                                <Highlight color={COLORS.LIGHT_PINK}>
+                                                    {showArrowIcon ? (
+                                                        <Ionicons
+                                                            name="chevron-forward-circle-outline"
+                                                            color={COLORS.DARK_GREY}
+                                                            size={38}
+                                                        />
+                                                    ) : (
+                                                        <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: 0 }]}>
+                                                            <Icon iconStyle="solid" name={name} color={fg} size={18} />
+                                                        </View>
+                                                    )}
+                                                    <Text variant="h4" style={styles.highlightText}>
+                                                        {displayTitle}
+                                                    </Text>
+                                                </Highlight>
+                                            </View>
+                                        </TouchableOpacity>
                                     );
                                 }
-                                if (incompleteDay && isIncomplete) {
-                                    return (
-                                        <FeatherIcon name="info" size={18} color={COLORS.BROWN} />
-                                    );
-                                }
-                                return null;
-                            };
 
-                            // Status indicator left position - exactly where the dot would be
-                            // TIMELINE_WIDTH/2 = 25 for MEAL, offsetLineX = 105 for non-MEAL
-                            // Subtract half of icon size (18/2 = 9) to center it
-                            const statusLeftPosition = isMeal ? 16 : 96;
-
-                            if (shouldHighlight) {
+                                // Normal item (non-highlighted)
                                 return (
                                     <TouchableOpacity
                                         key={String(item.id)}
                                         style={styles.row}
                                         onPress={() => handlePhasePress(item)}
                                     >
-                                        <View style={[styles.statusIndicator, { left: statusLeftPosition }]}>
-                                            {renderStatusIndicator()}
+                                        {isDone && (
+                                            <View style={[styles.doneStatusIndicator, { left: isMeal ? 16 : 96 }]}>
+                                                <AnimatedCheckmark
+                                                    isDone={isDone}
+                                                    phaseId={item.id}
+                                                    isFocused={isFocused}
+                                                    isRecentlyCompleted={recentlyCompletedPhases.includes(item.id)}
+                                                    onAnimationComplete={() => dispatch(removeRecentlyCompletedPhase(item.id))}
+                                                />
+                                            </View>
+                                        )}
+                                        <View style={[
+                                            styles.iconWrapper,
+                                            { backgroundColor: bg, marginLeft: iconMarginLeft },
+                                            isDone && styles.donePhaseContent
+                                        ]}>
+                                            <Icon iconStyle="solid" name={name} color={fg} size={18} />
                                         </View>
-                                        <View style={{ marginLeft: iconMarginLeft }}>
-                                            <Highlight color={COLORS.LIGHT_PINK}>
-                                                {showArrowIcon ? (
-                                                    <Ionicons
-                                                        name="chevron-forward-circle-outline"
-                                                        color={COLORS.DARK_GREY}
-                                                        size={38}
-                                                    />
-                                                ) : (
-                                                    <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: 0 }]}>
-                                                        <Icon iconStyle="solid" name={name} color={fg} size={18} />
-                                                    </View>
-                                                )}
-                                                <Text variant="h4" style={styles.highlightText}>
-                                                    {displayTitle}
-                                                </Text>
-                                            </Highlight>
+                                        <View style={[styles.rightContent, isDone && styles.donePhaseContent]}>
+                                            <Text variant="h4" style={{ color: isDone ? theme.colors.grey : theme.colors.text }}>
+                                                {displayTitle}
+                                            </Text>
                                         </View>
                                     </TouchableOpacity>
                                 );
-                            }
-
-                            // Normal item (non-highlighted)
-                            return (
-                                <TouchableOpacity
-                                    key={String(item.id)}
-                                    style={styles.row}
-                                    onPress={() => handlePhasePress(item)}
-                                >
-                                    {isDone && (
-                                        <View style={[styles.doneStatusIndicator, { left: isMeal ? 16 : 96 }]}>
-                                            <AnimatedCheckmark
-                                                isDone={isDone}
-                                                phaseId={item.id}
-                                                isFocused={isFocused}
-                                                isRecentlyCompleted={recentlyCompletedPhases.includes(item.id)}
-                                                onAnimationComplete={() => dispatch(removeRecentlyCompletedPhase(item.id))}
-                                            />
-                                        </View>
-                                    )}
-                                    <View style={[
-                                        styles.iconWrapper,
-                                        { backgroundColor: bg, marginLeft: iconMarginLeft },
-                                        isDone && styles.donePhaseContent
-                                    ]}>
-                                        <Icon iconStyle="solid" name={name} color={fg} size={18} />
-                                    </View>
-                                    <View style={[styles.rightContent, isDone && styles.donePhaseContent]}>
-                                        <Text variant="h4" style={{ color: isDone ? theme.colors.grey : theme.colors.text }}>
-                                            {displayTitle}
-                                        </Text>
-                                    </View>
-                                </TouchableOpacity>
-                            );
-                        }}
-                    />
+                            }}
+                        />
+                    </View>
                 </View>
-            </View>
+            </ScrollView>
 
             <AnytimeMenu
                 date={currentDate}
