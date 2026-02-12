@@ -1,10 +1,22 @@
 // outsource dependencies
 import moment from 'moment';
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 // local dependencies
+import {
+    useGetPhaseItemsQuery,
+    useGetDayOverviewQuery,
+    useUpdatePhaseMutation,
+    useAddPhaseItemMutation,
+    useUpdatePhaseItemMutation,
+    useDeletePhaseItemMutation,
+    useAddPhaseMealItemMutation,
+    useReplacePhaseItemMutation,
+    useAddPhaseCustomRecipeMutation,
+    useUpdateIncludeRescueFoodsMutation
+} from 'store/api/dayOverviewApi';
 import ListItem from './ListItem';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -23,10 +35,6 @@ import SwipeList, { SwipeValueChange } from 'components/SwipeList';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
-import { useGetDayOverviewQuery, useGetPhaseItemsQuery, useUpdatePhaseItemMutation,
-    useDeletePhaseItemMutation, useAddPhaseMealItemMutation, useAddPhaseCustomRecipeMutation,
-    useUpdatePhaseMutation, useReplacePhaseItemMutation, useAddPhaseItemMutation,
-    useUpdateIncludeRescueFoodsMutation } from 'store/api/dayOverviewApi';
 
 
 interface EditProps {

@@ -80,33 +80,6 @@ export const ListItem: React.FC<ListItemProps> = ({
         }
     };
 
-    // const prepareIngredientNameWithUnit = (item: any, options: { withoutName?: boolean } = {}) => {
-    //     const amount = item.amount || item.initialAmount;
-    //     const serving = item.serving;
-    //     const useServing = item.useServing;
-    //     const ingredient = item.recipe?.ingredients?.[0];
-
-    //     if (!amount) { return ''; }
-
-    //     let result = '';
-    //     let unitSingularName,
-    //     unitPluralName;
-        
-    //     if (useServing && serving) {
-    //         result += `${serving} serving`;
-    //     } else {
-    //         result += amount;
-    //         if (item.weight?.unit?.name) {
-    //             result += ` ${item.weight.unit.name}`;
-    //         }
-    //     }
-
-    //     if (!options.withoutName && ingredient?.entity?.name) {
-    //         result += ` ${ingredient.entity.name}`;
-    //     }
-
-    //     return result;
-    // };
 
     const getImageUrl = () => {
         if (isRecipe) {
