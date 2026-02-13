@@ -1,25 +1,34 @@
 // outsource dependencies
 import React, { useEffect, memo } from 'react';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useIsFocused } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // local dependencies
 import StockList from './StockList';
 import ShoppingPDF from './ShoppingPDF';
-import Header from 'components/Header';
+import BackBtn from 'components/BackBtn';
 import { ROUTES } from 'constants/routes';
+import { COLORS } from 'constants/colors';
 import ShoppingList from './ShoppingList';
 import ChooseAddress from './ChooseAddress';
 import ConfirmShopping from './ConfirmShopping';
+import { Hamburger } from 'components/Hamburger';
 import { SHOPPING_STATUS } from 'constants/spec';
 import ChooseGroceryStore from './ChooseGroceryStore';
 import { useAppDispatch, useAppSelector } from 'store';
 import ShoppingPreferences from './ShoppingPreferences';
-import { resetShopping } from 'store/slices/shoppingSlice';
 import { VideoScreen } from 'screens/privateScreens/Library';
 import { QuestionScreen } from 'screens/privateScreens/Question';
 import { useGetShoppingListStatusQuery } from 'store/api/shoppingApi';
+import { resetShopping, selectShopping } from 'store/slices/shoppingSlice';
 
 const Stack = createNativeStackNavigator();
+
+const screenOptions = {
+    headerStyle: { backgroundColor: COLORS.THEME_COLOR },
+    headerTintColor: COLORS.WHITE,
+    headerTitleStyle: { fontWeight: '600' as const },
+    headerTitleAlign: 'center' as const,
+};
 
 interface ShoppingProps {
     route?: any;
@@ -28,7 +37,7 @@ interface ShoppingProps {
 const Shopping: React.FC<ShoppingProps> = ({ route }) => {
     const dispatch = useAppDispatch();
     const isFocused = useIsFocused();
-    const drawerNavigation = useNavigation<any>();
+    const { initialized, status } = useAppSelector(selectShopping);
     const submittedShoppingList = useAppSelector(state => state.app?.user?.submittedShoppingList);
 
     const { data: statusData, isLoading } = useGetShoppingListStatusQuery(undefined, {
@@ -49,57 +58,77 @@ const Shopping: React.FC<ShoppingProps> = ({ route }) => {
         return ROUTES.SHOPPING_PREFERENCES;
     };
 
-    const renderHeader = (title: string, isRootScreen = false) => (headerProps: any) => (
-        <Header
-            title={title}
-            showHamburger
-            isRootScreen={isRootScreen}
-            navigation={headerProps.navigation}
-            onHamburgerPress={() => drawerNavigation.openDrawer?.()}
-        />
-    );
-
     if (isLoading) {
         return null;
     }
 
     return (
-        <Stack.Navigator initialRouteName={getInitialRoute()}>
+        <Stack.Navigator
+            initialRouteName={getInitialRoute()}
+            screenOptions={({ navigation }) => ({
+                ...screenOptions,
+                gestureEnabled: true,
+                gestureDirection: 'horizontal',
+                headerRight: () => <Hamburger onPress={() => (navigation as any).openDrawer?.()} />,
+                headerLeft: () => <BackBtn onPress={() => navigation.goBack()} />,
+            })}
+        >
             <Stack.Screen
                 component={ShoppingList}
                 name={ROUTES.SHOPPING_LIST}
                 initialParams={route?.params}
-                options={{ header: renderHeader('Shopping List', true) }}
+                options={{
+                    title: 'Shopping List',
+                    headerBackVisible: false,
+                }}
             />
             <Stack.Screen
                 component={ShoppingPDF}
                 name={ROUTES.SHOPPING_PDF}
-                options={{ header: renderHeader('Download File') }}
+                options={{
+                    title: 'Download File',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
             />
             <Stack.Screen
                 component={StockList}
                 name={ROUTES.STOCK_LIST}
-                options={{ header: renderHeader('Stock List') }}
+                options={{
+                    title: 'Stock List',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
             />
             <Stack.Screen
                 component={ShoppingPreferences}
                 name={ROUTES.SHOPPING_PREFERENCES}
-                options={{ header: renderHeader('Shopping Preferences', true) }}
+                options={{
+                    title: 'Shopping Preferences',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
             />
             <Stack.Screen
                 component={ChooseGroceryStore}
                 name={ROUTES.CHOOSE_GROCERY_STORE}
-                options={{ header: renderHeader('Shopping List') }}
+                options={{
+                    title: 'Shopping List',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
             />
             <Stack.Screen
                 component={ChooseAddress}
                 name={ROUTES.CHOOSE_ADDRESS}
-                options={{ header: renderHeader('Shopping List') }}
+                options={{
+                    title: 'Shopping List',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
             />
             <Stack.Screen
                 component={ConfirmShopping}
                 name={ROUTES.CONFIRM_SHOPPING}
-                options={{ header: renderHeader('Shopping List') }}
+                options={{
+                    title: 'Shopping List',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
             />
             <Stack.Screen
                 name={ROUTES.QUESTION}
@@ -112,7 +141,10 @@ const Shopping: React.FC<ShoppingProps> = ({ route }) => {
             <Stack.Screen
                 name={ROUTES.VIDEO}
                 component={VideoScreen}
-                options={{ header: renderHeader('Video') }}
+                options={{
+                    title: 'Video',
+                    headerTitleStyle: { fontSize: 18 },
+                }}
             />
         </Stack.Navigator>
     );
