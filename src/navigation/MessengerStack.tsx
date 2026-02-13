@@ -4,11 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // local dependencies
-import BackBtn from 'components/BackBtn';
+import Header from 'components/Header';
 import { ROUTES } from 'constants/routes.ts';
-import { useTheme } from 'hooks/useTheme.ts';
-import { OFFSET } from 'constants/offset.ts';
-import { Hamburger } from 'components/Hamburger';
 import { MessageEntity } from 'types/common/interfaces.ts';
 import MessengerList from 'screens/privateScreens/Messenger';
 import AudioScreen from 'screens/privateScreens/Messenger/AudioScreen.tsx';
@@ -18,41 +15,36 @@ import WriteMessageScreen from 'screens/privateScreens/Messenger/WriteMessageScr
 
 const Stack = createStackNavigator();
 const MessengerStack = () => {
-    const theme = useTheme();
     const drawerNavigation = useNavigation<any>();
 
+    const renderHeader = (title: string, isRootScreen = false) => (headerProps: any) => (
+        <Header
+            title={title}
+            showHamburger
+            isRootScreen={isRootScreen}
+            navigation={headerProps.navigation}
+            onHamburgerPress={() => drawerNavigation.openDrawer?.()}
+        />
+    );
+
     return (
-        <Stack.Navigator
-            initialRouteName={ROUTES.MESSAGE_LIST}
-            screenOptions={({ navigation }) => ({
-                headerShown: true,
-                drawerPosition: 'right',
-                gestureDirection: 'horizontal-inverted',
-                headerLeft: () => <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />,
-                headerRight: () => <Hamburger style={{ marginRight: OFFSET.HORIZONTAL / 2 }} onPress={() => drawerNavigation.openDrawer?.()} />,
-                headerStyle: {
-                    backgroundColor: theme.colors.primary,
-                },
-                headerTintColor: theme.colors.white,
-                headerTitleStyle: {
-                    fontWeight: '600'
-                },
-                headerTitleAlign: 'center',
-                headerLeftContainerStyle: {
-                    minWidth: 70,
-                },
-                headerRightContainerStyle: {
-                    minWidth: 70,
-                },
-            })}
-        >
-            <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.MESSAGE_LIST} component={MessengerList} />
-            <Stack.Screen options={{ title: 'Camera' }} name={ROUTES.MESSENGER_CAMERA} component={CameraScreen} />
-            <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.READ_MESSAGE} component={ReadMessageScreen} />
-            <Stack.Screen options={{ title: 'Record Audio' }} name={ROUTES.MESSENGER_AUDIO} component={AudioScreen} />
+        <Stack.Navigator initialRouteName={ROUTES.MESSAGE_LIST}>
+            <Stack.Screen name={ROUTES.MESSAGE_LIST} component={MessengerList} options={{ header: renderHeader('Messages', true) }} />
+            <Stack.Screen name={ROUTES.MESSENGER_CAMERA} component={CameraScreen} options={{ header: renderHeader('Camera') }} />
+            <Stack.Screen name={ROUTES.READ_MESSAGE} component={ReadMessageScreen} options={{ header: renderHeader('Messages') }} />
+            <Stack.Screen name={ROUTES.MESSENGER_AUDIO} component={AudioScreen} options={{ header: renderHeader('Record Audio') }} />
             <Stack.Screen
                 name={ROUTES.WRITE_MESSAGE} component={WriteMessageScreen}
-                options={({ route }: {route: { params?: MessageEntity }}) => ({ title: route.params?.id ? 'Message' : 'New Message' })}
+                options={({ route }: {route: { params?: MessageEntity }}) => ({
+                    header: (headerProps: any) => (
+                        <Header
+                            title={route.params?.id ? 'Message' : 'New Message'}
+                            showHamburger
+                            navigation={headerProps.navigation}
+                            onHamburgerPress={() => drawerNavigation.openDrawer?.()}
+                        />
+                    ),
+                })}
             />
         </Stack.Navigator>
     );

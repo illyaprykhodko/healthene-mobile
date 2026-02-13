@@ -1,9 +1,7 @@
 // outsource dependencies
 import React from 'react';
 import moment from 'moment';
-import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // local dependencies
@@ -16,15 +14,11 @@ import Item from './Item';
 import Edit from './Edit';
 import UPCScan from './UPCScan';
 import EditFood from './EditFood';
-import Text from 'components/Text';
+import Header from 'components/Header';
 import { Overview } from './Overview';
-import BackBtn from 'components/BackBtn';
 import { VideoScreen } from '../Library';
 import { ROUTES } from 'constants/routes';
-import { useTheme } from 'hooks/useTheme';
-import { OFFSET } from 'constants/offset';
 import AddReplaceItem from './AddReplaceItem';
-import { Hamburger } from 'components/Hamburger';
 import SaveValueScreen from '../SaveValueScreen';
 import AddReplaceRecipe from './AddReplaceRecipe';
 import SmartScaleScreen from '../SmartScaleScreen';
@@ -45,8 +39,6 @@ const Stack = createNativeStackNavigator();
 
 const DayOverviewStack: React.FC = () => {
     const navigation = useNavigation<RootStackParamList>();
-    const theme = useTheme();
-    const insets = useSafeAreaInsets();
 
     const dispatch = useAppDispatch();
     const { date, expectAnswer } = useAppSelector(selectDayOverview);
@@ -67,203 +59,150 @@ const DayOverviewStack: React.FC = () => {
         );
     };
 
-    const renderCustomHeader = (options?: {
-        title?: string;
+    const renderHeader = (title: string, isRootScreen = false) => (headerProps: any) => (
+        <Header
+            title={title}
+            showHamburger
+            isRootScreen={isRootScreen}
+            navigation={headerProps.navigation}
+            onHamburgerPress={() => (navigation as any).openDrawer?.()}
+        />
+    );
+
+    const renderHeaderWithTimeSwitcher = (options?: {
         disabled?: boolean;
-        showBackButton?: boolean;
+        isRootScreen?: boolean;
         showDateButtons?: boolean;
     }) => (headerProps: any) => (
-        <View style={[styles.customHeader, { paddingTop: insets.top + OFFSET.POINT, backgroundColor: theme.colors.primary }]}>
-            <View style={[styles.headerSide, styles.headerSideLeft]}>
-                <BackBtn onPress={() => headerProps.navigation.goBack()} color={theme.colors.white}/>
-            </View>
-            {options?.title
-                ? <View style={styles.headerCenter}>
-                    <Text variant="h3" style={{ color: theme.colors.white }}>
-                        {options.title}
-                    </Text>
-                </View>
-                : <View style={styles.headerCenter}>
-                    <TimeSwitcher
-                        date={currentDate}
-                        disabled={options?.disabled ?? true}
-                        isHideLeftBtn={!options?.showDateButtons}
-                        isHideRightBtn={!options?.showDateButtons}
-                        init={({ date: nextDate }) => handleDateChange(nextDate)}
-                    />
-                </View>}
-            <View style={[styles.headerSide, styles.headerSideRight]}>
-                <Hamburger onPress={() => (navigation as any).openDrawer?.()} />
-            </View>
-        </View>
+        <Header
+            showHamburger
+            isRootScreen={options?.isRootScreen}
+            navigation={headerProps.navigation}
+            onHamburgerPress={() => (navigation as any).openDrawer?.()}
+            centerComponent={
+                <TimeSwitcher
+                    date={currentDate}
+                    disabled={options?.disabled ?? true}
+                    isHideLeftBtn={!options?.showDateButtons}
+                    isHideRightBtn={!options?.showDateButtons}
+                    init={({ date: nextDate }) => handleDateChange(nextDate)}
+                />
+            }
+        />
     );
 
     return (
-        <Stack.Navigator initialRouteName="DayOverview" screenOptions={() => ({
-            // title: currentDate,
-            // headerStyle: {
-            //     backgroundColor: theme.colors.primary,
-            // },
-            // headerTintColor: theme.colors.white,
-            // headerTitleStyle: {
-            //     fontWeight: '600',
-            //     fontSize: 18,
-            // },
-            // headerTitleAlign: 'center',
-            // headerLeftContainerStyle: {
-            //     paddingLeft: OFFSET.HORIZONTAL,
-            // },
-            // headerRightContainerStyle: {
-            //     paddingRight: OFFSET.HORIZONTAL,
-            // },
-            headerRight: () => (
-                <Hamburger onPress={() => (navigation as any).openDrawer?.()} style={styles.menuButton} />
-            ),
-        })}>
+        <Stack.Navigator initialRouteName="DayOverview">
             <Stack.Screen
                 name="DayOverview"
                 component={Overview}
                 options={() => ({
-                    title: 'Day Overview',
-                    header: renderCustomHeader({ showDateButtons: true, disabled: Boolean(expectAnswer) }),
-                    // header: () => (
-                    //     <View style={[styles.customHeader, { paddingTop: insets.top, backgroundColor: theme.colors.primary }]}>
-                    //         <View style={styles.headerSide}>
-                    //             <BackButton navigation={navigation} theme={theme} />
-                    //         </View>
-                    //         <View style={styles.headerCenter}>
-                    //             <TimeSwitcher
-                    //                 date={currentDate}
-                    //                 isHideLeftBtn={false}
-                    //                 isHideRightBtn={false}
-                    //                 disabled={Boolean(expectAnswer)}
-                    //                 init={({ date: nextDate }) => handleDateChange(nextDate)}
-                    //             />
-                    //         </View>
-                    //         <View style={styles.headerSide}>
-                    //             <Hamburger onPress={() => (navigation as any).openDrawer?.()} />
-                    //         </View>
-                    //     </View>
-                    // ),
+                    header: renderHeaderWithTimeSwitcher({ showDateButtons: true, disabled: Boolean(expectAnswer), isRootScreen: true }),
                 })}
             />
             <Stack.Screen
                 name="Item"
                 component={Item}
-                options={{
-                    title: 'Recipe',
-                    header: renderCustomHeader(),
-                }}
+                options={{ header: renderHeader('Recipe') }}
             />
             <Stack.Screen
                 name="Edit"
                 component={Edit}
                 options={() => ({
-                    title: 'Edit',
-                    header: renderCustomHeader({ showDateButtons: true, disabled: Boolean(expectAnswer) }),
+                    header: renderHeaderWithTimeSwitcher({ showDateButtons: true, disabled: Boolean(expectAnswer) }),
                 })}
             />
             <Stack.Screen
                 name="AddReplaceItem"
                 component={AddReplaceItem}
-                options={{ title: 'Select Item', header: renderCustomHeader() }}
+                options={{ header: renderHeader('Select Item') }}
             />
             <Stack.Screen
                 name="AddReplaceRecipe"
                 component={AddReplaceRecipe}
-                options={{ title: 'Select Recipe', header: renderCustomHeader() }}
+                options={{ header: renderHeader('Select Recipe') }}
             />
             <Stack.Screen
                 name="TreeAddReplaceItem"
                 component={TreeAddReplaceItem}
-                options={{ title: 'Select Item', header: renderCustomHeader() }}
+                options={{ header: renderHeader('Select Item') }}
             />
             <Stack.Screen
                 name="EditFood"
                 component={EditFood}
-                options={{ title: 'Edit Food', header: renderCustomHeader() }}
+                options={{ header: renderHeader('Edit Food') }}
             />
             <Stack.Screen
                 name="ModifyIngredient"
                 component={ModifyIngredient}
-                options={{ title: 'Ingredients', header: renderCustomHeader() }}
+                options={{ header: renderHeader('Ingredients') }}
             />
             <Stack.Screen
                 name="ModifyTypeIngredient"
                 component={ModifyTypeIngredient}
-                options={{ title: 'Modify', header: renderCustomHeader() }}
+                options={{ header: renderHeader('Modify') }}
             />
             <Stack.Screen
                 name="UPCScan"
                 component={UPCScan}
-                options={{ title: 'Scan UPC Code' }}
+                options={{ header: renderHeader('Scan UPC Code') }}
             />
             <Stack.Screen
                 name="ExerciseCategories"
                 component={ExerciseCategories}
-                options={{ title: 'Exercise', header: renderCustomHeader() }}
+                options={{ header: renderHeader('Exercise') }}
             />
             <Stack.Screen
                 name="ExerciseDetails"
                 component={ExerciseDetails}
-                options={{ title: 'Exercise Details', header: renderCustomHeader() }}
+                options={{ header: renderHeader('Exercise Details') }}
             />
             <Stack.Screen
                 name="EditExercise"
                 component={ExerciseEdit}
-                options={{ title: 'Edit Exercise', header: renderCustomHeader() }}
+                options={{ header: renderHeader('Edit Exercise') }}
             />
 
             <Stack.Screen
                 name="SaveValue"
                 component={SaveValueScreen}
-                options={{ title: 'Measurement', header: renderCustomHeader() }}
+                options={{ header: renderHeader('Measurement') }}
             />
             <Stack.Screen
                 name="MeasurementChart"
                 component={MeasurementChartScreen}
-                options={{ title: 'Measurement', header: renderCustomHeader() }}
+                options={{ header: renderHeader('Measurement') }}
             />
 
             <Stack.Screen
                 name="AllRecordedData"
                 component={AllRecordedDataScreen}
-                options={{ title: 'All Recorded Data', header: renderCustomHeader() }}
+                options={{ header: renderHeader('All Recorded Data') }}
             />
 
             {/* WEIGHT-SPECIFIC SCREENS: Smart Scale and Manual Input */}
             <Stack.Screen
                 name="WeightMeasurement"
                 component={WeightMeasurementScreen}
-                options={{
-                    headerTitleStyle: { fontSize: 18 },
-                    header: renderCustomHeader({ title: 'Measurement' }),
-                }}
+                options={{ header: renderHeader('Measurement') }}
             />
             
             <Stack.Screen
                 name="SmartScale"
                 component={SmartScaleScreen}
-                options={{
-                    title: 'Smart Scale',
-                    headerTitleStyle: { fontSize: 18 },
-                }}
+                options={{ header: renderHeader('Smart Scale') }}
             />
             <Stack.Screen
                 name="Replacement"
                 component={ReplacementScreen}
-                options={{
-                    title: 'Select Replacement',
-                    headerTitleStyle: { fontSize: 18 },
-                }}
+                options={{ header: renderHeader('Select Replacement') }}
             />
             
             <Stack.Screen
                 name="ReplaceItems"
                 component={ReplaceItemsScreen}
                 options={({ route }) => ({
-                    title: (route.params as any)?.title || 'Replacement Options',
-                    headerTitleStyle: { fontSize: 18 },
+                    header: renderHeader((route.params as any)?.title || 'Replacement Options'),
                 })}
             />
 
@@ -279,67 +218,20 @@ const DayOverviewStack: React.FC = () => {
             <Stack.Screen
                 name={ROUTES.QUESTION_CATEGORY}
                 component={QuestionCategoryScreen}
-                options={{
-                    title: 'Questions',
-                    header: renderCustomHeader(),
-                }}
+                options={{ header: renderHeader('Questions') }}
             />
             <Stack.Screen
                 name={ROUTES.QUESTION_LIST}
                 component={QuestionListScreen}
-                options={{
-                    title: 'Questions',
-                    header: renderCustomHeader(),
-                }}
+                options={{ header: renderHeader('Questions') }}
             />
             <Stack.Screen
                 name={ROUTES.VIDEO}
                 component={VideoScreen}
-                options={{
-                    title: 'Video',
-                    header: renderCustomHeader(),
-                }}
+                options={{ header: renderHeader('Video') }}
             />
         </Stack.Navigator>
     );
 };
 
 export default DayOverviewStack;
-
-const styles = StyleSheet.create({
-    customHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        // paddingTop: OFFSET.VERTICAL * 2,
-        paddingBottom: OFFSET.POINT * 3,
-        justifyContent: 'space-between',
-        paddingHorizontal: OFFSET.HORIZONTAL,
-    },
-    headerSide: {
-        minWidth: 60,
-        justifyContent: 'center',
-    },
-    headerSideLeft: {
-        alignItems: 'flex-start',
-    },
-    headerSideRight: {
-        alignItems: 'flex-end',
-    },
-    headerCenter: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    backButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    backText: {
-        fontSize: 16,
-        marginLeft: OFFSET.HORIZONTAL / 2,
-        fontWeight: '600',
-    },
-    menuButton: {
-        marginRight: OFFSET.HORIZONTAL / 2,
-    },
-});

@@ -4,10 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // local dependencies
-import BackBtn from 'components/BackBtn';
+import Header from 'components/Header';
 import { ROUTES } from 'constants/routes';
-import { useTheme } from 'hooks/useTheme';
-import { Hamburger } from 'components/Hamburger';
 import { VideoScreen } from 'screens/privateScreens/Library';
 import AboutPlanScreen from 'screens/privateScreens/AboutPlanScreen';
 import {
@@ -19,39 +17,29 @@ import {
 const Stack = createNativeStackNavigator();
 
 const AboutPlanStack: React.FC = () => {
-    const theme = useTheme();
     const drawerNavigation = useNavigation<any>();
 
+    const renderHeader = (title: string, isRootScreen = false) => (headerProps: any) => (
+        <Header
+            title={title}
+            showHamburger
+            isRootScreen={isRootScreen}
+            navigation={headerProps.navigation}
+            onHamburgerPress={() => drawerNavigation.openDrawer?.()}
+        />
+    );
+
     return (
-        <Stack.Navigator
-            initialRouteName={ROUTES.ABOUT_PLAN}
-            screenOptions={({ navigation }) => ({
-                headerStyle: {
-                    backgroundColor: theme.colors.primary,
-                },
-                headerTintColor: theme.colors.white,
-                headerTitleStyle: {
-                    fontSize: 18,
-                    fontWeight: '600',
-                },
-                headerTitleAlign: 'center',
-                headerLeft: () => <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />,
-                headerRight: () => <Hamburger onPress={() => drawerNavigation.openDrawer?.()} />,
-            })}
-        >
+        <Stack.Navigator initialRouteName={ROUTES.ABOUT_PLAN}>
             <Stack.Screen
                 name={ROUTES.ABOUT_PLAN}
                 component={AboutPlanScreen}
-                options={{
-                    title: 'About Plan',
-                }}
+                options={{ header: renderHeader('About Plan', true) }}
             />
             <Stack.Screen
                 name={ROUTES.VIDEO}
                 component={VideoScreen}
-                options={{
-                    title: 'Video',
-                }}
+                options={{ header: renderHeader('Video') }}
             />
             <Stack.Screen
                 name={ROUTES.QUESTION}
@@ -64,16 +52,12 @@ const AboutPlanStack: React.FC = () => {
             <Stack.Screen
                 name={ROUTES.QUESTION_CATEGORY}
                 component={QuestionCategoryScreen}
-                options={{
-                    title: 'Questions',
-                }}
+                options={{ header: renderHeader('Questions') }}
             />
             <Stack.Screen
                 name={ROUTES.QUESTION_LIST}
                 component={QuestionListScreen}
-                options={{
-                    title: 'Questions',
-                }}
+                options={{ header: renderHeader('Questions') }}
             />
         </Stack.Navigator>
     );

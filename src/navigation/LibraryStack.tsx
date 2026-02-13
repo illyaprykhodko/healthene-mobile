@@ -4,10 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // local dependencies
-import BackBtn from 'components/BackBtn';
-import { ROUTES } from 'constants/routes';
-import { useTheme } from 'hooks/useTheme';
-import { Hamburger } from 'components/Hamburger';
+import Header from 'components/Header';
 import {
     VideoScreen,
     VideoListScreen,
@@ -15,69 +12,49 @@ import {
     VideoLibraryScreen,
     VideoCategoryScreen,
 } from 'screens/privateScreens/Library';
+import { ROUTES } from 'constants/routes';
 
 const Stack = createNativeStackNavigator();
 
 export const LibraryStack: React.FC = () => {
-    const theme = useTheme();
     const drawerNavigation = useNavigation<any>();
 
+    const renderHeader = (title: string, isRootScreen = false) => (headerProps: any) => (
+        <Header
+            title={title}
+            showHamburger
+            isRootScreen={isRootScreen}
+            navigation={headerProps.navigation}
+            onHamburgerPress={() => drawerNavigation.openDrawer?.()}
+        />
+    );
+
     return (
-        <Stack.Navigator
-            initialRouteName={ROUTES.ROOT_VIDEO_LIBRARY}
-            screenOptions={({ navigation }) => ({
-                title: 'Videos',
-                headerStyle: {
-                    backgroundColor: theme.colors.primary,
-                },
-                headerTintColor: theme.colors.white,
-                headerTitleStyle: {
-                    fontSize: 18,
-                    fontWeight: '600',
-                },
-                headerTitleAlign: 'center',
-                headerRight: () => (
-                    <Hamburger onPress={() => drawerNavigation.openDrawer?.()} />
-                ),
-                headerLeft: () => (
-                    <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />
-                ),
-            })}
-        >
+        <Stack.Navigator initialRouteName={ROUTES.ROOT_VIDEO_LIBRARY}>
             <Stack.Screen
-                name={ROUTES.ROOT_VIDEO_LIBRARY}
                 component={LibraryListScreen}
-                options={{
-                    title: 'Library',
-                }}
+                name={ROUTES.ROOT_VIDEO_LIBRARY}
+                options={{ header: renderHeader('Library', true) }}
             />
             <Stack.Screen
                 name={ROUTES.VIDEO_LIBRARY}
                 component={VideoLibraryScreen}
-                options={{
-                    title: 'Videos',
-                }}
+                options={{ header: renderHeader('Videos') }}
             />
             <Stack.Screen
                 name={ROUTES.VIDEO_CATEGORY}
                 component={VideoCategoryScreen}
-                options={{
-                    title: 'Videos',
-                }}
+                options={{ header: renderHeader('Videos') }}
             />
             <Stack.Screen
                 name={ROUTES.VIDEO_LIST}
                 component={VideoListScreen}
-                options={{
-                    title: 'Videos',
-                }}
+                options={{ header: renderHeader('Videos') }}
             />
             <Stack.Screen
                 name={ROUTES.VIDEO}
                 component={VideoScreen}
-                options={{
-                    title: 'Video',
-                }}
+                options={{ header: renderHeader('Video') }}
             />
         </Stack.Navigator>
     );

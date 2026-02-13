@@ -8,7 +8,6 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import InfoStack from 'navigation/InfoStack';
-import BackButton from 'components/BackButton';
 import LibraryStack from 'navigation/LibraryStack';
 import Shopping from 'screens/privateScreens/Shopping';
 import MessengerStack from 'navigation/MessengerStack';
@@ -30,24 +29,12 @@ export const PrivateDrawer: React.FC = () => {
 
     return (
         <Drawer.Navigator
-            backBehavior="history"
+            backBehavior="initialRoute"
             initialRouteName={ROUTES.MAIN}
             drawerContent={props => <CustomDrawerContent {...props} />}
-            screenOptions={({ navigation }) => ({
+            screenOptions={{
                 headerShown: true,
                 drawerPosition: 'right',
-                gestureDirection: 'horizontal-inverted',
-                headerLeft: () => (
-                    <BackButton navigation={navigation} theme={theme} />
-                ),
-                headerStyle: {
-                    backgroundColor: theme.colors.primary,
-                },
-                headerTintColor: theme.colors.white,
-                headerTitleStyle: {
-                    fontWeight: '600'
-                },
-                headerTitleAlign: 'center',
                 drawerActiveBackgroundColor: 'transparent',
                 drawerLabelStyle: {
                     fontSize: 16,
@@ -57,7 +44,7 @@ export const PrivateDrawer: React.FC = () => {
                     width: width * 0.8,
                     backgroundColor: theme.colors.background,
                 },
-            })}
+            }}
         >
             <Drawer.Screen
                 name={ROUTES.MAIN}
