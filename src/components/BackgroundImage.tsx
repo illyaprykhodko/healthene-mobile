@@ -1,6 +1,6 @@
 // outsource dependencies
 import React, { useCallback, useEffect, useState, ReactNode } from 'react';
-import { StyleSheet, ImageBackground, Platform, Keyboard, ViewStyle } from 'react-native';
+import { StyleSheet, ImageBackground, Keyboard, ViewStyle } from 'react-native';
 // local dependencies
 import { OFFSET } from 'constants/offset';
 
@@ -30,9 +30,7 @@ const BackgroundImage: React.FC<BackgroundImageProps> = ({ children, style = {} 
         };
     }, []);
 
-    const backgroundImage = Platform.OS === 'ios'
-        ? require('../../assets/sign-in-bg.png')
-        : { uri: 'asset:/sign-in-bg.png' };
+    const backgroundImage = require('../../assets/sign-in-bg.png');
 
     const backgroundImageStyle = useCallback(() => StyleSheet.flatten([
         styles.image,

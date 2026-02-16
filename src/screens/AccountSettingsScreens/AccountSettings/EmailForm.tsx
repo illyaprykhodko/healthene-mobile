@@ -11,6 +11,7 @@ import { useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import { StyleSheet, View } from 'react-native';
 import React, { useRef, useCallback, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // local dependencies
 import { User } from 'types';
@@ -35,6 +36,7 @@ interface EmailFormProps {
 
 const EmailForm = ({ onPreloader }: EmailFormProps) => {
     const theme = useTheme();
+    const insets = useSafeAreaInsets();
     const user = useSelector((state: RootState) => state.app.user);
     const { signOut } = useAuth();
     const bottomSheetRef = useRef<BottomSheetModal>(null);
@@ -66,7 +68,7 @@ const EmailForm = ({ onPreloader }: EmailFormProps) => {
             setIsRequesting(true);
             onPreloader(true);
 
-            const verificationUrl = `${config.websiteUrl}/public/change-email/`;
+            const verificationUrl = `${config.websiteUrl}/public/email-change/`;
             await changeEmailRequest({
                 newEmail: email,
                 verificationUrl,
@@ -175,7 +177,7 @@ const EmailForm = ({ onPreloader }: EmailFormProps) => {
                 backgroundColor: theme.colors.grey,
             }}
         >
-            <BottomSheetView style={styles.confirmationContainer}>
+            <BottomSheetView style={[styles.confirmationContainer, { paddingBottom: Platform.OS === 'android' ? insets.bottom + OFFSET.VERTICAL : 0 }]}>
                 {sheetMode === 'confirm' ? (
                     <>
                         <Text variant="h3" style={styles.confirmationTitle}>

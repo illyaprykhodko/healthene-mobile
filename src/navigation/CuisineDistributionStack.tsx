@@ -7,7 +7,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BackBtn from 'components/BackBtn';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
-import { OFFSET } from 'constants/offset';
 import { Hamburger } from 'components/Hamburger';
 import { FavoritesScreen, CuisineListScreen } from 'screens/privateScreens/CuisineDistribution';
 
@@ -29,12 +28,7 @@ const CuisineDistributionStack: React.FC = () => {
                 headerTitleStyle: {
                     fontWeight: '600',
                 },
-                headerLeftContainerStyle: {
-                    paddingLeft: OFFSET.HORIZONTAL,
-                },
-                headerRightContainerStyle: {
-                    paddingRight: OFFSET.HORIZONTAL,
-                },
+                headerTitleAlign: 'center',
                 headerLeft: () => (
                     <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />
                 ),

@@ -1,8 +1,15 @@
 apply plugin: "com.android.application"
-apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply plugin: "com.google.gms.google-services"
+
+project.ext.envConfigFiles = [
+        productiondebug: ".env.production",
+        productionrelease: ".env.production",
+        developmentrelease: ".env.development",
+        developmentdebug: ".env.development",
+]
+apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -78,16 +85,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.intelliceed_patientapp_mobile_v2"
+    namespace "com.healthene"
     defaultConfig {
-        applicationId "com.intelliceed_patientapp_mobile_v2"
+        applicationId "com.healthene"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
-//         ndk {
-//   abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
-// }
+        versionName "0.0.1"
     }
 
     signingConfigs {
@@ -109,37 +113,13 @@ android {
 
     flavorDimensions "environment"
     productFlavors {
-        // development {
-        //     dimension "environment"
-        //     applicationIdSuffix ".dev"
-        //     resValue "string", "app_name", "IntelliCeed Dev"
-        // }
-        // local {
-        //     dimension "environment"
-        //     applicationIdSuffix ".local"
-        //     resValue "string", "app_name", "IntelliCeed Local"
-        // }
-        // production {
-        //     dimension "environment"
-        //     resValue "string", "app_name", "IntelliCeed"
-        // }
-
-        local {
-            minSdkVersion rootProject.ext.minSdkVersion
-            targetSdkVersion rootProject.ext.targetSdkVersion
-            resValue "string", "build_config_package", "com.healthene"
-        }
         development {
-//            applicationId "com.healthene.dev"
-//            minSdkVersion rootProject.ext.minSdkVersion
-//            targetSdkVersion rootProject.ext.targetSdkVersion
-//            resValue "string", "build_config_package", "com.healthene"
+             dimension "environment"
+             resValue "string", "app_name", "Healthene Dev"
         }
         production {
-            applicationId "com.healthene"
-            minSdkVersion rootProject.ext.minSdkVersion
-            targetSdkVersion rootProject.ext.targetSdkVersion
-            resValue "string", "build_config_package", "com.healthene"
+            dimension "environment"
+            resValue "string", "app_name", "Healthene"
         }
     }
 

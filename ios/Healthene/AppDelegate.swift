@@ -28,7 +28,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     window = UIWindow(frame: UIScreen.main.bounds)
 
     factory.startReactNative(
-      withModuleName: "intelliceed_patientapp_mobile_v2",
+      withModuleName: "Healthene",
       in: window,
       launchOptions: launchOptions
     )

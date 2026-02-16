@@ -43,7 +43,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'intelliceed_patientapp_mobile_v2' do
+target 'Healthene' do
   config = use_native_modules!
 
   pod 'react-native-blob-util',
