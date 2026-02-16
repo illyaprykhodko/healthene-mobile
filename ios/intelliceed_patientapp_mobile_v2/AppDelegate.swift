@@ -3,7 +3,6 @@ import React
 import FirebaseCore
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
-#import <React/RCTLinkingManager.h>
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
   var window: UIWindow?
