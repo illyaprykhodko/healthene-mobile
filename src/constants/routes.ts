@@ -29,6 +29,7 @@ export const ROUTES = {
     MEASUREMENT_CHART: 'MeasurementChart',
     MODIFY_INGREDIENT: 'ModifyIngredient',
     ADD_REPLACE_RECIPE: 'AddReplaceRecipe',
+    WEIGHT_MEASUREMENT: 'WeightMeasurement',
     HEALTH_PROFILE_STACK: 'HealthProfileStack',
     TREE_ADD_REPLACE_ITEM: 'TreeAddReplaceItem',
     CUISINE_DISTRIBUTION: 'CuisineDistribution',
@@ -36,7 +37,6 @@ export const ROUTES = {
     CUISINE_DISTRIBUTION_LIST: 'CuisineDistributionList',
     MEAL_PREFERENCES_MEALS_LIST: 'MealPreferencesMealsList',
     CUISINE_DISTRIBUTION_FAVORITES: 'CuisineDistributionFavorites',
-
     // Questions
     QUESTION: 'Question',
     QUESTION_LIST: 'QuestionList',
@@ -59,6 +59,7 @@ export const ROUTES = {
     // Account Settings
     ADDRESS: 'Address',
     SETTINGS: 'Settings',
+    NOTIFICATIONS: 'Notifications',
     SETTINGS_STACK: 'SettingsStack',
     CHANGE_PASSWORD: 'ChangePassword',
     ACCOUNT_SETTINGS: 'AccountSettings',

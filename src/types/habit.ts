@@ -20,27 +20,35 @@ import { IdName, Url } from './common';
  * @property {string} createdDate - ISO date string when the habit was created
  * @property {string} updatedDate - ISO date string when the habit was last updated
  */
+// export interface Habit {
+//   id: number;
+//   name: string;
+//   description: string;
+//   category: IdName;
+//   image?: Url;
+//   frequency: {
+//     type: 'daily' | 'weekly' | 'monthly';
+//     times: number;
+//     days?: string[];
+//   };
+//   reminder?: {
+//     time: string;
+//     days: string[];
+//   };
+//   tags?: string[];
+//   isActive: boolean;
+//   createdDate: string;
+//   updatedDate: string;
+// }
 export interface Habit {
-  id: number;
-  name: string;
-  description: string;
-  category: IdName;
-  image?: Url;
-  frequency: {
-    type: 'daily' | 'weekly' | 'monthly';
-    times: number;
-    days?: string[];
-  };
-  reminder?: {
-    time: string;
-    days: string[];
-  };
-  tags?: string[];
-  isActive: boolean;
-  createdDate: string;
-  updatedDate: string;
+    id: number;
+    name: string;
+    group: 'ALL' | 'MALE' | 'FEMALE';
+    record?: {
+        id?: number;
+        entity: { id: number };
+    } | null;
 }
-
 /**
  * Represents a category of habits
  * @interface HabitCategory

@@ -18,11 +18,6 @@ import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import { SHOPPING_STEP } from 'constants/spec';
 import { setCurrentStep } from 'store/slices/shoppingSlice';
-import {
-    useGetShoppingPreferencesQuery,
-    useUpdateShoppingPreferencesMutation,
-    useGenerateShoppingListMutation,
-} from 'store/api/shoppingApi';
 // import { ShoppingListSkeleton } from 'components/Skeleton/ShoppingListSkeleton';
 import GenerateShoppingListSkeleton from 'components/Skeleton/GenerateShoppingListSkeleton';
 import { ShoppingPreferencesSkeleton } from 'components/Skeleton/ShoppingPreferencesSkeleton';
@@ -93,15 +88,18 @@ const ShoppingPreferences: React.FC = () => {
                     disabled={disabled || item.amount === 0}
                     style={[styles.controlBtn, item.amount === 0 && styles.controlBtnDisabled]}
                 >
-                    <Icon name="minus" size={20} color={item.amount === 0 ? COLORS.GREY : COLORS.THEME_COLOR} />
+                    <Icon name="minus" size={16} color={item.amount === 0 ? COLORS.DARK_GREY : COLORS.DARK_GREY} />
                 </TouchableOpacity>
-                <Text style={styles.amount}>{item.amount}</Text>
+                <View style={styles.amountWrapper}>
+                    <Text style={styles.amount}>{item.amount}</Text>
+                    <Text style={styles.amountLabel}>Amount</Text>
+                </View>
                 <TouchableOpacity
                     onPress={() => handleAmountChange(item.id, 1)}
                     disabled={disabled}
                     style={styles.controlBtn}
                 >
-                    <Icon name="plus" size={20} color={COLORS.THEME_COLOR} />
+                    <Icon name="plus" size={16} color={COLORS.DARK_GREY} />
                 </TouchableOpacity>
             </View>
         </View>
@@ -115,7 +113,7 @@ const ShoppingPreferences: React.FC = () => {
     return (
         <Screen initialized={!isLoading} style={styles.container}>
             <View style={styles.description}>
-                <Text textAlign="center" variant="h3" color={COLORS.THEME_COLOR}>
+                <Text textAlign="center" variant="h3" color={COLORS.DARK_BLUE}>
                     People Eating Per Meal
                 </Text>
             </View>
@@ -170,39 +168,55 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         justifyContent: 'space-between',
         marginBottom: OFFSET.VERTICAL,
+        marginRight: OFFSET.HORIZONTAL,
         paddingVertical: OFFSET.VERTICAL,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: '#F3F3F380',
         borderWidth: 1,
-        borderRadius: 8,
-        borderColor: COLORS.GREY,
+        borderRadius: 5,
+        borderColor: COLORS.DARKER_GREY,
     },
     itemName: {
         marginBottom: 10,
         color: COLORS.BLACK,
     },
     controls: {
+        width: '100%',
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
+        paddingHorizontal: OFFSET.HORIZONTAL * 2,
     },
     controlBtn: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
         backgroundColor: COLORS.WHITE,
         borderWidth: 1,
-        borderColor: COLORS.THEME_COLOR,
+        borderColor: COLORS.DARKER_GREY,
         justifyContent: 'center',
         alignItems: 'center',
     },
     controlBtnDisabled: {
         borderColor: COLORS.GREY,
     },
+    amountWrapper: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: 56,
+    },
     amount: {
-        fontSize: 24,
+        fontSize: 36,
         fontWeight: 'bold',
-        marginHorizontal: 20,
-        minWidth: 40,
+        marginHorizontal: 12,
+        minWidth: 48,
         textAlign: 'center',
+        color: COLORS.BLUE,
+    },
+    amountLabel: {
+        textTransform: 'uppercase',
+        color: COLORS.GREY,
+        textAlign: 'center',
+        fontSize: 18,
     },
     buttonControl: {
         flexDirection: 'row',
@@ -236,4 +250,3 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
-

@@ -1,8 +1,8 @@
 // outsource dependencies
 import * as yup from 'yup';
 import {
-    BottomSheetModal,
     BottomSheetView,
+    BottomSheetModal,
     BottomSheetBackdrop,
     BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';

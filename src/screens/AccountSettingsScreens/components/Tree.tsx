@@ -10,10 +10,10 @@ import Text from 'components/Text.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { TREE_TYPE } from 'constants/spec.ts';
-import { CategoryItem, CategoryTransformData, TreeType } from 'types/categoryTree.ts';
 import { setCategories } from 'store/slices/foodPreferrencesSlice.ts';
 import { BreadcrumbItem, Breadcrumbs } from 'components/Breadcrumbs.tsx';
 import { useGetPatientCategoriesQuery } from 'store/api/categoryTreeApi.ts';
+import { CategoryItem, CategoryTransformData, TreeType } from 'types/categoryTree.ts';
 
 interface TreeProps {
     treeTypeViewLabel: TreeType;

@@ -21,7 +21,7 @@ import { messengerApi } from 'store/api/messengerApi.ts';
 import messengerSlice from 'store/slices/messengerSlice.ts';
 import { dayOverviewReducer } from './slices/dayOverviewSlice';
 import { categoryTreeApi } from 'store/api/categoryTreeApi.ts';
-import { healthProfileApi } from 'store/api/healthProfileApi.ts';
+// import { healthProfileApi } from 'store/api/healthProfileApi.ts';
 import forgotPasswordReducer from './slices/forgotPasswordSlice';
 import { healthProfileApi } from 'store/api/healthProfileApi.ts';
 import { mealPreferencesApi } from 'store/api/mealPreferencesApi.ts';
@@ -36,7 +36,7 @@ export const store = configureStore({
         exercise: exerciseReducer,
         messenger: messengerSlice,
         dayOverview: dayOverviewReducer,
-        healthProfile: healthProfileSlice,
+        // healthProfile: healthProfileSlice,
         forgotPassword: forgotPasswordReducer,
         foodPreferences: foodPreferencesSlice,
         [authApi.reducerPath]: authApi.reducer,

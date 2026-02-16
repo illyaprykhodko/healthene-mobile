@@ -32,7 +32,7 @@ const SettingsScreen = () => {
         { title: ITEM.ACCOUNT_SETTINGS, navigate: () => navigation.navigate(ROUTES.ACCOUNT_SETTINGS) },
         { title: ITEM.FOOD_PREFERENCES, navigate: () => navigation.navigate(ROUTES.FOOD_PREFERENCES) },
         { title: ITEM.FOOD_ALLERGIES, navigate: () => navigation.navigate(ROUTES.FOOD_ALLERGIES) },
-        { title: ITEM.NOTIFICATIONS },
+        { title: ITEM.NOTIFICATIONS, navigate: () => navigation.navigate(ROUTES.NOTIFICATIONS) },
     ];
     return <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <FlatList

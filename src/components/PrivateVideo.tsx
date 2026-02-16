@@ -13,11 +13,11 @@ import Icon from '@react-native-vector-icons/ionicons';
 // local dependencies
 import Text from './Text';
 import { config } from 'constants';
+import { useAppSelector } from 'store';
 import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
-import { useAppSelector } from 'store';
-import { ATTACHMENT_STATUS } from 'constants/spec';
 import type { Attachment } from 'types/video';
+import { ATTACHMENT_STATUS } from 'constants/spec';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const VIDEO_HEIGHT = (SCREEN_WIDTH * 9) / 16; // 16:9 aspect ratio

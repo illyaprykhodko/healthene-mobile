@@ -17,7 +17,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Text from 'components/Text';
 // hooks
 import { useTheme } from 'hooks/useTheme';
-import { useHealthIntegration } from 'hooks/useHealthIntegration';
+// import { useHealthIntegration } from 'hooks/useHealthIntegration';
 import { useGetLastMeasurementQuery } from 'store/api/dayOverviewApi';
 import { MeasurementItem, useMeasurementSubmit } from 'hooks/useMeasurementSubmit';
 // types
@@ -32,6 +32,7 @@ import { GraphIcon, InfoIcon } from '../icons';
 import { MeasurementIcon } from './AnytimeIcons';
 import Description from 'components/Description';
 import { MeasurementField } from './MeasurementField';
+import AnimatedDropdown from 'components/AnimatedDropdown';
 import { BloodPressureFields } from './BloodPressureFields';
 
 interface MeasurementInputModalProps {
@@ -59,18 +60,16 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
     );
 
     const [selectedUnit, setSelectedUnit] = useState(config.defaultUnit);
-    const [showUnitPicker, setShowUnitPicker] = useState(false);
     const [isPanelOpen, setIsPanelOpen] = useState(false);
     const [hasLastMeasurement, setHasLastMeasurement] = useState(false);
 
     const navigation = useNavigation();
-
-    const {
-        isAvailable: healthAppAvailable,
-        hasPermissions: healthAppPermissions,
-        isLoading: healthAppLoading,
-        fetchLatestSample,
-    } = useHealthIntegration();
+    // const {
+    //     isAvailable: healthAppAvailable,
+    //     hasPermissions: healthAppPermissions,
+    //     isLoading: healthAppLoading,
+    //     fetchLatestSample,
+    // } = useHealthIntegration();
 
     const { submit, isSubmitting } = useMeasurementSubmit(item, {
         onSuccess: onClose,
@@ -97,42 +96,41 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
         });
         return values;
     }, [config]);
-
     // Handle fetch from health app
-    const handleFetchFromHealth = async (setValues: (values: any) => void) => {
-        try {
-            const sample = await fetchLatestSample(measurementType);
+    // const handleFetchFromHealth = async (setValues: (values: any) => void) => {
+    //     try {
+    //         const sample = await fetchLatestSample(measurementType);
 
-            if (!sample) {
-                console.warn('[MeasurementInputModal] No health data found for today');
-                return;
-            }
+    //         if (!sample) {
+    //             console.warn('[MeasurementInputModal] No health data found for today');
+    //             return;
+    //         }
 
-            if (measurementType === 'BLOOD_PRESSURE') {
-                const bpValue = sample.value as { systolic: number; diastolic: number };
-                setValues({
-                    systolic: String(bpValue.systolic),
-                    diastolic: String(bpValue.diastolic),
-                });
-            } else {
-                setValues({
-                    value: String(sample.value),
-                });
-            }
+    //         if (measurementType === 'BLOOD_PRESSURE') {
+    //             const bpValue = sample.value as { systolic: number; diastolic: number };
+    //             setValues({
+    //                 systolic: String(bpValue.systolic),
+    //                 diastolic: String(bpValue.diastolic),
+    //             });
+    //         } else {
+    //             setValues({
+    //                 value: String(sample.value),
+    //             });
+    //         }
 
-            // Submit immediately with health app source
-            await submit(
-                [sample],
-                Platform.OS === 'ios' ? 'APPLE_HEALTH' : 'GOOGLE_FIT',
-                selectedUnit,
-            );
-        } catch (error) {
-            console.error('[MeasurementInputModal] Fetch from health error:', error);
-        }
-    };
+    //         // Submit immediately with health app source
+    //         await submit(
+    //             [sample],
+    //             Platform.OS === 'ios' ? 'APPLE_HEALTH' : 'GOOGLE_FIT',
+    //             selectedUnit,
+    //         );
+    //     } catch (error) {
+    //         console.error('[MeasurementInputModal] Fetch from health error:', error);
+    //     }
+    // };
 
-    const showHealthButton
-    = config.supportsHealthApp && healthAppAvailable && healthAppPermissions;
+    // const showHealthButton
+    // = config.supportsHealthApp && healthAppAvailable && healthAppPermissions;
 
     const openPanel = () => setIsPanelOpen(true);
     const closePanel = () => setIsPanelOpen(false);
@@ -238,52 +236,16 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                                 {config.units.length > 1
                   && measurementType !== 'BLOOD_PRESSURE' && (
                                     <View style={styles.unitSelector}>
-                                        <TouchableOpacity
-                                            onPress={() => setShowUnitPicker(!showUnitPicker)}
-                                            style={styles.unitButton}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.unitButtonText,
-                                                    { color: theme.colors.blue },
-                                                ]}
-                                            >
-                          Unit: {selectedUnit}
-                                            </Text>
-                                            <Icon
-                                                size={16}
-                                                iconStyle="solid"
-                                                color={theme.colors.blue}
-                                                name={showUnitPicker ? 'chevron-up' : 'chevron-down'}
-                                            />
-                                        </TouchableOpacity>
-
-                                        {showUnitPicker && (
-                                            <View style={styles.unitPicker}>
-                                                {config.units.map(unit => (
-                                                    <TouchableOpacity
-                                                        key={unit.id}
-                                                        onPress={() => {
-                                                            setSelectedUnit(unit.name);
-                                                            setShowUnitPicker(false);
-                                                        }}
-                                                        style={[
-                                                            styles.unitOption,
-                                                            { borderBottomColor: theme.colors.border },
-                                                        ]}
-                                                    >
-                                                        <Text
-                                                            style={[
-                                                                styles.unitOptionText,
-                                                                { color: theme.colors.text },
-                                                            ]}
-                                                        >
-                                                            {unit.name}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                ))}
-                                            </View>
-                                        )}
+                                        <AnimatedDropdown
+                                            prefix="Unit: "
+                                            maxHeight={190}
+                                            valueLabel={selectedUnit}
+                                            options={config.units.map(unit => ({
+                                                id: unit.id,
+                                                label: unit.name,
+                                            }))}
+                                            onSelect={option => setSelectedUnit(option.label)}
+                                        />
                                     </View>
                                 )}
 
@@ -301,7 +263,7 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                                 <Description
                                     onClose={closePanel}
                                     isActive={isPanelOpen}
-                                    video={item.measurement?.video || null}
+                                    video={(item.measurement?.video as any) || null}
                                     description={item.measurement?.description || ''}
                                 />
                                 <View style={styles.buttonsContainer}>
@@ -416,33 +378,7 @@ const styles = StyleSheet.create({
     unitSelector: {
         width: '100%',
         marginBottom: 24,
-    },
-    unitButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 12,
-    },
-    unitButtonText: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginRight: 8,
-    },
-    unitPicker: {
-        marginTop: 8,
-        borderRadius: 8,
-        overflow: 'hidden',
-    },
-    unitOption: {
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        backgroundColor: '#E0EBF766',
-        borderBottomWidth: 1,
-    },
-    unitOptionText: {
-        fontSize: 20,
-        fontWeight: '500',
-        textAlign: 'center',
+        zIndex: 20,
     },
     healthButton: {
         flexDirection: 'row',

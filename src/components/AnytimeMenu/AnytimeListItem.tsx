@@ -1,7 +1,8 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/fontawesome5';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 // local dependencies
 import Text from 'components/Text';
 import { COLORS } from 'constants/colors';
@@ -37,7 +38,7 @@ const getItemDisplayData = (item: AnytimeItem) => {
         case 'MEASUREMENT':
             return {
                 details: '',
-                image: null,
+                image: item.measurement?.coverImage?.url,
                 name: item.measurement?.name || 'Unknown Measurement',
             };
         case 'PHYSICAL_ACTIVITY':
@@ -105,6 +106,8 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
 
     const isDetailsEnabled = !isFutureDate && isFoodOrDrink && (item.amount || 0) > 1;
     const showParentCheckbox = !isDetailsEnabled || item.status === 'DONE';
+    const detailsProgress = useSharedValue(0);
+    const detailsMaxHeight = useMemo(() => childItems.length * 62, [childItems.length]);
 
     const handleChevronPress = useCallback(() => setExpanded(v => !v), []);
     const onToggleServing = useCallback((unitAmount: number, isDone: boolean) => {
@@ -113,6 +116,21 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
         const willBeDone = nextConsumed === (item.amount || 0);
         onUpdateItem({ ...item, status: willBeDone ? 'DONE' : 'PENDING', consumedAmount: nextConsumed } as AnytimeItem);
     }, [disabled, canToggle, isFoodOrDrink, consumedAmount, item.amount, onUpdateItem, item]);
+
+    useEffect(() => {
+        const shouldExpand = expanded && isDetailsEnabled;
+        detailsProgress.value = withTiming(shouldExpand ? 1 : 0, {
+            duration: shouldExpand ? 350 : 250,
+            easing: shouldExpand ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
+        });
+    }, [detailsProgress, expanded, isDetailsEnabled]);
+
+    const detailsAnimatedStyle = useAnimatedStyle(() => ({
+        opacity: detailsProgress.value,
+        maxHeight: detailsMaxHeight * detailsProgress.value,
+        transform: [{ scaleY: 0.96 + (0.04 * detailsProgress.value) }],
+        overflow: 'hidden',
+    }));
     return (
         <View>
             <TouchableOpacity
@@ -220,8 +238,11 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
                     }}
                 />
             )} */}
-            {expanded && isDetailsEnabled && (
-                <View>
+            {isDetailsEnabled && (
+                <Animated.View
+                    style={detailsAnimatedStyle}
+                    pointerEvents={expanded ? 'auto' : 'none'}
+                >
                     {childItems.map((unitItem, index) => {
                         const state = { integerConsumed, decimalConsumed };
                         const checkboxEnabled = isServingEnabled(index, unitItem.amount, state);
@@ -263,7 +284,7 @@ export const AnytimeListItem: React.FC<AnytimeListItemProps> = ({
                             </View>
                         );
                     })}
-                </View>
+                </Animated.View>
             )}
         </View>
     );
@@ -316,6 +337,7 @@ const styles = StyleSheet.create({
     chevron: {
         marginTop: 2,
         marginRight: 4,
+        padding: 7,
     },
     chevronWithCheckbox: {
         marginRight: 12,

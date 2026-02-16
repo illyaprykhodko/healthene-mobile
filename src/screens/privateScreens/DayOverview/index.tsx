@@ -73,7 +73,8 @@ const DayOverviewStack: React.FC = () => {
     }) => (headerProps: any) => (
         <View style={[styles.customHeader, { paddingTop: insets.top + OFFSET.POINT, backgroundColor: theme.colors.primary }]}>
             <View style={[styles.headerSide, styles.headerSideLeft]}>
-                <BackBtn label={headerProps.back?.title} onPress={() => headerProps.navigation.goBack()} color={theme.colors.white}/>
+                {/* TODO: Add back button label if needed label={headerProps.back?.title} */}
+                <BackBtn onPress={() => headerProps.navigation.goBack()} color={theme.colors.white}/>
                 {/* {(options?.showBackButton !== false) && headerProps.back && (
                     <TouchableOpacity
                         style={styles.backButton}
@@ -240,6 +241,7 @@ const DayOverviewStack: React.FC = () => {
                 component={WeightMeasurementScreen}
                 options={{
                     title: 'Measurement',
+                    header: renderCustomHeader(),
                     headerTitleStyle: { fontSize: 18 },
                 }}
             />

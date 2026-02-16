@@ -130,6 +130,7 @@ export const ForgotPasswordScreen: React.FC = () => {
                 <BackgroundImage>
                     <IconButton
                         size={20}
+                        iconStyle="solid"
                         icon="arrow-left"
                         onPress={goToSignIn}
                         style={styles.backIcon}

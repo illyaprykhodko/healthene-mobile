@@ -12,6 +12,7 @@ import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
 import FoodPreferences from 'screens/AccountSettingsScreens/FoodPreferences';
 import AccountSettings from 'screens/AccountSettingsScreens/AccountSettings';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
+import NotificationsScreen from 'screens/AccountSettingsScreens/NotificationsScreen';
 import ChangePasswordScreen from 'screens/AccountSettingsScreens/ChangePasswordScreen.tsx';
 import { BiometricSettingsScreen } from 'screens/AccountSettingsScreens/BiometricSettingsScreen';
 import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
@@ -68,6 +69,11 @@ export const AccountSettingsStack = () => {
                 name={ROUTES.BIOMETRIC_SETTINGS}
                 component={BiometricSettingsScreen}
                 options={{ title: 'Biometric Authentication' }}
+            />
+            <Stack.Screen
+                name={ROUTES.NOTIFICATIONS}
+                component={NotificationsScreen}
+                options={{ title: 'Notification settings' }}
             />
             <Stack.Screen
                 component={FoodPreferences}

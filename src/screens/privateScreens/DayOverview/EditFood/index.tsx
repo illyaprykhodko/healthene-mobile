@@ -4,7 +4,7 @@ import Icon from '@react-native-vector-icons/fontawesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, UIManager, LayoutAnimation, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image, FlatList, UIManager, LayoutAnimation, Platform } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text';
@@ -18,6 +18,7 @@ import Controls from 'components/Controls';
 import { CATALOG_TAG_TYPE } from 'constants/spec';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import ApproveButtons from 'components/ApproveButtons';
+import AnimatedDropdown from 'components/AnimatedDropdown';
 import { selectDayOverview } from 'store/slices/dayOverviewSlice';
 import { prepareIngredientNameWithUnit } from 'utils/ingredientUtils';
 import { useGetRecipePrototypeQuery } from 'store/api/dayOverviewApi';
@@ -97,41 +98,20 @@ interface UnitsViewProps {
 }
 
 const UnitsView: React.FC<UnitsViewProps> = ({ unit, unitsList, handleUnit }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-
-    const handleToggle = () => {
-        setIsExpanded(prev => !prev);
-    };
-
     return (
         <View style={styles.unitsContainer}>
             <View style={styles.unitViewContainer}>
-                <TouchableOpacity onPress={handleToggle} style={styles.unitTouchable}>
-                    <Text style={styles.unitText}>{unit}</Text>
-                    <Icon
-                        size={16}
-                        iconStyle="solid"
-                        color={COLORS.BLACK}
-                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                    />
-                </TouchableOpacity>
+                <AnimatedDropdown
+                    maxHeight={150}
+                    valueLabel={unit}
+                    options={(unitsList || []).map(item => ({
+                        id: item.id,
+                        label: item.unitName,
+                    }))}
+                    onSelect={option => handleUnit(Number(option.id))}
+                    triggerTextStyle={styles.unitText}
+                />
             </View>
-            {isExpanded && (
-                <ScrollView style={styles.unitsList}>
-                    {(unitsList || []).map(item => (
-                        <TouchableOpacity
-                            key={item.id}
-                            style={styles.unitButton}
-                            onPress={() => {
-                                handleUnit(item.id);
-                                handleToggle();
-                            }}
-                        >
-                            <Text style={styles.unitName}>{item.unitName}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            )}
         </View>
     );
 };
@@ -249,14 +229,14 @@ export const EditFood: React.FC = () => {
                 entityType
             });
         }
-        // Go back twice: to TreeAddReplaceItem, then to Edit
         navigation.goBack();
         setTimeout(() => navigation.goBack(), 100);
     }, [item, amount, localIngredients, prevItem, substanceType, entityType, onApply, navigation, isRecipe]);
 
     const handleUpdateAmount = useCallback((newAmount: number) => {
         setAmount(newAmount);
-        setItem(prev => ({ ...prev, amount: newAmount }));
+        // setItem(prev => ({ ...prev, amount: newAmount }));
+        setItem(prev => ({ ...prev, recipe: { ...prev.recipe, servingAmount: newAmount } as any, amount: newAmount, initialAmount: newAmount }));
     }, []);
 
     const handleDeleteIngredient = useCallback((ing: any) => {
@@ -320,12 +300,13 @@ export const EditFood: React.FC = () => {
                     updateData={handleUpdateAmount}
                 />
             </View>
-            {weights.length > 0 && <UnitsView
+            {weights.length > 0
+            && <UnitsView
                 unitsList={weights}
                 unit={getCurrentUnit()}
                 handleUnit={handleUnit}
             />}
-            <View style={styles.bottomPadding} />
+            {/* <View style={styles.bottomPadding} /> */}
         </View>
     );
 
@@ -584,6 +565,7 @@ const styles = StyleSheet.create({
         paddingLeft: 0,
         paddingRight: 0,
         backgroundColor: COLORS.WHITE,
+        paddingTop: OFFSET.VERTICAL,
     },
     header: {
         backgroundColor: '#E0EBF7',
@@ -667,33 +649,12 @@ const styles = StyleSheet.create({
     },
     unitViewContainer: {
         alignItems: 'center',
-    },
-    unitTouchable: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
+        paddingHorizontal: OFFSET.HORIZONTAL * 2,
     },
     unitText: {
         fontSize: 18,
-        marginRight: 10,
         fontWeight: '500',
         textTransform: 'capitalize',
-        color: COLORS.BLACK,
-    },
-    unitsList: {
-        maxHeight: 150,
-    },
-    unitButton: {
-        backgroundColor: '#E0EBF766',
-        paddingVertical: OFFSET.VERTICAL,
-        borderBottomWidth: 1,
-        borderBottomColor: '#D9D9D9',
-    },
-    unitName: {
-        textTransform: 'capitalize',
-        fontSize: 18,
-        fontWeight: '500',
-        textAlign: 'center',
         color: COLORS.BLACK,
     },
     // Ingredients tab

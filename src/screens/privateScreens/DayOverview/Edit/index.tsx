@@ -1,9 +1,9 @@
 // outsource dependencies
 import moment from 'moment';
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 // local dependencies
 import ListItem from './ListItem';
 import Text from 'components/Text';
@@ -48,6 +48,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
   
     const [scrollEnabled, setScrollEnabled] = useState(true);
     const [localItems, setLocalItems] = useState<PhaseItem[]>([]);
+    const [isAddingAddedItem, setIsAddingAddedItem] = useState(false);
+    const [shouldScrollToAddedEnd, setShouldScrollToAddedEnd] = useState(false);
+    const scrollViewRef = useRef<ScrollView>(null);
     const [showRescueFoodsModal, setShowRescueFoodsModal] = useState(false);
 
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
@@ -63,7 +66,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         skip: !targetDate,
     });
 
-    const { data: phaseItems, isLoading: isPhaseItemsLoading } = useGetPhaseItemsQuery(targetPhaseId, {
+    const { data: phaseItems, isLoading: isPhaseItemsLoading, refetch: refetchPhaseItems } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
     });
     // mutations
@@ -160,6 +163,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 entityType: 'PATIENT_FOOD',
                 substanceType: 'FOOD',
                 onApply: async (payload: any) => {
+                    let isAddSuccessful = false;
+                    setShouldScrollToAddedEnd(true);
+                    setIsAddingAddedItem(true);
                     try {
                         const selectedItemData = payload.item || payload;
                         const selectedItem = { ...selectedItemData?.item };
@@ -211,10 +217,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             //     id: se
                             //   }
                             // };
-                            addPhaseMealItem({
+                            await addPhaseMealItem({
                                 data: itemData,
                                 phaseId: targetPhaseId,
-                            });
+                            }).unwrap();
                         } else if (itemEntityType === ENTITY_TYPE.RECIPE || itemEntityType === 'PATIENT_RECIPES' || itemEntityType === 'RESTAURANT') {
                             const hasModifiedIngredients = selectedItem.recipe?.ingredients?.some((ing: any) => ing?.modified);
                             const isCustomRecipe = selectedItem.recipe && hasModifiedIngredients;
@@ -225,7 +231,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 await addPhaseCustomRecipe({
                                     phaseId: targetPhaseId,
                                     data: itemData,
-                                });
+                                }).unwrap();
                             } else {
 
                                 itemData.type = 'RECIPE';
@@ -241,7 +247,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 await addPhaseCustomRecipe({
                                     phaseId: targetPhaseId,
                                     data: itemData,
-                                });
+                                }).unwrap();
                             }
                         } else if (itemEntityType === ENTITY_TYPE.MEASUREMENT) {
                             itemData.measurement = { id: selectedItem.id };
@@ -250,7 +256,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 id: currentPhase?.id,
                                 phaseId: targetPhaseId,
                                 data: itemData,
-                            });
+                            }).unwrap();
                         } else if (itemEntityType === ENTITY_TYPE.MEDICATION) {
                             itemData.medication = { id: selectedItem.id };
                             itemData.type = ENTITY_TYPE.MEDICATION;
@@ -258,7 +264,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 id: currentPhase?.id,
                                 phaseId: targetPhaseId,
                                 data: itemData,
-                            });
+                            }).unwrap();
                         } else if (itemEntityType === ENTITY_TYPE.SUPPLEMENT) {
                             itemData.supplement = { id: selectedItem.id };
                             itemData.type = ENTITY_TYPE.SUPPLEMENT;
@@ -266,7 +272,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 id: currentPhase?.id,
                                 phaseId: targetPhaseId,
                                 data: itemData,
-                            });
+                            }).unwrap();
                         } else if (itemEntityType === ENTITY_TYPE.PHYSICAL_ACTIVITY) {
                             itemData.physicalActivity = { id: selectedItem.id };
                             itemData.type = ENTITY_TYPE.PHYSICAL_ACTIVITY;
@@ -274,10 +280,18 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 id: currentPhase.id,
                                 phaseId: targetPhaseId,
                                 data: itemData,
-                            });
+                            }).unwrap();
                         }
+                        await refetchPhaseItems();
+                        isAddSuccessful = true;
                     } catch (error) {
                         console.error('Error adding item:', error);
+                        setShouldScrollToAddedEnd(false);
+                    } finally {
+                        setIsAddingAddedItem(false);
+                        if (!isAddSuccessful) {
+                            setShouldScrollToAddedEnd(false);
+                        }
                     }
                 }
             });
@@ -607,9 +621,30 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     </View>
                 )}
             </View>
-
+            {/* if (onlyPhaseItemsFetching) {
+                sortedSections.push(['Added', [{
+                    id: 'skeleton',
+                    type: ENTITY_TYPE.FOOD,
+                    title: 'Loading...',
+                    rating: null,
+                    order: 0,
+                    section: 'Added',
+                } as PhaseItem]])
+            } */}
             <View style={styles.list}>
-                <ScrollView style={isFutureDate && styles.opacity} scrollEnabled={scrollEnabled}>
+                <ScrollView
+                    ref={scrollViewRef}
+                    style={isFutureDate && styles.opacity}
+                    scrollEnabled={scrollEnabled}
+                    onContentSizeChange={() => {
+                        if (shouldScrollToAddedEnd && !isAddingAddedItem) {
+                            setTimeout(() => {
+                                scrollViewRef.current?.scrollToEnd({ animated: true });
+                            }, 0);
+                            setShouldScrollToAddedEnd(false);
+                        }
+                    }}
+                >
                     {!isEmpty(localItems) ? (
                         sortedSections.map(([section, sectionItems]) => (
                             <SwipeList
@@ -627,17 +662,45 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 onSwipeValueChange={handleScrollDisabled}
                                 handleCheckboxStatus={handleCheckboxStatus}
                                 keyExtractor={({ id, status }) => String(status + id)}
-                                renderItem={({ item }) => (
-                                    <ListItem
+                                renderItem={({ item, index }, ...restProps) => {
+                                    return <ListItem
                                         item={item}
                                         disabled={false}
                                         date={targetDate}
                                         isFutureDate={isFutureDate}
                                         updateData={updatePhaseItem}
-                                        nextSection={item?.section || ''}
                                         handleCheckboxStatus={handleCheckboxStatus}
-                                    />
-                                )}
+                                    />;
+                                    // return (
+                                    //     isPhaseItemsFetching
+                                    //     ?
+                                    //     <>
+                                    //     <ListItem
+                                    //        item={item}
+                                    //        disabled={false}
+                                    //        date={targetDate}
+                                    //        isFutureDate={isFutureDate}
+                                    //        updateData={updatePhaseItem}
+                                    //        nextSection={item?.section || ''}
+                                    //        handleCheckboxStatus={handleCheckboxStatus}
+                                    //    />;
+                                    //        nextSection={item?.section || ''}
+                                    //        handleCheckboxStatus={handleCheckboxStatus}
+                                    //    />;
+
+                                    //         <Skeleton width={200} height={20} />
+                                    //         </>
+                                    //         : <ListItem
+                                    //             item={item}
+                                    //             disabled={false}
+                                    //             date={targetDate}
+                                    //             isFutureDate={isFutureDate}
+                                    //             updateData={updatePhaseItem}
+                                    //             nextSection={item?.section || ''}
+                                    //             handleCheckboxStatus={handleCheckboxStatus}
+                                    //         />
+                                    // );
+                                }}
                                 ListHeaderComponent={() => (
                                     (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
                                         <View style={[
@@ -651,6 +714,16 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                             <Text variant="h3" style={styles.offset}>
                                                 {section || 'No section'}
                                             </Text>
+                                        </View>
+                                    ) : null
+                                )}
+                                ListFooterComponent={() => (
+                                    section === 'Added' && isAddingAddedItem ? (
+                                        <View style={styles.addedSkeletonContainer}>
+                                            <View style={styles.addedSkeletonRow}>
+                                                <ListItemSkeleton />
+                                                <Skeleton width={25} height={25} />
+                                            </View>
                                         </View>
                                     ) : null
                                 )}
@@ -812,6 +885,13 @@ const styles = StyleSheet.create({
     },
     emptyScreen: {
         marginTop: OFFSET.VERTICAL * 2,
+    },
+    addedSkeletonContainer: {
+        marginRight: OFFSET.HORIZONTAL * 2,
+    },
+    addedSkeletonRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     opacity: {
         opacity: 0.4,

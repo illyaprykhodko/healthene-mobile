@@ -49,6 +49,10 @@ target 'intelliceed_patientapp_mobile_v2' do
   pod 'react-native-blob-util',
       :path => '../node_modules/react-native-blob-util'
 
+  # Firebase (Swift pods) + static libraries require modular headers
+  pod 'FirebaseCoreInternal', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
+
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.

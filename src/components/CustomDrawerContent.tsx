@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
-import { View, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Pressable, Alert } from 'react-native';
 
 // local dependencies
 import { RootState } from 'store';
@@ -23,6 +23,7 @@ import {
     useGetLibraryItemsTotalTreeQuery,
     useGetIncompleteQuestionsVideosQuery,
 } from 'store/api/dayOverviewApi';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DESTINATIONS = {
     MESSAGES: 'MESSAGES',
@@ -146,7 +147,19 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     }, [dailyPlanCounter, libraryItemsTree, medicalProblems, medicationAllergies]);
 
     const handleLogout = async () => {
-        await signOut();
+        Alert.alert(
+            'Sign Out',
+            'Please confirm you really want to sign out from the Healthene',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Ok',
+                    onPress: async () => {
+                        await signOut();
+                    },
+                },
+            ]
+        );
     };
     // const menuItems: {
     //     title: string,
@@ -206,20 +219,20 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     const goToAccountSettings = () => navigate(ROUTES.SETTINGS_STACK);
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
-                <Pressable onPress={goToAccountSettings} style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
-                    <ProfileImage style={styles.userIcon} uri={user?.coverImage?.url} />
-                    <View>
-                        <Text variant="h4" color={theme.colors.text}>
-                            {user?.firstName} {user?.lastName}
-                        </Text>
-                        {/* <Text variant="body" color={theme.colors.textSecondary}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <Pressable onPress={goToAccountSettings} style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
+                <ProfileImage style={styles.userIcon} uri={user?.coverImage?.url} />
+                <View>
+                    <Text variant="h4" style={styles.userName} color={theme.colors.text}>
+                        {user?.firstName} {user?.lastName}
+                    </Text>
+                    {/* <Text variant="body" color={theme.colors.textSecondary}>
                             {user?.email}
                         </Text> */}
-                        <Text color={theme.colors.primary}>Account Setting</Text>
-                    </View>
-                </Pressable>
+                    <Text color={theme.colors.primary}>Account Setting</Text>
+                </View>
+            </Pressable>
+            <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
                 {/* {menuItems.map(item => {
                     const focused = getFocusedRoute() === item.route;
                     return (
@@ -315,8 +328,9 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                 variant="outline"
                 onPress={handleLogout}
                 style={styles.logoutButton}
+                textStyle={{ color: theme.colors.error }}
             />
-        </View>
+        </SafeAreaView>
     );
 };
 
@@ -325,14 +339,15 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     drawerContent: {
-        paddingTop: OFFSET.VERTICAL + 5,
+        paddingTop: 0,
     },
     profileSection: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL,
         borderBottomWidth: 1,
-        marginBottom: OFFSET.POINT * 2.5,
+        // marginBottom: OFFSET.POINT * 2.5,
     },
     userIcon: {
         marginRight: OFFSET.POINT * 2,
@@ -382,8 +397,13 @@ const styles = StyleSheet.create({
         color: '#666666',
     },
     logoutButton: {
-        margin: OFFSET.VERTICAL,
+        // color: '#E74C3C',
         borderRadius: 30,
         borderColor: '#E74C3C',
+        margin: OFFSET.VERTICAL,
+    },
+    userName: {
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

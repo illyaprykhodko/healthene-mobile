@@ -5,6 +5,7 @@ import { LoginData } from 'types';
 import { useAppDispatch } from '../store';
 import { MessageService } from '../services/messages';
 import { clearSession, setUser, setAuth } from '../store/slices/appSlice';
+import notificationService from 'services/notifications/notification.service';
 import { authApi, useGetSelfQuery, useLoginMutation, useLogoutMutation } from '../store/api/authApi';
 
 export const useAuth = () => {
@@ -32,6 +33,7 @@ export const useAuth = () => {
         } catch (error) {
             console.error('Logout API error:', error);
         } finally {
+            await notificationService.deleteDeviceToken();
             dispatch(clearSession());
             dispatch(setUser(null));
             dispatch(setAuth(false));

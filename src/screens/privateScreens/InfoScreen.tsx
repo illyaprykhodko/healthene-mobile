@@ -26,7 +26,7 @@ export const InfoScreen: React.FC = () => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
-            <Text variant="h4" textAlign="center" color={theme.colors.primary} style={styles.heading}>
+            <Text variant="h2" textAlign="center" color={theme.colors.primary} style={styles.heading}>
                 Information about {DeviceInfo.getApplicationName()} application
             </Text>
             {hasVideoOrQuestion && (
@@ -58,17 +58,17 @@ export const InfoScreen: React.FC = () => {
                 </View>
             )}
 
-            <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: '#F2F2F7' }]}>
+            <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: theme.colors.lightGrey }]}>
                 <Text color={theme.colors.grey}>Version:</Text>
                 <Text color={theme.colors.text}>{DeviceInfo.getVersion()}</Text>
             </View>
 
-            <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: '#F2F2F7' }]}>
+            <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: theme.colors.lightGrey }]}>
                 <Text color={theme.colors.grey}>Build Number:</Text>
                 <Text color={theme.colors.text}>{DeviceInfo.getBuildNumber()}</Text>
             </View>
 
-            <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: '#F2F2F7' }]}>
+            <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: theme.colors.lightGrey }]}>
                 <Text color={theme.colors.grey}>Environment:</Text>
                 <Text color={theme.colors.text}>{config.environment}</Text>
             </View>
@@ -84,12 +84,14 @@ const styles = StyleSheet.create({
         paddingVertical: OFFSET.VERTICAL,
     },
     heading: {
-        marginTop: OFFSET.VERTICAL,
+        // marginTop: OFFSET.VERTICAL,
         marginBottom: OFFSET.VERTICAL,
+        fontWeight: '600',
     },
     btnContainer: {
         flexDirection: 'row',
-        paddingVertical: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL,
+        marginBottom: 10,
     },
     btnOffset: {
         marginRight: 10,

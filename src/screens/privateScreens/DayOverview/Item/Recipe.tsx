@@ -76,7 +76,7 @@ const Recipe: React.FC<RecipeProps> = ({ recipe }) => {
 
     const renderFooter = () => (
         <View>
-            <Text style={styles.listFooter} variant="h4" textAlign="center">
+            <Text style={styles.listFooter} variant="h2" textAlign="center">
                 {lastItem.content}
             </Text>
         </View>
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         flex: 1,
         paddingHorizontal: OFFSET.HORIZONTAL,
-        paddingTop: OFFSET.VERTICAL * 2,
+        paddingTop: OFFSET.VERTICAL,
         marginHorizontal: OFFSET.HORIZONTAL,
         alignItems: 'center',
     },
@@ -154,5 +154,6 @@ const styles = StyleSheet.create({
         marginBottom: 35,
         marginTop: 15,
         color: '#007FFF',
+        fontWeight: '600',
     },
 });

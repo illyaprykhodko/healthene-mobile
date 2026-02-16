@@ -99,6 +99,7 @@ export default function ExerciseEdit ({ route, navigation }: any) {
                         size={24}
                         icon="times"
                         disabled={false}
+                        iconStyle="solid"
                         style={{ width: 20 }}
                         color={theme.colors.text}
                         onPress={navigation.goBack}

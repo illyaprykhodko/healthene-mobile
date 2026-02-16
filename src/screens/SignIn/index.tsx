@@ -282,7 +282,7 @@ export const SignIn: React.FC = (): React.ReactElement => {
                                     color={theme.colors.primary}
                                     style={styles.forgotPassword}
                                 >
-                  Forgot Password?
+                  Forgot your password?
                                 </Text>
                             </View>
                         </TouchableWithoutFeedback>
@@ -339,6 +339,7 @@ const styles = StyleSheet.create({
     forgotPassword: {
         marginTop: OFFSET.VERTICAL,
         alignItems: 'center',
+        fontSize: 16,
     },
     signUp: {
         marginTop: OFFSET.VERTICAL,

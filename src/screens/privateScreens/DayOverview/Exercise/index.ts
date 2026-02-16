@@ -8,6 +8,6 @@ export * from './exerciseFactory';
 export * from './decimal-utils';
 
 // Exercise components exports
+export { WheelPicker, ITEM_HEIGHT } from './components/WheelPicker';
 export { default as MultiWheelPicker } from './components/MultiWheelPicker';
 export { default as DecimalWheelPicker } from './components/DecimalWheelPicker';
-export { WheelPicker, ITEM_HEIGHT } from './components/WheelPicker';

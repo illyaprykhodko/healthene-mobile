@@ -125,6 +125,7 @@ export interface AnytimeMenuIconProps {
 export interface AnytimeModalProps {
     icon: string;
     title: string;
+    date?: string;
     visible: boolean;
     disabled?: boolean;
     maxHeight?: number; // max height in pixels or percentage

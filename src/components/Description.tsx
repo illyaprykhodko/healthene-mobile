@@ -7,21 +7,22 @@ import { View, TouchableOpacity, Text, StyleSheet, ViewStyle, Modal, ScrollView 
 import { OFFSET } from 'constants/offset';
 import { useTheme } from 'hooks/useTheme';
 import YoutubeVideo from './YoutubeVideo';
-import { PrivateVideo } from './PrivateVideo';
+import PrivateVideo from './PrivateVideo';
+import type { Attachment } from 'types/video';
 import HTMLView, { RenderNodeProps } from './HTMLView';
 
-interface VideoAttachment {
-    status?: string;
-    embedUrl?: string;
-    id: string | number;
-}
+// interface VideoAttachment {
+//     status?: string;
+//     embedUrl?: string;
+//     id: string | number;
+// }
 
 interface DescriptionProps {
     style?: ViewStyle;
     isActive: boolean;
     description: string;
     onClose: () => void;
-    video?: VideoAttachment | null;
+    video?: Attachment | null;
 }
 
 const Description: React.FC<DescriptionProps> = memo(
@@ -67,11 +68,11 @@ const Description: React.FC<DescriptionProps> = memo(
                 }
 
                 if (video?.embedUrl) {
-                    return <YoutubeVideo url={video.embedUrl} height={250} />;
+                    return <YoutubeVideo url={video.embedUrl} />;
                 }
 
                 if (video) {
-                    return <PrivateVideo video={video} height={250} />;
+                    return <PrivateVideo video={video} />;
                 }
 
                 return null;
@@ -91,7 +92,7 @@ const Description: React.FC<DescriptionProps> = memo(
                 return (
                     <TouchableOpacity onPress={toggleText} style={styles.actionButton}>
                         <Text style={[styles.helpLink, { color: theme.colors.blue }]}>
-                            {showDescription ? 'Back to Video' : 'Show Description'}
+                            {showDescription ? 'Back to Video' : 'More'}
                         </Text>
                     </TouchableOpacity>
                 );

@@ -20,7 +20,8 @@ import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
 import { HTMLView } from 'components/HTMLView';
 import YoutubeVideo from 'components/YoutubeVideo';
-import { PrivateVideo } from 'components/PrivateVideo';
+import { IconButton } from 'components/IconButton';
+import PrivateVideo from 'components/PrivateVideo';
 import { SwipeablePanel } from 'components/SwipeablePanel';
 
 // Helper function to get exercise step parameters
@@ -170,7 +171,7 @@ export default function ExerciseDetails () {
                     type: exercise?.type,
                     title: exercise?.title || (exercise as any)?.name || title,
                 };
-                await updatePhaseItemApi({ id: exercise.id, phaseId: deepPhaseId, data: payload, date }).unwrap();
+                await updatePhaseItemApi({ id: exercise.id, phaseId: deepPhaseId, data: payload as any, date }).unwrap();
             } catch (error) {
                 console.error('Failed to update phase item status:', error);
             }
@@ -241,8 +242,8 @@ export default function ExerciseDetails () {
 
     // Panel state for video/instruction
     const [isPanelOpen, setIsPanelOpen] = useState(false);
-    const [videoData, setVideoData] = useState([]);
-    const [instructionData, setInstructionData] = useState([]);
+    const [videoData, setVideoData] = useState<any>(null);
+    const [instructionData, setInstructionData] = useState<string>('');
 
     // Step management functions
     const updateStepCallback = useCallback((stepId: string | number, vals: any) => {
@@ -325,7 +326,7 @@ export default function ExerciseDetails () {
                             onPress={() => {
                                 setVideoData(video);
                                 setIsPanelOpen(true);
-                                setInstructionData(instruction);
+                                setInstructionData(normalizeDescription(instruction));
                             }}
                         >
                             <Text style={[styles.videoText, { color: theme.colors.info }]}>Video</Text>
@@ -407,6 +408,7 @@ export default function ExerciseDetails () {
                             : scientificDescription?.length > 0 ? (
                                 <HTMLView
                                     value={scientificDescription}
+                                    renderNode={renderNode}
                                     stylesheet={htmlStyles}
                                 />
                             ) : <Text>No scientific information available</Text>}
@@ -436,7 +438,7 @@ export default function ExerciseDetails () {
                     {title}
                 </Text>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Text style={{ fontSize: 24, color: theme.colors.text }}>×</Text>
+                    <IconButton iconStyle="solid" icon="times" size={24} color={theme.colors.text} />
                 </TouchableOpacity>
             </View>
             <ScrollView>
@@ -476,15 +478,18 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
     const [toggle, setToggle] = useState(false);
     const theme = useTheme();
     const toggleText = useCallback(() => setToggle(prevState => !prevState), []);
-    
+    const normalizedDescription = normalizeDescription(description);
+    const hasDescription = normalizedDescription.trim().length > 0;
+    const hasVideo = Boolean(video);
     return (
         <SwipeablePanel
-            // fullWidth
-            // openLarge
-            // onlyLarge
+            fullWidth
+            openLarge
+            onlyLarge
             showCloseButton
             closeOnTouchOutside
             onClose={closePanel}
+            snapPoints={['65%']}
             isActive={isPanelOpen}
             onPressCloseButton={closePanel}
             style={StyleSheet.flatten([styles.swipePanel, style])}
@@ -495,20 +500,27 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
             }}
             closeRootStyle={{ backgroundColor: 'transparent' }}
         >
-            <View style={{ paddingHorizontal: 16 * 1.5 }}>
-                <View style={{ marginTop: 16 * 5 }}>
+            <View style={{ paddingHorizontal: OFFSET.HORIZONTAL, marginTop: OFFSET.VERTICAL }}>
+                <View style={{ marginTop: 16 * 2 }}>
                     {!toggle
-                        ? video
+                        ? hasVideo
                             ? video?.embedUrl
                                 ? <YoutubeVideo url={video?.embedUrl} />
                                 : <PrivateVideo video={video} />
-                            : <Text textAlign="center">No video available</Text>
+                            : hasDescription
+                                ? <HTMLView
+                                    renderNode={renderNode}
+                                    stylesheet={htmlStyles}
+                                    value={normalizedDescription}
+                                />
+                                : <Text textAlign="center">No video available</Text>
                         : <HTMLView
-                            value={description}
+                            renderNode={renderNode}
                             stylesheet={htmlStyles}
+                            value={normalizedDescription}
                         />}
                 </View>
-                {description?.length
+                {hasDescription && hasVideo
                     ? <TouchableOpacity onPress={toggleText}>
                         <Text style={[styles.helpLink, styles.swipePanelButton]}>
                             {toggle ? 'Back' : 'More'}
@@ -568,9 +580,9 @@ const styles = StyleSheet.create({
     },
     headerBanner: {
         paddingHorizontal: OFFSET.HORIZONTAL * 2,
-        marginBottom: OFFSET.VERTICAL * 2,
+        // marginBottom: OFFSET.VERTICAL * 2,
         justifyContent: 'space-between',
-        paddingVertical: OFFSET.VERTICAL,
+        paddingVertical: 15,
         backgroundColor: '#E0EBF7',
         flexDirection: 'row'
     },
@@ -663,7 +675,7 @@ const styles = StyleSheet.create({
     },
     swipePanel: {
         backgroundColor: COLORS.WHITE,
-        height: '55%'
+        height: '75%'
     },
     swipePanelButton: {
         marginLeft: 'auto',
@@ -677,5 +689,61 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '700'
     },
+    htmlViewTextContainer: {
+        width: '90%',
+        flexDirection: 'row',
+        paddingRight: 4,
+        margin: 2,
+    },
 });
 
+const renderNode = ({ node, parent, defaultRenderer, index }: any) => {
+    if (node?.data === '\n') { return <View />; }
+    if (node?.name === 'li') {
+        const flattenText = (children: any[] = []): string => children.map(child => {
+            if (!child) { return ''; }
+            if (child.type === 'text' || child.name === 'text') { return child.data || ''; }
+            if (child.type === 'tag' && child.name === 'br') { return '\n'; }
+            if (child.name === 'br') { return '\n'; }
+            return flattenText(child.children || []);
+        }).join('');
+        const renderedChildren = flattenText(node.children);
+        return (
+            <View key={`li-${index}`} style={styles.htmlViewTextContainer}>
+                <Text style={{ marginRight: 5, marginTop: 5 }}>•</Text>
+                <Text style={htmlStyles.li}>{renderedChildren}</Text>
+            </View>
+        );
+    }
+    return undefined;
+};
+
+const normalizeDescription = (value: unknown): string => {
+    if (typeof value === 'string') { return value; }
+    if (Array.isArray(value)) {
+        return value
+            .map(item => {
+                if (typeof item === 'string') { return item; }
+                if (item && typeof item === 'object') {
+                    const textValue = (item as any).text
+                        || (item as any).description
+                        || (item as any).value
+                        || (item as any).html
+                        || '';
+                    return typeof textValue === 'string' ? textValue : '';
+                }
+                return '';
+            })
+            .filter(Boolean)
+            .join('\n');
+    }
+    if (value && typeof value === 'object') {
+        const maybeText = (value as any).text
+            || (value as any).description
+            || (value as any).value
+            || (value as any).html
+            || '';
+        return typeof maybeText === 'string' ? maybeText : '';
+    }
+    return '';
+};

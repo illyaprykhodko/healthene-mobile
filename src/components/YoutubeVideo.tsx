@@ -1,13 +1,14 @@
 // outsource dependencies
+import YoutubePlayer from 'react-native-youtube-iframe';
 import React, { memo, useState, useCallback } from 'react';
 import { StyleSheet, View, Dimensions, Alert } from 'react-native';
-import YoutubePlayer from 'react-native-youtube-iframe';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const VIDEO_HEIGHT = (SCREEN_WIDTH * 9) / 16; // 16:9 aspect ratio
+// const VIDEO_HEIGHT = (SCREEN_WIDTH * 9) / 16; // 16:9 aspect ratio
+const VIDEO_HEIGHT = 200;
 
 // Extract YouTube video ID from various URL formats
 const prepareYoutubeId = (url: string): string | null => {

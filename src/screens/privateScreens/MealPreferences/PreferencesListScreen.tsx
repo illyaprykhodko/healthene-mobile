@@ -7,6 +7,7 @@ import { View, FlatList, StyleSheet, Platform, TouchableOpacity } from 'react-na
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
+import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
@@ -47,7 +48,7 @@ const ListItem: React.FC<ListItemProps> = ({ item, isSelected, onPress }) => {
                 onPress={handlePress}
                 style={[styles.itemContainer, { borderBottomColor: theme.colors.border }]}
             >
-                <Text variant="h4">{item.mealTemplate?.displayName}</Text>
+                <Text style={styles.itemName} variant="h4">{item.mealTemplate?.displayName}</Text>
                 <Checkbox
                     size={10}
                     value={isSelected}
@@ -198,7 +199,7 @@ const styles = StyleSheet.create({
         marginBottom: OFFSET.VERTICAL,
     },
     sectionHeader: {
-        marginVertical: OFFSET.VERTICAL * 2,
+        marginVertical: OFFSET.VERTICAL * 1.5,
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     listContent: {
@@ -238,9 +239,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#E5E5EA',
     },
     submitBtnText: {
+        color: COLORS.DARK_GREY,
         fontSize: 18,
         fontWeight: Platform.OS === 'ios' ? '600' : '700',
     },
+    itemName: {
+        width: '80%'
+    }
 });
 
 export default PreferencesListScreen;
