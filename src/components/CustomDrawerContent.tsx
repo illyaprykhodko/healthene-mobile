@@ -4,10 +4,18 @@ import moment from 'moment';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Icon from '@react-native-vector-icons/fontawesome5';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { View, StyleSheet, TouchableOpacity, Pressable, Alert } from 'react-native';
 
+
 // local dependencies
+import {
+    useGetMedicalProblemsQuery,
+    useGetMedicationAllergiesQuery,
+    useGetLibraryItemsTotalTreeQuery,
+    useGetIncompleteQuestionsVideosQuery,
+} from 'store/api/dayOverviewApi';
 import { RootState } from 'store';
 import Text from 'components/Text';
 import { useAuth } from 'hooks/useAuth';
@@ -17,13 +25,6 @@ import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import { navigate } from 'services/navigation';
 import ProfileImage from 'components/ProfileImage.tsx';
-import {
-    useGetMedicalProblemsQuery,
-    useGetMedicationAllergiesQuery,
-    useGetLibraryItemsTotalTreeQuery,
-    useGetIncompleteQuestionsVideosQuery,
-} from 'store/api/dayOverviewApi';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DESTINATIONS = {
     MESSAGES: 'MESSAGES',
@@ -67,7 +68,6 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                 iconStyle="solid"
                 style={styles.menuIcon}
                 color={theme.colors.primary}
-                // color={focused ? theme.colors.primary : theme.colors.textSecondary}
             />
             <Text
                 variant="h5"
@@ -81,7 +81,6 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                     <Text
                         variant="bold"
                         style={styles.badgeText}
-                        // color="#FFFFFF"
                         color={theme.colors.white}
                     >
                         {badge > 99 ? '99+' : badge}
@@ -161,57 +160,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
             ]
         );
     };
-    // const menuItems: {
-    //     title: string,
-    //     route: RouteName,
-    //     icon: DrawerIconName,
-    // }[] = [
-    //     {
-    //         icon: 'file',
-    //         title: 'My Daily Plan',
-    //         route: ROUTES.DAILY_PLAN,
-    //     },
-    //     {
-    //         icon: 'shopping-cart',
-    //         title: 'Shopping List',
-    //         route: ROUTES.SHOPPING,
-    //     },
-    //     {
-    //         icon: 'comments',
-    //         title: 'Messages',
-    //         route: ROUTES.MESSENGER,
-    //     },
-    //     {
-    //         icon: 'chart-bar',
-    //         title: 'My Results',
-    //         route: ROUTES.MY_RESULTS,
-    //     },
-    //     {
-    //         icon: 'clipboard',
-    //         title: 'About Plan',
-    //         route: ROUTES.ABOUT_PLAN,
-    //     },
-    //     {
-    //         icon: 'heartbeat',
-    //         title: 'My Health Profile',
-    //         route: ROUTES.HEALTH_PROFILE,
-    //     },
-    //     {
-    //         icon: 'book',
-    //         title: 'Library',
-    //         route: ROUTES.LIBRARY,
-    //     },
-    //     {
-    //         title: 'Info',
-    //         icon: 'info-circle',
-    //         route: ROUTES.INFO,
-    //     },
-    //     {
-    //         icon: 'award',
-    //         title: 'Cuisine Distribution',
-    //         route: ROUTES.CUISINE_DISTRIBUTION,
-    //     },
-    // ];
+
     const getFocusedRoute = () => {
         return props.state?.routes[props.state?.index]?.name;
     };
@@ -347,7 +296,6 @@ const styles = StyleSheet.create({
         paddingVertical: OFFSET.VERTICAL,
         paddingHorizontal: OFFSET.HORIZONTAL,
         borderBottomWidth: 1,
-        // marginBottom: OFFSET.POINT * 2.5,
     },
     userIcon: {
         marginRight: OFFSET.POINT * 2,
@@ -397,7 +345,6 @@ const styles = StyleSheet.create({
         color: '#666666',
     },
     logoutButton: {
-        // color: '#E74C3C',
         borderRadius: 30,
         borderColor: '#E74C3C',
         margin: OFFSET.VERTICAL,
