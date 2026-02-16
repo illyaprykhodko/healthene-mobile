@@ -1,4 +1,5 @@
 import { Url } from './common';
+import { VideoAttachment } from './healthProfile';
 import { BaseEntity, NamedEntity, TimestampedEntity } from './common/interfaces';
 import { DiagnoseType, MedicalProblemStatus, MedicalProblemSeverity } from './common/enums';
 
@@ -27,12 +28,15 @@ export interface LibrarySetting extends BaseEntity {
  * @property {Url} coverImage - URL to the cover image for the term
  * @property {number} attachmentsCount - Number of attachments associated with the term
  */
-export interface MedicalTerm extends BaseEntity, NamedEntity {
-  description: string;
-  coverImage: Url;
-  attachmentsCount: number;
+// export interface MedicalTerm extends BaseEntity, NamedEntity {
+//   description: string;
+//   coverImage: Url;
+//   attachmentsCount: number;
+// }
+export interface MedicalTerm {
+    id: number;
+    name: string;
 }
-
 /**
  * Represents a patient's medical problem
  * @interface PatientMedicalProblem
@@ -70,16 +74,27 @@ export interface PatientMedicalProblem extends BaseEntity, NamedEntity, Timestam
  * @property {string[]} prevention - List of prevention measures
  * @property {string[]} references - List of medical references
  */
-export interface MedicalProblem extends PatientMedicalProblem {
-  category: string;
-  symptoms: string[];
-  treatments: string[];
-  riskFactors: string[];
-  complications: string[];
-  prevention: string[];
-  references: string[];
+// export interface MedicalProblem extends PatientMedicalProblem {
+//   category: string;
+//   symptoms: string[];
+//   treatments: string[];
+//   riskFactors: string[];
+//   complications: string[];
+//   prevention: string[];
+//   references: string[];
+// }
+export interface MedicalProblem {
+    id: number;
+    medicalTerm: MedicalTerm;
+    seenAttachments?: Array<{
+        alreadySeen: boolean;
+        attachment?: VideoAttachment;
+    }>;
+    readyToSeeAttachments?: Array<{
+        id: number;
+        attachment?: VideoAttachment;
+    }>;
 }
-
 /**
  * Represents a file attachment in the system
  * @interface FileAttachment

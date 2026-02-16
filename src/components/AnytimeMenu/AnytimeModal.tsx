@@ -7,11 +7,14 @@ import {
     ScrollView,
     TouchableOpacity,
 } from 'react-native';
+import moment from 'moment';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // local dependencies
 import { Badge } from './Badge';
 import Text from 'components/Text';
 import { COLORS } from 'constants/colors';
+import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { AnytimeListItem } from './AnytimeListItem';
@@ -47,6 +50,7 @@ const getIconComponent = (icon: string, size: number = 24) => {
 };
 
 export const AnytimeModal: React.FC<AnytimeModalProps> = ({
+    date,
     icon,
     items,
     title,
@@ -59,22 +63,34 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
 }) => {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
+    const navigation = useNavigation<any>();
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
     const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
 
-    const pendingItems = items.filter(item => item.status === PHASE_ITEM_STATUS.PENDING);
+    const pendingItems = items.filter(item =>
+        item.status === PHASE_ITEM_STATUS.PENDING || item.status === PHASE_ITEM_STATUS.INCOMPLETE
+    );
     const completedItems = items.filter(item => item.status === PHASE_ITEM_STATUS.DONE);
+
+    const toApiAnytimeItem = (item: AnytimeItem) => {
+        // Backend contract for drinks in phase items is FOOD + substanceType DRINK.
+        if (item.type === 'DRINK') {
+            return {
+                ...item,
+                type: 'FOOD',
+                substanceType: 'DRINK',
+            };
+        }
+        return item;
+    };
 
     const handleUpdateItem = async (data: AnytimeItem) => {
         if (disabled || !data.phaseId) { return; }
-        const preparedData = {
-            ...data,
-            type: data.type === 'DRINK' ? 'FOOD' : data.type,
-        };
         try {
+            const payload: any = toApiAnytimeItem(data);
             await updatePhaseItem({
                 id: data.id,
-                data: preparedData,
+                data: payload,
                 phaseId: data.phaseId,
             }).unwrap();
         } catch (error) {
@@ -84,6 +100,14 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
 
     const handleMeasurementPress = (item: AnytimeItem) => {
         if (item.type === 'MEASUREMENT' && item.status !== 'DONE') {
+            if (item.measurement?.type === 'WEIGHT') {
+                onClose();
+                navigation.navigate(ROUTES.WEIGHT_MEASUREMENT, {
+                    measurementPhaseItem: item,
+                    date: date || moment().format('YYYY-MM-DD'),
+                });
+                return;
+            }
             setSelectedMeasurement(item as AnytimeMeasurementItem);
         }
     };

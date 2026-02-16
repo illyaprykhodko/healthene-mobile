@@ -8,9 +8,10 @@ import { setInitialized, setHealth, setAuth, setUser } from '../store/slices/app
 export const useAppInitialization = () => {
     const dispatch = useAppDispatch();
     const [isInitializing, setIsInitializing] = useState(true);
+    const isHealthy = useAppSelector((state: RootState) => state.app.health);
     
     const { data: health, error: healthError } = useCheckHealthQuery();
-    const { data: user, error: sessionError, isLoading: sessionLoading } = useRestoreSessionQuery();
+    const { data: user } = useRestoreSessionQuery();
     const { accessToken: session } = useAppSelector((state: RootState) => state.app);
     useEffect(() => {
         const initializeApp = async () => {
@@ -47,6 +48,7 @@ export const useAppInitialization = () => {
 
     return {
         health,
+        isHealthy,
         healthError,
         isInitializing,
     };

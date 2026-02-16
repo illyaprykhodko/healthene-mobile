@@ -35,7 +35,12 @@ interface SwipeListProps {
     handleCheckboxStatus?: (item: any) => void;
     onSwipeValueChange?: (item: SwipeValueChange) => void;
     ListHeaderComponent?: () => React.ReactElement | null;
-    renderItem: (info: { item: any }) => React.ReactElement;
+    ListFooterComponent?: () => React.ReactElement | null;
+    renderItem: (info: { item: any, index: number, separators: {
+        highlight: () => void;
+        unhighlight: () => void;
+        updateProps: () => void;
+    } }) => React.ReactElement;
 }
 
 
@@ -50,6 +55,7 @@ export const SwipeList: React.FC<SwipeListProps> = ({
     isPastDate = false,
     onSwipeValueChange,
     ListHeaderComponent,
+    ListFooterComponent,
     onDelete = () => {},
     onReplace = () => {},
     handleCheckboxStatus,
@@ -85,6 +91,7 @@ export const SwipeList: React.FC<SwipeListProps> = ({
             onRowDidClose={onRowDidClose}
             onSwipeValueChange={onSwipeValueChange}
             ListHeaderComponent={ListHeaderComponent}
+            ListFooterComponent={ListFooterComponent}
             disableLeftSwipe={isFutureDate || (noDelete && noReplace)}
             renderHiddenItem={({ item }) => {
                 // const isDidNotEatStatus = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;

@@ -10,6 +10,7 @@ import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { COLORS } from 'constants/colors';
 import { Button } from 'components/Button';
 import { TextLogo } from 'components/TextLogo';
 import { Hamburger } from 'components/Hamburger';
@@ -82,7 +83,7 @@ export const MainScreen: React.FC = () => {
                 </View>
 
                 <Button
-                    title="GET STARTED"
+                    title="Get Started"
                     style={styles.button}
                     onPress={handleGetStarted}
                     textStyle={styles.buttonText}
@@ -145,13 +146,18 @@ const styles = StyleSheet.create({
         width: '90%',
         borderRadius: 30,
         alignSelf: 'center',
-        backgroundColor: '#96E072',
-        borderColor: 'transparent',
+        borderWidth: 2,
+        borderColor: COLORS.BLACK,
+        backgroundColor: 'transparent',
+        marginBottom: 15
+        // borderColor: 'transparent',
+        // backgroundColor: '#96E072',
     },
     buttonText: {
-        fontSize: 20,
-        color: '#4E733C',
-        paddingVertical: 3,
+        fontSize: 16,
+        color: COLORS.BLACK,
+        // color: '#4E733C',
+        // paddingVertical: 3,
         fontWeight: Platform.OS === 'ios' ? '600' : '700',
     },
 });

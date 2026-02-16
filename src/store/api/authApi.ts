@@ -84,6 +84,13 @@ export const authApi = createApi({
             },
             invalidatesTags: ['Auth'],
         }),
+        registerNotificationToken: builder.mutation<void, { token: string }>({
+            query: ({ token }) => ({
+                method: 'POST',
+                params: { token },
+                url: '/auth/users/notification-token',
+            }),
+        }),
         // signUp: builder.mutation<User, SignUpData>({
         //     query: data => ({
         //         url: '/patient-service/public/patients/sign-up',
@@ -131,4 +138,5 @@ export const {
     useRestoreSessionQuery,
     useRefreshSessionMutation,
     useForgotPasswordMutation,
+    useRegisterNotificationTokenMutation,
 } = authApi;

@@ -1,5 +1,7 @@
 // Types for Health Profile feature
 
+import { MedicalTerm } from './medical';
+
 // export interface Habit {
 //     id: number;
 //     name: string;
@@ -10,15 +12,15 @@
 //     } | null;
 // }
 
-// export interface Medication {
-//     id: number;
-//     name: string;
-// }
+export interface Medication {
+    id: number;
+    name: string;
+}
 
-// export interface PatientMedication {
-//     id: number;
-//     medication: Medication;
-// }
+export interface PatientMedication {
+    id: number;
+    medication: Medication;
+}
 
 // export interface MedicalTerm {
 //     id: number;
@@ -44,18 +46,18 @@ export interface VideoAttachment {
 //     }>;
 // }
 
-// export interface MedicationAllergy {
-//     id: number;
-//     medicalTerm: MedicalTerm;
-//     seenAttachments?: Array<{
-//         alreadySeen: boolean;
-//         attachment?: VideoAttachment;
-//     }>;
-//     readyToSeeAttachments?: Array<{
-//         id: number;
-//         attachment?: VideoAttachment;
-//     }>;
-// }
+export interface MedicationAllergy {
+    id: number;
+    medicalTerm: MedicalTerm;
+    seenAttachments?: Array<{
+        alreadySeen: boolean;
+        attachment?: VideoAttachment;
+    }>;
+    readyToSeeAttachments?: Array<{
+        id: number;
+        attachment?: VideoAttachment;
+    }>;
+}
 
 // export interface Supplement {
 //     id: number;

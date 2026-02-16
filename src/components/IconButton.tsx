@@ -22,11 +22,15 @@ interface BaseProps {
 interface PropsWithIcon extends BaseProps {
     icon: string;
     CustomIcon?: undefined;
+    iconStyle?: 'solid' | 'regular' | 'brand';
+    // iconStyle?: 'solid' | 'regular' | 'light' | 'duotone' | 'thin' | 'brands';
 }
 
 interface PropsWithCustomIcon extends BaseProps {
     icon?: string;
     CustomIcon?: React.ReactNode;
+    iconStyle?: 'solid' | 'regular' | 'brand';
+    // iconStyle?: 'solid' | 'regular' | 'light' | 'duotone' | 'thin' | 'brands';
 }
 
 type IconButtonProps = PropsWithIcon | PropsWithCustomIcon;
@@ -37,6 +41,7 @@ export const IconButton: React.FC<IconButtonProps> = props => {
         style,
         color,
         onPress,
+        iconStyle,
         size = 22,
         textLeft = '',
         textRight = '',
@@ -86,6 +91,7 @@ export const IconButton: React.FC<IconButtonProps> = props => {
           && <Icon
               size={size}
               color={iconColor}
+              iconStyle={iconStyle}
               name={props.icon as any}
           />}
                 {textRight && (

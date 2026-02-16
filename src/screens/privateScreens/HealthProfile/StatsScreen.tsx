@@ -14,16 +14,17 @@ import TextInput from 'components/TextInput';
 import { Skeleton } from 'components/Skeleton';
 import OptionSelector from 'components/Selector/OptionSelector';
 
+import { Habit } from 'types';
+import { useAppDispatch } from 'store';
 type DataType = { label: string; value: string };
 import { useGetSelfQuery, authApi } from 'store/api/authApi';
-import { useAppDispatch } from 'store';
 import {
     useGetHabitsQuery,
     useGetPatientHabitsQuery,
     useUpdatePatientStatsMutation,
     useUpdatePatientHabitsMutation,
 } from 'store/api/healthProfileApi';
-import type { Habit } from 'types/healthProfile';
+// import type { Habit } from 'types/healthProfile';
 
 const GENDER_OPTIONS: DataType[] = [
     { label: 'Male', value: 'MALE' },

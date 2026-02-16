@@ -1,5 +1,6 @@
 // outsource dependencies
-import { Habit } from 'types/healthProfile.ts';
+// import { Habit } from 'types/healthProfile.ts';
+import { Habit } from 'types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface HealthProfileState {

@@ -34,6 +34,7 @@ import {
     useGetShoppingCategoriesQuery,
     useUpdateShoppingItemMutation,
     useConfirmShopOnMyOwnMutation,
+    useGetShoppingPreferencesQuery,
 } from 'store/api/shoppingApi';
 import ShoppingItem from './ShoppingItem';
 import ListSwitcher from 'components/ListSwitcher';
@@ -69,6 +70,7 @@ const ShoppingList: React.FC = () => {
     const submittedShoppingList = useAppSelector(state => (state.app?.user as any)?.submittedShoppingList) ?? false;
 
     const [open, setOpen] = useState(true);
+    const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
     const [page, setPage] = useState(0);
 
     // Queries
@@ -101,6 +103,7 @@ const ShoppingList: React.FC = () => {
 
     const [updateItem] = useUpdateShoppingItemMutation();
     const [confirmShopOnMyOwn] = useConfirmShopOnMyOwnMutation();
+    const { data: preferencesData } = useGetShoppingPreferencesQuery();
 
     // Get questions and videos for shopping list
     const { data: libraryElements } = useGetCurrentLibraryElementsQuery([DESTINATIONS.SHOPPING_LIST]);
@@ -205,12 +208,10 @@ const ShoppingList: React.FC = () => {
                 dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
                 refetch();
             } else {
-                dispatch(setCurrentStep(SHOPPING_STEP.STORE));
-                navigation.navigate(ROUTES.CHOOSE_GROCERY_STORE);
+                setIsFinalizeOpen(true);
             }
         } else {
-            dispatch(setCurrentStep(SHOPPING_STEP.STORE));
-            navigation.navigate(ROUTES.CHOOSE_GROCERY_STORE);
+            setIsFinalizeOpen(true);
         }
     }, [navigation, currentStep, stockList, isListTouched, dispatch, refetch]);
 
@@ -232,6 +233,16 @@ const ShoppingList: React.FC = () => {
             console.error('Error confirming:', error);
         }
     }, [confirmShopOnMyOwn, dispatch]);
+    const handleFinalize = useCallback(async () => {
+        try {
+            await confirmShopOnMyOwn({}).unwrap();
+            dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
+            setIsFinalizeOpen(false);
+            navigation.navigate(ROUTES.SHOPPING_LIST, { isShopOnMyOwn: true });
+        } catch (error) {
+            console.error('Error finalizing shopping list:', error);
+        }
+    }, [confirmShopOnMyOwn, dispatch, navigation]);
 
     const handlePrint = useCallback(() => {
         const endDate = moment().endOf('week').format('YYYY-MM-DD');
@@ -243,10 +254,12 @@ const ShoppingList: React.FC = () => {
 
     const handleCloseCustomAlert = useCallback(() => {
         dispatch(setIsCustomAlertOpen(false));
+        dispatch(setIsMealQuestionAsked(true));
     }, [dispatch]);
 
     const handleApplyCustomAlert = useCallback(() => {
         dispatch(setIsCustomAlertOpen(false));
+        dispatch(setIsMealQuestionAsked(true));
         dispatch(setCurrentStep(SHOPPING_STEP.MEAL));
         navigation.navigate(ROUTES.SHOPPING_PREFERENCES);
     }, [dispatch, navigation]);
@@ -264,10 +277,12 @@ const ShoppingList: React.FC = () => {
     // Show custom alert when conditions are met
     useEffect(() => {
         if (isNeedToAskQuestion) {
-            dispatch(setIsMealQuestionAsked(true));
             dispatch(setIsCustomAlertOpen(true));
         }
     }, [isNeedToAskQuestion, dispatch]);
+    const filteredPreferences = useMemo(() => (
+        (preferencesData || []).filter(preference => preference?.amount !== 1)
+    ), [preferencesData]);
 
     const handleGetRescue = useCallback(() => {
         dispatch(setItemType(SHOPPING_ITEM_TYPE.RESCUE));
@@ -454,9 +469,23 @@ const ShoppingList: React.FC = () => {
                     >
                         <View style={styles.alertBox}>
                             <Text style={styles.alertTitle}>People Eating per Meal</Text>
-                            <Text style={styles.alertMessage}>
-                                Do you want to change the number of people eating per meal?
-                            </Text>
+                            {filteredPreferences.length === 0 ? (
+                                <Text style={styles.alertMessage}>
+                                    Do you want to change the number of people eating per meal?
+                                </Text>
+                            ) : (
+                                <View>
+                                    <Text style={styles.alertMessagePreference}>You have:</Text>
+                                    {filteredPreferences.map(preference => (
+                                        <Text key={preference.id} style={styles.alertMessagePreference}>
+                                            {`• ${preference.amount} people eating for ${preference.name}`}
+                                        </Text>
+                                    ))}
+                                    <Text style={styles.alertMessage}>
+                                        Do you want to change your selections?
+                                    </Text>
+                                </View>
+                            )}
                             <View style={styles.alertActions}>
                                 <TouchableOpacity
                                     onPress={handleApplyCustomAlert}
@@ -475,6 +504,16 @@ const ShoppingList: React.FC = () => {
                     </TouchableOpacity>
                 </Modal>
             )}
+            <ConfirmationAlert
+                cancelTxt="Cancel"
+                applyTxt="Finalize"
+                disabled={isLoading}
+                isOpen={isFinalizeOpen}
+                onSubmit={handleFinalize}
+                message="This action cannot be undone."
+                onClose={() => setIsFinalizeOpen(false)}
+                title="Are you sure you want to finalize your shopping list?"
+            />
 
 
             {popoverText && !isCustomAlertOpen && (
@@ -619,6 +658,11 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         textAlign: 'center',
     },
+    alertMessagePreference: {
+        fontSize: 16,
+        marginBottom: 5,
+        textAlign: 'center',
+    },
     alertActions: {
         width: '80%',
         flexDirection: 'row',
@@ -636,7 +680,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         textAlign: 'center',
-        color: COLORS.DARK_GREY,
+        color: COLORS.BLACK,
     },
     yesBtnBgColor: {
         backgroundColor: '#B8E6B3',

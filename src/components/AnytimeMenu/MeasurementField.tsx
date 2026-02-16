@@ -104,6 +104,7 @@ const styles = StyleSheet.create({
         fontSize: 32,
         fontWeight: '600',
         marginLeft: 8,
+        width: 125,
     },
     errorText: {
         fontSize: 12,

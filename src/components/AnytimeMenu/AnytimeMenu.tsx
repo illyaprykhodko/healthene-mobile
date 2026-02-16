@@ -167,6 +167,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
             {/* Modals */}
             {activeModal && (
                 <AnytimeModal
+                    date={date}
                     visible={true}
                     onClose={handleCloseModal}
                     maxHeight={modalMaxHeight}

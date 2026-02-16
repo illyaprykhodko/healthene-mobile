@@ -84,6 +84,16 @@ export const useAnytimeData = (date?: string) => {
                         } as AnytimeFoodItem);
                     }
                     break;
+                case 'DRINK':
+                    // Fallback for optimistic cache updates where type can be DRINK.
+                    drinks.push({
+                        ...baseItem,
+                        type: 'DRINK',
+                        food: item.food,
+                        weight: item.weight,
+                        substanceType: 'DRINK',
+                    } as AnytimeDrinkItem);
+                    break;
           
                 case 'SUPPLEMENT':
                     supplements.push({
@@ -126,7 +136,7 @@ export const useAnytimeData = (date?: string) => {
     }, [anytimeItems, anytimePhaseId]);
 
     const getPendingCount = (items: AnytimeItem[]) =>
-        items.filter(item => item.status === 'PENDING').length;
+        items.filter(item => item.status === 'PENDING' || item.status === 'INCOMPLETE').length;
 
     const counts = useMemo(() => ({
         foods: getPendingCount(processedData.foods),

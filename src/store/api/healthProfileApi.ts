@@ -4,17 +4,17 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from './baseApi';
 import {
-    Habit,
+    // Habit,
     UserStats,
-    Supplement,
-    MedicalProblem,
+    // Supplement,
+    // MedicalProblem,
     FilterParams,
     FilteredResponse,
     PatientMedication,
     MedicationAllergy,
     MedicationFilterRequest,
-    MedicalTermFilterRequest,
 } from 'types/healthProfile';
+import { Habit, MedicalProblem, Supplement } from 'types';
 
 export const healthProfileApi = createApi({
     reducerPath: 'healthProfileApi',

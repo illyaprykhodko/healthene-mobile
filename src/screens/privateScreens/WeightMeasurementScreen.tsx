@@ -16,9 +16,11 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 // local dependencies
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
 import { SwipeablePanel } from 'components/SwipeablePanel';
 import { RootStackParamList } from 'services/navigation/types';
 import { useMeasurementSubmit } from 'hooks/useMeasurementSubmit';
+import { useGetAggregateMeasurementDataQuery } from 'store/api/dayOverviewApi';
 
 type Navigation = StackNavigationProp<RootStackParamList>;
 
@@ -36,11 +38,21 @@ const WeightMeasurementScreen: React.FC = () => {
     const [isPanelOpen, setIsPanelOpen] = useState(false);
 
     const measurementPhaseItem = (route.params as any)?.measurementPhaseItem;
+    const currentDate = (route.params as any)?.date || moment().format('YYYY-MM-DD');
     const item = measurementPhaseItem || {};
-
+    const { data: aggregateData } = useGetAggregateMeasurementDataQuery({
+        type: 'WEIGHT',
+        period: '1-day',
+        date: currentDate,
+        offset: moment().utcOffset() / 60,
+    });
+    const hasRecentWeight = aggregateData?.data?.length > 0;
+    // const hasRecentWeight = aggregateData?.totalLastValuesByUnitType?.DEFAULT !== null
+    //     && aggregateData?.totalLastValuesByUnitType?.DEFAULT !== undefined;
     const { submit, isSubmitting } = useMeasurementSubmit(item, {
         onSuccess: () => {
-            navigation.goBack();
+            navigation.navigate(ROUTES.DAY_OVERVIEW);
+            // navigation.goBack();
         },
         onError: error => {
             // console.error('[WeightMeasurementScreen] Submit error:', error);
@@ -86,7 +98,7 @@ const WeightMeasurementScreen: React.FC = () => {
                 onPress={handleSmartScalePress}
                 style={[styles.scaleButton, { borderColor: theme.colors.success }]}
             >
-                <Text style={[styles.scaleButtonText, { color: theme.colors.text }]}>
+                <Text style={[styles.scaleButtonText, { color: theme.colors.darkGrey }]}>
                         Step on Scale
                 </Text>
             </TouchableOpacity>
@@ -98,7 +110,7 @@ const WeightMeasurementScreen: React.FC = () => {
                         Add your Weight Manually
                 </Text>
             </TouchableOpacity>
-            <SwipeablePanel showCloseButton={false} snapPoints={['35%', '30%']} isActive={isPanelOpen} onClose={() => setIsPanelOpen(false)}>
+            <SwipeablePanel style={{ height: '75%' }} showCloseButton={false} snapPoints={['75%']} isActive={isPanelOpen} onClose={() => setIsPanelOpen(false)}>
                 <Formik
                     onSubmit={handleSubmit}
                     initialValues={{ value: '' }}
@@ -138,6 +150,11 @@ const WeightMeasurementScreen: React.FC = () => {
                                     </Text>
                                 </TouchableOpacity>
                             </View>
+                            {!hasRecentWeight && (
+                                <Text style={[styles.noRecentDataText, { color: theme.colors.primary }]}>
+                                    No Weight was recorded recently - please add it manually
+                                </Text>
+                            )}
                             <View style={styles.dateContainer}>
                                 <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
                                     <Text style={[styles.itemLabel, { color: theme.colors.text }]}>
@@ -221,7 +238,7 @@ const styles = StyleSheet.create({
     scaleButton: {
         marginTop: 70,
         marginHorizontal: 20,
-        height: 80,
+        paddingVertical: OFFSET.VERTICAL * 2,
         borderWidth: 2,
         borderRadius: 8,
         justifyContent: 'center',
@@ -264,13 +281,20 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     headerTitle: {
-        width: '33.33%',
+        // width: '33.33%',
         fontSize: 20,
         fontWeight: 'bold',
         textAlign: 'center',
     },
     dateContainer: {
         paddingTop: 10,
+    },
+    noRecentDataText: {
+        fontSize: 16,
+        textAlign: 'center',
+        fontWeight: '500',
+        marginBottom: 8,
+        paddingHorizontal: 12,
     },
     item: {
         flexDirection: 'row',

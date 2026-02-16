@@ -38,8 +38,8 @@ export type RootStackParamList = {
   [ROUTES.ABOUT_PLAN]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
   [ROUTES.MESSAGE_LIST]: undefined;
-  [ROUTES.READ_MESSAGE]: undefined;
   [ROUTES.WRITE_MESSAGE]: undefined;
+  [ROUTES.NOTIFICATIONS]: undefined;
   [ROUTES.PROFILE_STATS]: undefined;
   [ROUTES.SETTINGS_STACK]: undefined;
   [ROUTES.HEALTH_PROFILE]: undefined;
@@ -55,6 +55,10 @@ export type RootStackParamList = {
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
   [ROUTES.MEAL_PREFERENCES_MEALS_LIST]: undefined;
+  [ROUTES.READ_MESSAGE]: {
+    id?: number;
+    chainId?: number;
+  } | undefined;
 
   // Example of a screen that requires params
   [ROUTES.SMART_SCALE]: {
@@ -121,6 +125,10 @@ export type RootStackParamList = {
     item: {
       name: string;
     };
+  };
+  [ROUTES.WEIGHT_MEASUREMENT]: {
+    date?: string;
+    measurementPhaseItem?: object;
   };
 };
 

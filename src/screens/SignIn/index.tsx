@@ -311,6 +311,7 @@ const styles = StyleSheet.create({
         marginTop: OFFSET.VERTICAL * 2,
         marginBottom: OFFSET.VERTICAL,
         alignItems: 'center',
+        fontSize: 16,
     },
     signUp: {
         marginTop: OFFSET.VERTICAL,

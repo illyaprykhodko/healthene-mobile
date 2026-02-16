@@ -42,6 +42,11 @@ export const ListItem: React.FC<ListItemProps> = ({
     // Video and Question data from item
     const currentVideo = item?.patientFoodCategoryAttachment;
     const currentQuestion = item?.patientFoodCategoryQuestion;
+    const questionPayload = currentQuestion?.question || currentQuestion?.questionToAnswer;
+    const hasQuestionRelation = Boolean(
+        currentQuestion?.relatedToDayOverviewItemQuestionExists
+        || currentQuestion?.foodCategory?.relatedToDayOverviewItemQuestionExists
+    );
 
     const handleCheckboxPress = (next: boolean) => {
         if (handleCheckboxStatus && !disabled && !isFutureDate) {
@@ -209,8 +214,8 @@ export const ListItem: React.FC<ListItemProps> = ({
 
         if (isFood) {
             const hasVideoOrQuestion = currentVideo?.relatedToDayOverviewItemAttachmentExists
-                || currentQuestion?.questionToAnswer
-                || currentQuestion?.relatedToDayOverviewItemQuestionExists;
+                || Boolean(questionPayload)
+                || hasQuestionRelation;
 
             return (
                 <View style={styles.foodContentContainer}>
@@ -244,14 +249,18 @@ export const ListItem: React.FC<ListItemProps> = ({
                                     }}
                                 />
                             )}
-                            {(currentQuestion?.questionToAnswer || currentQuestion?.relatedToDayOverviewItemQuestionExists) && (
+                            {(Boolean(questionPayload) || hasQuestionRelation) && (
                                 <QuestionBtn
                                     style={styles.btnOffset}
-                                    change={Boolean(currentQuestion?.questionToAnswer) || !currentQuestion?.relatedToDayOverviewItemQuestionExists}
-                                    disabled={disabled || !currentQuestion?.questionToAnswer || isFutureDate}
+                                    change={Boolean(questionPayload) || !hasQuestionRelation}
+                                    disabled={disabled || !questionPayload || isFutureDate}
                                     navigationAttr={{
                                         backLink: ROUTES.EDIT,
-                                        question: { ...currentQuestion, questionType: QUESTION_TYPE.FOOD_QUESTION },
+                                        question: {
+                                            ...currentQuestion,
+                                            question: questionPayload,
+                                            questionType: QUESTION_TYPE.FOOD_QUESTION
+                                        },
                                     }}
                                 />
                             )}
@@ -294,9 +303,11 @@ export const ListItem: React.FC<ListItemProps> = ({
                     activeOpacity={0.7}
                 >
                     {renderItemContent()}
-                    {renderStatusText()}
                 </TouchableOpacity>
-                {renderCheckbox()}
+                <View style={styles.itemContent}>
+                    {renderStatusText()}
+                    {renderCheckbox()}
+                </View>
             </View>
         </View>
     );
@@ -311,11 +322,10 @@ const styles = StyleSheet.create({
     },
     listItem: {
         width: '100%',
-        display: 'flex',
         borderBottomWidth: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 0,
+        // marginRight: 0,
         justifyContent: 'space-between',
         paddingVertical: OFFSET.VERTICAL,
         paddingLeft: 20,
@@ -325,7 +335,7 @@ const styles = StyleSheet.create({
         borderRightWidth: 7,
     },
     listItemLink: {
-        maxWidth: '70%',
+        maxWidth: '55%',
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
@@ -337,6 +347,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 3,
         paddingVertical: 1,
         marginRight: 5,
+        marginLeft: 15,
     },
     image: {
         width: 40,
@@ -391,10 +402,9 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     notEatText: {
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 15,
+        
     },
     buttonContainer: {
         display: 'flex',
@@ -406,6 +416,12 @@ const styles = StyleSheet.create({
     },
     btnOffset: {
         marginRight: 10,
+    },
+    itemContent: {
+        // width: '35%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
 });
 
@@ -566,4 +582,5 @@ export function prepareIngredientNameWithUnitFromItem (
         useServing: !!item.useServing,
         peopleEatingNumber: options?.peopleEatingNumber ?? 1,
     });
+
 }

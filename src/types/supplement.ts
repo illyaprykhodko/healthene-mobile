@@ -1,6 +1,6 @@
-import { BaseEntity, NamedEntity, TimestampedEntity } from './common/interfaces';
 import { Url } from './common';
 import { Flavonoid } from './flavonoid';
+import { BaseEntity, NamedEntity, TimestampedEntity } from './common/interfaces';
 
 /**
  * Represents a dietary supplement in the system
@@ -75,8 +75,18 @@ export interface Supplement extends BaseEntity, NamedEntity, TimestampedEntity {
   manufacturer?: string;
   certification?: string;
   isActive: boolean;
+  supplement: {
+    id: number;
+    name: string;
+};
 }
-
+// export interface Supplement {
+//   id: number;
+//   supplement: {
+//       id: number;
+//       name: string;
+//   };
+// }
 /**
  * Represents a category of supplements
  * @interface SupplementCategory

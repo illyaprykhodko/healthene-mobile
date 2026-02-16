@@ -9,6 +9,7 @@ import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
+import { COLORS } from 'constants/colors';
 import DefImage from 'components/DefImage';
 import { Button } from 'components/Button';
 import { RangeSlider } from 'components/RangeSlider';
@@ -282,6 +283,7 @@ const styles = StyleSheet.create({
     },
     submitBtnText: {
         fontSize: 18,
+        color: COLORS.DARK_GREY,
         fontWeight: Platform.OS === 'ios' ? '600' : '700',
     },
 });

@@ -335,7 +335,16 @@ export const dayOverviewApi = createApi({
                           for (const arr of Object.values(draft) as any[][]) {
                               const found = arr.find(x => x.id === id);
                               if (found) {
-                                  Object.assign(found, serverItem);
+                                  const mergedServerItem = { ...serverItem } as any;
+                                  // Some responses omit question/video attachment fields after status-only updates.
+                                  // Preserve already loaded nested objects to avoid UI flicker/disappearance.
+                                  if (mergedServerItem?.patientFoodCategoryQuestion == null && found?.patientFoodCategoryQuestion) {
+                                      mergedServerItem.patientFoodCategoryQuestion = found.patientFoodCategoryQuestion;
+                                  }
+                                  if (mergedServerItem?.patientFoodCategoryAttachment == null && found?.patientFoodCategoryAttachment) {
+                                      mergedServerItem.patientFoodCategoryAttachment = found.patientFoodCategoryAttachment;
+                                  }
+                                  Object.assign(found, mergedServerItem);
                                   arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
                                   break;
                               }

@@ -12,7 +12,7 @@ import { ActivityIcon, CloseIcon } from './AnytimeIcons';
 import { useGetDayOverviewQuery, useUpdatePhaseMutation } from 'store/api/dayOverviewApi';
 
 function isItemFullyDone (item: any): boolean {
-    if (item.status !== PHASE_ITEM_STATUS.DONE) { return false; }
+    if (![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.DID_NOT_EAT].includes(item.status)) { return false; }
     if (Array.isArray(item.list) && item.list.length) { return item.list.every(isItemFullyDone); }
     return true;
 }
@@ -100,7 +100,6 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
     const navigation = useNavigation();
     const { data: dayOverviewData, refetch } = useGetDayOverviewQuery(date || new Date().toISOString().split('T')[0]);
     const [updatePhase] = useUpdatePhaseMutation();
-
     const exerciseCategories = useMemo(() => {
         const anytimePhase = dayOverviewData?.phases?.find(phase => phase.type === 'ANYTIME');
         const anytimeItems = anytimePhase?.items || [];
@@ -155,7 +154,6 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
         );
         return exerciseItems.filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
     }, [dayOverviewData]);
-
     const listIsDone = useMemo(() => areAllItemsFullyDone(exerciseCategories), [exerciseCategories]);
     
     // Check if today to determine status logic
@@ -208,6 +206,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
             (navigation as any).navigate('ExerciseCategories', {
                 date,
                 deepCounter: 1,
+                list: item.list,
                 title: item?.title,
                 deepPhaseId: anytimePhaseId,
                 onRefresh: refreshAnytimeExercises,

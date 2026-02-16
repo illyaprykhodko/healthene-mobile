@@ -5,9 +5,16 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQuery } from 'store/api/baseApi.ts';
 import { Country, User, State, ChangePassword } from 'types';
 
+export interface NotificationSetting {
+    id: number;
+    enabled: boolean;
+    notificationType: string;
+}
+
 export const settingsApi = createApi({
     baseQuery,
     reducerPath: 'settingsApi',
+    tagTypes: ['NotificationSettings'],
     endpoints: builder => ({
         updateUserData: builder.mutation<User, Partial<User>>({
             query: body => ({
@@ -48,6 +55,21 @@ export const settingsApi = createApi({
                 url: '/patient-service/patients/me/email/change-request',
             }),
         }),
+        getNotificationSettings: builder.query<NotificationSetting[], void>({
+            query: () => ({
+                method: 'GET',
+                url: '/patient-service/patients/me/notification-setting',
+            }),
+            providesTags: ['NotificationSettings'],
+        }),
+        updateNotificationSettings: builder.mutation<NotificationSetting[], NotificationSetting[]>({
+            query: body => ({
+                body,
+                method: 'PUT',
+                url: '/patient-service/patients/me/notification-setting',
+            }),
+            invalidatesTags: ['NotificationSettings'],
+        }),
     })
 });
 
@@ -56,5 +78,7 @@ export const {
     useFilterCountryMutation,
     useUpdateUserDataMutation,
     useChangePasswordMutation,
-    useChangeEmailRequestMutation
+    useChangeEmailRequestMutation,
+    useGetNotificationSettingsQuery,
+    useUpdateNotificationSettingsMutation,
 } = settingsApi;
