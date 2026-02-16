@@ -5,9 +5,16 @@ import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 
 // local dependencies
+import {
+    useGetMedicalProblemsQuery,
+    useGetMedicationAllergiesQuery,
+    useGetLibraryItemsTotalTreeQuery,
+    useGetIncompleteQuestionsVideosQuery,
+} from 'store/api/dayOverviewApi';
 import { RootState } from 'store';
 import Text from 'components/Text';
 import { useAuth } from 'hooks/useAuth';
@@ -17,12 +24,6 @@ import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import { navigate } from 'services/navigation';
 import ProfileImage from 'components/ProfileImage.tsx';
-import {
-    useGetMedicalProblemsQuery,
-    useGetMedicationAllergiesQuery,
-    useGetLibraryItemsTotalTreeQuery,
-    useGetIncompleteQuestionsVideosQuery,
-} from 'store/api/dayOverviewApi';
 
 const DESTINATIONS = {
     MESSAGES: 'MESSAGES',
@@ -66,7 +67,6 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                 iconStyle="solid"
                 style={styles.menuIcon}
                 color={theme.colors.primary}
-                // color={focused ? theme.colors.primary : theme.colors.textSecondary}
             />
             <Text
                 variant="h5"
@@ -80,7 +80,6 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                     <Text
                         variant="bold"
                         style={styles.badgeText}
-                        // color="#FFFFFF"
                         color={theme.colors.white}
                     >
                         {badge > 99 ? '99+' : badge}
@@ -107,6 +106,7 @@ interface CustomDrawerContentProps {
 
 export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => {
     const theme = useTheme();
+    const insets = useSafeAreaInsets();
     const { signOut } = useAuth();
     const user = useSelector((state: RootState) => state.app.user);
 
@@ -148,57 +148,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     const handleLogout = async () => {
         await signOut();
     };
-    // const menuItems: {
-    //     title: string,
-    //     route: RouteName,
-    //     icon: DrawerIconName,
-    // }[] = [
-    //     {
-    //         icon: 'file',
-    //         title: 'My Daily Plan',
-    //         route: ROUTES.DAILY_PLAN,
-    //     },
-    //     {
-    //         icon: 'shopping-cart',
-    //         title: 'Shopping List',
-    //         route: ROUTES.SHOPPING,
-    //     },
-    //     {
-    //         icon: 'comments',
-    //         title: 'Messages',
-    //         route: ROUTES.MESSENGER,
-    //     },
-    //     {
-    //         icon: 'chart-bar',
-    //         title: 'My Results',
-    //         route: ROUTES.MY_RESULTS,
-    //     },
-    //     {
-    //         icon: 'clipboard',
-    //         title: 'About Plan',
-    //         route: ROUTES.ABOUT_PLAN,
-    //     },
-    //     {
-    //         icon: 'heartbeat',
-    //         title: 'My Health Profile',
-    //         route: ROUTES.HEALTH_PROFILE,
-    //     },
-    //     {
-    //         icon: 'book',
-    //         title: 'Library',
-    //         route: ROUTES.LIBRARY,
-    //     },
-    //     {
-    //         title: 'Info',
-    //         icon: 'info-circle',
-    //         route: ROUTES.INFO,
-    //     },
-    //     {
-    //         icon: 'award',
-    //         title: 'Cuisine Distribution',
-    //         route: ROUTES.CUISINE_DISTRIBUTION,
-    //     },
-    // ];
+
     const getFocusedRoute = () => {
         return props.state?.routes[props.state?.index]?.name;
     };
@@ -208,36 +158,15 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
-                <Pressable onPress={goToAccountSettings} style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
+                <Pressable onPress={goToAccountSettings} style={[styles.profileSection, { borderBottomColor: theme.colors.border, paddingTop: insets.top }]}>
                     <ProfileImage style={styles.userIcon} uri={user?.coverImage?.url} />
                     <View>
                         <Text variant="h4" color={theme.colors.text}>
                             {user?.firstName} {user?.lastName}
                         </Text>
-                        {/* <Text variant="body" color={theme.colors.textSecondary}>
-                            {user?.email}
-                        </Text> */}
                         <Text color={theme.colors.primary}>Account Setting</Text>
                     </View>
                 </Pressable>
-                {/* {menuItems.map(item => {
-                    const focused = getFocusedRoute() === item.route;
-                    return (
-                        <DrawerItem
-                            key={item.route}
-                            icon={item.icon}
-                            focused={focused}
-                            title={item.title}
-                            onPress={() => navigate(item.route)}
-                        />
-                    );
-                })}
-                {user?.preferenceTemplatesExist && <DrawerItem
-                    icon="utensils"
-                    title="Meal Preferences"
-                    onPress={() => navigate(ROUTES.MEAL_PREFERENCES)}
-                    focused={getFocusedRoute() === ROUTES.MEAL_PREFERENCES}
-                />} */}
                 <DrawerItem
                     icon="file"
                     title="My Daily Plan"
@@ -325,12 +254,12 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     drawerContent: {
-        paddingTop: OFFSET.VERTICAL + 5,
+        paddingTop: OFFSET.VERTICAL,
     },
     profileSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: OFFSET.VERTICAL,
+        paddingBottom: OFFSET.VERTICAL,
         borderBottomWidth: 1,
         marginBottom: OFFSET.POINT * 2.5,
     },
