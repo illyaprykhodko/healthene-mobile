@@ -1,7 +1,6 @@
 // outsource dependencies
 import moment from 'moment';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
