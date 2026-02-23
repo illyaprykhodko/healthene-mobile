@@ -4,10 +4,11 @@ apply plugin: "com.facebook.react"
 apply plugin: "com.google.gms.google-services"
 
 project.ext.envConfigFiles = [
+        localdebug: ".env.local",
         productiondebug: ".env.production",
         productionrelease: ".env.production",
-        developmentrelease: ".env.development",
         developmentdebug: ".env.development",
+        developmentrelease: ".env.development",
 ]
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 /**
@@ -113,6 +114,10 @@ android {
 
     flavorDimensions "environment"
     productFlavors {
+        local {
+             dimension "environment"
+             resValue "string", "app_name", "Healthene Local"
+        }
         development {
              dimension "environment"
              resValue "string", "app_name", "Healthene Dev"
