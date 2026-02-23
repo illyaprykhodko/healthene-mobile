@@ -4,6 +4,7 @@ import { enableScreens } from 'react-native-screens';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // local dependencies
+import { navigationIntegration } from '../../App';
 import { PUBLIC, PRIVATE } from 'constants/routes';
 import { SplashScreen } from 'components/SplashScreen';
 import { RootStackParamList, navigationRef } from 'services/navigation';
@@ -26,7 +27,12 @@ export function RootNavigator () {
     }
 
     return (
-        <NavigationContainer ref={navigationRef}>
+        <NavigationContainer
+            ref={navigationRef}
+            onReady={() => {
+                navigationIntegration.registerNavigationContainer(navigationRef);
+            }}
+        >
             <Stack.Navigator
                 screenOptions={{
                     headerShown: false,

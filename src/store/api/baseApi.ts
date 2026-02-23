@@ -6,6 +6,7 @@ import {
     FetchBaseQueryError,
 } from '@reduxjs/toolkit/query/react';
 import { Platform } from 'react-native';
+import * as Sentry from '@sentry/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // local dependencies
 import { RootState } from 'store';
@@ -41,9 +42,25 @@ addInterceptor.error(async (error, args, api) => {
         originalArgs: args,
         status: error.status as number,
     };
+
+    // Log only MUST log statuses: 500+ and 404
+    const status = error.status as number | string;
+
+    if (
+        (typeof status === 'number' && status >= 500)
+      || status === 404
+    ) {
+        Sentry.captureException(
+            new Error(
+                `API Error ${(args as FetchArgs)?.url}: ${JSON.stringify(error)}`
+            )
+        );
+    }
+
     if (error.status === 401) {
         return handleRefreshToken(refreshError, api);
     }
+
     return error;
 });
 // type ErrorStatus = FetchBaseQueryError['status'];

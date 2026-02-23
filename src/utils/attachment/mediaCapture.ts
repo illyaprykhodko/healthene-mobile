@@ -1,6 +1,7 @@
 // outsource dependencies
 import React from 'react';
 import moment from 'moment/moment';
+import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import { ReactNativeBlobUtilStat } from 'react-native-blob-util';
 import { VideoFile, PhotoFile } from 'react-native-vision-camera';
@@ -65,6 +66,7 @@ export const handleCapture = async ({
             body: formData
         })).unwrap();
     } catch (error) {
+        Sentry.captureException(error);
         Toast.show({
             type: 'error',
             text1: 'Upload failed',

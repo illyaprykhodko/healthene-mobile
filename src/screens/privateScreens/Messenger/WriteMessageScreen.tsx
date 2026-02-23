@@ -2,6 +2,7 @@
 import * as yup from 'yup';
 import moment from 'moment';
 import { Formik } from 'formik';
+import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import React, { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -102,6 +103,7 @@ const WriteMessageScreen = () => {
                 text2: 'File selected successfully',
             });
         } catch (error) {
+            Sentry.captureException(error);
             Toast.show({
                 type: 'error',
                 text1: 'Upload failed',
