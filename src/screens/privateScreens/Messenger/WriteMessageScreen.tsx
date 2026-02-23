@@ -2,6 +2,7 @@
 import * as yup from 'yup';
 import moment from 'moment';
 import { Formik } from 'formik';
+import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import React, { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -30,7 +31,6 @@ import { useUploadAttachmentMutation } from 'store/api/s3ServiceApi.ts';
 import { setAttachment, saveMessageForm } from 'store/slices/messengerSlice.ts';
 import Attachments from 'screens/privateScreens/Messenger/components/Attachments.tsx';
 import { useCreateChainMutation, useReplyToChainMutation } from 'store/api/messengerApi.ts';
-import * as Sentry from '@sentry/react-native';
 
 // configure
 const ATTACHMENTS = {
