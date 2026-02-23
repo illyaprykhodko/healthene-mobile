@@ -175,31 +175,10 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                     <Text variant="h4" style={styles.userName} color={theme.colors.text}>
                         {user?.firstName} {user?.lastName}
                     </Text>
-                    {/* <Text variant="body" color={theme.colors.textSecondary}>
-                            {user?.email}
-                        </Text> */}
                     <Text color={theme.colors.primary}>Account Setting</Text>
                 </View>
             </Pressable>
             <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
-                {/* {menuItems.map(item => {
-                    const focused = getFocusedRoute() === item.route;
-                    return (
-                        <DrawerItem
-                            key={item.route}
-                            icon={item.icon}
-                            focused={focused}
-                            title={item.title}
-                            onPress={() => navigate(item.route)}
-                        />
-                    );
-                })}
-                {user?.preferenceTemplatesExist && <DrawerItem
-                    icon="utensils"
-                    title="Meal Preferences"
-                    onPress={() => navigate(ROUTES.MEAL_PREFERENCES)}
-                    focused={getFocusedRoute() === ROUTES.MEAL_PREFERENCES}
-                />} */}
                 <DrawerItem
                     icon="file"
                     title="My Daily Plan"
@@ -345,9 +324,9 @@ const styles = StyleSheet.create({
         color: '#666666',
     },
     logoutButton: {
+        margin: OFFSET.VERTICAL,
         borderRadius: 30,
         borderColor: '#E74C3C',
-        margin: OFFSET.VERTICAL,
     },
     userName: {
         fontSize: 16,
