@@ -72,7 +72,7 @@ const WriteMessageScreen = () => {
         },
         [dispatch]
     );
-    const handleSubmit = useCallback(async (data: MessageForm) => {
+    const handleSubmit = useCallback(async (data: MessageForm, formikHelpers?: any) => {
         if (chain) {
             await replyChain({ chain, ...data, attachments: initialValues.attachments }).unwrap();
         } else {
@@ -80,8 +80,25 @@ const WriteMessageScreen = () => {
                 await createChain({ ...data, attachments: initialValues.attachments, collocutor: { id: user.physician.id } });
             }
         }
-        navigation.goBack();
-    }, [chain, navigation]);
+
+        // reset form fields
+        formikHelpers?.resetForm({
+            values: {
+                subject: '',
+                text: '',
+                attachments: []
+            }
+        });
+
+        // clear attachments in redux
+        dispatch(saveMessageForm({
+            subject: '',
+            text: '',
+            attachments: []
+        } as any));
+
+        navigation.navigate(ROUTES.MESSAGE_LIST);
+    }, [chain, navigation, dispatch, replyChain, createChain, initialValues, user]);
 
     const handleAttachFile = useCallback(async () => {
         try {
@@ -178,7 +195,7 @@ const WriteMessageScreen = () => {
                     </View>
                     <Formik<MessageForm>
                         enableReinitialize
-                        onSubmit={handleSubmit}
+                        onSubmit={(values, helpers) => handleSubmit(values, helpers)}
                         initialValues={formInitialValues}
                         validationSchema={validationSchema}
                     >

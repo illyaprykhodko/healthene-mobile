@@ -42,6 +42,7 @@ export const RecordPreview = ({ file, onRetake, onCapture, recordType }: RecordP
             captureType,
             setPreloader
         });
+
         if (attachment) {
             onCapture(attachment);
         }

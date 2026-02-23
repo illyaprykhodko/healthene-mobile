@@ -14,20 +14,8 @@ import { config } from 'constants';
 import { UserSession } from 'types';
 import { addInterceptor, applyInterceptors } from './interceptors';
 
-//   // add request interceptor
-// addInterceptor.request(async (args, api) => {
-//     // add headers
-//     args.headers = {
-//       ...args.headers,
-//       'Cache-Control': 'no-cache',
-//       'Content-Type': 'application/json',
-//       'user-platform': Platform.OS === 'ios' ? 'IOS' : 'ANDROID',
-//     };
-//     return args;
-//   });
-
 // add response interceptor
-addInterceptor.response(async (response, args, api) => {
+addInterceptor.response(async response => {
     // log response in debug mode
     if (config.DEBUG) {
         console.info('%c RESPONSE ', 'background: green; color: #fff;', response);
@@ -63,14 +51,13 @@ addInterceptor.error(async (error, args, api) => {
 
     return error;
 });
-// type ErrorStatus = FetchBaseQueryError['status'];
+
   type RefreshError = FetchBaseQueryError & {
-      // status: FetchBaseQueryError['status'];
+
     status: number;
     data?: unknown;
     originalArgs: FetchArgs & {
-      wasTryingToRestore?: boolean;
-    //   headers?: Record<string, string>;
+        wasTryingToRestore?: boolean;
     };
   };
 
@@ -154,11 +141,6 @@ const handleRefreshToken = async (
                             .catch(reject)
                     )
                 );
-                //   await Promise.all(
-                //     stuckRequests.map(({ resolve, reject, args }) =>
-                //       baseQueryRaw(args, api).then(resolve).catch(reject)
-                //     )
-                //   );
             } else {
                 throw new Error('Invalid refresh response');
             }
@@ -194,12 +176,12 @@ const baseQueryRaw = fetchBaseQuery({
         const token = (getState() as RootState).app.accessToken;
         const actualToken = session?.[TOKEN_KEYS.ACCESS] || token;
         if (actualToken) {
-            // headers.set('Authorization', `Bearer ${actualToken}`);
             headers.set(TOKEN_KEYS.HEADER, `${TOKEN_KEYS.BEARER}${actualToken}`);
         } else {
             console.log('No access token found in session');
         }
-        if (endpoint !== 'uploadImage') {
+
+        if (endpoint !== 'uploadImage' && endpoint !== 'uploadAttachment') {
             headers.set('Content-Type', 'application/json');
         }
         headers.set('user-platform', Platform.OS === 'ios' ? 'IOS' : 'ANDROID');
@@ -210,7 +192,6 @@ const baseQueryRaw = fetchBaseQuery({
 export const baseQuery = async (
     args: string | FetchArgs,
     api: BaseQueryApi,
-    extraOptions: any
 ) => {
     const fetchArgs = typeof args === 'string' ? { url: args } : args;
     return applyInterceptors(fetchArgs, api, baseQueryRaw);
@@ -229,7 +210,6 @@ const baseQueryRawPub = fetchBaseQuery({
 export const baseQueryPub = async (
     args: string | FetchArgs,
     api: BaseQueryApi,
-    extraOptions: any
 ) => {
     const fetchArgs = typeof args === 'string' ? { url: args } : args;
     return applyInterceptors(fetchArgs, api, baseQueryRawPub);
