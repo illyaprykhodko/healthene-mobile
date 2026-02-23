@@ -195,9 +195,9 @@ const WriteMessageScreen = () => {
                     </View>
                     <Formik<MessageForm>
                         enableReinitialize
-                        onSubmit={(values, helpers) => handleSubmit(values, helpers)}
                         initialValues={formInitialValues}
                         validationSchema={validationSchema}
+                        onSubmit={(values, helpers) => handleSubmit(values, helpers)}
                     >
                         {({ values, errors, touched, handleChange, handleSubmit }) => {
                             return <View style={styles.formContainer}>
