@@ -73,7 +73,7 @@ const DayOverviewStack: React.FC = () => {
         showBackButton?: boolean;
         showDateButtons?: boolean;
     }) => (headerProps: any) => (
-        <View style={[styles.customHeader, { paddingTop: insets.top + OFFSET.POINT, backgroundColor: theme.colors.primary }]}>
+        <View style={[styles.customHeader, { paddingTop: insets.top + OFFSET.VERTICAL, backgroundColor: theme.colors.primary }]}>
             <View style={[styles.headerSide, styles.headerSideLeft]}>
                 <BackBtn onPress={() => headerProps.navigation.goBack()} color={theme.colors.white}/>
             </View>
@@ -100,22 +100,6 @@ const DayOverviewStack: React.FC = () => {
 
     return (
         <Stack.Navigator initialRouteName="DayOverview" screenOptions={() => ({
-            // title: currentDate,
-            // headerStyle: {
-            //     backgroundColor: theme.colors.primary,
-            // },
-            // headerTintColor: theme.colors.white,
-            // headerTitleStyle: {
-            //     fontWeight: '600',
-            //     fontSize: 18,
-            // },
-            // headerTitleAlign: 'center',
-            // headerLeftContainerStyle: {
-            //     paddingLeft: OFFSET.HORIZONTAL,
-            // },
-            // headerRightContainerStyle: {
-            //     paddingRight: OFFSET.HORIZONTAL,
-            // },
             headerRight: () => (
                 <Hamburger onPress={() => (navigation as any).openDrawer?.()} style={styles.menuButton} />
             ),
@@ -126,25 +110,6 @@ const DayOverviewStack: React.FC = () => {
                 options={() => ({
                     title: 'Day Overview',
                     header: renderCustomHeader({ showDateButtons: true, disabled: Boolean(expectAnswer) }),
-                    // header: () => (
-                    //     <View style={[styles.customHeader, { paddingTop: insets.top, backgroundColor: theme.colors.primary }]}>
-                    //         <View style={styles.headerSide}>
-                    //             <BackButton navigation={navigation} theme={theme} />
-                    //         </View>
-                    //         <View style={styles.headerCenter}>
-                    //             <TimeSwitcher
-                    //                 date={currentDate}
-                    //                 isHideLeftBtn={false}
-                    //                 isHideRightBtn={false}
-                    //                 disabled={Boolean(expectAnswer)}
-                    //                 init={({ date: nextDate }) => handleDateChange(nextDate)}
-                    //             />
-                    //         </View>
-                    //         <View style={styles.headerSide}>
-                    //             <Hamburger onPress={() => (navigation as any).openDrawer?.()} />
-                    //         </View>
-                    //     </View>
-                    // ),
                 })}
             />
             <Stack.Screen
@@ -240,30 +205,30 @@ const DayOverviewStack: React.FC = () => {
                     header: renderCustomHeader({ title: 'Measurement' }),
                 }}
             />
-            
+
             <Stack.Screen
                 name="SmartScale"
                 component={SmartScaleScreen}
                 options={{
-                    title: 'Smart Scale',
                     headerTitleStyle: { fontSize: 18 },
+                    header: renderCustomHeader({ title: 'Smart Scale' }),
                 }}
             />
             <Stack.Screen
                 name="Replacement"
                 component={ReplacementScreen}
                 options={{
-                    title: 'Select Replacement',
                     headerTitleStyle: { fontSize: 18 },
+                    header: renderCustomHeader({ title: 'Select Replacement' }),
                 }}
             />
-            
+
             <Stack.Screen
                 name="ReplaceItems"
                 component={ReplaceItemsScreen}
                 options={({ route }) => ({
-                    title: (route.params as any)?.title || 'Replacement Options',
                     headerTitleStyle: { fontSize: 18 },
+                    header: renderCustomHeader({ title: (route.params as any)?.title || 'Replacement Options' }),
                 })}
             />
 
@@ -310,8 +275,7 @@ const styles = StyleSheet.create({
     customHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        // paddingTop: OFFSET.VERTICAL * 2,
-        paddingBottom: OFFSET.POINT * 3,
+        paddingBottom: OFFSET.VERTICAL,
         justifyContent: 'space-between',
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
