@@ -10,12 +10,15 @@ const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 const {
     wrapWithReanimatedMetroConfig,
   } = require('react-native-reanimated/metro-config');
-  
+
+const {
+ withSentryConfig
+} = require("@sentry/react-native/metro");
+
 const config = {};
 
 
 const defaultConfig = getDefaultConfig(__dirname);
 
 const merged = mergeConfig(defaultConfig, config);
-module.exports = wrapWithReanimatedMetroConfig(merged);
-// module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+module.exports = withSentryConfig(wrapWithReanimatedMetroConfig(merged));

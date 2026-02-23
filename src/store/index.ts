@@ -1,5 +1,6 @@
 // outsource dependencies
-import { configureStore } from '@reduxjs/toolkit';
+import * as Sentry from '@sentry/react-native';
+import { configureStore, Middleware } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 
 // local dependencies
@@ -27,6 +28,49 @@ import { mealPreferencesApi } from 'store/api/mealPreferencesApi.ts';
 import foodPreferencesSlice from 'store/slices/foodPreferrencesSlice.ts';
 import { cuisineDistributionApi } from 'store/api/cuisineDistributionApi.ts';
 
+export const sentryApiMiddleware: Middleware = () => next => (action: any) => {
+
+    if (typeof action?.type === 'string' && action.type.endsWith('/rejected')) {
+
+        const status = action.payload?.status;
+        const data = action.payload?.data;
+
+        if (status < 500 || status === 404) {
+
+            Sentry.withScope(scope => {
+                const endpoint = action.meta?.arg?.endpointName;
+                const errorCode = data?.errorCode || 'unknown';
+                scope.setFingerprint([
+                    'network-error',
+                    endpoint || 'unknown',
+                    String(status),
+                    errorCode
+                ]);
+                scope.setTag('rtk.endpoint', action.meta?.arg?.endpointName);
+                scope.setTag('http.status', String(status));
+
+                scope.setContext('request', {
+                    url: action.meta?.baseQueryMeta?.request?.url,
+                    method: action.meta?.baseQueryMeta?.request?.method,
+                });
+
+                scope.setContext('response', {
+                    status,
+                    data,
+                });
+
+                Sentry.captureException(
+                    new Error(data?.errorMessageDebug || 'API Error')
+                );
+
+            });
+
+        }
+    }
+
+    return next(action);
+};
+
 export const store = configureStore({
     reducer: {
         app: appReducer,
@@ -35,7 +79,6 @@ export const store = configureStore({
         exercise: exerciseReducer,
         messenger: messengerSlice,
         dayOverview: dayOverviewReducer,
-        // healthProfile: healthProfileSlice,
         forgotPassword: forgotPasswordReducer,
         foodPreferences: foodPreferencesSlice,
         [authApi.reducerPath]: authApi.reducer,
@@ -59,6 +102,7 @@ export const store = configureStore({
                 authApi.middleware,
                 planApi.middleware,
                 videoApi.middleware,
+                sentryApiMiddleware,
                 publicApi.middleware,
                 questionApi.middleware,
                 settingsApi.middleware,

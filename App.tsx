@@ -7,6 +7,7 @@
 // outsource dependencies
 import React from 'react';
 import { Provider } from 'react-redux';
+import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import { Platform, StyleSheet } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -20,9 +21,34 @@ import { RootNavigator } from 'navigation/RootNavigator.tsx';
 import { BoxHolder, MaintenanceHolder } from 'components/preloader';
 import { useAppInitialization } from 'hooks/useAppInitialization.ts';
 
+export const navigationIntegration = Sentry.reactNavigationIntegration({
+    enableTimeToInitialDisplay: true,
+});
+
 if (config.DEBUG) {
     require('./ReactotronConfig');
+} else {
+    Sentry.init({
+        environment: config.environment,
+        dsn: 'https://6eec9d361bc9f719c01f5e25e3855c34@o4510911881871360.ingest.de.sentry.io/4510911893733456',
+        integrations: [navigationIntegration, Sentry.reactNativeTracingIntegration()],
+        // Adds more context data to events (IP address, cookies, user, etc.)
+        // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+        sendDefaultPii: true,
+
+        // Enable Logs
+        enableLogs: true,
+
+        // Configure Session Replay
+        replaysSessionSampleRate: 0.1,
+        replaysOnErrorSampleRate: 1,
+        tracesSampleRate: 1.0,
+
+        // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+        // spotlight: __DEV__,
+    });
 }
+
 function AppContent (): React.JSX.Element {
     const { isInitializing, health } = useAppInitialization();
     const insets = useSafeAreaInsets();
@@ -54,7 +80,7 @@ function App (): React.JSX.Element {
     );
 }
 
-export default App;
+export default Sentry.wrap(App);
 
 const createStyles = (insets?: EdgeInsets) => StyleSheet.create({
     flex: {

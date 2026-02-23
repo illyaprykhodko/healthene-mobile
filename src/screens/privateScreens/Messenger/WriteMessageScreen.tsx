@@ -30,6 +30,7 @@ import { useUploadAttachmentMutation } from 'store/api/s3ServiceApi.ts';
 import { setAttachment, saveMessageForm } from 'store/slices/messengerSlice.ts';
 import Attachments from 'screens/privateScreens/Messenger/components/Attachments.tsx';
 import { useCreateChainMutation, useReplyToChainMutation } from 'store/api/messengerApi.ts';
+import * as Sentry from '@sentry/react-native';
 
 // configure
 const ATTACHMENTS = {
@@ -102,6 +103,7 @@ const WriteMessageScreen = () => {
                 text2: 'File selected successfully',
             });
         } catch (error) {
+            Sentry.captureException(error);
             Toast.show({
                 type: 'error',
                 text1: 'Upload failed',
