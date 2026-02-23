@@ -10,7 +10,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "android-reactotron-start": "adb reverse tcp:9090 tcp:9090",
-    "android-development-unix": "react-native run-android --mode=developmentdebug",
+    "android-development-unix": "react-native run-android --mode=localdebug",
     "android-production-unix": "react-native run-android --mode=productiondebug",
     "emulator": "adb devices | grep emulator || (emulator -avd $(emulator -list-avds | head -n 1) -no-snapshot -no-boot-anim & sleep 30)",
     "android-local": "npm run emulator && cd android && ./gradlew clean installLocalDebug && cd ../",
