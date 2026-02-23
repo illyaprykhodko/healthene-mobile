@@ -23,7 +23,7 @@ interface AudioRecordProps {
 
 const AudioRecord = ({ onCapture }: AudioRecordProps) => {
     const theme = useTheme();
-    const [permissionHasDenied, setPermissionHasDenied] = useState(false);
+    const [hasPermission, setHasPermission] = useState<boolean | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [recordTime, setRecordTime] = useState('0:00');
     const [result, setResult] = useState<ReactNativeBlobUtilStat | null>(null);
@@ -41,8 +41,11 @@ const AudioRecord = ({ onCapture }: AudioRecordProps) => {
 
 
     const startAudioRecording = useCallback(async () => {
-        const hasPermission = await checkMicrophonePermission();
-        setPermissionHasDenied(hasPermission);
+        const granted = await checkMicrophonePermission();
+        setHasPermission(granted);
+
+        if (!granted) { return; }
+
         setRecordTime('00:00');
 
         Sound.addRecordBackListener((e: RecordBackType) => {
@@ -52,7 +55,7 @@ const AudioRecord = ({ onCapture }: AudioRecordProps) => {
 
         await Sound.startRecorder();
         setIsRecording(true);
-    }, []);
+    }, [checkMicrophonePermission]);
 
 
     const stopAudioRecording = useCallback(async () => {
@@ -73,6 +76,7 @@ const AudioRecord = ({ onCapture }: AudioRecordProps) => {
         };
     }, []);
 
+
     if (result) {
         return <RecordPreview
             file={result}
@@ -82,7 +86,7 @@ const AudioRecord = ({ onCapture }: AudioRecordProps) => {
         />;
     }
 
-    if (permissionHasDenied) {
+    if (hasPermission === false) {
         return <NoMicPermission />;
     }
     return <View style={styles.container}>

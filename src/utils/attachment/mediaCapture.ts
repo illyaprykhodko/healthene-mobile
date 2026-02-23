@@ -9,6 +9,7 @@ import { VideoFile, PhotoFile } from 'react-native-vision-camera';
 // local dependencies
 import { store } from 'store';
 import { uploadAttachmentInitiate } from 'store/api/s3ServiceApi.ts';
+import { Platform } from 'react-native';
 
 type captureType = 'video' | 'image' | 'audio'
 interface CaptureProps {
@@ -55,11 +56,12 @@ export const handleCapture = async ({
     const { mimeType, fileTitle, fileName, fileDescription } = prepareFile(captureType);
     try {
         const formData = new FormData();
+        const fileUri = normalizeUri(file?.path);
         formData.append('file', {
             name: fileName,
             type: mimeType,
-            uri: file?.path,
-        });
+            uri: fileUri,
+        } as any);
         formData.append('title', fileTitle);
         formData.append('description', fileDescription);
         return await store.dispatch(uploadAttachmentInitiate({
@@ -75,4 +77,21 @@ export const handleCapture = async ({
     } finally {
         setPreloader(false);
     }
+};
+
+const normalizeUri = (path?: string) => {
+    if (!path) { return ''; }
+
+    // content:// => Android SAF
+    if (path.startsWith('content://')) { return path; }
+
+    // file://
+    if (path.startsWith('file://')) { return path; }
+
+    // Only android
+    if (Platform.OS === 'android') {
+        return `file://${path}`;
+    }
+
+    return path;
 };

@@ -1,6 +1,5 @@
 // outsource dependencies
 import React, { memo } from 'react';
-import { StyleSheet } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,11 +11,7 @@ import AudioRecord from 'components/AudioRecord';
 import { RootStackParamList } from 'services/navigation';
 import { setAttachment } from 'store/slices/messengerSlice.ts';
 
-interface AudioScreenProps {
-  // props here
-}
-
-const AudioScreen = (props: AudioScreenProps) => {
+const AudioScreen = () => {
     const dispatch = useDispatch();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const handleCapture = (item: Attachment) => {
@@ -27,8 +22,4 @@ const AudioScreen = (props: AudioScreenProps) => {
 };
 
 export default memo(AudioScreen);
-const styles = StyleSheet.create({
-    container: {
-    // style here
-    },
-});
+

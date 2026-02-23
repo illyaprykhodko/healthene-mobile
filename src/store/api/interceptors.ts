@@ -1,6 +1,4 @@
 import { BaseQueryApi, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
-import { Platform } from 'react-native';
-import { config } from '../../constants';
 
 type RequestInterceptor = (args: FetchArgs, api: BaseQueryApi) => FetchArgs;
 type ResponseInterceptor = (response: any, args: FetchArgs, api: BaseQueryApi) => any;
@@ -31,7 +29,7 @@ export const applyInterceptors = async (
 ) => {
     let modifiedArgs = args;
     for (const interceptor of interceptors.request) {
-        modifiedArgs = await interceptor(modifiedArgs, api);
+        modifiedArgs = interceptor(modifiedArgs, api);
     }
 
     try {
