@@ -1,7 +1,7 @@
 // outsource dependencies
 import moment from 'moment';
-import React, { useMemo, useCallback, memo } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import React, { useMemo, useCallback, memo } from 'react';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 

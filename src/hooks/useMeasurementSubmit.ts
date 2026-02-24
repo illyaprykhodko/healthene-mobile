@@ -93,7 +93,12 @@ export const useMeasurementSubmit = (
 
             try {
                 const measurementType = item.measurement?.type as MeasurementType;
-                const unitId = item.measurement?.units?.[0]?.id;
+                const units = item.measurement?.units || [];
+                const selectedUnit = units.find(unit => unit.name === unitName);
+                const defaultUnitId = selectedUnit?.id || units[0]?.id;
+
+                const systolicUnitId = units.find(unit => unit.unitType === 'SYSTOLIC')?.id;
+                const diastolicUnitId = units.find(unit => unit.unitType === 'DIASTOLIC')?.id;
 
                 if (!measurementType) {
                     throw new Error('Measurement type is required');
@@ -102,7 +107,11 @@ export const useMeasurementSubmit = (
                     measurementType,
                     values,
                     source,
-                    unitId,
+                    {
+                        defaultUnitId,
+                        systolicUnitId,
+                        diastolicUnitId,
+                    },
                 );
                 await addMeasurementRecord({
                     type: measurementType,

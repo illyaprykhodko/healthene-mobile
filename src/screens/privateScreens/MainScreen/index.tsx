@@ -15,6 +15,7 @@ import { Button } from 'components/Button';
 import { TextLogo } from 'components/TextLogo';
 import { Hamburger } from 'components/Hamburger';
 import { RootState, useAppSelector } from 'store';
+import { SplashScreen } from 'components/SplashScreen';
 import { useGetWelcomeQuery } from 'store/api/publicApi';
 
 type DrawerParamList = {
@@ -55,9 +56,12 @@ export const MainScreen: React.FC = () => {
     const handleOpenDrawer = () => {
         navigation.openDrawer();
     };
+    if (isLoading) {
+        return <SplashScreen onFinish={() => {}} />;
+    }
 
     return (
-        <Screen style={styles.container} initialized={!isLoading}>
+        <Screen style={styles.container} initialized={true}>
             <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
                 <View style={styles.textLogoWrapper}>
                     <TextLogo color={theme.colors.background} />

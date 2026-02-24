@@ -56,6 +56,7 @@ export interface MeasurementUnit {
   id: number;
   name: string;
   symbol?: string;
+  unitType?: string;
 }
 
 /**

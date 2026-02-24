@@ -9,13 +9,21 @@ import type {
 } from 'types/health';
 import { MEASUREMENT_UNIT_IDS } from './measurement-config';
 
+interface UnitIds {
+    defaultUnitId?: number;
+    systolicUnitId?: number;
+    diastolicUnitId?: number;
+}
+
 export const buildManualPayload = (
     type: MeasurementType,
     values: Record<string, any>,
-    unitId?: number,
+    unitIds?: UnitIds,
 ): MeasurementPayload => {
     const now = moment().format();
     if (type === 'BLOOD_PRESSURE') {
+        const systolicUnitId = unitIds?.systolicUnitId || MEASUREMENT_UNIT_IDS.SYSTOLIC_MMHG;
+        const diastolicUnitId = unitIds?.diastolicUnitId || MEASUREMENT_UNIT_IDS.DIASTOLIC_MMHG;
         return {
             type,
             source: 'HEALTHENE_MANUAL_INPUT',
@@ -23,11 +31,11 @@ export const buildManualPayload = (
                 {
                     values: [
                         {
-                            measurementUnit: { id: MEASUREMENT_UNIT_IDS.SYSTOLIC_MMHG },
+                            measurementUnit: { id: systolicUnitId },
                             value: parseFloat(String(values.systolic).replace(',', '.')),
                         },
                         {
-                            measurementUnit: { id: MEASUREMENT_UNIT_IDS.DIASTOLIC_MMHG },
+                            measurementUnit: { id: diastolicUnitId },
                             value: parseFloat(String(values.diastolic).replace(',', '.')),
                         },
                     ],
@@ -48,7 +56,7 @@ export const buildManualPayload = (
                 values: [
                     {
                         value,
-                        measurementUnit: { id: unitId || 0 },
+                        measurementUnit: { id: unitIds?.defaultUnitId || 0 },
                     },
                 ],
                 endDate: now,
@@ -62,9 +70,11 @@ export const buildHealthAppPayload = (
     type: MeasurementType,
     samples: HealthSample[],
     source: 'APPLE_HEALTH' | 'GOOGLE_FIT',
-    unitId?: number,
+    unitIds?: UnitIds,
 ): MeasurementPayload => {
     if (type === 'BLOOD_PRESSURE') {
+        const systolicUnitId = unitIds?.systolicUnitId || MEASUREMENT_UNIT_IDS.SYSTOLIC_MMHG;
+        const diastolicUnitId = unitIds?.diastolicUnitId || MEASUREMENT_UNIT_IDS.DIASTOLIC_MMHG;
         return {
             type,
             source,
@@ -73,11 +83,11 @@ export const buildHealthAppPayload = (
                 return {
                     values: [
                         {
-                            measurementUnit: { id: MEASUREMENT_UNIT_IDS.SYSTOLIC_MMHG },
+                            measurementUnit: { id: systolicUnitId },
                             value: value.systolic,
                         },
                         {
-                            measurementUnit: { id: MEASUREMENT_UNIT_IDS.DIASTOLIC_MMHG },
+                            measurementUnit: { id: diastolicUnitId },
                             value: value.diastolic,
                         },
                     ],
@@ -95,7 +105,7 @@ export const buildHealthAppPayload = (
             values: [
                 {
                     value: sample.value as number,
-                    measurementUnit: { id: unitId || 0 },
+                    measurementUnit: { id: unitIds?.defaultUnitId || 0 },
                 },
             ],
             endDate: sample.endDate,
@@ -112,16 +122,16 @@ export const buildMeasurementPayload = (
     type: MeasurementType,
     data: Record<string, any> | HealthSample[],
     source: MeasurementSource,
-    unitId?: number,
+    unitIds?: UnitIds,
 ): MeasurementPayload => {
     if (source === 'HEALTHENE_MANUAL_INPUT') {
-        return buildManualPayload(type, data as Record<string, any>, unitId);
+        return buildManualPayload(type, data as Record<string, any>, unitIds);
     }
     return buildHealthAppPayload(
         type,
       data as HealthSample[],
       source as 'APPLE_HEALTH' | 'GOOGLE_FIT',
-      unitId,
+      unitIds,
     );
   
 };

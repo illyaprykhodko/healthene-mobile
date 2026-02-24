@@ -74,7 +74,6 @@ export const authApi = createApi({
                     const userData = await dispatch(
                         authApi.endpoints.getSelf.initiate()
                     ).unwrap();
-                    
                     dispatch(setUser(userData));
                 } catch (error) {
                     await sessionManager.update(null);

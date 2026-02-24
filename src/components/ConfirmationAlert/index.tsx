@@ -1,6 +1,6 @@
 // outsource dependencies
 import React, { memo } from 'react';
-import { StyleSheet, View, Modal, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Modal, TouchableOpacity, Platform } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { COLORS } from 'constants/colors';
@@ -16,6 +16,7 @@ interface ConfirmationAlertProps {
     onClose: () => void;
     onSubmit: () => void;
     hideCancelBtn?: boolean;
+    variant?: 'default' | 'legacy';
 }
 
 const ConfirmationAlert: React.FC<ConfirmationAlertProps> = memo(({
@@ -27,9 +28,11 @@ const ConfirmationAlert: React.FC<ConfirmationAlertProps> = memo(({
     onSubmit,
     hideCancelBtn,
     applyTxt = 'OK',
+    variant = 'default',
     cancelTxt = 'Cancel',
 }) => {
     if (!isOpen) { return null; }
+    const isLegacy = variant === 'legacy';
 
     return (
         <Modal
@@ -41,23 +44,44 @@ const ConfirmationAlert: React.FC<ConfirmationAlertProps> = memo(({
             <TouchableOpacity
                 activeOpacity={1}
                 onPress={onClose}
-                style={styles.overlay}
+                style={[styles.overlay, isLegacy && styles.overlayLegacy]}
             >
                 <TouchableOpacity
                     activeOpacity={1}
-                    style={styles.alertBox}
+                    style={[
+                        styles.alertBox,
+                        isLegacy && styles.alertBoxLegacy,
+                    ]}
                 >
-                    <Text variant="h3" style={styles.title}>{title}</Text>
-                    <Text style={styles.message}>{message}</Text>
+                    <Text
+                        variant="h3"
+                        style={isLegacy ? { ...styles.title, ...styles.titleLegacy } : styles.title}
+                    >
+                        {title}
+                    </Text>
+                    <Text style={isLegacy ? { ...styles.message, ...styles.messageLegacy } : styles.message}>
+                        {message}
+                    </Text>
 
-                    <View style={styles.actions}>
+                    <View style={[styles.actions, isLegacy && styles.actionsLegacy]}>
                         {!hideCancelBtn && (
                             <TouchableOpacity
                                 onPress={onClose}
                                 disabled={disabled}
-                                style={[styles.btn, styles.cancelBtn]}
+                                style={[
+                                    styles.btn,
+                                    styles.cancelBtn,
+                                    isLegacy && styles.btnLegacy,
+                                    isLegacy && styles.cancelBtnLegacy,
+                                ]}
                             >
-                                <Text style={styles.cancelBtnText}>{cancelTxt}</Text>
+                                <Text
+                                    style={isLegacy
+                                        ? { ...styles.cancelBtnText, ...styles.btnTextLegacy }
+                                        : styles.cancelBtnText}
+                                >
+                                    {cancelTxt}
+                                </Text>
                             </TouchableOpacity>
                         )}
                         <TouchableOpacity
@@ -66,10 +90,18 @@ const ConfirmationAlert: React.FC<ConfirmationAlertProps> = memo(({
                             style={[
                                 styles.btn,
                                 styles.applyBtn,
+                                isLegacy && styles.btnLegacy,
+                                isLegacy && styles.applyBtnLegacy,
                                 hideCancelBtn && styles.applyBtnFull,
                             ]}
                         >
-                            <Text style={styles.applyBtnText}>{applyTxt}</Text>
+                            <Text
+                                style={isLegacy
+                                    ? { ...styles.applyBtnText, ...styles.btnTextLegacy }
+                                    : styles.applyBtnText}
+                            >
+                                {applyTxt}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
@@ -87,6 +119,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
+    overlayLegacy: {
+        backgroundColor: '#00000090',
+    },
     alertBox: {
         width: '85%',
         padding: OFFSET.HORIZONTAL * 1.5,
@@ -97,6 +132,14 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 4,
         elevation: 5,
+    },
+    alertBoxLegacy: {
+        width: Platform.OS === 'ios' ? '75%' : '80%',
+        padding: 20,
+        borderRadius: 6,
+        marginBottom: 150,
+        alignItems: 'center',
+        shadowOpacity: 0.2,
     },
     title: {
         fontSize: 20,
@@ -112,9 +155,21 @@ const styles = StyleSheet.create({
         color: COLORS.DARK_GREY,
         lineHeight: 22,
     },
+    titleLegacy: {
+        fontSize: 20,
+        marginBottom: 10,
+    },
+    messageLegacy: {
+        fontSize: 18,
+        marginBottom: 20,
+        lineHeight: 24,
+    },
     actions: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+    },
+    actionsLegacy: {
+        width: '100%',
     },
     btn: {
         flex: 1,
@@ -122,9 +177,20 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         alignItems: 'center',
     },
+    btnLegacy: {
+        paddingVertical: 2,
+        borderWidth: 3,
+        borderRadius: 30,
+        marginHorizontal: 10,
+        borderColor: COLORS.THEME_COLOR,
+    },
     cancelBtn: {
         backgroundColor: '#EBB3D1',
         marginRight: 8,
+    },
+    cancelBtnLegacy: {
+        marginRight: 10,
+        marginLeft: 0,
     },
     cancelBtnText: {
         color: COLORS.BLACK,
@@ -135,6 +201,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#B8E6B3',
         marginLeft: 8,
     },
+    applyBtnLegacy: {
+        marginLeft: 10,
+        marginRight: 0,
+    },
     applyBtnFull: {
         marginLeft: 0,
     },
@@ -143,5 +213,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
+    btnTextLegacy: {
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
 });
-

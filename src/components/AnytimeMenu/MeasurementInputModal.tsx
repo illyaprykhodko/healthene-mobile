@@ -59,9 +59,22 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
         [measurementType],
     );
 
-    const [selectedUnit, setSelectedUnit] = useState(config.defaultUnit);
+    const availableUnits = useMemo(() => {
+        if (item.measurement?.units?.length) {
+            return item.measurement.units;
+        }
+        return config.units;
+    }, [item.measurement?.units, config.units]);
+
+    const [selectedUnit, setSelectedUnit] = useState(
+        availableUnits[0]?.name || config.defaultUnit
+    );
     const [isPanelOpen, setIsPanelOpen] = useState(false);
     const [hasLastMeasurement, setHasLastMeasurement] = useState(false);
+
+    useEffect(() => {
+        setSelectedUnit(availableUnits[0]?.name || config.defaultUnit);
+    }, [availableUnits, config.defaultUnit, measurementType]);
 
     const navigation = useNavigation();
     // const {
@@ -233,14 +246,14 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                                 )}
 
                                 {/* Unit Selector (if multiple units available and not BP) */}
-                                {config.units.length > 1
+                                {availableUnits.length > 1
                   && measurementType !== 'BLOOD_PRESSURE' && (
                                     <View style={styles.unitSelector}>
                                         <AnimatedDropdown
                                             prefix="Unit: "
                                             maxHeight={190}
                                             valueLabel={selectedUnit}
-                                            options={config.units.map(unit => ({
+                                            options={availableUnits.map(unit => ({
                                                 id: unit.id,
                                                 label: unit.name,
                                             }))}

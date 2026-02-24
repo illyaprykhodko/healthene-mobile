@@ -88,6 +88,7 @@ export interface AnytimeMeasurementItem extends AnytimeBaseItem {
       id: number;
       name: string;
       symbol?: string;
+      unitType?: string;
     }>;
   };
 }

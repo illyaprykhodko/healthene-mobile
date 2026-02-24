@@ -21,7 +21,7 @@ export const TextLogo: React.FC<TextLogoProps> = ({ style, color }) => {
             ])}
             numberOfLines={1}
         >
-            {' '}Healthene{' '}
+            {' '}Healthene®{' '}
         </Text>
     );
 };

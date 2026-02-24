@@ -19,7 +19,7 @@ import ShoppingPreferences from './ShoppingPreferences';
 import { VideoScreen } from 'screens/privateScreens/Library';
 import { QuestionScreen } from 'screens/privateScreens/Question';
 import { useGetShoppingListStatusQuery } from 'store/api/shoppingApi';
-import { resetShopping, selectShopping } from 'store/slices/shoppingSlice';
+import { resetShopping, selectShopping, updateShoppingMeta } from 'store/slices/shoppingSlice';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,7 +37,7 @@ interface ShoppingProps {
 const Shopping: React.FC<ShoppingProps> = ({ route }) => {
     const dispatch = useAppDispatch();
     const isFocused = useIsFocused();
-    const { initialized, status } = useAppSelector(selectShopping);
+    const { status } = useAppSelector(selectShopping);
     const submittedShoppingList = useAppSelector(state => state.app?.user?.submittedShoppingList);
 
     const { data: statusData, isLoading } = useGetShoppingListStatusQuery(undefined, {
@@ -69,7 +69,37 @@ const Shopping: React.FC<ShoppingProps> = ({ route }) => {
                 ...screenOptions,
                 gestureEnabled: true,
                 gestureDirection: 'horizontal',
-                headerRight: () => <Hamburger onPress={() => (navigation as any).openDrawer?.()} />,
+                headerRight: () => (
+                    <Hamburger
+                        onPress={() => {
+                            const navState = (navigation as any)?.getState?.();
+                            const currentRoute = navState?.routes?.[navState.index];
+                            const routeName = currentRoute?.name || (navigation as any)?.getCurrentRoute?.()?.name;
+                            const isGuardedShoppingScreen
+                                = routeName === ROUTES.SHOPPING_LIST || routeName === ROUTES.SHOPPING_PREFERENCES;
+                            const shouldWarn = status === SHOPPING_STATUS.PENDING;
+
+                            if (isGuardedShoppingScreen && shouldWarn) {
+                                dispatch(updateShoppingMeta({
+                                    isTryToOpenSideMenu: true,
+                                    isFinalizeAlertOpen: true,
+                                }));
+                                return;
+                            }
+
+                            const parentNav = (navigation as any)?.getParent?.();
+                            if (parentNav?.openDrawer) {
+                                parentNav.openDrawer();
+                                return;
+                            }
+                            if (parentNav?.toggleDrawer) {
+                                parentNav.toggleDrawer();
+                                return;
+                            }
+                            (navigation as any).openDrawer?.();
+                        }}
+                    />
+                ),
                 headerLeft: () => <BackBtn onPress={() => navigation.goBack()} />,
             })}
         >

@@ -10,7 +10,12 @@ export const useAppInitialization = () => {
     const [isInitializing, setIsInitializing] = useState(true);
     const isHealthy = useAppSelector((state: RootState) => state.app.health);
     
-    const { data: health, error: healthError } = useCheckHealthQuery();
+    const {
+        data: health,
+        error: healthError,
+        isLoading: isHealthLoading,
+        isFetching: isHealthFetching,
+    } = useCheckHealthQuery();
     const { data: user } = useRestoreSessionQuery();
     const { accessToken: session } = useAppSelector((state: RootState) => state.app);
     useEffect(() => {
@@ -51,5 +56,6 @@ export const useAppInitialization = () => {
         isHealthy,
         healthError,
         isInitializing,
+        isHealthLoading: isHealthLoading || isHealthFetching,
     };
 };

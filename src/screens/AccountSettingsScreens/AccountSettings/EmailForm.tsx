@@ -9,7 +9,7 @@ import {
 import { Formik } from 'formik';
 import { useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import React, { useRef, useCallback, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -188,9 +188,9 @@ const EmailForm = ({ onPreloader }: EmailFormProps) => {
                         </Text>
                         <View style={styles.confirmationButtons}>
                             <Button
-                                disabled={isRequesting}
                                 title="No"
                                 variant="outline"
+                                disabled={isRequesting}
                                 onPress={handleConfirmNo}
                                 style={styles.confirmationButton}
                             />

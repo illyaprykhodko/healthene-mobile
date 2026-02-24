@@ -50,11 +50,12 @@ if (config.DEBUG) {
 }
 
 function AppContent (): React.JSX.Element {
-    const { isInitializing, health } = useAppInitialization();
+    const { isInitializing, isHealthy, isHealthLoading } = useAppInitialization();
     const insets = useSafeAreaInsets();
     const styles = createStyles(insets);
     if (isInitializing) { return <BoxHolder active />; }
-    if (!health) { return <MaintenanceHolder active />; }
+    if (isHealthLoading) { return <BoxHolder active />; }
+    if (!isHealthy) { return <MaintenanceHolder active />; }
     return (
         <SafeAreaView style={[styles.safeArea, styles.flex]}>
             <RootNavigator />

@@ -37,7 +37,7 @@ export const TermsAndConditions = () => {
         }
         <View style={styles.footer}>
             <Text>
-        Healthene &copy;
+        Healthene® &copy;
                 {' '}
                 {moment().format('MMMM, YYYY')}
             </Text>

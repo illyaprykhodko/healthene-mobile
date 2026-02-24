@@ -1,8 +1,8 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/feather';
 import { useNavigation } from '@react-navigation/native';
-import React, { memo, useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View, FlatList, TouchableOpacity } from 'react-native';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 // local dependencies
 import {
     useGetShoppingPreferencesQuery,
@@ -11,15 +11,17 @@ import {
 } from 'store/api/shoppingApi';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
-import { useAppDispatch } from 'store';
+import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
-import { SHOPPING_STEP } from 'constants/spec';
-import { setCurrentStep } from 'store/slices/shoppingSlice';
+import { useAppDispatch, useAppSelector } from 'store';
+import ConfirmationAlert from 'components/ConfirmationAlert';
+import { SHOPPING_STEP, SHOPPING_STATUS } from 'constants/spec';
 import GenerateShoppingListSkeleton from 'components/Skeleton/GenerateShoppingListSkeleton';
 import { ShoppingPreferencesSkeleton } from 'components/Skeleton/ShoppingPreferencesSkeleton';
+import { selectShopping, setCurrentStep, updateShoppingMeta } from 'store/slices/shoppingSlice';
 
 interface PreferenceItem {
     id: number;
@@ -31,13 +33,28 @@ interface PreferenceItem {
 const ShoppingPreferences: React.FC = () => {
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
+    const pendingActionRef = useRef<any | null>(null);
+    const allowNavigationRef = useRef(false);
 
     const [localPreferences, setLocalPreferences] = useState<PreferenceItem[]>([]);
     const [isChanged, setIsChanged] = useState(false);
 
     const { data: preferences, isLoading } = useGetShoppingPreferencesQuery();
+    const submittedShoppingList = useAppSelector(state => state.app?.user?.submittedShoppingList);
+    const { status: shoppingStatus, isFinalizeAlertOpen, isTryToOpenSideMenu } = useAppSelector(selectShopping);
     const [updatePreferences, { isLoading: isUpdating }] = useUpdateShoppingPreferencesMutation();
     const [generateList, { isLoading: isGenerating }] = useGenerateShoppingListMutation();
+    const shouldWarnOnExit = !submittedShoppingList
+        && shoppingStatus === SHOPPING_STATUS.PENDING;
+
+    const requestExit = useCallback(() => {
+        if (shouldWarnOnExit && !isFinalizeAlertOpen) {
+            pendingActionRef.current = null;
+            dispatch(updateShoppingMeta({ isFinalizeAlertOpen: true, isTryToOpenSideMenu: false }));
+            return;
+        }
+        navigation.goBack();
+    }, [shouldWarnOnExit, isFinalizeAlertOpen, dispatch, navigation]);
 
     useEffect(() => {
         if (preferences) {
@@ -45,6 +62,28 @@ const ShoppingPreferences: React.FC = () => {
             setLocalPreferences(sorted);
         }
     }, [preferences]);
+
+    useEffect(() => {
+        navigation.setOptions({
+            headerLeft: () => <BackBtn onPress={requestExit} />,
+        });
+    }, [navigation, requestExit]);
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', (event: any) => {
+            if (allowNavigationRef.current) {
+                allowNavigationRef.current = false;
+                return;
+            }
+            if (!shouldWarnOnExit) {
+                return;
+            }
+            event.preventDefault();
+            pendingActionRef.current = event.data.action;
+            dispatch(updateShoppingMeta({ isFinalizeAlertOpen: true, isTryToOpenSideMenu: false }));
+        });
+        return unsubscribe;
+    }, [navigation, shouldWarnOnExit, dispatch]);
 
     const handleAmountChange = useCallback((id: number, delta: number) => {
         setLocalPreferences(prev =>
@@ -64,6 +103,7 @@ const ShoppingPreferences: React.FC = () => {
                 await generateList({}).unwrap();
             }
             dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
+            allowNavigationRef.current = true;
             navigation.navigate(ROUTES.SHOPPING_LIST, { excluded: false });
             setIsChanged(false);
         } catch (error) {
@@ -72,8 +112,39 @@ const ShoppingPreferences: React.FC = () => {
     }, [isChanged, localPreferences, updatePreferences, generateList, dispatch, navigation]);
 
     const handleBack = useCallback(() => {
+        requestExit();
+    }, [requestExit]);
+
+    const handleFinishUp = useCallback(() => {
+        pendingActionRef.current = null;
+        dispatch(updateShoppingMeta({ isFinalizeAlertOpen: false, isTryToOpenSideMenu: false }));
+    }, [dispatch]);
+
+    const handleNotNow = useCallback(() => {
+        const action = pendingActionRef.current;
+        pendingActionRef.current = null;
+        dispatch(updateShoppingMeta({ isFinalizeAlertOpen: false, isTryToOpenSideMenu: false }));
+        if (isTryToOpenSideMenu) {
+            const parentNav = (navigation as any)?.getParent?.();
+            if (parentNav?.toggleDrawer) {
+                parentNav.toggleDrawer();
+                return;
+            }
+            if (parentNav?.openDrawer) {
+                parentNav.openDrawer();
+                return;
+            }
+            (navigation as any).toggleDrawer?.();
+            return;
+        }
+        if (action) {
+            allowNavigationRef.current = true;
+            navigation.dispatch(action);
+            return;
+        }
+        allowNavigationRef.current = true;
         navigation.goBack();
-    }, [navigation]);
+    }, [dispatch, navigation, isTryToOpenSideMenu]);
 
     const disabled = isLoading || isUpdating || isGenerating;
     const hasValidAmount = localPreferences.some(p => p.amount > 0);
@@ -87,7 +158,7 @@ const ShoppingPreferences: React.FC = () => {
                     disabled={disabled || item.amount === 0}
                     style={[styles.controlBtn, item.amount === 0 && styles.controlBtnDisabled]}
                 >
-                    <Icon name="minus" size={16} color={item.amount === 0 ? COLORS.DARK_GREY : COLORS.DARK_GREY} />
+                    <Icon name="minus" size={18} color={item.amount === 0 ? COLORS.LIGHT_GREY : COLORS.DARK_GREY} />
                 </TouchableOpacity>
                 <View style={styles.amountWrapper}>
                     <Text style={styles.amount}>{item.amount}</Text>
@@ -98,7 +169,7 @@ const ShoppingPreferences: React.FC = () => {
                     disabled={disabled}
                     style={styles.controlBtn}
                 >
-                    <Icon name="plus" size={16} color={COLORS.DARK_GREY} />
+                    <Icon name="plus" size={18} color={COLORS.DARK_GREY} />
                 </TouchableOpacity>
             </View>
         </View>
@@ -119,6 +190,7 @@ const ShoppingPreferences: React.FC = () => {
 
             <View style={styles.list}>
                 <FlatList
+                    scrollEnabled={false}
                     data={localPreferences}
                     renderItem={renderItem}
                     keyExtractor={item => String(item.id)}
@@ -143,6 +215,16 @@ const ShoppingPreferences: React.FC = () => {
                     disabled={disabled || !hasValidAmount}
                 />
             </View>
+            <ConfirmationAlert
+                title="Oops!"
+                variant="legacy"
+                cancelTxt="Not Now"
+                applyTxt="Finish Up"
+                onClose={handleNotNow}
+                onSubmit={handleFinishUp}
+                isOpen={isFinalizeAlertOpen}
+                message="Looks like your list isn’t done yet. Finish it before you go?"
+            />
         </Screen>
     );
 };
@@ -153,6 +235,8 @@ const styles = StyleSheet.create({
     container: {
         paddingLeft: 0,
         paddingRight: 0,
+        // alignItems: 'center',
+        // justifyContent: 'center',
     },
     description: {
         marginVertical: 25,
@@ -167,9 +251,10 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         justifyContent: 'space-between',
         marginBottom: OFFSET.VERTICAL,
-        marginRight: OFFSET.HORIZONTAL,
-        paddingVertical: OFFSET.VERTICAL,
-        backgroundColor: '#F3F3F380',
+
+        // marginRight: OFFSET.HORIZONTAL,
+        paddingVertical: 10,
+        backgroundColor: COLORS.LIGHT_GREY,
         borderWidth: 1,
         borderRadius: 5,
         borderColor: COLORS.DARKER_GREY,
@@ -189,11 +274,12 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 25,
-        backgroundColor: COLORS.WHITE,
+        backgroundColor: COLORS.LIGHT_GREY,
         borderWidth: 1,
         borderColor: COLORS.DARKER_GREY,
         justifyContent: 'center',
         alignItems: 'center',
+        marginBottom: 15,
     },
     controlBtnDisabled: {
         borderColor: COLORS.GREY,
@@ -204,7 +290,7 @@ const styles = StyleSheet.create({
         minWidth: 56,
     },
     amount: {
-        fontSize: 36,
+        fontSize: 32,
         fontWeight: 'bold',
         marginHorizontal: 12,
         minWidth: 48,

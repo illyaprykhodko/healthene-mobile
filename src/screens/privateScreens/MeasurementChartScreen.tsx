@@ -140,12 +140,16 @@ const MeasurementChartScreen: React.FC = () => {
         }
 
         // Single value measurements
+        const displayUnit = measurementType === 'BMI'
+            ? 'BMI'
+            : lastMeasurement.values[0].measurementUnit?.name || '';
+
         return {
             isBloodPressure: false,
             value: lastMeasurement.values[0].value,
-            unit: lastMeasurement.values[0].measurementUnit?.name || '',
+            unit: displayUnit,
         };
-    }, [lastMeasurement, isBloodPressure]);
+    }, [lastMeasurement, isBloodPressure, measurementType]);
 
     // Calculate starting value and total change
     const currentMeasurement = (measurementTypes || []).find(

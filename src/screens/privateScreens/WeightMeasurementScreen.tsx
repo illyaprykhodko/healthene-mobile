@@ -9,8 +9,8 @@ import {
 import * as yup from 'yup';
 import moment from 'moment';
 import { Formik } from 'formik';
-import React, { useState, useCallback } from 'react';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import React, { useState, useCallback, useRef } from 'react';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation, useRoute } from '@react-navigation/native';
 // local dependencies
@@ -47,11 +47,19 @@ const WeightMeasurementScreen: React.FC = () => {
         offset: moment().utcOffset() / 60,
     });
     const hasRecentWeight = aggregateData?.data?.length > 0;
+    const lastSubmittedValueRef = useRef<string | null>(null);
     // const hasRecentWeight = aggregateData?.totalLastValuesByUnitType?.DEFAULT !== null
     //     && aggregateData?.totalLastValuesByUnitType?.DEFAULT !== undefined;
     const { submit, isSubmitting } = useMeasurementSubmit(item, {
         onSuccess: () => {
-            navigation.navigate(ROUTES.DAY_OVERVIEW);
+            (navigation as any).navigate('SaveValue', {
+                date: currentDate,
+                measurementPhaseItem: item,
+                savedValue: lastSubmittedValueRef.current,
+                measurementType: item?.measurement?.type || 'WEIGHT',
+                measurementName: item?.measurement?.name || 'Weight',
+            });
+            // navigation.navigate(ROUTES.DAY_OVERVIEW);
             // navigation.goBack();
         },
         onError: error => {
@@ -76,8 +84,10 @@ const WeightMeasurementScreen: React.FC = () => {
     const handleSubmit = useCallback(
         async (values: { value: string }) => {
             setIsPanelOpen(false);
+            const normalizedValue = values.value.replace(',', '.');
+            lastSubmittedValueRef.current = normalizedValue;
             await submit(
-                { value: values.value.replace(',', '.') },
+                { value: normalizedValue },
                 'HEALTHENE_MANUAL_INPUT',
                 'lbs'
             );
@@ -110,7 +120,7 @@ const WeightMeasurementScreen: React.FC = () => {
                         Add your Weight Manually
                 </Text>
             </TouchableOpacity>
-            <SwipeablePanel style={{ height: '75%' }} showCloseButton={false} snapPoints={['75%']} isActive={isPanelOpen} onClose={() => setIsPanelOpen(false)}>
+            <SwipeablePanel style={{ height: '75%', paddingTop: 25 }} showCloseButton={false} snapPoints={['75%']} isActive={isPanelOpen} onClose={() => setIsPanelOpen(false)}>
                 <Formik
                     onSubmit={handleSubmit}
                     initialValues={{ value: '' }}

@@ -11,6 +11,7 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import { RangeSlider } from 'components/RangeSlider';
+import ConfirmationAlert from 'components/ConfirmationAlert';
 import { TagType, CuisineFrequency } from 'types/cuisineDistribution';
 import {
     useGetCuisineFrequencyQuery,
@@ -23,17 +24,56 @@ interface FavoritesScreenProps {
 
 const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
     const theme = useTheme();
-    const [isDirty, setIsDirty] = useState(false);
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [hasReviewBeenShown, setHasReviewBeenShown] = useState(false);
+    const [isHydrated, setIsHydrated] = useState(false);
+    const [initialFrequencies, setInitialFrequencies] = useState<Record<number, number>>({});
     const [localFavoriteList, setLocalFavoriteList] = useState<CuisineFrequency[]>([]);
 
     const { data: favoriteList, isLoading, isFetching } = useGetCuisineFrequencyQuery(TagType.CUISINE);
     const [updateFrequency, { isLoading: isUpdating }] = useUpdateCuisineFrequencyMutation();
 
     useEffect(() => {
-        if (favoriteList) {
+        if (favoriteList !== undefined) {
             setLocalFavoriteList(favoriteList);
+            const initial = (favoriteList || []).reduce<Record<number, number>>((acc, item) => {
+                const tagId = item?.tag?.id || item?.id;
+                if (typeof tagId === 'number') {
+                    acc[tagId] = item?.relativeFrequency || 1;
+                }
+                return acc;
+            }, {});
+            setInitialFrequencies(initial);
+            setIsHydrated(true);
         }
     }, [favoriteList]);
+
+    const currentFrequencies = React.useMemo(
+        () => localFavoriteList.reduce<Record<number, number>>((acc, item) => {
+            const tagId = item?.tag?.id || item?.id;
+            if (typeof tagId === 'number') {
+                acc[tagId] = item?.relativeFrequency || 1;
+            }
+            return acc;
+        }, {}),
+        [localFavoriteList]
+    );
+
+    const hasUnsavedChanges = React.useMemo(() => {
+        if (!isHydrated) { return false; }
+        const keys = Array.from(new Set([
+            ...Object.keys(initialFrequencies),
+            ...Object.keys(currentFrequencies),
+        ])).sort();
+        return keys.some(key => initialFrequencies[Number(key)] !== currentFrequencies[Number(key)]);
+    }, [isHydrated, initialFrequencies, currentFrequencies]);
+
+    useEffect(() => {
+        if (hasUnsavedChanges && !hasReviewBeenShown) {
+            setIsReviewOpen(true);
+            setHasReviewBeenShown(true);
+        }
+    }, [hasUnsavedChanges, hasReviewBeenShown]);
 
     const navigateToList = useCallback(() => {
         navigation.navigate(ROUTES.CUISINE_DISTRIBUTION_LIST);
@@ -47,27 +87,42 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
                     : elem)
             )
         );
-        setIsDirty(true);
     }, []);
 
     const handleSave = useCallback(async () => {
         try {
             await updateFrequency(localFavoriteList).unwrap();
-            setIsDirty(false);
+            const saved = localFavoriteList.reduce<Record<number, number>>((acc, item) => {
+                const tagId = item?.tag?.id || item?.id;
+                if (typeof tagId === 'number') {
+                    acc[tagId] = item?.relativeFrequency || 1;
+                }
+                return acc;
+            }, {});
+            setInitialFrequencies(saved);
         } catch (error) {
             console.error('Failed to update cuisine frequency:', error);
         }
     }, [updateFrequency, localFavoriteList]);
 
+    const handleContinueReview = useCallback(() => {
+        setIsReviewOpen(false);
+    }, []);
+
+    const handleGoBackFromReview = useCallback(() => {
+        setIsReviewOpen(false);
+        navigation.goBack();
+    }, [navigation]);
+
     const renderItem = useCallback(({ item }: { item: CuisineFrequency }) => (
         <RangeSlider
             item={item}
-            isFormDirty={isDirty}
             onChange={handleChange}
             title={item?.tag?.name}
+            isFormDirty={hasUnsavedChanges}
             value={item?.relativeFrequency || 1}
         />
-    ), [isDirty, handleChange]);
+    ), [hasUnsavedChanges, handleChange]);
 
     const keyExtractor = useCallback((item: CuisineFrequency) =>
         String(item?.id ?? item?.tag?.id), []);
@@ -123,12 +178,21 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
                 title="SAVE"
                 variant="success"
                 onPress={handleSave}
-                disabled={!localFavoriteList.length || !isDirty || isUpdating}
+                disabled={!localFavoriteList.length || !hasUnsavedChanges || isUpdating}
                 style={[
                     styles.submitBtn,
-                    isDirty ? styles.submitBtnActive : styles.submitBtnInactive,
+                    hasUnsavedChanges ? styles.submitBtnActive : styles.submitBtnInactive,
                 ]}
                 textStyle={styles.submitBtnText}
+            />
+            <ConfirmationAlert
+                cancelTxt="Go Back"
+                applyTxt="Continue"
+                isOpen={isReviewOpen}
+                title="Dietitian Review"
+                onSubmit={handleContinueReview}
+                onClose={handleGoBackFromReview}
+                message="These changes will be reviewed by your registered dietitian."
             />
         </Screen>
     );

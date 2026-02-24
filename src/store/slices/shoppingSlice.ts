@@ -30,6 +30,8 @@ interface ShoppingState {
     isListTouched: boolean;
     isMealQuestionAsked: boolean;
     isCustomAlertOpen: boolean;
+    isFinalizeAlertOpen: boolean;
+    isTryToOpenSideMenu: boolean;
 
     // Stock state
     isStockTouched: boolean;
@@ -55,6 +57,8 @@ const initialState: ShoppingState = {
     isListTouched: false,
     isMealQuestionAsked: false,
     isCustomAlertOpen: false,
+    isFinalizeAlertOpen: false,
+    isTryToOpenSideMenu: false,
 
     // Stock state
     isStockTouched: false,
@@ -107,6 +111,12 @@ const shoppingSlice = createSlice({
         setIsCustomAlertOpen: (state, action: PayloadAction<boolean>) => {
             state.isCustomAlertOpen = action.payload;
         },
+        setIsFinalizeAlertOpen: (state, action: PayloadAction<boolean>) => {
+            state.isFinalizeAlertOpen = action.payload;
+        },
+        setIsTryToOpenSideMenu: (state, action: PayloadAction<boolean>) => {
+            state.isTryToOpenSideMenu = action.payload;
+        },
         setIsStockTouched: (state, action: PayloadAction<boolean>) => {
             state.isStockTouched = action.payload;
         },
@@ -149,6 +159,8 @@ export const {
     setShoppingListDates,
     setIsMealQuestionAsked,
     clearCheckedStockItems,
+    setIsFinalizeAlertOpen,
+    setIsTryToOpenSideMenu,
 } = shoppingSlice.actions;
 
 export const selectShopping = (state: RootState) => state.shopping;

@@ -149,7 +149,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     const handleLogout = async () => {
         Alert.alert(
             'Sign Out',
-            'Please confirm you really want to sign out from the Healthene',
+            'Please confirm you really want to sign out from the Healthene®',
             [
                 { text: 'Cancel', style: 'cancel' },
                 {

@@ -167,7 +167,7 @@ const DayOverviewStack: React.FC = () => {
             <Stack.Screen
                 name="UPCScan"
                 component={UPCScan}
-                options={{ title: 'Scan UPC Code' }}
+                options={{ title: 'Scan UPC Code', header: renderCustomHeader({ title: 'Scan UPC Code' }) }}
             />
             <Stack.Screen
                 name="ExerciseCategories"

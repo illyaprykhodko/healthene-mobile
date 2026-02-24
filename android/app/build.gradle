@@ -121,11 +121,11 @@ android {
         }
         development {
              dimension "environment"
-             resValue "string", "app_name", "Healthene Dev"
+             resValue "string", "app_name", "Healthene® V2 Dev"
         }
         production {
             dimension "environment"
-            resValue "string", "app_name", "Healthene"
+            resValue "string", "app_name", "Healthene® V2"
         }
     }
 
