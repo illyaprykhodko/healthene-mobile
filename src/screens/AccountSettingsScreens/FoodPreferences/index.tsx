@@ -8,4 +8,3 @@ import { FoodCategory } from 'screens/AccountSettingsScreens/components/FoodCate
 const FoodPreferences = () => <FoodCategory treeTypeViewLabel={TREE_TYPE.DISLIKE} />;
 
 export default FoodPreferences;
-

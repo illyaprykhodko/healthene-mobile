@@ -11,6 +11,7 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
+import ConfirmationAlert from 'components/ConfirmationAlert';
 import { TagType, CuisineTag, CuisineFrequency } from 'types/cuisineDistribution';
 import {
     useGetCuisineTagsQuery,
@@ -54,7 +55,10 @@ const ListItem: React.FC<ListItemProps> = ({ item, isSelected, onPress }) => {
 
 const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => {
     const theme = useTheme();
-    const [isDirty, setIsDirty] = useState(false);
+    const [isHydrated, setIsHydrated] = useState(false);
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [hasReviewBeenShown, setHasReviewBeenShown] = useState(false);
+    const [initialFavoriteTagIds, setInitialFavoriteTagIds] = useState<number[]>([]);
     const [page, setPage] = useState(0);
     const [localFavoriteList, setLocalFavoriteList] = useState<CuisineFrequency[]>([]);
     const [allTags, setAllTags] = useState<CuisineTag[]>([]);
@@ -77,10 +81,42 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
     const [saveCuisine, { isLoading: isSaving }] = useSaveCuisineFrequencyMutation();
 
     useEffect(() => {
-        if (favoriteList) {
+        if (favoriteList !== undefined) {
             setLocalFavoriteList(favoriteList);
+            setInitialFavoriteTagIds(
+                favoriteList
+                    .map(item => item?.tag?.id || item?.id)
+                    .filter((id): id is number => typeof id === 'number')
+            );
+            setIsHydrated(true);
         }
     }, [favoriteList]);
+
+    const selectedFavoriteTagIds = React.useMemo(
+        () => localFavoriteList
+            .map(item => item?.tag?.id || item?.id)
+            .filter((id): id is number => typeof id === 'number')
+            .sort((a, b) => a - b),
+        [localFavoriteList]
+    );
+
+    const initialFavoriteTagIdsSorted = React.useMemo(
+        () => [...initialFavoriteTagIds].sort((a, b) => a - b),
+        [initialFavoriteTagIds]
+    );
+
+    const hasUnsavedChanges = React.useMemo(() => {
+        if (!isHydrated) { return false; }
+        if (selectedFavoriteTagIds.length !== initialFavoriteTagIdsSorted.length) { return true; }
+        return selectedFavoriteTagIds.some((id, idx) => id !== initialFavoriteTagIdsSorted[idx]);
+    }, [isHydrated, selectedFavoriteTagIds, initialFavoriteTagIdsSorted]);
+
+    useEffect(() => {
+        if (hasUnsavedChanges && !hasReviewBeenShown) {
+            setIsReviewOpen(true);
+            setHasReviewBeenShown(true);
+        }
+    }, [hasUnsavedChanges, hasReviewBeenShown]);
 
     useEffect(() => {
         if (tagsData?.content) {
@@ -102,8 +138,6 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
     }, [localFavoriteList]);
 
     const handleCheck = useCallback((tag: CuisineTag) => {
-        setIsDirty(true);
-
         const existingItem = favoriteList?.find(el => el?.tag?.id === tag.id);
         const isCurrentlySelected = isItemSelected(tag.id);
 
@@ -128,7 +162,6 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
     }, [favoriteList, isItemSelected, user?.id]);
 
     const clearChoose = useCallback(() => {
-        setIsDirty(true);
         setLocalFavoriteList([]);
     }, []);
 
@@ -138,12 +171,24 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
                 tagType: TagType.CUISINE,
                 data: localFavoriteList,
             }).unwrap();
-            setIsDirty(false);
+            const savedTagIds = localFavoriteList
+                .map(item => item?.tag?.id || item?.id)
+                .filter((id): id is number => typeof id === 'number');
+            setInitialFavoriteTagIds(savedTagIds);
             navigation.goBack();
         } catch (error) {
             console.error('Failed to save cuisines:', error);
         }
     }, [saveCuisine, localFavoriteList, navigation]);
+
+    const handleContinueReview = useCallback(() => {
+        setIsReviewOpen(false);
+    }, []);
+
+    const handleGoBackFromReview = useCallback(() => {
+        setIsReviewOpen(false);
+        navigation.goBack();
+    }, [navigation]);
 
     const handleLoadMore = useCallback(() => {
         if (!isFetching && tagsData && page < tagsData.totalPages - 1) {
@@ -208,12 +253,21 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
                 title="SAVE"
                 variant="success"
                 onPress={handleSave}
-                disabled={!isDirty || isSaving}
+                disabled={!hasUnsavedChanges || isSaving}
                 style={[
                     styles.submitBtn,
-                    isDirty ? styles.submitBtnActive : styles.submitBtnInactive,
+                    hasUnsavedChanges ? styles.submitBtnActive : styles.submitBtnInactive,
                 ]}
                 textStyle={styles.submitBtnText}
+            />
+            <ConfirmationAlert
+                cancelTxt="Go Back"
+                applyTxt="Continue"
+                isOpen={isReviewOpen}
+                title="Dietitian Review"
+                onSubmit={handleContinueReview}
+                onClose={handleGoBackFromReview}
+                message="These changes will be reviewed by your registered dietitian."
             />
         </Screen>
     );

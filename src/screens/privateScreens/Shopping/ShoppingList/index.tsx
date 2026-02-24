@@ -3,10 +3,11 @@ import moment from 'moment';
 import Icon from '@react-native-vector-icons/feather';
 import { useNavigation, useRoute, useIsFocused } from '@react-navigation/native';
 import { StyleSheet, View, SectionList, TouchableOpacity, Modal } from 'react-native';
-import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
+import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
@@ -22,6 +23,7 @@ import {
     setIsListTouched,
     setShoppingStatus,
     setActiveCategory,
+    updateShoppingMeta,
     setShoppingListDates,
     setIsCustomAlertOpen,
     setIsMealQuestionAsked,
@@ -62,6 +64,8 @@ const ShoppingList: React.FC = () => {
         shoppingListDates,
         isCustomAlertOpen,
         confirmedItemsType,
+        isFinalizeAlertOpen,
+        isTryToOpenSideMenu,
         separateRescueItems,
         isMealQuestionAsked,
     } = useAppSelector(selectShopping);
@@ -72,6 +76,8 @@ const ShoppingList: React.FC = () => {
     const [open, setOpen] = useState(true);
     const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
     const [page, setPage] = useState(0);
+    const pendingBackActionRef = useRef<any | null>(null);
+    const allowBackRef = useRef(false);
 
     // Queries
     const { data: statusData } = useGetShoppingListStatusQuery();
@@ -218,12 +224,47 @@ const ShoppingList: React.FC = () => {
     const handleBack = useCallback(() => {
         if (isListTouched && stockList.length === 0 && currentStep === SHOPPING_STEP.CHECK) {
             dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
-        } else if (status === SHOPPING_STATUS.CONFIRMED || status === SHOPPING_STATUS.SHOP_ON_MY_OWN) {
-            navigation.navigate(ROUTES.DAY_OVERVIEW);
-        } else {
-            navigation.goBack();
+            return;
         }
-    }, [navigation, isListTouched, stockList, currentStep, status, dispatch]);
+        if (
+            status === SHOPPING_STATUS.PENDING
+            && !isFinalizeAlertOpen
+            && currentStep !== SHOPPING_STEP.CHECK
+        ) {
+            pendingBackActionRef.current = null;
+            dispatch(updateShoppingMeta({ isFinalizeAlertOpen: true, isTryToOpenSideMenu: false }));
+            return;
+        }
+        if (status === SHOPPING_STATUS.CONFIRMED || status === SHOPPING_STATUS.SHOP_ON_MY_OWN) {
+            navigation.navigate(ROUTES.DAY_OVERVIEW);
+            return;
+        }
+        navigation.goBack();
+    }, [navigation, isListTouched, stockList, currentStep, status, dispatch, isFinalizeAlertOpen]);
+
+    useEffect(() => {
+        navigation.setOptions({
+            headerLeft: () => <BackBtn onPress={handleBack} />,
+        });
+    }, [navigation, handleBack]);
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', (event: any) => {
+            if (allowBackRef.current) {
+                allowBackRef.current = false;
+                return;
+            }
+            if (
+                status === SHOPPING_STATUS.PENDING
+                && currentStep !== SHOPPING_STEP.CHECK
+            ) {
+                event.preventDefault();
+                pendingBackActionRef.current = event.data.action;
+                dispatch(updateShoppingMeta({ isFinalizeAlertOpen: true, isTryToOpenSideMenu: false }));
+            }
+        });
+        return unsubscribe;
+    }, [navigation, status, currentStep, dispatch]);
 
     const handleDone = useCallback(async () => {
         try {
@@ -251,6 +292,37 @@ const ShoppingList: React.FC = () => {
     }, [navigation]);
 
     const handleCloseAlert = useCallback(() => setOpen(false), []);
+
+    const handleFinishUpAlert = useCallback(() => {
+        pendingBackActionRef.current = null;
+        dispatch(updateShoppingMeta({ isFinalizeAlertOpen: false, isTryToOpenSideMenu: false }));
+    }, [dispatch]);
+
+    const handleNotNowAlert = useCallback(() => {
+        const action = pendingBackActionRef.current;
+        pendingBackActionRef.current = null;
+        dispatch(updateShoppingMeta({ isFinalizeAlertOpen: false, isTryToOpenSideMenu: false }));
+        if (isTryToOpenSideMenu) {
+            const parentNav = (navigation as any)?.getParent?.();
+            if (parentNav?.toggleDrawer) {
+                parentNav.toggleDrawer();
+                return;
+            }
+            if (parentNav?.openDrawer) {
+                parentNav.openDrawer();
+                return;
+            }
+            (navigation as any).toggleDrawer?.();
+            return;
+        }
+        if (action) {
+            allowBackRef.current = true;
+            navigation.dispatch(action);
+            return;
+        }
+        allowBackRef.current = true;
+        navigation.goBack();
+    }, [dispatch, navigation, isTryToOpenSideMenu]);
 
     const handleCloseCustomAlert = useCallback(() => {
         dispatch(setIsCustomAlertOpen(false));
@@ -513,6 +585,16 @@ const ShoppingList: React.FC = () => {
                 message="This action cannot be undone."
                 onClose={() => setIsFinalizeOpen(false)}
                 title="Are you sure you want to finalize your shopping list?"
+            />
+            <ConfirmationAlert
+                variant="legacy"
+                title="Oops!"
+                cancelTxt="Not Now"
+                applyTxt="Finish Up"
+                onClose={handleNotNowAlert}
+                isOpen={isFinalizeAlertOpen}
+                onSubmit={handleFinishUpAlert}
+                message="Looks like your list isn’t done yet. Finish it before you go?"
             />
 
 

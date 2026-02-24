@@ -9,7 +9,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Healthene</string>
+	<string>Healthene® V2</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -55,11 +55,11 @@
 		</dict>
 	</dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>"Healthene" uses Bluetooth to connect to your smart scale for real-time weight tracking and health insights</string>
+	<string>"Healthene®" uses Bluetooth to connect to your smart scale for real-time weight tracking and health insights</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>We use Bluetooth to connect to devices for data transfer.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Allow "Healthene" to take pictures and record video</string>
+	<string>Allow "Healthene®" to take pictures and record video</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Enable Face ID to quickly and securely log in to your account</string>
 	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
@@ -69,17 +69,17 @@
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Share workout data with other apps.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>"Healthene" requires location access to use Bluetooth for connecting to your smart scale, ensuring accurate and personalized health data</string>
+	<string>"Healthene®" requires location access to use Bluetooth for connecting to your smart scale, ensuring accurate and personalized health data</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>"Healthene" requires location access to use Bluetooth for connecting to your smart scale, ensuring accurate and personalized health data</string>
+	<string>"Healthene®" requires location access to use Bluetooth for connecting to your smart scale, ensuring accurate and personalized health data</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>"Healthene" requires location access to use Bluetooth for connecting to your smart scale, ensuring accurate and personalized health data</string>
+	<string>"Healthene®" requires location access to use Bluetooth for connecting to your smart scale, ensuring accurate and personalized health data</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Allow "Healthene" to record audio</string>
+	<string>Allow "Healthene®" to record audio</string>
 	<key>NSMotionUsageDescription</key>
-	<string>Allow "Healthene" to record steps</string>
+	<string>Allow "Healthene®" to record steps</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Allow "Healthene" to upload your photo</string>
+	<string>Allow "Healthene®" to upload your photo</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>
@@ -92,7 +92,6 @@
 		<string>Outfit-Medium.ttf</string>
 		<string>Outfit-Regular.ttf</string>
 		<string>Outfit-SemiBold.ttf</string>
-		<!-- <string>Outfit-Thin.ttf</string> -->
 		<string>Outfit-VariableFont_wght.ttf</string>
 		<string>NunitoSans-Black.ttf</string>
 		<string>NunitoSans-BlackItalic.ttf</string>
@@ -109,22 +108,15 @@
 		<string>NunitoSans-SemiBold.ttf</string>
 		<string>NunitoSans-SemiBoldItalic.ttf</string>
 		<string>icomoon.ttf</string>
-		<!-- <string>AntDesign.ttf</string> -->
 		<string>Entypo.ttf</string>
 		<string>EvilIcons.ttf</string>
 		<string>Feather.ttf</string>
-		<!-- <string>FontAwesome.ttf</string> -->
 		<string>FontAwesome5_Brands.ttf</string>
 		<string>FontAwesome5_Regular.ttf</string>
 		<string>FontAwesome5_Solid.ttf</string>
 		<string>Fontisto.ttf</string>
-		<!-- <string>Foundation.ttf</string> -->
 		<string>Ionicons.ttf</string>
-		<!-- <string>MaterialCommunityIcons.ttf</string> -->
 		<string>MaterialIcons.ttf</string>
-		<!-- <string>Octicons.ttf</string> -->
-		<!-- <string>SimpleLineIcons.ttf</string> -->
-		<!-- <string>Zocial.ttf</string> -->
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

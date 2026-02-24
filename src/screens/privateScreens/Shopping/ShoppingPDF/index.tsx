@@ -109,7 +109,7 @@ const ShoppingPDF: React.FC = () => {
                         File type: <Text style={styles.metaInfoDescription}>pdf</Text>
                     </Text>
                     <Text style={styles.metaInfoTitle}>
-                        Author: <Text style={styles.metaInfoDescription}>Healthene</Text>
+                        Author: <Text style={styles.metaInfoDescription}>Healthene®</Text>
                     </Text>
                     <Text style={styles.metaInfoTitle}>
                         Date: <Text style={styles.metaInfoDescription}>{moment().format('llll')}</Text>

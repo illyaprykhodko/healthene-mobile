@@ -25,7 +25,7 @@ import {
     useCreatePatientPhaseMutation,
     useUpdatePatientPhaseMutation,
     useAddPhaseCustomRecipeMutation,
-    useCreatePatientPhaseWithRecipeMutation,
+    useCreatePatientPhaseWithCustomRecipeMutation,
 } from 'store/api/dayOverviewApi';
 import Text from 'components/Text';
 import {
@@ -592,7 +592,7 @@ export const Overview: React.FC = () => {
     });
 
     const [createPatientPhase] = useCreatePatientPhaseMutation();
-    const [createPatientPhaseWithRecipe] = useCreatePatientPhaseWithRecipeMutation();
+    const [createPatientPhaseWithCustomRecipe] = useCreatePatientPhaseWithCustomRecipeMutation();
     const [updatePatientPhase] = useUpdatePatientPhaseMutation();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
 
@@ -710,11 +710,15 @@ export const Overview: React.FC = () => {
                             });
                         }
                     } else if (itemEntityType === ENTITY_TYPE.RECIPE || itemEntityType === 'PATIENT_RECIPES' || itemEntityType === 'RESTAURANT') {
+                        const hasModifiedIngredients = selectedItem?.recipe?.ingredients?.some((ing: any) => ing?.modified);
+                        const preparedRecipe = selectedItem?.recipe
+                            ? { ...selectedItem.recipe, modified: Boolean(hasModifiedIngredients) }
+                            : { id: selectedItem?.id };
                         const recipeItem: any = {
                             order: 0,
                             section: 'Added',
                             type: ENTITY_TYPE.RECIPE,
-                            recipe: { id: selectedItem?.id },
+                            recipe: preparedRecipe,
                             amount: selectedItem?.amount || 1,
                             status: PHASE_ITEM_STATUS.PENDING,
                             initialAmount: selectedItem?.initialAmount || 1,
@@ -728,10 +732,10 @@ export const Overview: React.FC = () => {
                             });
                         } else {
                             // Create new phase with recipe
-                            await createPatientPhaseWithRecipe({
+                            await createPatientPhaseWithCustomRecipe({
                                 dayOverviewId: data.id,
                                 data: {
-                                    items: [recipeItem],
+                                    item: recipeItem,
                                     order: phasesCount + 1,
                                     status: PHASE_ITEM_STATUS.PENDING,
                                     type: OVERVIEW_TYPE.ADDED_BY_PATIENT,
@@ -744,7 +748,7 @@ export const Overview: React.FC = () => {
                 }
             }
         });
-    }, [data, currentDate, navigation, createPatientPhase, createPatientPhaseWithRecipe, updatePatientPhase, addPhaseCustomRecipe]);
+    }, [data, currentDate, navigation, createPatientPhase, createPatientPhaseWithCustomRecipe, updatePatientPhase, addPhaseCustomRecipe]);
 
     useEffect(() => {
         moment.updateLocale('en', { week: { dow: 1 } });

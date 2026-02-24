@@ -22,6 +22,7 @@ import { SplashScreen } from 'components/SplashScreen';
 import BackgroundImage from 'components/BackgroundImage';
 import { AnimatedWelcome } from 'components/AnimatedWelcome';
 import { biometricService } from 'services/biometricService';
+// import { useGetLibraryItemsTotalTreeQuery } from 'store/api/dayOverviewApi';
 
 
 const validateEmail = (email: string): boolean => {
@@ -42,6 +43,9 @@ export const SignIn: React.FC = (): React.ReactElement => {
     const [biometricEnabled, setBiometricEnabled] = useState(false);
     const [biometryType, setBiometryType] = useState<BiometryType | null>(null);
     const [isBiometricLoading, setIsBiometricLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showSuccessLoader, setShowSuccessLoader] = useState(false);
+    // const { isLoading: isLibraryItemsTotalTreeLoading } = useGetLibraryItemsTotalTreeQuery();
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(50)).current;
@@ -86,6 +90,9 @@ export const SignIn: React.FC = (): React.ReactElement => {
     }, []);
 
     const handleSubmit = async () => {
+        if (isSubmitting || isBiometricLoading) {
+            return;
+        }
         try {
             if (!formData.username || !formData.password) {
                 MessageService.error({
@@ -105,7 +112,12 @@ export const SignIn: React.FC = (): React.ReactElement => {
                 return;
             }
 
+            setIsSubmitting(true);
             await signIn(formData);
+            setShowSuccessLoader(true);
+            // setTimeout(() => {
+            //     setShowSuccessLoader(false);
+            // }, 10000);
 
             if (!biometricEnabled) {
                 const { available } = await biometricService.isAvailable();
@@ -147,6 +159,13 @@ export const SignIn: React.FC = (): React.ReactElement => {
             }
         } catch (error) {
             console.error('Sign in error:', error);
+            MessageService.error({
+                uid: 'SignIn',
+                title: 'Sign In Error',
+                message: 'Please try again',
+            });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -177,10 +196,12 @@ export const SignIn: React.FC = (): React.ReactElement => {
             setIsBiometricLoading(false);
         }
     };
-
-    if (isLoading) {
-        return <SplashScreen onFinish={() => {}} />;
-    }
+    // if (isLoading) {
+    //     return <SplashScreen onFinish={() => {}} />;
+    // }
+    // if (isLibraryItemsTotalTreeLoading) {
+    //     return <SplashScreen onFinish={() => {}} />;
+    // }
 
     return (
         <AnimatedWelcome>
@@ -202,11 +223,11 @@ export const SignIn: React.FC = (): React.ReactElement => {
                     <TextInput
                         name="email"
                         label="Email"
-                        disabled={false}
                         autoComplete="email"
                         autoCapitalize="none"
                         value={formData.username}
                         keyboardType="email-address"
+                        disabled={isSubmitting || isLoading}
                         accessibilityLabel="Email input field"
                         accessibilityHint="Enter your email address to sign in"
                         onChangeText={value => handleChange('username', value)}
@@ -216,10 +237,10 @@ export const SignIn: React.FC = (): React.ReactElement => {
                     <TextInput
                         name="password"
                         label="Password"
-                        disabled={false}
                         autoComplete="password"
                         value={formData.password}
                         secureTextEntry={securePassword}
+                        disabled={isSubmitting || isLoading}
                         accessibilityHint="Enter your password"
                         accessibilityLabel="Password input field"
                         onChangeText={value => handleChange('password', value)}
@@ -236,14 +257,16 @@ export const SignIn: React.FC = (): React.ReactElement => {
                         variant="outline"
                         style={styles.button}
                         onPress={handleSubmit}
+                        loading={isSubmitting}
                         color={theme.colors.primary}
+                        disabled={isSubmitting || isLoading}
                     />
 
                     {biometricAvailable && (
                         <TouchableOpacity
                             style={[styles.biometricButton, { borderColor: theme.colors.primary }]}
                             onPress={handleBiometricLogin}
-                            disabled={isBiometricLoading || isLoading}
+                            disabled={isBiometricLoading || isLoading || isSubmitting}
                         >
                             <Icon
                                 size={24}
@@ -273,6 +296,11 @@ export const SignIn: React.FC = (): React.ReactElement => {
                         </Pressable>
                     </View>
                 </Animated.View>
+                {/* {showSuccessLoader && (
+                    <View style={styles.loaderOverlay}>
+                        <SplashScreen onFinish={() => {}} />
+                    </View>
+                )} */}
             </Screen>
         </AnimatedWelcome>
     );
@@ -316,5 +344,9 @@ const styles = StyleSheet.create({
     signUp: {
         marginTop: OFFSET.VERTICAL,
         alignItems: 'center',
+    },
+    loaderOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 20,
     },
 });

@@ -137,6 +137,10 @@ export default function ExerciseCategories () {
     const displayList = currentList.length > 0 ? currentList : exerciseCategories;
     const listIsDone = useMemo(() => areAllItemsFullyDone(displayList), [displayList]);
     const isExercise = Boolean(route.params?.list && route.params?.list?.length);
+    const isSingleExerciseCategoryDone = useMemo(
+        () => title === 'Exercise' && displayList.length === 1 && listIsDone,
+        [title, displayList.length, listIsDone]
+    );
     const swipeWidth = 123;
 
     // Calculate active exercises count
@@ -371,13 +375,22 @@ export default function ExerciseCategories () {
                 </View>
             </ScrollView>
             {listIsDone && (<Text textAlign="center" style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>Keep It Up!</Text>)}
-            {listIsDone && (
+            {listIsDone && !isSingleExerciseCategoryDone && (
                 <Button
                     variant="primary"
                     title="NEXT ACTIVITY"
                     style={styles.submitBtn}
                     textStyle={styles.submitBtnText}
                     onPress={() => navigation.goBack()}
+                />
+            )}
+            {isSingleExerciseCategoryDone && (
+                <Button
+                    title="DONE"
+                    variant="primary"
+                    onPress={handleBack}
+                    style={styles.submitBtn}
+                    textStyle={styles.submitBtnText}
                 />
             )}
         </View>

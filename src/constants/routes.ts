@@ -10,6 +10,7 @@ export const ROUTES = {
     EDIT: 'Edit',
     INFO: 'Info',
     LIBRARY: 'Library',
+    UPC_SCAN: 'UPCScan',
     SHOPPING: 'Shopping',
     EDIT_FOOD: 'EditFood',
     MESSENGER: 'Messenger',

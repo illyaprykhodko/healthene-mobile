@@ -154,7 +154,11 @@ export const dayOverviewApi = createApi({
                 method: 'POST',
                 url: '/patient-service/patients/me/measurement/third-party',
             }),
-            invalidatesTags: ['DayOverview'],
+            invalidatesTags: (result, error, { type }) => [
+                'DayOverview',
+                { type: 'PhaseItems', id: `measurement-${type}` },
+                { type: 'PhaseItems', id: `measurement-last-${type}` },
+            ],
         }),
         getQuestions: builder.query<PatientFoodCategoryQuestion, string>({
             query: date => `/patient-service/patient/me/disease-questions/${date}`,
@@ -231,9 +235,9 @@ export const dayOverviewApi = createApi({
         getRecipePrototypes: builder.query<any, { filter: RecipePrototypeFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
                 url: '/patient-service/recipe-prototypes/filter',
+                params: { page, size, sort },
                 method: 'POST',
                 body: filter,
-                params: { page, size, sort },
             }),
             providesTags: ['AvailableItems'],
         }),
@@ -255,20 +259,69 @@ export const dayOverviewApi = createApi({
 
         getIngredientsBySibling: builder.query<any[], { id: number | string; useInPrototypes?: boolean }>({
             query: ({ id, useInPrototypes = false }) => ({
-                url: `/patient-service/recipe-prototypes/ingredients-by-sibling/${id}`,
                 method: 'GET',
                 params: { useInPrototypes },
+                url: `/patient-service/recipe-prototypes/ingredients-by-sibling/${id}`,
             }),
         }),
   
         getFoods: builder.query<any, { filter: FoodFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
                 url: '/patient-service/foods/filter',
+                params: { page, size, sort },
                 method: 'POST',
                 body: filter,
-                params: { page, size, sort },
             }),
             providesTags: ['AvailableItems'],
+        }),
+
+        getAiFoods: builder.query<any[], { name: string }>({
+            query: ({ name }) => ({
+                url: '/patient-service/ai/foods',
+                params: { name },
+                method: 'GET',
+            }),
+        }),
+
+        getAiFoodData: builder.mutation<any, { name: string }>({
+            query: body => ({
+                url: '/patient-service/ai/foods',
+                method: 'POST',
+                body,
+            }),
+        }),
+
+        filterFoodToCreate: builder.mutation<any, { upc: string }>({
+            query: body => ({
+                url: '/patient-service/food-to-create/filter',
+                method: 'POST',
+                body,
+            }),
+        }),
+
+        filterBFPDFoods: builder.mutation<any, { upc: string }>({
+            query: body => ({
+                url: '/patient-service/usda-foods/BFPD/filter',
+                method: 'POST',
+                body,
+            }),
+        }),
+
+        importFoodDefault: builder.mutation<any, { originId: string | number }>({
+            query: body => ({
+                url: '/patient-service/foods/import/default',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['AvailableItems'],
+        }),
+
+        createFoodToCreate: builder.mutation<any, { upc: string; name: string; images: any[] }>({
+            query: body => ({
+                url: '/patient-service/food-to-create',
+                method: 'POST',
+                body,
+            }),
         }),
   
         getPhaseItem: builder.query<PhaseItem, number | string>({
@@ -469,13 +522,13 @@ export const dayOverviewApi = createApi({
             }),
             invalidatesTags: ['DayOverview', 'PhaseItems'],
         }),
-        // Create patient phase with recipe
-        createPatientPhaseWithRecipe: builder.mutation<Phase, {
+        // Create patient phase with custom recipe payload
+        createPatientPhaseWithCustomRecipe: builder.mutation<Phase, {
             dayOverviewId: number | string;
             data: any;
         }>({
             query: ({ dayOverviewId, data }) => ({
-                url: `/patient-service/patients/day-overview/${dayOverviewId}/phase/previous-recipe`,
+                url: `/patient-service/patients/day-overview/${dayOverviewId}/phase/recipe`,
                 method: 'POST',
                 body: data,
             }),
@@ -1044,6 +1097,12 @@ export const {
     useAddPhaseCustomRecipeMutation,
     // useGetAvailableItemsQuery,
     useGetFoodsQuery,
+    useLazyGetAiFoodsQuery,
+    useGetAiFoodDataMutation,
+    useFilterFoodToCreateMutation,
+    useFilterBFPDFoodsMutation,
+    useImportFoodDefaultMutation,
+    useCreateFoodToCreateMutation,
     useUpdatePhaseItemMutation,
     useDeletePhaseItemMutation,
     useGetRecipePrototypeQuery,
@@ -1082,7 +1141,7 @@ export const {
     // Create patient phase (ADDED_BY_PATIENT)
     useCreatePatientPhaseMutation,
     useUpdatePatientPhaseMutation,
-    useCreatePatientPhaseWithRecipeMutation,
+    useCreatePatientPhaseWithCustomRecipeMutation,
     // Menu badges
     useGetMedicalProblemsQuery,
     useGetMedicationAllergiesQuery,

@@ -155,6 +155,10 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
         return exerciseItems.filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
     }, [dayOverviewData]);
     const listIsDone = useMemo(() => areAllItemsFullyDone(exerciseCategories), [exerciseCategories]);
+    const isSingleExerciseCategoryDone = useMemo(
+        () => exerciseCategories.length === 1 && listIsDone,
+        [exerciseCategories.length, listIsDone]
+    );
     
     // Check if today to determine status logic
     const isToday = useMemo(() => {
@@ -307,7 +311,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                             onPress={onClose}
                         >
                             <Text style={[styles.nextActivityText, { color: theme.colors.white }]}>
-                                NEXT ACTIVITY
+                                {isSingleExerciseCategoryDone ? 'DONE' : 'NEXT ACTIVITY'}
                             </Text>
                         </TouchableOpacity>
                     </View>

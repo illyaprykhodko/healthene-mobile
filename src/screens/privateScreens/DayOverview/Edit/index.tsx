@@ -23,6 +23,7 @@ import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import { COLORS } from 'constants/colors';
 import { Button } from 'components/Button';
 import { PhaseItem } from 'types/overview';
 import { groupBy, isEmpty } from 'utils/general';
@@ -184,8 +185,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             order: items.length,
                             status: PHASE_ITEM_STATUS.PENDING,
                             amount: selectedItem?.amount || 1,
+                            initialAmount: selectedItem?.amount || 1,
                             section: selectedItem?.section || 'Added',
-                            initialAmount: selectedItem?.servingAmount || 1,
+                            // initialAmount: selectedItem?.servingAmount || 1,
                             
                         };
                         if (itemEntityType === ENTITY_TYPE.FOOD || itemEntityType === 'PATIENT_FOOD' || itemEntityType === 'PATIENT_DRINK') {
@@ -860,6 +862,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#F3F3F380', // 50% opacity
         paddingTop: 10,
         paddingBottom: 10,
+        borderTopWidth: 1,
+        borderTopColor: COLORS.GREY,
         // marginBottom: 10,
     },
     offset: {

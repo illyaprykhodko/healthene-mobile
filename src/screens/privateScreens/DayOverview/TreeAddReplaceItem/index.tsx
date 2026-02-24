@@ -4,6 +4,7 @@ import {
     Image,
     FlatList,
     Keyboard,
+    Platform,
     TextInput,
     StyleSheet,
     TouchableOpacity,
@@ -17,6 +18,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 // local dependencies
 import {
     useGetFoodsQuery,
+    useLazyGetAiFoodsQuery,
+    useGetAiFoodDataMutation,
     useGetRecipePrototypesQuery,
     useGetCategoryTreeNodesQuery,
     useGetCatalogPrototypeTreeNodesQuery,
@@ -28,7 +31,7 @@ import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
 import { RootStackParamList } from 'services/navigation';
-import { SEARCH_TYPE, SUBSTANCE_TYPE, TAG_TYPE } from 'constants/spec';
+import { ENTITY_TYPE, SEARCH_TYPE, SUBSTANCE_TYPE, TAG_TYPE } from 'constants/spec';
 
 interface TreeItem {
     id: number;
@@ -67,9 +70,15 @@ const TreeAddReplaceItem: React.FC = () => {
     );
     const [page, setPage] = useState(0);
     const [allItems, setAllItems] = useState<any[]>([]);
+    const [isAiLoading, setIsAiLoading] = useState(false);
+    const [isAiItemLoading, setIsAiItemLoading] = useState(false);
+    const [aiFoods, setAiFoods] = useState<any[]>([]);
+    const [isAiFoodsAdded, setIsAiFoodsAdded] = useState(false);
     const isRecipesTab = selectedTab === TAG_TYPE.PATIENT_RECIPES;
     const isRestaurantTab = selectedTab === TAG_TYPE.RESTAURANT;
     const hasSearch = debouncedSearchQuery.trim().length > 0;
+    const [getAiFoodsTrigger] = useLazyGetAiFoodsQuery();
+    const [getAiFoodData] = useGetAiFoodDataMutation();
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -82,6 +91,8 @@ const TreeAddReplaceItem: React.FC = () => {
         if (debouncedSearchQuery.trim().length === 0 && selectedTab !== TAG_TYPE.RESTAURANT) {
             setPage(0);
             setAllItems([]);
+            setAiFoods([]);
+            setIsAiFoodsAdded(false);
         }
     }, [debouncedSearchQuery, selectedTab]);
     const { data: categoryTreeData, isLoading: isCategoryTreeLoading } = useGetCategoryTreeNodesQuery(
@@ -269,8 +280,33 @@ const TreeAddReplaceItem: React.FC = () => {
         }
     }, [page, contentKey, allItemsKey, currentContent, debouncedSearchQuery, selectedTab]);
 
-    const handleSelectItem = useCallback((item: any) => {
+    const handleSelectItem = useCallback(async (item: any) => {
         const isNode = searchType === SEARCH_TYPE.TREE;
+
+        if (item?.isDisabled) {
+            return;
+        }
+
+        if (item?.isGPTFood) {
+            try {
+                setIsAiItemLoading(true);
+                const aiItem = await getAiFoodData({ name: item.name }).unwrap();
+                (navigation as any).navigate(ROUTES.EDIT_FOOD, {
+                    date,
+                    item: aiItem,
+                    substanceType,
+                    entityType: selectedTab,
+                    onApply: (editedItem: any) => {
+                        if (onApply) {
+                            onApply({ item: editedItem });
+                        }
+                    },
+                });
+            } finally {
+                setIsAiItemLoading(false);
+            }
+            return;
+        }
 
         if (isNode) {
             setBreadcrumb(prev => [...prev, item]);
@@ -294,7 +330,7 @@ const TreeAddReplaceItem: React.FC = () => {
                 },
             });
         }
-    }, [searchType, date, selectedTab, substanceType, onApply, navigation]);
+    }, [searchType, date, selectedTab, substanceType, onApply, navigation, getAiFoodData]);
 
     const handleGoBack = useCallback(() => {
         if (breadcrumb.length > 0) {
@@ -366,6 +402,8 @@ const TreeAddReplaceItem: React.FC = () => {
         setSelectedTab(tabType);
         setPage(0);
         setAllItems([]);
+        setAiFoods([]);
+        setIsAiFoodsAdded(false);
         setSearchQuery('');
         setDebouncedSearchQuery('');
         setCurrentNodeId(null);
@@ -373,6 +411,28 @@ const TreeAddReplaceItem: React.FC = () => {
         // setSearchType(SEARCH_TYPE.ITEM);
         setSearchType(tabType === TAG_TYPE.RESTAURANT ? SEARCH_TYPE.TREE : SEARCH_TYPE.ITEM);
     }, []);
+
+    const handleShowMore = useCallback(async () => {
+        if (isAiLoading || !debouncedSearchQuery.trim()) {
+            return;
+        }
+        try {
+            setIsAiLoading(true);
+            const data = await getAiFoodsTrigger({ name: debouncedSearchQuery.trim() }).unwrap();
+            if (!Array.isArray(data) || data.length === 0) {
+                return;
+            }
+            const preparedData = data.map((item: any) => ({
+                ...item,
+                isGPTFood: true,
+                id: `${item.name}-${Math.random()}`,
+            }));
+            setAiFoods(preparedData);
+            setIsAiFoodsAdded(true);
+        } finally {
+            setIsAiLoading(false);
+        }
+    }, [debouncedSearchQuery, getAiFoodsTrigger, isAiLoading]);
 
     const renderTabs = useCallback(() => {
         const tabs = [
@@ -426,6 +486,16 @@ const TreeAddReplaceItem: React.FC = () => {
     // }, [theme, handleSelectItem]);
     const renderItem = useCallback(
         ({ item }: { item: any }) => {
+            if (item?.isDisabled) {
+                return (
+                    <View style={styles.listItem}>
+                        <Text style={[styles.itemName, styles.additionalTitle]} numberOfLines={2}>
+                            {item.name}
+                        </Text>
+                    </View>
+                );
+            }
+
             const imageUrl = item.coverImage?.url;
 
             return (
@@ -465,7 +535,11 @@ const TreeAddReplaceItem: React.FC = () => {
                     returnKeyType="search"
                     placeholder="Search..."
                     style={styles.searchInput}
-                    onChangeText={setSearchQuery}
+                    onChangeText={(value: string) => {
+                        setSearchQuery(value);
+                        setAiFoods([]);
+                        setIsAiFoodsAdded(false);
+                    }}
                     placeholderTextColor={COLORS.GREY}
                 />
                 {searchQuery.length > 0 && (
@@ -474,6 +548,8 @@ const TreeAddReplaceItem: React.FC = () => {
                         onPress={() => {
                             setSearchQuery('');
                             setDebouncedSearchQuery('');
+                            setAiFoods([]);
+                            setIsAiFoodsAdded(false);
                         }}
                     >
                         <Icon iconStyle="solid" name="times" size={14} color={COLORS.GREY} />
@@ -504,6 +580,26 @@ const TreeAddReplaceItem: React.FC = () => {
         };
     }, []);
 
+    const displayedItems = useMemo(() => {
+        if (!isAiFoodsAdded || aiFoods.length === 0) {
+            return allItems;
+        }
+
+        return [
+            ...allItems,
+            { id: 'additionalSearchResult', isDisabled: true, name: 'Additional Search Result' },
+            ...aiFoods,
+        ];
+    }, [allItems, aiFoods, isAiFoodsAdded]);
+
+    const isShowMoreVisible = useMemo(
+        () => selectedTab === TAG_TYPE.PATIENT_FOOD
+            && searchType === SEARCH_TYPE.ITEM
+            && debouncedSearchQuery.trim().length > 3
+            && !isAiFoodsAdded,
+        [selectedTab, searchType, debouncedSearchQuery, isAiFoodsAdded]
+    );
+
     // if (isLoading && page === 0 && allItems.length === 0) {
     //     return (
     //         <View style={styles.loadingContainer}>
@@ -518,8 +614,21 @@ const TreeAddReplaceItem: React.FC = () => {
             </View>
             {renderTabs()}
             {renderSearchInput()}
+            {isShowMoreVisible && (
+                <TouchableOpacity
+                    disabled={isLoading || isAiLoading}
+                    onPress={handleShowMore}
+                    style={styles.showMoreContainer}
+                >
+                    {isAiLoading ? (
+                        <ActivityIndicator size="small" color={theme.colors.primary} />
+                    ) : (
+                        <Text style={styles.showMoreText}>✨  Show More...</Text>
+                    )}
+                </TouchableOpacity>
+            )}
             <FlatList
-                data={allItems}
+                data={displayedItems}
                 renderItem={renderItem}
                 onEndReached={handleLoadMore}
                 keyboardDismissMode="on-drag"
@@ -530,7 +639,7 @@ const TreeAddReplaceItem: React.FC = () => {
                 keyExtractor={({ id }) => String(id)}
                 keyboardShouldPersistTaps="handled"
                 ListEmptyComponent={
-                    !isLoading ? (
+                    !isLoading && !isAiLoading ? (
                         <Text style={styles.emptyScreen}>
                             {searchQuery.trim().length > 0 ? 'No items found' : 'Enter a search term'}
                         </Text>
@@ -544,6 +653,26 @@ const TreeAddReplaceItem: React.FC = () => {
                     ) : null
                 }
             />
+            {Platform.OS === 'ios' && (
+                <View style={styles.upcBtnContainer}>
+                    <TouchableOpacity
+                        style={styles.upcBtn}
+                        onPress={() => (navigation as any).navigate(ROUTES.UPC_SCAN, {
+                            date,
+                            onApply,
+                            substanceType,
+                            entityType: ENTITY_TYPE.FOOD,
+                        })}
+                    >
+                        <Text style={styles.upcBtnText}>SCAN UPC CODE</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+            {isAiItemLoading && (
+                <View style={styles.overlay}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
+                </View>
+            )}
         </Screen>
     );
 };
@@ -607,7 +736,7 @@ const styles = StyleSheet.create({
     },
     searchContainer: {
         paddingHorizontal: OFFSET.HORIZONTAL,
-        marginBottom: OFFSET.VERTICAL,
+        marginBottom: OFFSET.VERTICAL * 0.5,
     },
     searchInputWrapper: {
         flexDirection: 'row',
@@ -663,6 +792,15 @@ const styles = StyleSheet.create({
         color: COLORS.BLACK,
         marginBottom: 4,
     },
+    additionalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: COLORS.GREY,
+        textDecorationLine: 'underline',
+        textAlign: 'right',
+        width: '100%',
+        marginBottom: 0,
+    },
     itemType: {
         fontSize: 12,
         color: COLORS.GREY,
@@ -678,5 +816,38 @@ const styles = StyleSheet.create({
     loadingMore: {
         padding: 20,
         alignItems: 'center',
+    },
+    showMoreContainer: {
+        minHeight: 26,
+        justifyContent: 'center',
+        paddingHorizontal: OFFSET.HORIZONTAL,
+        marginBottom: OFFSET.VERTICAL,
+    },
+    showMoreText: {
+        fontSize: 22,
+        color: '#156F93',
+        fontWeight: '300',
+    },
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#DADADA99',
+    },
+    upcBtnContainer: {
+        paddingHorizontal: OFFSET.HORIZONTAL,
+        paddingVertical: OFFSET.VERTICAL,
+    },
+    upcBtn: {
+        backgroundColor: '#CAE1F9',
+        borderRadius: 30,
+        paddingVertical: OFFSET.VERTICAL * 0.75,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    upcBtnText: {
+        color: '#567697',
+        fontSize: 14,
+        fontWeight: '500',
     },
 });

@@ -34,6 +34,7 @@ const SaveValueScreen: React.FC = () => {
     const measurementType = params?.measurementType;
     const measurementName = params?.measurementName || measurementType;
     const measurementPhaseItem = params?.measurementPhaseItem;
+    const savedValue = params?.savedValue;
     const currentDate = params?.date || moment().format('YYYY-MM-DD');
 
     const isSameDate = moment().isSame(currentDate, 'day');
@@ -44,6 +45,8 @@ const SaveValueScreen: React.FC = () => {
         period: '1-day',
         date: currentDate,
         offset: moment().utcOffset() / 60,
+    }, {
+        refetchOnMountOrArgChange: true,
     });
 
     const [deleteMeasurements, { isLoading: isDeleting }] = useDeleteMeasurementsMutation();
@@ -51,20 +54,26 @@ const SaveValueScreen: React.FC = () => {
 
     // Extract current value
     const currentValue = useMemo(() => {
-        const totalAverage = aggregateData?.totalLastValuesByUnitType;
-        if (!totalAverage) { return null; }
+        const totalLast = aggregateData?.totalLastValuesByUnitType;
+        if (!totalLast) { return null; }
 
         if (measurementType === 'BLOOD_PRESSURE') {
-            const systolic = totalAverage.SYSTOLIC;
-            const diastolic = totalAverage.DIASTOLIC;
+            const systolic = totalLast.SYSTOLIC;
+            const diastolic = totalLast.DIASTOLIC;
             return systolic && diastolic
                 ? `${Math.round(systolic)}/${Math.round(diastolic)}`
                 : null;
         }
 
-        return totalAverage.DEFAULT;
+        return totalLast.DEFAULT;
     }, [aggregateData, measurementType]);
 
+    const displayValue = useMemo(() => {
+        if (savedValue !== undefined && savedValue !== null && savedValue !== '') {
+            return savedValue;
+        }
+        return currentValue;
+    }, [savedValue, currentValue]);
     // Extract measurement IDs for delete
     const measurementIds = useMemo(() => {
         const data = aggregateData?.data || [];
@@ -175,7 +184,7 @@ const SaveValueScreen: React.FC = () => {
             <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
             <Text variant="h1" textAlign="center" style={styles.title}>
-                {!currentValue && !moment().isSame(currentDate)
+                {!displayValue && !moment().isSame(currentDate)
                     ? `No ${measurementName}`
                     : `Current ${measurementName}`}
             </Text>
@@ -188,7 +197,7 @@ const SaveValueScreen: React.FC = () => {
                             { borderColor: theme.colors.text, backgroundColor: '#F3F3F3' },
                         ]}
                     >
-                        {currentValue ? (
+                        {displayValue ? (
                             <Text
                                 textAlign="center"
                                 style={[
@@ -196,9 +205,9 @@ const SaveValueScreen: React.FC = () => {
                                     measurementType === 'BLOOD_PRESSURE' ? styles.valueSmaller : {},
                                 ]}
                             >
-                                {typeof currentValue === 'number'
-                                    ? currentValue.toFixed(1)
-                                    : currentValue}
+                                {typeof displayValue === 'number'
+                                    ? displayValue.toFixed(1)
+                                    : displayValue}
                             </Text>
                         ) : (
                             <Text textAlign="center" style={styles.noDataText}>

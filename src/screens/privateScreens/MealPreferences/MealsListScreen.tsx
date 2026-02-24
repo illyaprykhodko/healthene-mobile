@@ -13,6 +13,7 @@ import { COLORS } from 'constants/colors';
 import DefImage from 'components/DefImage';
 import { Button } from 'components/Button';
 import { RangeSlider } from 'components/RangeSlider';
+import ConfirmationAlert from 'components/ConfirmationAlert';
 import {
     // Meal,
     MealPreferenceType,
@@ -109,13 +110,13 @@ const MealItem: React.FC<MealItemProps> = ({
 };
 
 const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
-    const theme = useTheme();
-    const [isDirty, setIsDirty] = useState(false);
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [hasReviewBeenShown, setHasReviewBeenShown] = useState(false);
+    const [isHydrated, setIsHydrated] = useState(false);
+    const [initialFrequencies, setInitialFrequencies] = useState<Record<number, number>>({});
     const [mealsWithPreferences, setMealsWithPreferences] = useState<MealWithPreferences[]>([]);
 
     const { data: mealsList, isLoading: isLoadingMeals } = useGetMealsQuery(MealPreferenceType.PREFERENCE);
-
-    const mealsToFetch = mealsList || [];
 
     const { data: breakfastPrefs } = useGetMealPreferencesQuery(
         { type: MealPreferenceType.PREFERENCE, meal: 'Breakfast' },
@@ -153,8 +154,46 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
                 .sort((a, b) => a.order - b.order);
 
             setMealsWithPreferences(combined);
+            const initial = combined.reduce<Record<number, number>>((acc, meal) => {
+                (meal.preferences || []).forEach(pref => {
+                    if (typeof pref.id === 'number') {
+                        acc[pref.id] = pref.relativeFrequency || 1;
+                    }
+                });
+                return acc;
+            }, {});
+            setInitialFrequencies(initial);
+            setIsHydrated(true);
         }
     }, [mealsList, breakfastPrefs, lunchPrefs, dinnerPrefs, snackPrefs]);
+
+    const currentFrequencies = React.useMemo(
+        () => mealsWithPreferences.reduce<Record<number, number>>((acc, meal) => {
+            (meal.preferences || []).forEach(pref => {
+                if (typeof pref.id === 'number') {
+                    acc[pref.id] = pref.relativeFrequency || 1;
+                }
+            });
+            return acc;
+        }, {}),
+        [mealsWithPreferences]
+    );
+
+    const hasUnsavedChanges = React.useMemo(() => {
+        if (!isHydrated) { return false; }
+        const keys = Array.from(new Set([
+            ...Object.keys(initialFrequencies),
+            ...Object.keys(currentFrequencies),
+        ])).sort();
+        return keys.some(key => initialFrequencies[Number(key)] !== currentFrequencies[Number(key)]);
+    }, [isHydrated, initialFrequencies, currentFrequencies]);
+
+    useEffect(() => {
+        if (hasUnsavedChanges && !hasReviewBeenShown) {
+            setIsReviewOpen(true);
+            setHasReviewBeenShown(true);
+        }
+    }, [hasUnsavedChanges, hasReviewBeenShown]);
 
     const handleUpdateItem = useCallback((updatedItem: MealWithPreferences) => {
         setMealsWithPreferences(prev =>
@@ -172,21 +211,36 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
 
         try {
             await updateFrequency(allPreferences).unwrap();
-            setIsDirty(false);
+            const saved = allPreferences.reduce<Record<number, number>>((acc, pref) => {
+                if (typeof pref.id === 'number') {
+                    acc[pref.id] = pref.relativeFrequency || 1;
+                }
+                return acc;
+            }, {});
+            setInitialFrequencies(saved);
         } catch (error) {
             console.error('Failed to update meal preferences:', error);
         }
     }, [mealsWithPreferences, updateFrequency]);
 
+    const handleContinueReview = useCallback(() => {
+        setIsReviewOpen(false);
+    }, []);
+
+    const handleGoBackFromReview = useCallback(() => {
+        setIsReviewOpen(false);
+        navigation.goBack();
+    }, [navigation]);
+
     const renderItem = useCallback(({ item }: { item: MealWithPreferences }) => (
         <MealItem
             item={item}
-            isDirtyForm={isDirty}
+            isDirtyForm={hasUnsavedChanges}
             navigation={navigation}
-            setIsDirtyForm={setIsDirty}
+            setIsDirtyForm={() => {}}
             onUpdateItem={handleUpdateItem}
         />
-    ), [isDirty, navigation, handleUpdateItem]);
+    ), [hasUnsavedChanges, navigation, handleUpdateItem]);
 
     const keyExtractor = useCallback((item: MealWithPreferences) => String(item.id), []);
 
@@ -206,7 +260,7 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
                 />
             </View>
 
-            {isDirty && (
+            {hasUnsavedChanges && (
                 <Button
                     title="SAVE"
                     variant="success"
@@ -216,6 +270,15 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
                     textStyle={styles.submitBtnText}
                 />
             )}
+            <ConfirmationAlert
+                cancelTxt="Go Back"
+                applyTxt="Continue"
+                isOpen={isReviewOpen}
+                title="Dietitian Review"
+                onSubmit={handleContinueReview}
+                onClose={handleGoBackFromReview}
+                message="These changes will be reviewed by your registered dietitian."
+            />
         </Screen>
     );
 };

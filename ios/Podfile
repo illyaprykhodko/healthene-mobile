@@ -13,6 +13,7 @@ node_require('react-native-permissions/scripts/setup.rb')
 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
+project 'Healthene.xcodeproj'
 
 setup_permissions([
   # 'AppTrackingTransparency',
@@ -44,7 +45,11 @@ if linkage != nil
 end
 
 target 'Healthene' do
-  config = use_native_modules!
+  config_command = [
+    'cat',
+    File.join(__dir__, 'build/generated/autolinking/autolinking.json')
+  ]
+  config = use_native_modules!(config_command)
 
   pod 'react-native-blob-util',
       :path => '../node_modules/react-native-blob-util'

@@ -11,6 +11,7 @@ import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
+import ConfirmationAlert from 'components/ConfirmationAlert';
 import {
     MealPreferenceType,
     MealTemplatePreference,
@@ -63,7 +64,10 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
     const theme = useTheme();
     const mealName = route.params?.item?.name;
 
-    const [isDirty, setIsDirty] = useState(false);
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [hasReviewBeenShown, setHasReviewBeenShown] = useState(false);
+    const [isHydrated, setIsHydrated] = useState(false);
+    const [initialFavoriteIds, setInitialFavoriteIds] = useState<number[]>([]);
     const [localFavorites, setLocalFavorites] = useState<MealTemplatePreference[]>([]);
 
     const { data: favoriteList, isLoading: isLoadingFavorites } = useGetMealPreferencesQuery({
@@ -80,10 +84,42 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
     const [deletePreferences, { isLoading: isDeleting }] = useDeleteMealPreferencesMutation();
 
     useEffect(() => {
-        if (favoriteList) {
+        if (favoriteList !== undefined) {
             setLocalFavorites(favoriteList);
+            setInitialFavoriteIds(
+                favoriteList
+                    .map(item => item.mealTemplate?.id)
+                    .filter((id): id is number => typeof id === 'number')
+            );
+            setIsHydrated(true);
         }
     }, [favoriteList]);
+
+    const selectedFavoriteIds = useMemo(
+        () => localFavorites
+            .map(item => item.mealTemplate?.id)
+            .filter((id): id is number => typeof id === 'number')
+            .sort((a, b) => a - b),
+        [localFavorites]
+    );
+
+    const initialFavoriteIdsSorted = useMemo(
+        () => [...initialFavoriteIds].sort((a, b) => a - b),
+        [initialFavoriteIds]
+    );
+
+    const hasUnsavedChanges = useMemo(() => {
+        if (!isHydrated) { return false; }
+        if (selectedFavoriteIds.length !== initialFavoriteIdsSorted.length) { return true; }
+        return selectedFavoriteIds.some((id, idx) => id !== initialFavoriteIdsSorted[idx]);
+    }, [isHydrated, selectedFavoriteIds, initialFavoriteIdsSorted]);
+
+    useEffect(() => {
+        if (hasUnsavedChanges && !hasReviewBeenShown) {
+            setIsReviewOpen(true);
+            setHasReviewBeenShown(true);
+        }
+    }, [hasUnsavedChanges, hasReviewBeenShown]);
 
     const allItems = useMemo(() => {
         const combined = [...(favoriteList || []), ...(newTemplates || [])];
@@ -99,7 +135,6 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
     }, [localFavorites]);
 
     const handleCheck = useCallback((item: MealTemplatePreference) => {
-        setIsDirty(true);
         const isCurrentlySelected = isItemSelected(item.mealTemplate?.id);
 
         if (!isCurrentlySelected) {
@@ -126,12 +161,24 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
                     meal: mealName,
                 }).unwrap();
             }
-            setIsDirty(false);
+            const savedIds = localFavorites
+                .map(item => item.mealTemplate?.id)
+                .filter((id): id is number => typeof id === 'number');
+            setInitialFavoriteIds(savedIds);
             navigation.goBack();
         } catch (error) {
             console.error('Failed to save preferences:', error);
         }
     }, [localFavorites, savePreferences, deletePreferences, mealName, navigation]);
+
+    const handleContinueReview = useCallback(() => {
+        setIsReviewOpen(false);
+    }, []);
+
+    const handleGoBackFromReview = useCallback(() => {
+        setIsReviewOpen(false);
+        navigation.goBack();
+    }, [navigation]);
 
     const renderItem = useCallback(({ item }: { item: MealTemplatePreference }) => (
         <ListItem
@@ -178,12 +225,21 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
                 title="SAVE"
                 variant="success"
                 onPress={handleSave}
-                disabled={!isDirty || isSaving || isDeleting}
+                disabled={!hasUnsavedChanges || isSaving || isDeleting}
                 style={[
                     styles.submitBtn,
-                    isDirty ? styles.submitBtnActive : styles.submitBtnInactive,
+                    hasUnsavedChanges ? styles.submitBtnActive : styles.submitBtnInactive,
                 ]}
                 textStyle={styles.submitBtnText}
+            />
+            <ConfirmationAlert
+                cancelTxt="Go Back"
+                applyTxt="Continue"
+                isOpen={isReviewOpen}
+                title="Dietitian Review"
+                onSubmit={handleContinueReview}
+                onClose={handleGoBackFromReview}
+                message="These changes will be reviewed by your registered dietitian."
             />
         </Screen>
     );
