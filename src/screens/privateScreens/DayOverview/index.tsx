@@ -1,8 +1,8 @@
 // outsource dependencies
 import React from 'react';
 import moment from 'moment';
-import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -73,7 +73,13 @@ const DayOverviewStack: React.FC = () => {
         showBackButton?: boolean;
         showDateButtons?: boolean;
     }) => (headerProps: any) => (
-        <View style={[styles.customHeader, { paddingTop: insets.top + OFFSET.VERTICAL, backgroundColor: theme.colors.primary }]}>
+        <View style={[
+            styles.customHeader,
+            {
+                backgroundColor: theme.colors.primary,
+                paddingTop: Platform.OS === 'android' ? insets.top + OFFSET.VERTICAL : insets.top
+            }
+        ]}>
             <View style={[styles.headerSide, styles.headerSideLeft]}>
                 <BackBtn onPress={() => headerProps.navigation.goBack()} color={theme.colors.white}/>
             </View>
