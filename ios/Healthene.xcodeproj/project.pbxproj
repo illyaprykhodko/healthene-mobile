@@ -19,6 +19,8 @@
 		58EE5A5728574B648FC8D6E1 /* NunitoSans-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C58CBEA71F1C4A63A23B5847 /* NunitoSans-Light.ttf */; };
 		63507697A9D14AD4A042FAD4 /* NunitoSans-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C87833C5F8D49ED9D3F168D /* NunitoSans-Black.ttf */; };
 		67B4FE943FD14474B4FF58CB /* NunitoSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 465EED1DBCB847ADBEDA9675 /* NunitoSans-Bold.ttf */; };
+		6AEDB1962F56E96100D926E2 /* appearing.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AEDB1952F56E96100D926E2 /* appearing.mov */; };
+		6AEDB1982F571AA700D926E2 /* flying.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AEDB1972F571AA700D926E2 /* flying.mov */; };
 		6C0AC7EDF48546859601243E /* NunitoSans-LightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8628FE74FBF74E148EB947F5 /* NunitoSans-LightItalic.ttf */; };
 		6C8A4E8528284AA5B1FC0850 /* NunitoSans-SemiBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4A33CA98310A4ABBA7F1E38F /* NunitoSans-SemiBoldItalic.ttf */; };
 		6CD51BC470CF416F930471C1 /* Outfit-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0024D639C6AC42E29DE74308 /* Outfit-Light.ttf */; };
@@ -64,6 +66,8 @@
 		5FD25C3A52834B2AA91DDC95 /* Outfit-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-ExtraBold.ttf"; path = "../assets/fonts/Outfit-ExtraBold.ttf"; sourceTree = "<group>"; };
 		61BEC2FDFDD14C89A5D4F5A3 /* Outfit-Thin.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-Thin.ttf"; path = "../assets/fonts/Outfit-Thin.ttf"; sourceTree = "<group>"; };
 		6AD77D9D2F47179B002CEDBC /* Healthene.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Healthene.entitlements; path = Healthene/Healthene.entitlements; sourceTree = "<group>"; };
+		6AEDB1952F56E96100D926E2 /* appearing.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = appearing.mov; sourceTree = "<group>"; };
+		6AEDB1972F571AA700D926E2 /* flying.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = flying.mov; sourceTree = "<group>"; };
 		7219FF88BD68C1492B435792 /* Pods-Healthene.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Healthene.release.xcconfig"; path = "Target Support Files/Pods-Healthene/Pods-Healthene.release.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Healthene/AppDelegate.swift; sourceTree = "<group>"; };
 		770D99F22F3E016C00A4EFDC /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -185,6 +189,8 @@
 				F7E0DDAB33F3407F8137D738 /* icomoon.eot */,
 				8E9CE330C5584C06B9A13F50 /* icomoon.svg */,
 				FA1ED7F0EA5640B3A8435D71 /* icomoon.woff */,
+				6AEDB1952F56E96100D926E2 /* appearing.mov */,
+				6AEDB1972F571AA700D926E2 /* flying.mov */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -262,6 +268,7 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				6AEDB1982F571AA700D926E2 /* flying.mov in Resources */,
 				82971B106F7EBC737841CF29 /* PrivacyInfo.xcprivacy in Resources */,
 				63507697A9D14AD4A042FAD4 /* NunitoSans-Black.ttf in Resources */,
 				E59E07D726914468A3931687 /* NunitoSans-BlackItalic.ttf in Resources */,
@@ -290,6 +297,7 @@
 				1621F4D108F74EF89FB5D1DA /* icomoon.ttf in Resources */,
 				770D99F32F3E016D00A4EFDC /* GoogleService-Info.plist in Resources */,
 				FC3956978ED84FF79BF15023 /* OFL.txt in Resources */,
+				6AEDB1962F56E96100D926E2 /* appearing.mov in Resources */,
 				A2C2A6B938BF41A291054053 /* icomoon.eot in Resources */,
 				BBD971098C904D25956B7208 /* icomoon.svg in Resources */,
 				755B4CCC825243A79AE59FDA /* icomoon.woff in Resources */,
