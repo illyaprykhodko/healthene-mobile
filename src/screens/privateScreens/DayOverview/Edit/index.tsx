@@ -64,6 +64,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const [showRescueFoodsModal, setShowRescueFoodsModal] = useState(false);
 
     /****** Bord animation trigger *****/
+    // eslint-disable-next-line no-unused-vars
     const [adjustedX, setAdjustedX] = useState<number>(0);
     const [birdAnimationStep, setBirdAnimationStep] = useState(false);
     useEffect(() => {
@@ -616,7 +617,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     return (
         <Screen initialized={!isLoading} style={styles.container}>
             {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
-                ? <BirdAnimation startAnimation={ birdAnimationStep } adjustedX={adjustedX} />
+                ? <BirdAnimation allChecked={birdAnimationStep} checkboxAreaX={adjustedX} />
                 : null
             }
             <View style={[styles.title, isFutureDate && styles.opacity]}>

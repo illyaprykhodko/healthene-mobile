@@ -19,8 +19,13 @@
 		58EE5A5728574B648FC8D6E1 /* NunitoSans-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C58CBEA71F1C4A63A23B5847 /* NunitoSans-Light.ttf */; };
 		63507697A9D14AD4A042FAD4 /* NunitoSans-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C87833C5F8D49ED9D3F168D /* NunitoSans-Black.ttf */; };
 		67B4FE943FD14474B4FF58CB /* NunitoSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 465EED1DBCB847ADBEDA9675 /* NunitoSans-Bold.ttf */; };
-		6AEDB1962F56E96100D926E2 /* appearing.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AEDB1952F56E96100D926E2 /* appearing.mov */; };
-		6AEDB1982F571AA700D926E2 /* flying.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AEDB1972F571AA700D926E2 /* flying.mov */; };
+		6AB910682F605D2D0085DDF8 /* appearing.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB910612F605D2D0085DDF8 /* appearing.mov */; };
+		6AB910692F605D2D0085DDF8 /* flying.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB910622F605D2D0085DDF8 /* flying.mov */; };
+		6AB9106A2F605D2D0085DDF8 /* sitting.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB910652F605D2D0085DDF8 /* sitting.mov */; };
+		6AB9106B2F605D2D0085DDF8 /* takeoff.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB910662F605D2D0085DDF8 /* takeoff.mov */; };
+		6AB9106C2F605D2D0085DDF8 /* walking.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB910672F605D2D0085DDF8 /* walking.mov */; };
+		6AB9106D2F605D2D0085DDF8 /* flyingAway.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB910632F605D2D0085DDF8 /* flyingAway.mov */; };
+		6AB9106E2F605D2D0085DDF8 /* pecking.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AB910642F605D2D0085DDF8 /* pecking.mov */; };
 		6C0AC7EDF48546859601243E /* NunitoSans-LightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8628FE74FBF74E148EB947F5 /* NunitoSans-LightItalic.ttf */; };
 		6C8A4E8528284AA5B1FC0850 /* NunitoSans-SemiBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4A33CA98310A4ABBA7F1E38F /* NunitoSans-SemiBoldItalic.ttf */; };
 		6CD51BC470CF416F930471C1 /* Outfit-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0024D639C6AC42E29DE74308 /* Outfit-Light.ttf */; };
@@ -65,9 +70,14 @@
 		4A33CA98310A4ABBA7F1E38F /* NunitoSans-SemiBoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "NunitoSans-SemiBoldItalic.ttf"; path = "../assets/fonts/NunitoSans-SemiBoldItalic.ttf"; sourceTree = "<group>"; };
 		5FD25C3A52834B2AA91DDC95 /* Outfit-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-ExtraBold.ttf"; path = "../assets/fonts/Outfit-ExtraBold.ttf"; sourceTree = "<group>"; };
 		61BEC2FDFDD14C89A5D4F5A3 /* Outfit-Thin.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-Thin.ttf"; path = "../assets/fonts/Outfit-Thin.ttf"; sourceTree = "<group>"; };
+		6AB910612F605D2D0085DDF8 /* appearing.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = appearing.mov; sourceTree = "<group>"; };
+		6AB910622F605D2D0085DDF8 /* flying.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = flying.mov; sourceTree = "<group>"; };
+		6AB910632F605D2D0085DDF8 /* flyingAway.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = flyingAway.mov; sourceTree = "<group>"; };
+		6AB910642F605D2D0085DDF8 /* pecking.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = pecking.mov; sourceTree = "<group>"; };
+		6AB910652F605D2D0085DDF8 /* sitting.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = sitting.mov; sourceTree = "<group>"; };
+		6AB910662F605D2D0085DDF8 /* takeoff.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = takeoff.mov; sourceTree = "<group>"; };
+		6AB910672F605D2D0085DDF8 /* walking.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = walking.mov; sourceTree = "<group>"; };
 		6AD77D9D2F47179B002CEDBC /* Healthene.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Healthene.entitlements; path = Healthene/Healthene.entitlements; sourceTree = "<group>"; };
-		6AEDB1952F56E96100D926E2 /* appearing.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = appearing.mov; sourceTree = "<group>"; };
-		6AEDB1972F571AA700D926E2 /* flying.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = flying.mov; sourceTree = "<group>"; };
 		7219FF88BD68C1492B435792 /* Pods-Healthene.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Healthene.release.xcconfig"; path = "Target Support Files/Pods-Healthene/Pods-Healthene.release.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Healthene/AppDelegate.swift; sourceTree = "<group>"; };
 		770D99F22F3E016C00A4EFDC /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -160,6 +170,13 @@
 		8B8DBEFD42404722A07E4B22 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				6AB910612F605D2D0085DDF8 /* appearing.mov */,
+				6AB910622F605D2D0085DDF8 /* flying.mov */,
+				6AB910632F605D2D0085DDF8 /* flyingAway.mov */,
+				6AB910642F605D2D0085DDF8 /* pecking.mov */,
+				6AB910652F605D2D0085DDF8 /* sitting.mov */,
+				6AB910662F605D2D0085DDF8 /* takeoff.mov */,
+				6AB910672F605D2D0085DDF8 /* walking.mov */,
 				2C87833C5F8D49ED9D3F168D /* NunitoSans-Black.ttf */,
 				DDE8D75F4E29491EB5A19E0D /* NunitoSans-BlackItalic.ttf */,
 				465EED1DBCB847ADBEDA9675 /* NunitoSans-Bold.ttf */,
@@ -189,8 +206,6 @@
 				F7E0DDAB33F3407F8137D738 /* icomoon.eot */,
 				8E9CE330C5584C06B9A13F50 /* icomoon.svg */,
 				FA1ED7F0EA5640B3A8435D71 /* icomoon.woff */,
-				6AEDB1952F56E96100D926E2 /* appearing.mov */,
-				6AEDB1972F571AA700D926E2 /* flying.mov */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -268,7 +283,6 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
-				6AEDB1982F571AA700D926E2 /* flying.mov in Resources */,
 				82971B106F7EBC737841CF29 /* PrivacyInfo.xcprivacy in Resources */,
 				63507697A9D14AD4A042FAD4 /* NunitoSans-Black.ttf in Resources */,
 				E59E07D726914468A3931687 /* NunitoSans-BlackItalic.ttf in Resources */,
@@ -283,6 +297,13 @@
 				6C0AC7EDF48546859601243E /* NunitoSans-LightItalic.ttf in Resources */,
 				AAB311E0ABBA47F5827B08D0 /* NunitoSans-Regular.ttf in Resources */,
 				45A3C23683E34A418A5A6661 /* NunitoSans-SemiBold.ttf in Resources */,
+				6AB910682F605D2D0085DDF8 /* appearing.mov in Resources */,
+				6AB910692F605D2D0085DDF8 /* flying.mov in Resources */,
+				6AB9106A2F605D2D0085DDF8 /* sitting.mov in Resources */,
+				6AB9106B2F605D2D0085DDF8 /* takeoff.mov in Resources */,
+				6AB9106C2F605D2D0085DDF8 /* walking.mov in Resources */,
+				6AB9106D2F605D2D0085DDF8 /* flyingAway.mov in Resources */,
+				6AB9106E2F605D2D0085DDF8 /* pecking.mov in Resources */,
 				6C8A4E8528284AA5B1FC0850 /* NunitoSans-SemiBoldItalic.ttf in Resources */,
 				BE140B0A2D114FD882470720 /* Outfit-Black.ttf in Resources */,
 				3DE8FE07308B4EDFAECE5452 /* Outfit-Bold.ttf in Resources */,
@@ -297,7 +318,6 @@
 				1621F4D108F74EF89FB5D1DA /* icomoon.ttf in Resources */,
 				770D99F32F3E016D00A4EFDC /* GoogleService-Info.plist in Resources */,
 				FC3956978ED84FF79BF15023 /* OFL.txt in Resources */,
-				6AEDB1962F56E96100D926E2 /* appearing.mov in Resources */,
 				A2C2A6B938BF41A291054053 /* icomoon.eot in Resources */,
 				BBD971098C904D25956B7208 /* icomoon.svg in Resources */,
 				755B4CCC825243A79AE59FDA /* icomoon.woff in Resources */,
