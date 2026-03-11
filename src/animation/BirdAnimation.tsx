@@ -55,16 +55,16 @@ export enum BirdAnimationPhase {
 }
 
 // Video size configuration for each phase
-export const VIDEO_SIZE_CONFIG: Record<BirdAnimationPhase, { width: number; height: number }> = {
-    [BirdAnimationPhase.APPEARING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
-    [BirdAnimationPhase.SITTING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
-    [BirdAnimationPhase.TAKEOFF]: { width: VIDEO_SIZE + 50, height: VIDEO_SIZE + 50 },
-    [BirdAnimationPhase.FLYING]: { width: VIDEO_SIZE + 50, height: VIDEO_SIZE + 50 },
-    [BirdAnimationPhase.WALKING]: { width: VIDEO_SIZE + 50, height: VIDEO_SIZE + 50 },
-    [BirdAnimationPhase.PECKING]: { width: VIDEO_SIZE + 50, height: VIDEO_SIZE + 50 },
-    [BirdAnimationPhase.FLYING_AWAY]: { width: VIDEO_SIZE + 50, height: VIDEO_SIZE + 50 },
-    [BirdAnimationPhase.FINISHED]: { width: 0, height: 0 },
-};
+// export const VIDEO_SIZE_CONFIG: Record<BirdAnimationPhase, { width: number; height: number }> = {
+//     [BirdAnimationPhase.APPEARING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
+//     [BirdAnimationPhase.SITTING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
+//     [BirdAnimationPhase.TAKEOFF]: { width: VIDEO_SIZE + 50, height: VIDEO_SIZE + 50 },
+//     [BirdAnimationPhase.FLYING]: { width: VIDEO_SIZE + 50, height: VIDEO_SIZE + 50 },
+//     [BirdAnimationPhase.WALKING]: { width: VIDEO_SIZE + 50, height: VIDEO_SIZE + 50 },
+//     [BirdAnimationPhase.PECKING]: { width: VIDEO_SIZE + 50, height: VIDEO_SIZE + 50 },
+//     [BirdAnimationPhase.FLYING_AWAY]: { width: VIDEO_SIZE + 50, height: VIDEO_SIZE + 50 },
+//     [BirdAnimationPhase.FINISHED]: { width: 0, height: 0 },
+// };
 
 // Video file mapping for each phase
 const PHASE_VIDEO_MAP: Record<BirdAnimationPhase, string | null> = {
@@ -345,11 +345,9 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimati
     if (phase === BirdAnimationPhase.FINISHED) {
         return null;
     }
-    console.log('phase', phase);
+
     return (
-        <View style={[styles.container, {
-            top: phase === BirdAnimationPhase.TAKEOFF ? BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top + (VIDEO_SIZE - VIDEO_SIZE_CONFIG.FLYING.height + 14) : BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top
-        }]}>
+        <View style={[styles.container, { top: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top }]}>
             <Animated.View
                 style={[
                     {
@@ -389,7 +387,7 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimati
                                             display: flex;
                                             align-items: center;
                                             justify-content: center;
-                                            border: #1BA8CB 1px solid;
+                                            /*border: #1BA8CB 1px solid;*/
                                             overflow: visible;
                                         }
                                         video {
@@ -424,8 +422,8 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimati
                     }}
                     style={{
                         backgroundColor: 'transparent',
-                        width: VIDEO_SIZE_CONFIG[phase].width,
-                        height: VIDEO_SIZE_CONFIG[phase].height,
+                        width: VIDEO_SIZE,
+                        height: VIDEO_SIZE,
                     }}
                     onError={_e => {}}
                     allowsInlineMediaPlayback={true}
