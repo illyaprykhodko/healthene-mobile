@@ -10,7 +10,11 @@ import RNBlobUtil from 'react-native-blob-util';
 import { scheduleOnRN } from 'react-native-worklets';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
+
+// local dependencies
+import { COMPONENT_HEIGHT } from 'components/AnytimeMenu/AnytimeMenu';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -29,7 +33,7 @@ export const BIRD_ANIMATION_CONFIG = {
     TAKEOFF_OFFSET_Y: -30,
     FLY_TARGET: {
         x: -SCREEN_WIDTH + VIDEO_SIZE,
-        y: SCREEN_HEIGHT - VIDEO_SIZE - 180,
+        y: SCREEN_HEIGHT,
     },
     WALKING_STOP_OFFSET: SCREEN_WIDTH,
     DURATIONS: {
@@ -111,7 +115,7 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimati
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
     const [videoCache, setVideoCache] = useState<Map<BirdAnimationPhase, string>>(new Map());
     const isAnimationComplete = useRef<boolean>(false);
-
+    const insets = useSafeAreaInsets();
     // ========================================================================
     // VIDEO PRELOADING
     // ========================================================================
@@ -213,7 +217,7 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimati
         setPhase(BirdAnimationPhase.FINISHED);
         isAnimationComplete.current = true;
     }, []);
-
+    
     // ========================================================================
     // POSITION ANIMATIONS FOR EACH PHASE
     // ========================================================================
@@ -234,7 +238,7 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimati
                     duration: config.DURATIONS.FLY_TO_BOTTOM,
                     easing: Easing.inOut(Easing.ease),
                 });
-                birdY.value = withTiming(config.FLY_TARGET.y, {
+                birdY.value = withTiming(config.FLY_TARGET.y - insets.bottom - COMPONENT_HEIGHT - VIDEO_SIZE - 38, {
                     duration: config.DURATIONS.FLY_TO_BOTTOM,
                     easing: Easing.inOut(Easing.ease),
                 }, finished => {

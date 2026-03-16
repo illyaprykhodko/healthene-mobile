@@ -18,6 +18,7 @@ import type { AnytimeItemType } from '../../types/anytime';
 import { AnytimeExercisesModal } from './AnytimeExercisesModal';
 import { useGetDayOverviewQuery } from 'store/api/dayOverviewApi';
 
+export const COMPONENT_HEIGHT = 54;
 interface AnytimeMenuProps {
     date?: string;
     disabled?: boolean;
@@ -112,7 +113,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
     return (
         <>
-            <View style={[styles.container, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.blue }]}>
+            <View style={[styles.container, { height: COMPONENT_HEIGHT, backgroundColor: theme.colors.surface, borderTopColor: theme.colors.blue }]}>
                 <TouchableOpacity
                     style={styles.iconButton}
                     disabled={disabled || isLoading}
