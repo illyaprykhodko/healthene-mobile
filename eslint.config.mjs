@@ -223,9 +223,9 @@ export default defineConfig([
     },
     { files: ["**/*.js"], plugins: { js }, extends: ["js/recommended"] },
     {
-        files: ['*.ts', '*.tsx'],
+        files: ['**/*.ts', '**/*.tsx'],
         rules: {
-            '@typescript-eslint/no-unused-vars': 'warn',
+            '@typescript-eslint/no-unused-vars': ['warn', { ignoreEnumMembers: true }],
             '@typescript-eslint/explicit-module-boundary-types': 'off'
         }
     }
