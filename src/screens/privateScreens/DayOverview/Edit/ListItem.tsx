@@ -1,5 +1,5 @@
 // outsource dependencies
-import React from 'react';
+import React, { useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 // local dependencies
@@ -19,6 +19,7 @@ interface ListItemProps {
   isFutureDate?: boolean;
   updateData?: (item: any) => void;
   handleCheckboxStatus?: (item: any) => void;
+  onSpawnSeedsAt?: (x: number, y: number) => void;
 }
 
 export const ListItem: React.FC<ListItemProps> = ({
@@ -29,6 +30,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     disabled = false,
     isFutureDate = false,
     handleCheckboxStatus,
+    onSpawnSeedsAt,
 }) => {
     const theme = useTheme();
     const navigation = useNavigation();
@@ -48,8 +50,16 @@ export const ListItem: React.FC<ListItemProps> = ({
         || currentQuestion?.foodCategory?.relatedToDayOverviewItemQuestionExists
     );
 
+    const checkboxRef = useRef<View>(null);
+
     const handleCheckboxPress = (next: boolean) => {
         if (handleCheckboxStatus && !disabled && !isFutureDate) {
+            const willBeDone = !isDone && !isDidNotEat;
+            if (willBeDone && onSpawnSeedsAt && checkboxRef.current) {
+                checkboxRef.current.measureInWindow((wx, wy, w, h) => {
+                    onSpawnSeedsAt(wx + w / 2, wy + h / 2);
+                });
+            }
             handleCheckboxStatus({ ...item, status: (isDone || isDidNotEat) ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
         }
     };
@@ -61,15 +71,17 @@ export const ListItem: React.FC<ListItemProps> = ({
     };
 
     const renderCheckbox = () => (
-        <Checkbox
-            size={22}
-            isDayOverview
-            status={item.status}
-            onChange={handleCheckboxPress}
-            style={styles.checkboxContainer}
-            editable={!disabled && !isFutureDate}
-            value={item.status === PHASE_ITEM_STATUS.DONE}
-        />
+        <View ref={checkboxRef} collapsable={false}>
+            <Checkbox
+                size={22}
+                isDayOverview
+                status={item.status}
+                onChange={handleCheckboxPress}
+                style={styles.checkboxContainer}
+                editable={!disabled && !isFutureDate}
+                value={item.status === PHASE_ITEM_STATUS.DONE}
+            />
+        </View>
     );
 
     const renderStatusText = () => {

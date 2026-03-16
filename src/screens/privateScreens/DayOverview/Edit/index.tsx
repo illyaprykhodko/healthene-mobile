@@ -37,6 +37,7 @@ import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal
 import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
 import { BirdAnimation } from 'animation/BirdAnimation.tsx';
+import { SeedAnimation, SeedAnimationRef } from 'animation/SeedAnimation';
 
 
 interface EditProps {
@@ -67,6 +68,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     // eslint-disable-next-line no-unused-vars
     const [adjustedX, setAdjustedX] = useState<number>(0);
     const [birdAnimationStep, setBirdAnimationStep] = useState(false);
+    const seedAnimationRef = useRef<SeedAnimationRef>(null);
     useEffect(() => {
         if ((localItems || []).length > 0) {
             const allDone = localItems.every(item => item.status === 'DONE');
@@ -620,6 +622,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 ? <BirdAnimation allChecked={birdAnimationStep} checkboxAreaX={adjustedX} />
                 : null
             }
+            {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
+                ? <SeedAnimation ref={seedAnimationRef} />
+                : null
+            }
             <View style={[styles.title, isFutureDate && styles.opacity]}>
                 <View>
                     <Text style={styles.titleText}>
@@ -696,6 +702,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                         isFutureDate={isFutureDate}
                                         updateData={updatePhaseItem}
                                         handleCheckboxStatus={handleCheckboxStatus}
+                                        onSpawnSeedsAt={(x, y) => seedAnimationRef.current?.spawnSeeds(x, y)}
                                     />;
                                     // return (
                                     //     isPhaseItemsFetching

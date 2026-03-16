@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
 
 // local dependencies
-import { COMPONENT_HEIGHT } from 'components/AnytimeMenu/AnytimeMenu';
+import { COMPONENT_HEIGHT } from '../components/AnytimeMenu/constants';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
