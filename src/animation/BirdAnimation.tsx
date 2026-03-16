@@ -287,16 +287,16 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
             case BirdAnimationPhase.PECKING:
                 break;
 
-            case BirdAnimationPhase.FLYING_AWAY:
-                birdX.value = withTiming(SCREEN_WIDTH + VIDEO_SIZE_CONFIG[BirdAnimationPhase.FLYING_AWAY].width, {
-                    duration: config.DURATIONS.FLYING_AWAY,
-                    easing: Easing.in(Easing.ease),
-                }, finished => {
-                    if (finished) {
-                        scheduleOnRN(handleFlyingAwayComplete);
-                    }
-                });
-                break;
+            // case BirdAnimationPhase.FLYING_AWAY:
+            //     birdX.value = withTiming(SCREEN_WIDTH + VIDEO_SIZE_CONFIG[BirdAnimationPhase.FLYING_AWAY].width, {
+            //         duration: config.DURATIONS.FLYING_AWAY,
+            //         easing: Easing.in(Easing.ease),
+            //     }, finished => {
+            //         if (finished) {
+            //             scheduleOnRN(handleFlyingAwayComplete);
+            //         }
+            //     });
+            //     break;
 
             case BirdAnimationPhase.FINISHED:
             default:
@@ -348,12 +348,14 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                             setPhase(BirdAnimationPhase.FLYING);
                             break;
                         case BirdAnimationPhase.PECKING:
-                            setPhase(BirdAnimationPhase.FLYING_AWAY);
-                            break;
-                        case BirdAnimationPhase.FLYING_AWAY:
+                            // setPhase(BirdAnimationPhase.FLYING_AWAY);
                             setPhase(BirdAnimationPhase.FINISHED);
                             isAnimationComplete.current = true;
                             break;
+                        // case BirdAnimationPhase.FLYING_AWAY:
+                        //     setPhase(BirdAnimationPhase.FINISHED);
+                        //     isAnimationComplete.current = true;
+                        //     break;
                         default:
                             break;
                     }
