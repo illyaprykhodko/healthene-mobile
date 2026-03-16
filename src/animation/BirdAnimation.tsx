@@ -106,7 +106,7 @@ interface BirdAnimationProps {
 // ============================================================================
 export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimationProps) => {
     const webViewRef = useRef<WebView>(null);
-    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.APPEARING);
+    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.SITTING);
     const [DOMReady, setDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
     const [videoCache, setVideoCache] = useState<Map<BirdAnimationPhase, string>>(new Map());
@@ -339,15 +339,43 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimati
         }
     }, [phase]);
 
+    const handleVideoSize = useCallback(() => {
+        switch (phase) {
+            default: return VIDEO_SIZE;
+            case BirdAnimationPhase.APPEARING:
+                return VIDEO_SIZE;
+            case BirdAnimationPhase.SITTING:
+                return VIDEO_SIZE;
+            case BirdAnimationPhase.TAKEOFF:
+                return VIDEO_SIZE + 34;
+            case BirdAnimationPhase.FLYING:
+            case BirdAnimationPhase.WALKING:
+            case BirdAnimationPhase.PECKING:
+                return VIDEO_SIZE + 38;
+            case BirdAnimationPhase.FLYING_AWAY:
+                return VIDEO_SIZE + 58;
+        }
+    }, [phase]);
+
+    const handleStyle = useCallback(() => {
+        switch (phase) {
+            default: return {
+                top: 40,
+            };
+            case BirdAnimationPhase.TAKEOFF: return {
+                top: 6,
+            };
+            case BirdAnimationPhase.FLYING: return {
+                top: 10,
+            };
+        }
+    }, [phase]);
+
     // ========================================================================
     // RENDER
     // ========================================================================
-    if (phase === BirdAnimationPhase.FINISHED) {
-        return null;
-    }
-
-    return (
-        <View style={[styles.container, { top: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top }]}>
+    return phase === BirdAnimationPhase.FINISHED ? null : (
+        <View style={[styles.container, handleStyle()]} key="bird-animation">
             <Animated.View
                 style={[
                     {
@@ -422,8 +450,8 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimati
                     }}
                     style={{
                         backgroundColor: 'transparent',
-                        width: VIDEO_SIZE,
-                        height: VIDEO_SIZE,
+                        width: handleVideoSize(),
+                        height: handleVideoSize(),
                     }}
                     onError={_e => {}}
                     allowsInlineMediaPlayback={true}
