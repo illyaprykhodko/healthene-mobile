@@ -36,7 +36,8 @@ export const BIRD_ANIMATION_CONFIG = {
         x: -SCREEN_WIDTH + VIDEO_SIZE,
         y: SCREEN_HEIGHT,
     },
-    WALKING_STOP_OFFSET: SCREEN_WIDTH,
+    // X position (from left) where the bird stops under the checkbox - listItem paddingLeft(20) + checkbox marginLeft(15) + half checkbox(11) ≈ 46
+    WALKING_STOP_OFFSET: 50,
     DURATIONS: {
         TAKEOFF_LIFT: 500,
         FLY_TO_BOTTOM: 3200,
@@ -116,13 +117,13 @@ export const WEBVIEW_MESSAGES = {
 // ============================================================================
 interface BirdAnimationProps {
     allChecked: boolean;
-    checkboxAreaX: number;
+    checkboxAreaX?: number;
 }
 
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimationProps) => {
+export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAnimationProps) => {
     const webViewRef = useRef<WebView>(null);
     const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.SITTING);
     const [DOMReady, setDOMReady] = useState<boolean>(false);
@@ -233,7 +234,7 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimati
         setPhase(BirdAnimationPhase.FINISHED);
         isAnimationComplete.current = true;
     }, []);
-    
+
     // ========================================================================
     // POSITION ANIMATIONS FOR EACH PHASE
     // ========================================================================
@@ -267,7 +268,11 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX }: BirdAnimati
 
             case BirdAnimationPhase.WALKING: {
                 const videoWidth = VIDEO_SIZE_CONFIG[BirdAnimationPhase.WALKING].width;
-                const walkingTargetX = SCREEN_WIDTH - config.WALKING_STOP_OFFSET - checkboxAreaX - videoWidth;
+                const rightOffset = config.INITIAL_POSITION.right;
+                // Use measured checkbox x when available; fallback to WALKING_STOP_OFFSET when 0
+                const targetCheckboxX = checkboxAreaX > 0 ? checkboxAreaX : config.WALKING_STOP_OFFSET;
+                // Bird's left edge = SCREEN_WIDTH + rightOffset - videoWidth + translateX; solve for translateX to align with checkbox
+                const walkingTargetX = targetCheckboxX - SCREEN_WIDTH - rightOffset + videoWidth - (VIDEO_SIZE_CONFIG[BirdAnimationPhase.WALKING].width / 2);
                 birdX.value = withTiming(walkingTargetX, {
                     duration: config.DURATIONS.WALKING,
                     easing: Easing.linear,
@@ -460,7 +465,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 19999999,
+        zIndex: 19999997,
         pointerEvents: 'none',
     },
 });

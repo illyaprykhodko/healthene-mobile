@@ -64,10 +64,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const scrollViewRef = useRef<ScrollView>(null);
     const [showRescueFoodsModal, setShowRescueFoodsModal] = useState(false);
 
-    /****** Bord animation trigger *****/
-    // eslint-disable-next-line no-unused-vars
-    const [adjustedX, setAdjustedX] = useState<number>(0);
+    /****** Bird animation trigger *****/
     const [birdAnimationStep, setBirdAnimationStep] = useState(false);
+    const [checkboxAreaX, setCheckboxAreaX] = useState(0);
     const seedAnimationRef = useRef<SeedAnimationRef>(null);
     useEffect(() => {
         if ((localItems || []).length > 0) {
@@ -619,7 +618,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     return (
         <Screen initialized={!isLoading} style={styles.container}>
             {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
-                ? <BirdAnimation allChecked={birdAnimationStep} checkboxAreaX={adjustedX} />
+                ? <BirdAnimation allChecked={birdAnimationStep} checkboxAreaX={checkboxAreaX} />
                 : null
             }
             {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
@@ -702,7 +701,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                         isFutureDate={isFutureDate}
                                         updateData={updatePhaseItem}
                                         handleCheckboxStatus={handleCheckboxStatus}
-                                        onSpawnSeedsAt={(x, y) => seedAnimationRef.current?.spawnSeeds(x, y)}
+                                        onCheckboxAreaMeasure={setCheckboxAreaX}
+                                        onSpawnSeedsAt={(x, y) => {
+                                            seedAnimationRef.current?.spawnSeeds(x, y);
+                                        }}
                                     />;
                                     // return (
                                     //     isPhaseItemsFetching

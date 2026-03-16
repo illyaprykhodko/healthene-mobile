@@ -13,7 +13,7 @@ import { COMPONENT_HEIGHT } from '../components/AnytimeMenu/constants';
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const SEED_SIZE = 8;
-const SEED_RADIUS = 6; // Match visual size; smaller radius = tighter pile
+const SEED_RADIUS = SEED_SIZE / 2; // Match visual; same size = no gaps/incorrect overlap
 const SEEDS_PER_CHECK = 5;
 const MAX_SEEDS = 50;
 const FLOOR_HEIGHT = 20;
@@ -68,7 +68,12 @@ const SeedSprite: React.FC<SeedSpriteProps> = ({ x, y, angle, imageIndex }) => {
     );
 };
 
-const engine = Matter.Engine.create({ gravity: { x: 0, y: 1 } });
+const engine = Matter.Engine.create({
+    gravity: { x: 0, y: 1 },
+    enableSleeping: true, // Resting seeds sleep so the pile stabilizes and expands naturally
+    positionIterations: 12,
+    velocityIterations: 8,
+});
 const world = engine.world;
 
 export const SeedAnimation = forwardRef<SeedAnimationRef, object>((_props, ref) => {
@@ -92,8 +97,8 @@ export const SeedAnimation = forwardRef<SeedAnimationRef, object>((_props, ref) 
 
             const newSeeds: SeedState[] = [];
             for (let i = 0; i < SEEDS_PER_CHECK; i++) {
-                const offsetX = (Math.random() - 0.5) * 4;
-                const offsetY = i * 5;
+                const offsetX = 0; // No horizontal spread – straight vertical column
+                const offsetY = i * SEED_SIZE; // Seeds touch (back-to-back) as they fall, no gaps
                 const posX = localX + offsetX;
                 const posY = localY + offsetY;
 

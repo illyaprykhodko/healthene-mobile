@@ -20,6 +20,7 @@ interface ListItemProps {
   updateData?: (item: any) => void;
   handleCheckboxStatus?: (item: any) => void;
   onSpawnSeedsAt?: (x: number, y: number) => void;
+  onCheckboxAreaMeasure?: (x: number) => void;
 }
 
 export const ListItem: React.FC<ListItemProps> = ({
@@ -31,6 +32,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     isFutureDate = false,
     handleCheckboxStatus,
     onSpawnSeedsAt,
+    onCheckboxAreaMeasure,
 }) => {
     const theme = useTheme();
     const navigation = useNavigation();
@@ -58,6 +60,7 @@ export const ListItem: React.FC<ListItemProps> = ({
             if (willBeDone && onSpawnSeedsAt && checkboxRef.current) {
                 checkboxRef.current.measureInWindow((wx, wy, w, h) => {
                     onSpawnSeedsAt(wx + w / 2, wy + h / 2);
+                    onCheckboxAreaMeasure?.(wx);
                 });
             }
             handleCheckboxStatus({ ...item, status: (isDone || isDidNotEat) ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
@@ -70,8 +73,14 @@ export const ListItem: React.FC<ListItemProps> = ({
         }
     };
 
+    const handleCheckboxLayout = () => {
+        checkboxRef.current?.measureInWindow((x, _y, _w, _h) => {
+            onCheckboxAreaMeasure?.(x);
+        });
+    };
+
     const renderCheckbox = () => (
-        <View ref={checkboxRef} collapsable={false}>
+        <View ref={checkboxRef} collapsable={false} onLayout={handleCheckboxLayout}>
             <Checkbox
                 size={22}
                 isDayOverview
