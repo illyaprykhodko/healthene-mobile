@@ -34,7 +34,7 @@ export const BIRD_ANIMATION_CONFIG = {
     TAKEOFF_OFFSET_Y: -30,
     FLY_TARGET: {
         x: -SCREEN_WIDTH + VIDEO_SIZE,
-        y: SCREEN_HEIGHT,
+        y: SCREEN_HEIGHT + 12,
     },
     // X position (from left) where the bird stops under the checkbox - listItem paddingLeft(20) + checkbox marginLeft(15) + half checkbox(11) ≈ 46
     WALKING_STOP_OFFSET: 50,
@@ -125,7 +125,7 @@ interface BirdAnimationProps {
 // ============================================================================
 export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAnimationProps) => {
     const webViewRef = useRef<WebView>(null);
-    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.SITTING);
+    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.APPEARING);
     const [DOMReady, setDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
     const [videoCache, setVideoCache] = useState<Map<BirdAnimationPhase, string>>(new Map());

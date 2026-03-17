@@ -13,8 +13,11 @@ import { COMPONENT_HEIGHT } from '../components/AnytimeMenu/constants';
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const SEED_SIZE = 8;
-const SEED_RADIUS = SEED_SIZE / 2; // Match visual; same size = no gaps/incorrect overlap
+// Smaller physics radius than visual – allows seeds to overlap and form a tighter pile
+const SEED_RADIUS = SEED_SIZE * 0.3;
 const SEEDS_PER_CHECK = 5;
+// Horizontal spread so seeds form a flatter pile rather than a tall pyramid
+const HORIZONTAL_SPREAD = 14;
 const MAX_SEEDS = 50;
 const FLOOR_HEIGHT = 20;
 
@@ -70,9 +73,9 @@ const SeedSprite: React.FC<SeedSpriteProps> = ({ x, y, angle, imageIndex }) => {
 
 const engine = Matter.Engine.create({
     gravity: { x: 0, y: 1 },
-    enableSleeping: true, // Resting seeds sleep so the pile stabilizes and expands naturally
-    positionIterations: 12,
-    velocityIterations: 8,
+    enableSleeping: true,
+    positionIterations: 16,
+    velocityIterations: 12,
 });
 const world = engine.world;
 
@@ -97,8 +100,9 @@ export const SeedAnimation = forwardRef<SeedAnimationRef, object>((_props, ref) 
 
             const newSeeds: SeedState[] = [];
             for (let i = 0; i < SEEDS_PER_CHECK; i++) {
-                const offsetX = 0; // No horizontal spread – straight vertical column
-                const offsetY = i * SEED_SIZE; // Seeds touch (back-to-back) as they fall, no gaps
+                // Slight horizontal spread – seeds form a flatter pile instead of a tall pyramid
+                const offsetX = (Math.random() - 0.5) * HORIZONTAL_SPREAD;
+                const offsetY = i * SEED_SIZE * 0.4;
                 const posX = localX + offsetX;
                 const posY = localY + offsetY;
 
@@ -108,11 +112,17 @@ export const SeedAnimation = forwardRef<SeedAnimationRef, object>((_props, ref) 
                 const imageIndex = Math.floor(Math.random() * 4);
 
                 const body = Matter.Bodies.circle(posX, posY, SEED_RADIUS, {
-                    restitution: 0.1,
-                    friction: 0.8,
+                    restitution: 0,
+                    friction: 1,
+                    frictionStatic: 1,
+                    density: 0.006,
                 });
 
-                Matter.Body.setVelocity(body, { x: 0, y: 0 });
+                // Tiny horizontal velocity helps seeds drift and spread slightly as they fall
+                Matter.Body.setVelocity(body, {
+                    x: (Math.random() - 0.5) * 4,
+                    y: 0,
+                });
                 Matter.Body.setAngularVelocity(body, 0);
 
                 Matter.World.add(world, body);
@@ -137,7 +147,7 @@ export const SeedAnimation = forwardRef<SeedAnimationRef, object>((_props, ref) 
     useEffect(() => {
         const floor = Matter.Bodies.rectangle(
             SCREEN_WIDTH / 2,
-            floorY + FLOOR_HEIGHT / 2,
+            floorY + FLOOR_HEIGHT,
             SCREEN_WIDTH * 2,
             FLOOR_HEIGHT,
             { isStatic: true }
