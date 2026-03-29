@@ -8,6 +8,7 @@ export * from './video';
 export * from './recipe';
 export * from './common';
 export * from './health';
+export * from './update';
 export * from './contact';
 export * from './medical';
 export * from './business';
