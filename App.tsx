@@ -20,6 +20,10 @@ import { ThemeProvider } from 'providers/ThemeProvider.tsx';
 import { RootNavigator } from 'navigation/RootNavigator.tsx';
 import { BoxHolder, MaintenanceHolder } from 'components/preloader';
 import { useAppInitialization } from 'hooks/useAppInitialization.ts';
+// import { FeedbackProvider } from 'features/feedback';
+import { useAppUpdateGate } from 'hooks/useAppUpdateGate';
+import { SoftUpdateModal } from 'components/update/SoftUpdateModal';
+import { ForceUpdateScreen } from 'components/update/ForceUpdateScreen';
 
 export const navigationIntegration = Sentry.reactNavigationIntegration({
     enableTimeToInitialDisplay: true,
@@ -50,15 +54,32 @@ if (config.DEBUG) {
 }
 
 function AppContent (): React.JSX.Element {
-    const { isInitializing, isHealthy, isHealthLoading } = useAppInitialization();
+    const { isHealthLoading } = useAppInitialization();
+    // const { isInitializing, isHealthy, isHealthLoading } = useAppInitialization();
+    const {
+        softPolicy,
+        openStore,
+        forcePolicy,
+        onSoftCancel,
+        isSoftVisible,
+    } = useAppUpdateGate();
     const insets = useSafeAreaInsets();
     const styles = createStyles(insets);
-    if (isInitializing) { return <BoxHolder active />; }
+    // if (isInitializing) { return <BoxHolder active />; }
     if (isHealthLoading) { return <BoxHolder active />; }
-    if (!isHealthy) { return <MaintenanceHolder active />; }
+    // if (!isHealthy) { return <MaintenanceHolder active />; }
+    if (forcePolicy) { return <ForceUpdateScreen policy={forcePolicy} onUpdate={openStore} />; }
     return (
         <SafeAreaView style={[styles.safeArea, styles.flex]}>
+            {/* <FeedbackProvider> */}
             <RootNavigator />
+            <SoftUpdateModal
+                policy={softPolicy}
+                onUpdate={openStore}
+                visible={isSoftVisible}
+                onCancel={onSoftCancel}
+            />
+            {/* </FeedbackProvider> */}
         </SafeAreaView>
     );
 }

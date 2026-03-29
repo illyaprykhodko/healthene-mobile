@@ -2,8 +2,8 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 
 // local dependencies
-import { BUSINESS_PROPERTIES } from 'types';
 import { baseQueryPub } from 'store/api/baseApi.ts';
+import { BUSINESS_PROPERTIES, MobileUpdateConfig } from 'types';
 
 interface WelcomeImage {
     id: number;
@@ -30,10 +30,17 @@ export const publicApi = createApi({
                 url: 'patient-service/public/patients/welcome'
             }),
         }),
+        getUpdatePolicy: builder.query<MobileUpdateConfig, void>({
+            query: () => ({
+                method: 'GET',
+                url: 'patient-service/public/mobile-config',
+            }),
+        }),
     }),
 });
 
 export const {
     useGetTermsQuery,
     useGetWelcomeQuery,
+    useGetUpdatePolicyQuery,
 } = publicApi;
