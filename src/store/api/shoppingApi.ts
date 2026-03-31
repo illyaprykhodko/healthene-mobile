@@ -229,7 +229,7 @@ export const shoppingApi = createApi({
 
         // Get stock list
         getStockList: builder.query<{ content: StockItem[], totalPages: number, totalElements: number }, {
-            shoppingCartCategoryId?: number;
+            shoppingCartCategoryId?: number | null;
             page?: number;
             size?: number;
         }>({

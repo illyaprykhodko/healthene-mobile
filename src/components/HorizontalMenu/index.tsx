@@ -26,28 +26,33 @@ const SCROLL_NUMBER = 150;
 const HorizontalMenu: React.FC<HorizontalMenuProps> = memo(
     ({ data, handleItem, viewPosition = 0.5, activeItem = null, disabled = false }) => {
         const ref = useRef<FlatList<MenuItem> | null>(null);
+        const safeData = useMemo(() => (Array.isArray(data) ? data : []), [data]);
 
         const [index, setIndex] = useState(0);
-        const handleScrollToIndexFailed = useCallback(() => setIndex(0), []);
+        const handleScrollToIndexFailed = useCallback(() => {
+            if (safeData.length > 0) {
+                setIndex(0);
+            }
+        }, [safeData.length]);
 
         const handleIndex = useCallback(
             (item: MenuItem) => {
-                const foundIndex = data.findIndex(x => x?.name === item?.name);
+                const foundIndex = safeData.findIndex(x => x?.name === item?.name);
                 setIndex(foundIndex >= 0 ? foundIndex : 0);
             },
-            [data],
+            [safeData],
         );
 
         useEffect(() => {
-            if (!data?.length) { return; }
+            if (!safeData.length) { return; }
             // Ensure index is within valid bounds before scrolling
-            const safeIndex = Math.min(Math.max(0, index), data.length - 1);
+            const safeIndex = Math.min(Math.max(0, index), safeData.length - 1);
             if (safeIndex !== index) {
                 setIndex(safeIndex);
                 return;
             }
             ref.current?.scrollToIndex?.({ index: safeIndex, viewPosition, animated: true });
-        }, [index, viewPosition, data?.length]);
+        }, [index, viewPosition, safeData.length]);
 
         useEffect(() => {
             if (!activeItem?.name) { return; }
@@ -106,7 +111,7 @@ const HorizontalMenu: React.FC<HorizontalMenuProps> = memo(
                 <FlatList
                     ref={ref}
                     horizontal
-                    data={data}
+                    data={safeData}
                     style={{ flexGrow: 0 }}
                     onScroll={handleScroll}
                     scrollEventThrottle={16}
@@ -116,7 +121,7 @@ const HorizontalMenu: React.FC<HorizontalMenuProps> = memo(
                     contentContainerStyle={styles.contentContainer}
                     onScrollToIndexFailed={handleScrollToIndexFailed}
                     keyExtractor={(item, i) => String(item?.id ?? item?.name ?? i)}
-                    initialScrollIndex={data?.length ? Math.min(index, data.length - 1) : 0}
+                    initialScrollIndex={safeData.length ? Math.min(index, safeData.length - 1) : undefined}
                     renderItem={({ item }) => (
                         <Item
                             item={item}

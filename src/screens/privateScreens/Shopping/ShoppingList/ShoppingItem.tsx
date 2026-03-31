@@ -1,7 +1,7 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/feather';
 import React, { memo, useCallback, useRef, useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, TextInput } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { useAppSelector } from 'store';
@@ -16,6 +16,7 @@ interface ShoppingItemProps {
     disabled?: boolean;
     isConfirmed: boolean;
     onUpdate: (item: any) => void;
+    onAmountFocus?: (itemId: number) => void;
 }
 
 const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
@@ -24,6 +25,7 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
     onUpdate,
     disabled,
     isConfirmed,
+    onAmountFocus,
 }) => {
     const ref = useRef<TextInput>(null);
     const [editable, setEditable] = useState(false);
@@ -31,7 +33,6 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
 
     const currentStep = useAppSelector(selectCurrentStep);
     const isExcluded = item?.excluded;
-    const isPurchased = item?.bought;
 
     const isItemDisabled = isExcluded || isConfirmed;
 
@@ -128,24 +129,23 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                                 disabled={isItemDisabled}
                                 style={[styles.selectBtn, isItemDisabled && styles.selectBtnDisabled]}
                             >
-                                <ScrollView scrollEnabled={false}>
-                                    <TextInput
-                                        ref={ref}
-                                        maxLength={4}
-                                        onBlur={handleBlur}
-                                        editable={editable}
-                                        keyboardType="numeric"
-                                        onChangeText={setAmount}
-                                        value={cleanedStr(amount)}
-                                        style={[
-                                            styles.selectInput,
-                                            {
-                                                color: editable ? COLORS.BLACK : COLORS.DARK_GREY,
-                                                borderColor: isItemDisabled ? COLORS.GREY : COLORS.DARK_BLUE,
-                                            }
-                                        ]}
-                                    />
-                                </ScrollView>
+                                <TextInput
+                                    ref={ref}
+                                    maxLength={4}
+                                    onBlur={handleBlur}
+                                    editable={editable}
+                                    keyboardType="numeric"
+                                    onChangeText={setAmount}
+                                    value={cleanedStr(amount)}
+                                    onFocus={() => onAmountFocus?.(item?.id)}
+                                    style={[
+                                        styles.selectInput,
+                                        {
+                                            color: editable ? COLORS.BLACK : COLORS.DARK_GREY,
+                                            borderColor: isItemDisabled ? COLORS.GREY : COLORS.DARK_BLUE,
+                                        }
+                                    ]}
+                                />
                                 <Text style={[styles.selectBtnText, isItemDisabled && styles.selectBtnTextDisabled]}>
                                     select
                                 </Text>

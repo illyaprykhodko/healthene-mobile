@@ -1,8 +1,9 @@
 // outsource dependencies
 import moment from 'moment';
 import Icon from '@react-native-vector-icons/feather';
-import { useNavigation, useRoute, useIsFocused } from '@react-navigation/native';
-import { StyleSheet, View, SectionList, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal } from 'react-native';
+import { KeyboardAwareSectionList } from 'react-native-keyboard-aware-scroll-view';
+import { useNavigation, useRoute, useIsFocused, StackActions } from '@react-navigation/native';
 import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 // local dependencies
 import Text from 'components/Text';
@@ -49,6 +50,9 @@ interface GroupedItem {
     data: any[];
 }
 
+const ALL_CATEGORY: { name: string; id?: number | null } = { name: 'All' };
+const ADDITIONAL_CATEGORY_NAME = 'Additional';
+
 const ShoppingList: React.FC = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
@@ -78,6 +82,7 @@ const ShoppingList: React.FC = () => {
     const [page, setPage] = useState(0);
     const pendingBackActionRef = useRef<any | null>(null);
     const allowBackRef = useRef(false);
+    const sectionListRef = useRef<any>(null);
 
     // Queries
     const { data: statusData } = useGetShoppingListStatusQuery();
@@ -97,12 +102,23 @@ const ShoppingList: React.FC = () => {
         shoppingItemType,
     });
 
+    const activeCategoryIds = useMemo<(number | null)[]>(() => {
+        const activeId = activeCategory?.id;
+        if (!Object.prototype.hasOwnProperty.call(activeCategory || {}, 'id')) {
+            return [];
+        }
+        if (Array.isArray(activeId)) {
+            return activeId as (number | null)[];
+        }
+        return [activeId as number | null];
+    }, [activeCategory]);
+
     // const [localListData, setLocalListData]
     // = useState<{ content: any[], totalPages: number, totalElements: number, pageNumber: number}>({ content: [], totalPages: 0, totalElements: 0, pageNumber: 0 });
     const { data: listData, isLoading: isListLoading, isFetching, refetch } = useGetShoppingListQuery({
-        categories: activeCategory?.id ? [activeCategory.id] : [],
-        withExcluded: excluded,
         itemType: separateRescueItems ? itemType : null,
+        categories: activeCategoryIds,
+        withExcluded: excluded,
         page,
         size: 20,
     });
@@ -143,15 +159,24 @@ const ShoppingList: React.FC = () => {
 
     const tabs = useMemo(() => {
         const categories = categoriesData || [];
-        return [{ name: 'All' }, ...categories];
+        const normalized = categories
+            .filter(category => category && typeof category.name === 'string' && category.name.trim() !== '')
+            .map(category => ({ ...category, name: category.name.trim() }));
+        return [ALL_CATEGORY, ...normalized];
     }, [categoriesData]);
+
+    const uncategorizedCategoryName = useMemo(() => (
+        tabs.find(tab => tab?.id === null || tab?.id === 0)?.name || ADDITIONAL_CATEGORY_NAME
+    ), [tabs]);
 
     const groupedList: GroupedItem[] = useMemo(() => {
         const items = listData?.content || [];
         const grouped: Record<string, any[]> = {};
 
         items.forEach((item: any) => {
-            const categoryName = item.shoppingCartCategory?.name || 'Other';
+            const categoryName = item?.shoppingCartCategory?.name
+                || item?.food?.shoppingCartCategory?.name
+                || uncategorizedCategoryName;
             if (!grouped[categoryName]) {
                 grouped[categoryName] = [];
             }
@@ -162,7 +187,33 @@ const ShoppingList: React.FC = () => {
             title,
             data,
         }));
-    }, [listData]);
+    }, [listData, uncategorizedCategoryName]);
+
+    const itemPositionById = useMemo(() => {
+        const position = new Map<number, { sectionIndex: number; itemIndex: number }>();
+        groupedList.forEach((section, sectionIndex) => {
+            section.data.forEach((item, itemIndex) => {
+                if (item?.id) {
+                    position.set(item.id, { sectionIndex, itemIndex });
+                }
+            });
+        });
+        return position;
+    }, [groupedList]);
+
+    const handleAmountFocus = useCallback((itemId: number) => {
+        const location = itemPositionById.get(itemId);
+        if (!location || !sectionListRef.current?.scrollToLocation) {
+            return;
+        }
+        sectionListRef.current.scrollToLocation({
+            sectionIndex: location.sectionIndex,
+            itemIndex: location.itemIndex,
+            viewPosition: 0.35,
+            viewOffset: 120,
+            animated: true,
+        });
+    }, [itemPositionById]);
 
     const isOriginalConfirmed = useMemo(() => (
         confirmedItemsType === SHOPPING_CONFIRMED_ITEM_TYPE.ORIGINAL
@@ -236,7 +287,7 @@ const ShoppingList: React.FC = () => {
             return;
         }
         if (status === SHOPPING_STATUS.CONFIRMED || status === SHOPPING_STATUS.SHOP_ON_MY_OWN) {
-            navigation.navigate(ROUTES.DAY_OVERVIEW);
+            navigation.navigate(ROUTES.MAIN);
             return;
         }
         navigation.goBack();
@@ -279,7 +330,7 @@ const ShoppingList: React.FC = () => {
             await confirmShopOnMyOwn({}).unwrap();
             dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
             setIsFinalizeOpen(false);
-            navigation.navigate(ROUTES.SHOPPING_LIST, { isShopOnMyOwn: true });
+            navigation.dispatch(StackActions.replace(ROUTES.SHOPPING_LIST, { isShopOnMyOwn: true }));
         } catch (error) {
             console.error('Error finalizing shopping list:', error);
         }
@@ -358,13 +409,13 @@ const ShoppingList: React.FC = () => {
 
     const handleGetRescue = useCallback(() => {
         dispatch(setItemType(SHOPPING_ITEM_TYPE.RESCUE));
-        dispatch(setActiveCategory({ name: 'All' }));
+        dispatch(setActiveCategory(ALL_CATEGORY));
         setPage(0);
     }, [dispatch]);
 
     const handleGetOriginal = useCallback(() => {
         dispatch(setItemType(SHOPPING_ITEM_TYPE.ORIGINAL));
-        dispatch(setActiveCategory({ name: 'All' }));
+        dispatch(setActiveCategory(ALL_CATEGORY));
         setPage(0);
     }, [dispatch]);
 
@@ -397,9 +448,9 @@ const ShoppingList: React.FC = () => {
         return null;
     }, [currentStep, shoppingListDates, status, route.params]);
 
-    const renderSectionHeader = useCallback(({ section: { title } }: { section: GroupedItem }) => (
+    const renderSectionHeader = useCallback(({ section }: any) => (
         <View style={styles.section}>
-            <Text variant="h3" style={styles.sectionTitle}>{title}</Text>
+            <Text variant="h3" style={styles.sectionTitle}>{section?.title}</Text>
         </View>
     ), []);
     // const renderSectionHeader = useCallback(({ section: { title } }: { section: GroupedItem }) => (
@@ -475,9 +526,14 @@ const ShoppingList: React.FC = () => {
                     No shopping list was found
                 </Text>
             ) : (
-                <SectionList
+                <KeyboardAwareSectionList
+                    enableOnAndroid
+                    ref={sectionListRef}
                     sections={groupedList}
+                    extraScrollHeight={120}
+                    keyboardOpeningTime={0}
                     stickySectionHeadersEnabled
+                    keyboardShouldPersistTaps="handled"
                     renderSectionHeader={renderSectionHeader}
                     keyExtractor={(item, index) => `${item.id}_${index}`}
                     renderItem={({ item }) => (
@@ -487,6 +543,7 @@ const ShoppingList: React.FC = () => {
                             disabled={isLoading}
                             isConfirmed={isConfirmed}
                             onUpdate={handleUpdateItem}
+                            onAmountFocus={handleAmountFocus}
                         />
                     )}
                     onEndReached={() => {

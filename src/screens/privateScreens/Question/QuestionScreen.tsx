@@ -1,7 +1,7 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/fontawesome5';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { memo, useState, useCallback, useEffect } from 'react';
-import { useNavigation, useRoute, StackActions } from '@react-navigation/native';
 import {
     View,
     Alert,
@@ -22,6 +22,7 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
+import { navigate as rootNavigate } from 'services/navigation';
 import { QUESTION_TYPE, QUESTION_RESPONSE_TYPE } from 'constants/spec';
 import {
     useAnswerFoodQuestionMutation,
@@ -29,9 +30,6 @@ import {
     useAnswerGeneralQuestionMutation,
 } from 'store/api/questionApi';
 import type { ResponseItem } from 'types/question';
-
-// Question-related screen names for filtering
-const QUESTION_SCREENS = [ROUTES.QUESTION, ROUTES.QUESTION_CATEGORY, ROUTES.QUESTION_LIST];
 
 const QuestionScreen: React.FC = () => {
     const theme = useTheme();
@@ -73,33 +71,16 @@ const QuestionScreen: React.FC = () => {
             : !selectedId;
 
     const navigateToOrigin = useCallback(() => {
-        const state = navigation.getState();
+        const target = typeof backLink === 'string' && backLink
+            ? backLink
+            : ROUTES.MAIN;
 
-        if (!state || !state.routes) {
+        if (navigation?.canGoBack?.()) {
             navigation.goBack();
-            return;
         }
 
-        const routes = state.routes;
-        const currentIndex = state.index;
-
-        let targetIndex = -1;
-        for (let i = currentIndex - 1; i >= 0; i--) {
-            if (!QUESTION_SCREENS.includes(routes[i].name as any)) {
-                targetIndex = i;
-                break;
-            }
-        }
-
-        if (targetIndex >= 0) {
-            // Calculate how many screens to pop
-            const popCount = currentIndex - targetIndex;
-            navigation.dispatch(StackActions.pop(popCount));
-        } else {
-            // Fallback: pop to the top of the stack
-            navigation.dispatch(StackActions.popToTop());
-        }
-    }, [navigation]);
+        rootNavigate(target as any, date ? ({ date } as any) : undefined);
+    }, [navigation, backLink, date]);
 
     useEffect(() => {
         const handleBackPress = () => {

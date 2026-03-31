@@ -29,6 +29,7 @@ export interface DayOverviewState {
     overview: Record<string, any>;
     phaseId: number | string | null;
   };
+  pendingOpenPhaseId: number | string | null;
   byDate: Record<string, DayOverviewByDateEntry>;
   // Track recently completed phases for animation
   recentlyCompletedPhases: (number | string)[];
@@ -52,6 +53,7 @@ const initialState: DayOverviewState = {
         phaseId: null,
     },
     byDate: {},
+    pendingOpenPhaseId: null,
     recentlyCompletedPhases: [],
 };
 
