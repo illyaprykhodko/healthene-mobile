@@ -1,18 +1,20 @@
 // outsource dependencies
-import React, { memo, useCallback, useEffect } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
-import { useNavigation, useRoute, StackActions } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { memo, useCallback, useEffect, useLayoutEffect } from 'react';
 
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
+import BackBtn from 'components/BackBtn';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
+import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
-// import { ROUTES } from 'constants/routes';
 import YoutubeVideo from 'components/YoutubeVideo';
 import PrivateVideo from 'components/PrivateVideo';
 import { VIDEO_LIBRARY_TYPE } from 'constants/spec';
+import { navigate as rootNavigate } from 'services/navigation';
 import {
     useMarkGeneralVideoWatchedMutation,
     useMarkOverviewVideoWatchedMutation,
@@ -56,7 +58,7 @@ const VideoScreen: React.FC = () => {
                         await markOverviewWatched(id).unwrap();
                         break;
                     default:
-                        console.log('Unknown library type:', library);
+                        break;
                 }
             } catch (error) {
                 console.error('Failed to mark video as watched:', error);
@@ -67,24 +69,18 @@ const VideoScreen: React.FC = () => {
     }, [id, library, markHealthProfileWatched, markGeneralWatched, markOverviewWatched]);
 
     const handleClose = useCallback(() => {
-        if (backLink) {
-            // Try to pop back to the backLink screen
-            const state = navigation.getState();
-            if (state?.routes) {
-                const backLinkIndex = state.routes.findIndex(
-                    (r: any) => r.name === backLink
-                );
-                if (backLinkIndex >= 0 && backLinkIndex < state.index) {
-                    const popCount = state.index - backLinkIndex;
-                    navigation.dispatch(StackActions.pop(popCount));
-                    return;
-                }
-            }
-            navigation.navigate(backLink);
-        } else {
+        if (navigation?.canGoBack?.()) {
             navigation.goBack();
         }
+
+        rootNavigate((backLink || ROUTES.ROOT_VIDEO_LIBRARY) as any);
     }, [backLink, navigation]);
+
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerLeft: () => <BackBtn onPress={handleClose} color={theme.colors.white} />,
+        });
+    }, [navigation, handleClose, theme.colors.white]);
 
     const renderVideoPlayer = () => {
         if (!video) {

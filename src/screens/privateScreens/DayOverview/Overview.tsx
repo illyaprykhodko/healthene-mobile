@@ -581,7 +581,7 @@ export const Overview: React.FC = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const dispatch = useAppDispatch();
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const { date, showCalendar, calendarDays, recentlyCompletedPhases } = useAppSelector(selectDayOverview);
+    const { date, showCalendar, calendarDays, recentlyCompletedPhases, pendingOpenPhaseId } = useAppSelector(selectDayOverview);
     const currentDate = date || moment().format('YYYY-MM-DD');
     const isFocused = useIsFocused();
     const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
@@ -659,6 +659,7 @@ export const Overview: React.FC = () => {
             entityType: 'PATIENT_FOOD',
             onApply: async (payload: any) => {
                 try {
+                    let targetPhaseId: number | string | null = patientPhase?.id ?? null;
                     const selectedItemData = payload.item || payload;
                     const selectedItem = { ...selectedItemData?.item };
                     const itemEntityType = selectedItemData?.entityType || 'FOOD';
@@ -696,9 +697,10 @@ export const Overview: React.FC = () => {
                                     type: OVERVIEW_TYPE.ADDED_BY_PATIENT,
                                 },
                             });
+                            targetPhaseId = patientPhase.id;
                         } else {
                             // Create new ADDED_BY_PATIENT phase
-                            await createPatientPhase({
+                            const createdPhase = await createPatientPhase({
                                 dayOverviewId: data.id,
                                 data: {
                                     items: [newItem],
@@ -707,7 +709,8 @@ export const Overview: React.FC = () => {
                                     status: PHASE_ITEM_STATUS.PENDING,
                                     type: OVERVIEW_TYPE.ADDED_BY_PATIENT,
                                 },
-                            });
+                            }).unwrap();
+                            targetPhaseId = createdPhase?.id ?? targetPhaseId;
                         }
                     } else if (itemEntityType === ENTITY_TYPE.RECIPE || itemEntityType === 'PATIENT_RECIPES' || itemEntityType === 'RESTAURANT') {
                         const hasModifiedIngredients = selectedItem?.recipe?.ingredients?.some((ing: any) => ing?.modified);
@@ -730,9 +733,10 @@ export const Overview: React.FC = () => {
                                 data: recipeItem,
                                 phaseId: patientPhase.id,
                             });
+                            targetPhaseId = patientPhase.id;
                         } else {
                             // Create new phase with recipe
-                            await createPatientPhaseWithCustomRecipe({
+                            const createdPhase = await createPatientPhaseWithCustomRecipe({
                                 dayOverviewId: data.id,
                                 data: {
                                     item: recipeItem,
@@ -740,15 +744,32 @@ export const Overview: React.FC = () => {
                                     status: PHASE_ITEM_STATUS.PENDING,
                                     type: OVERVIEW_TYPE.ADDED_BY_PATIENT,
                                 },
-                            });
+                            }).unwrap();
+                            targetPhaseId = createdPhase?.id ?? targetPhaseId;
                         }
+                    }
+
+                    if (targetPhaseId) {
+                        dispatch(meta({ pendingOpenPhaseId: targetPhaseId }));
                     }
                 } catch (error) {
                     console.error('Error adding item to patient phase:', error);
                 }
             }
         });
-    }, [data, currentDate, navigation, createPatientPhase, createPatientPhaseWithCustomRecipe, updatePatientPhase, addPhaseCustomRecipe]);
+    }, [data, currentDate, navigation, createPatientPhase, createPatientPhaseWithCustomRecipe, updatePatientPhase, addPhaseCustomRecipe, dispatch]);
+
+    useEffect(() => {
+        if (!isFocused || !pendingOpenPhaseId) {
+            return;
+        }
+
+        dispatch(meta({ pendingOpenPhaseId: null }));
+        (navigation as any).navigate('Edit', {
+            date: currentDate,
+            phaseId: pendingOpenPhaseId,
+        });
+    }, [isFocused, pendingOpenPhaseId, navigation, currentDate, dispatch]);
 
     useEffect(() => {
         moment.updateLocale('en', { week: { dow: 1 } });

@@ -26,7 +26,6 @@ import {
 } from 'store/api/shoppingApi';
 import HorizontalMenu from 'components/HorizontalMenu';
 import ConfirmationAlert from 'components/ConfirmationAlert';
-import { filters } from 'services/filter';
 
 interface StockItem {
     id: number;
@@ -47,24 +46,30 @@ interface GroupedSection {
     data: StockItem[];
 }
 
+const ALL_CATEGORY: { name: string; id?: number | null } = { name: 'All' };
+const ADDITIONAL_CATEGORY_NAME = 'Additional';
+
 const StockList: React.FC = () => {
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
 
     const [open, setOpen] = useState(true);
-    const [activeCategory, setActiveCategory] = useState<{ name: string; id?: number }>({ name: 'All' });
+    const [activeCategory, setActiveCategory] = useState<{ name: string; id?: number | null }>(ALL_CATEGORY);
     const [page, setPage] = useState(0);
     const checkedItems = useAppSelector(selectCheckedStockItems);
+    const hasActiveCategoryId = Object.prototype.hasOwnProperty.call(activeCategory || {}, 'id');
+    const selectedStockCategoryId = hasActiveCategoryId
+        ? activeCategory.id
+        : undefined;
     const { data: stockData, isLoading, isFetching } = useGetStockListQuery({
-        // activeCategory.id && shoppingCartCategoryId: activeCategory.id,
-        shoppingCartCategoryId: activeCategory.id ? activeCategory.id : undefined,
+        shoppingCartCategoryId: selectedStockCategoryId,
         page,
         size: 20,
     });
     // const { data: stockData, isLoading } = useGetStockListQuery();
     const [updateStock, { isLoading: isUpdating }] = useUpdateStockItemsMutation();
     const { data: categoriesData } = useGetStockCategoriesQuery();
-    const [moveStocksToShoppingList, { isLoading: isMoving }] = useMoveStocksToShoppingListMutation();
+    const [moveStocksToShoppingList] = useMoveStocksToShoppingListMutation();
     const stockList = stockData?.content || [];
     // Get unique categories
     // const tabs = useMemo(() => {
@@ -82,8 +87,15 @@ const StockList: React.FC = () => {
     // }, [stockList]);
     const tabs = useMemo(() => {
         const categories = categoriesData || [];
-        return [{ name: 'All' }, ...categories];
+        const normalized = categories
+            .filter(category => category && typeof category.name === 'string' && category.name.trim() !== '')
+            .map(category => ({ ...category, name: category.name.trim() }));
+        return [ALL_CATEGORY, ...normalized];
     }, [categoriesData]);
+
+    const uncategorizedCategoryName = useMemo(() => (
+        tabs.find(tab => tab?.id === null || tab?.id === 0)?.name || ADDITIONAL_CATEGORY_NAME
+    ), [tabs]);
     // Filter and group by category
     const groupedList: GroupedSection[] = useMemo(() => {
         // let filtered = stockList;
@@ -95,7 +107,9 @@ const StockList: React.FC = () => {
 
         const grouped: Record<string, StockItem[]> = {};
         stockList.forEach((item: StockItem) => {
-            const categoryName = item.food?.shoppingCartCategory?.name || 'Other';
+            const categoryName = item.food?.shoppingCartCategory?.name
+                || (item as any)?.shoppingCartCategory?.name
+                || uncategorizedCategoryName;
             if (!grouped[categoryName]) {
                 grouped[categoryName] = [];
             }
@@ -103,7 +117,7 @@ const StockList: React.FC = () => {
         });
 
         return Object.entries(grouped).map(([title, data]) => ({ title, data }));
-    }, [stockList, activeCategory]);
+    }, [stockList, uncategorizedCategoryName]);
 
     useLayoutEffect(() => {
         navigation.setOptions({
