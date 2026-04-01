@@ -38,9 +38,12 @@ export type RootStackParamList = {
   [ROUTES.ABOUT_PLAN]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
   [ROUTES.MESSAGE_LIST]: undefined;
+  [ROUTES.GAMBLING_HOME]: undefined;
+  [ROUTES.GAMBLING_BANK]: undefined;
   [ROUTES.WRITE_MESSAGE]: undefined;
   [ROUTES.NOTIFICATIONS]: undefined;
   [ROUTES.PROFILE_STATS]: undefined;
+  [ROUTES.GAMBLING_GAMES]: undefined;
   [ROUTES.SETTINGS_STACK]: undefined;
   [ROUTES.HEALTH_PROFILE]: undefined;
   [ROUTES.FOOD_ALLERGIES]: undefined;
@@ -50,6 +53,7 @@ export type RootStackParamList = {
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;
   [ROUTES.FOOD_PREFERENCES]: undefined;
+  [ROUTES.GAMBLING_CASH_OUT]: undefined;
   [ROUTES.BIOMETRIC_SETTINGS]: undefined;
   [ROUTES.HEALTH_PROFILE_STACK]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
@@ -59,7 +63,7 @@ export type RootStackParamList = {
     id?: number;
     chainId?: number;
   } | undefined;
-
+  
   // Example of a screen that requires params
   [ROUTES.SMART_SCALE]: {
     measurementPhaseItem: object;
@@ -130,6 +134,9 @@ export type RootStackParamList = {
     date?: string;
     measurementPhaseItem?: object;
   };
+  [ROUTES.GAMBLING_SLOT_MACHINE]: {
+    gameType?: 'SLOTS' | 'BLACKJACK';
+  } | undefined;
 };
 
 type RouteName = keyof RootStackParamList;

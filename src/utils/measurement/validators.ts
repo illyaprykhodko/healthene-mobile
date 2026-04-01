@@ -5,7 +5,7 @@
 import * as yup from 'yup';
 // local dependencies
 import type { MeasurementType } from 'types/health';
-import { getMeasurementConfig } from './measurement-config';
+import { getMeasurementConfig, getResolvedMeasurementField } from './measurement-config';
 
 /**
  * Common validation messages
@@ -36,25 +36,27 @@ const createDecimalValidator = (maxPlaces: number) => {
 /**
  * Build validation schema for a specific measurement type
  */
-export const getMeasurementValidationSchema = (type: MeasurementType) => {
+export const getMeasurementValidationSchema = (type: MeasurementType, unitName?: string) => {
     const config = getMeasurementConfig(type);
     const schema: Record<string, yup.AnySchema> = {};
+    const effectiveUnit = unitName || config.defaultUnit;
 
     config.fields.forEach(field => {
+        const resolvedField = getResolvedMeasurementField(type, field, effectiveUnit);
         if (field.type === 'decimal') {
             let validator = createDecimalValidator(config.maxDecimalPlaces || 1);
       
             // Add min/max validation after converting to number
-            validator = validator.test('min-value', MESSAGES.min(field.min || 0), value => {
+            validator = validator.test('min-value', MESSAGES.min(resolvedField.min || 0), value => {
                 if (!value) { return true; }
                 const num = parseFloat(value.replace(',', '.'));
-                return field.min !== undefined ? num >= field.min : true;
+                return resolvedField.min !== undefined ? num >= resolvedField.min : true;
             });
 
-            validator = validator.test('max-value', MESSAGES.max(field.max || Infinity), value => {
+            validator = validator.test('max-value', MESSAGES.max(resolvedField.max || Infinity), value => {
                 if (!value) { return true; }
                 const num = parseFloat(value.replace(',', '.'));
-                return field.max !== undefined ? num <= field.max : true;
+                return resolvedField.max !== undefined ? num <= resolvedField.max : true;
             });
 
             schema[field.name] = validator.required(MESSAGES.required);
@@ -64,11 +66,11 @@ export const getMeasurementValidationSchema = (type: MeasurementType) => {
                 .number()
                 .typeError(MESSAGES.number);
 
-            if (field.min !== undefined) {
-                validator = validator.min(field.min, MESSAGES.min(field.min));
+            if (resolvedField.min !== undefined) {
+                validator = validator.min(resolvedField.min, MESSAGES.min(resolvedField.min));
             }
-            if (field.max !== undefined) {
-                validator = validator.max(field.max, MESSAGES.max(field.max));
+            if (resolvedField.max !== undefined) {
+                validator = validator.max(resolvedField.max, MESSAGES.max(resolvedField.max));
             }
 
             schema[field.name] = validator.required(MESSAGES.required);

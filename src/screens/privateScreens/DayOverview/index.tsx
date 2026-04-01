@@ -40,6 +40,13 @@ import WeightMeasurementScreen from '../WeightMeasurementScreen';
 import { ReplacementScreen, ReplaceItemsScreen } from './Replacement';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
 import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
+import {
+    GamblingGameSelectionScreen,
+    GamblingSlotMachineScreen,
+    GamblingCashOutScreen,
+    GamblingLobbyScreen,
+    GamblingBankScreen,
+} from '../Gambling';
 
 const Stack = createNativeStackNavigator();
 
@@ -236,6 +243,49 @@ const DayOverviewStack: React.FC = () => {
                     headerTitleStyle: { fontSize: 18 },
                     header: renderCustomHeader({ title: (route.params as any)?.title || 'Replacement Options' }),
                 })}
+            />
+
+            <Stack.Screen
+                name={ROUTES.GAMBLING_HOME}
+                component={GamblingLobbyScreen}
+                options={{
+                    title: 'Games',
+                    header: renderCustomHeader({ title: 'Games' }),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.GAMBLING_GAMES}
+                component={GamblingGameSelectionScreen}
+                options={{
+                    title: 'Games',
+                    header: renderCustomHeader({ title: 'Games' }),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.GAMBLING_SLOT_MACHINE}
+                component={GamblingSlotMachineScreen}
+                options={{
+                    animation: 'fade',
+                    headerShown: false,
+                    presentation: 'transparentModal',
+                    contentStyle: { backgroundColor: 'transparent' },
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.GAMBLING_CASH_OUT}
+                component={GamblingCashOutScreen}
+                options={{
+                    title: 'Cash Out',
+                    header: renderCustomHeader({ title: 'Cash Out' }),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.GAMBLING_BANK}
+                component={GamblingBankScreen}
+                options={{
+                    title: 'Bank',
+                    header: renderCustomHeader({ title: '$ Bank' }),
+                }}
             />
 
             {/* Question Screens */}

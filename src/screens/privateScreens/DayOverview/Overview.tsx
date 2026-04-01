@@ -447,6 +447,14 @@ const styles = StyleSheet.create({
         right: 20,
         bottom: 90,
     },
+    gamblingBtn: {
+        position: 'absolute',
+        left: 20,
+        bottom: 90,
+        backgroundColor: '#2978A0',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     addBtn: {
         position: 'absolute',
         right: 20,
@@ -758,6 +766,10 @@ export const Overview: React.FC = () => {
             }
         });
     }, [data, currentDate, navigation, createPatientPhase, createPatientPhaseWithCustomRecipe, updatePatientPhase, addPhaseCustomRecipe, dispatch]);
+
+    const handleGamblingPress = useCallback(() => {
+        (navigation as any).navigate(ROUTES.GAMBLING_HOME);
+    }, [navigation]);
 
     useEffect(() => {
         if (!isFocused || !pendingOpenPhaseId) {
@@ -1127,6 +1139,22 @@ export const Overview: React.FC = () => {
                             </Text>
                         </View>
                     </View>
+                </TouchableOpacity>
+            )}
+
+            {!showCalendar && (
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={handleGamblingPress}
+                    style={[
+                        styles.gamblingBtn,
+                        styles.shadowBtn,
+                        styles.roundBtn,
+                    ]}
+                >
+                    <Text variant="h2" style={{ color: '#FFFFFF', fontFamily: 'Outfit-Bold' }}>
+                        $
+                    </Text>
                 </TouchableOpacity>
             )}
 

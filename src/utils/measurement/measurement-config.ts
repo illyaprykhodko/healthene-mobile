@@ -3,7 +3,11 @@
  * Maps measurement types to their metadata (fields, units, validation rules)
  */
 // local dependencies
-import type { MeasurementConfig, MeasurementType } from 'types/health';
+import type {
+    MeasurementType,
+    MeasurementConfig,
+    MeasurementFieldConfig,
+} from 'types/health';
 
 /**
  * Measurement unit IDs from backend
@@ -118,6 +122,14 @@ export const MEASUREMENT_CONFIG: Record<MeasurementType, MeasurementConfig> = {
         maxDecimalPlaces: 1,
         defaultUnit: 'mmol/L',
         supportsHealthApp: true,
+        unitFieldOverrides: {
+            'mmol/L': {
+                value: { min: 0, max: 30, placeholder: '5.5' },
+            },
+            'mg/dL': {
+                value: { min: 20, max: 600, placeholder: '100' },
+            },
+        },
     },
 
     TEMPERATURE: {
@@ -139,6 +151,14 @@ export const MEASUREMENT_CONFIG: Record<MeasurementType, MeasurementConfig> = {
         defaultUnit: '°F',
         maxDecimalPlaces: 1,
         supportsHealthApp: false,
+        unitFieldOverrides: {
+            '°F': {
+                value: { min: 90, max: 110, placeholder: '98.6' },
+            },
+            '°C': {
+                value: { min: 30, max: 45, placeholder: '36.6' },
+            },
+        },
     },
 
     HEART_RATE: {
@@ -311,6 +331,26 @@ export const getMeasurementConfig = (type: MeasurementType): MeasurementConfig =
         throw new Error(`Unknown measurement type: ${type}`);
     }
     return config;
+};
+
+/**
+ * Resolve field config with unit-specific overrides (min/max/placeholder).
+ */
+export const getResolvedMeasurementField = (
+    type: MeasurementType,
+    field: MeasurementFieldConfig,
+    unitName?: string,
+): MeasurementFieldConfig => {
+    const config = getMeasurementConfig(type);
+    const effectiveUnit = unitName || config.defaultUnit;
+    const override = config.unitFieldOverrides?.[effectiveUnit]?.[field.name];
+    if (!override) {
+        return field;
+    }
+    return {
+        ...field,
+        ...override,
+    };
 };
 
 /**

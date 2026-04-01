@@ -25,9 +25,11 @@ export interface SwipeablePanelProps {
     closeRootStyle?: ViewStyle;
     showCloseButton?: boolean;
     closeOnTouchOutside?: boolean;
+    enableDynamicSizing?: boolean;
     enablePanDownToClose?: boolean;
     onPressCloseButton?: () => void;
     snapPoints?: (string | number)[];
+    enableContentPanningGesture?: boolean;
 }
 
 export interface SwipeablePanelRef {
@@ -48,8 +50,10 @@ export const SwipeablePanel = forwardRef<SwipeablePanelRef, SwipeablePanelProps>
             onPressCloseButton,
             showCloseButton = true,
             closeOnTouchOutside = true,
+            enableDynamicSizing = true,
             snapPoints = ['50%', '80%'],
             enablePanDownToClose = true,
+            enableContentPanningGesture = true,
         },
         ref
     ) => {
@@ -113,7 +117,9 @@ export const SwipeablePanel = forwardRef<SwipeablePanelRef, SwipeablePanelProps>
                 keyboardBlurBehavior="restore"
                 backdropComponent={renderBackdrop}
                 android_keyboardInputMode="adjustResize"
+                enableDynamicSizing={enableDynamicSizing}
                 enablePanDownToClose={enablePanDownToClose}
+                enableContentPanningGesture={enableContentPanningGesture}
                 backgroundStyle={[
                     styles.bottomSheetBackground,
                     { backgroundColor: theme.colors.surface },

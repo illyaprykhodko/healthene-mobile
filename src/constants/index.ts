@@ -1,6 +1,5 @@
 // outsource dependencies
 import env from 'react-native-config';
-import { Platform } from 'react-native';
 // API Configuration
 // export const config = {
 //   DEBUG: __DEV__,
@@ -11,6 +10,7 @@ import { Platform } from 'react-native';
 
 export const config = {
     apiPath: env.API_PATH,
+    gameSlots: env.GAME_SLOTS,
     landingUrl: env.LANDING_URL,
     websiteUrl: env.WEBSITE_URL,
     serviceUrl: env.SERVICE_URL,
