@@ -71,6 +71,12 @@ export interface MeasurementFieldConfig {
   type: 'number' | 'decimal';
 }
 
+export interface MeasurementFieldOverride {
+  min?: number;
+  max?: number;
+  placeholder?: string;
+}
+
 /**
  * Complete measurement configuration
  */
@@ -81,6 +87,7 @@ export interface MeasurementConfig {
   maxDecimalPlaces?: number;
   supportsHealthApp: boolean; // Can fetch from HealthKit/GoogleFit
   fields: MeasurementFieldConfig[];
+  unitFieldOverrides?: Record<string, Record<string, MeasurementFieldOverride>>;
 }
 
 /**

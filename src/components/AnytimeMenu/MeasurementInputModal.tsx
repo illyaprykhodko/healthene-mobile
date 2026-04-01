@@ -25,6 +25,7 @@ import type { MeasurementType } from 'types/health';
 // utils
 import {
     getMeasurementConfig,
+    getResolvedMeasurementField,
     getMeasurementValidationSchema,
 } from 'utils/measurement';
 // local dependencies
@@ -54,11 +55,6 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
         () => getMeasurementConfig(measurementType),
         [measurementType],
     );
-    const validationSchema = useMemo(
-        () => getMeasurementValidationSchema(measurementType),
-        [measurementType],
-    );
-
     const availableUnits = useMemo(() => {
         if (item.measurement?.units?.length) {
             return item.measurement.units;
@@ -68,6 +64,15 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
 
     const [selectedUnit, setSelectedUnit] = useState(
         availableUnits[0]?.name || config.defaultUnit
+    );
+
+    const validationSchema = useMemo(
+        () => getMeasurementValidationSchema(measurementType, selectedUnit),
+        [measurementType, selectedUnit],
+    );
+    const resolvedFields = useMemo(
+        () => config.fields.map(field => getResolvedMeasurementField(measurementType, field, selectedUnit)),
+        [config.fields, measurementType, selectedUnit],
     );
     const [isPanelOpen, setIsPanelOpen] = useState(false);
     const [hasLastMeasurement, setHasLastMeasurement] = useState(false);
@@ -104,11 +109,11 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
     // Initial form values
     const initialValues = useMemo(() => {
         const values: Record<string, string> = {};
-        config.fields.forEach(field => {
+        resolvedFields.forEach(field => {
             values[field.name] = '';
         });
         return values;
-    }, [config]);
+    }, [resolvedFields]);
     // Handle fetch from health app
     // const handleFetchFromHealth = async (setValues: (values: any) => void) => {
     //     try {
@@ -229,7 +234,7 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                                         }
                                     />
                                 ) : (
-                                    config.fields.map(field => (
+                                    resolvedFields.map(field => (
                                         <MeasurementField
                                             field={field}
                                             key={field.name}

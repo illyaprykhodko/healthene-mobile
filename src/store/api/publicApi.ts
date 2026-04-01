@@ -33,7 +33,8 @@ export const publicApi = createApi({
         getUpdatePolicy: builder.query<MobileUpdateConfig, void>({
             query: () => ({
                 method: 'GET',
-                url: 'patient-service/public/mobile-config',
+                url: 'patient-service/public/mobile-app/version',
+                // url: 'patient-service/public/mobile-config',
             }),
         }),
     }),
