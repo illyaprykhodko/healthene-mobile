@@ -26,15 +26,18 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 // Video size constant - all videos use the same dimensions (adjust this value as needed)
 export const VIDEO_SIZE = 80;
 
+/** Must match `Animated.View` `right` while phase is FLYING (wider clip is inset from the edge). */
+const RIGHT_ANCHOR_FLYING = VIDEO_SIZE / 2;
+
 export const BIRD_ANIMATION_CONFIG = {
     INITIAL_POSITION: {
         top: 40,
         right: -3,
     },
     TAKEOFF_OFFSET_Y: -30,
+    /** Vertical target for the flying phase; horizontal end is screen center (computed in the effect). */
     FLY_TARGET: {
-        x: -SCREEN_WIDTH + VIDEO_SIZE,
-        y: SCREEN_HEIGHT + 12,
+        y: SCREEN_HEIGHT,
     },
     // X position (from left) where the bird stops under the checkbox - listItem paddingLeft(20) + checkbox marginLeft(15) + half checkbox(11) ≈ 46
     WALKING_STOP_OFFSET: 50,
@@ -65,11 +68,11 @@ export enum BirdAnimationPhase {
 export const VIDEO_SIZE_CONFIG: Record<BirdAnimationPhase, { width: number; height: number }> = {
     [BirdAnimationPhase.APPEARING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
     [BirdAnimationPhase.SITTING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
-    [BirdAnimationPhase.TAKEOFF]: { width: VIDEO_SIZE + 34, height: VIDEO_SIZE + 34 },
-    [BirdAnimationPhase.FLYING]: { width: VIDEO_SIZE + 38, height: VIDEO_SIZE + 38 },
-    [BirdAnimationPhase.WALKING]: { width: VIDEO_SIZE + 38, height: VIDEO_SIZE + 38 },
-    [BirdAnimationPhase.PECKING]: { width: VIDEO_SIZE + 38, height: VIDEO_SIZE + 38 },
-    [BirdAnimationPhase.FLYING_AWAY]: { width: VIDEO_SIZE + 58, height: VIDEO_SIZE + 58 },
+    [BirdAnimationPhase.TAKEOFF]: { width: VIDEO_SIZE + 68, height: VIDEO_SIZE + 68 },
+    [BirdAnimationPhase.FLYING]: { width: VIDEO_SIZE + 10, height: VIDEO_SIZE + 10 },
+    [BirdAnimationPhase.WALKING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
+    [BirdAnimationPhase.PECKING]: { width: VIDEO_SIZE + 10, height: VIDEO_SIZE + 10 },
+    [BirdAnimationPhase.FLYING_AWAY]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
     [BirdAnimationPhase.FINISHED]: { width: 0, height: 0 },
 };
 
@@ -77,10 +80,11 @@ export const VIDEO_SIZE_CONFIG: Record<BirdAnimationPhase, { width: number; heig
 export const CONTAINER_TOP_CONFIG: Record<BirdAnimationPhase, number> = {
     [BirdAnimationPhase.APPEARING]: 40,
     [BirdAnimationPhase.SITTING]: 40,
-    [BirdAnimationPhase.TAKEOFF]: 6,
-    [BirdAnimationPhase.FLYING]: 10,
-    [BirdAnimationPhase.WALKING]: 10,
-    [BirdAnimationPhase.PECKING]: 10,
+    [BirdAnimationPhase.TAKEOFF]: 30,
+    [BirdAnimationPhase.FLYING]: 34,
+    [BirdAnimationPhase.WALKING]: 30,
+    // Same as WALKING so peck starts exactly where the walk ended (no container jump).
+    [BirdAnimationPhase.PECKING]: 30,
     [BirdAnimationPhase.FLYING_AWAY]: 10,
     [BirdAnimationPhase.FINISHED]: 0,
 };
@@ -125,12 +129,22 @@ interface BirdAnimationProps {
 // ============================================================================
 export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAnimationProps) => {
     const webViewRef = useRef<WebView>(null);
-    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.APPEARING);
+    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.APPEARING  );
     const [DOMReady, setDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
     const [videoCache, setVideoCache] = useState<Map<BirdAnimationPhase, string>>(new Map());
     const isAnimationComplete = useRef<boolean>(false);
+    const allCheckedRef = useRef(allChecked);
+    const phaseRef = useRef(phase);
     const headerHeight = useHeaderHeight();
+
+    useEffect(() => {
+        allCheckedRef.current = allChecked;
+    }, [allChecked]);
+
+    useEffect(() => {
+        phaseRef.current = phase;
+    }, [phase]);
     const insets = useSafeAreaInsets();
 
     // ========================================================================
@@ -186,6 +200,13 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                     
                     window.__VIDEO__.pause();
                     window.__SOURCE__.src = "data:video/quicktime;base64,${base64}";
+                    var phaseTag = "${targetPhase}";
+                    window.__VIDEO__.onended = function() {
+                        window.ReactNativeWebView.postMessage(JSON.stringify({
+                            type: "${WEBVIEW_MESSAGES.VIDEO_ENDED}",
+                            phase: phaseTag
+                        }));
+                    };
                     window.__VIDEO__.load();
                     window.__VIDEO__.play();
                     
@@ -240,6 +261,28 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
     // ========================================================================
     useEffect(() => {
         const config = BIRD_ANIMATION_CONFIG;
+        const rightDefault = config.INITIAL_POSITION.right;
+        const flyVideoHeight = VIDEO_SIZE_CONFIG[BirdAnimationPhase.FLYING].height;
+        const flyContainerTop = CONTAINER_TOP_CONFIG[BirdAnimationPhase.FLYING];
+        const birdYAtFlyEnd =
+            config.FLY_TARGET.y -
+            insets.bottom -
+            COMPONENT_HEIGHT -
+            flyVideoHeight -
+            headerHeight;
+
+        /**
+         * `rightStyle` must match `Animated.View`’s `right` for that phase (FLYING uses RIGHT_ANCHOR_FLYING, others use INITIAL_POSITION.right).
+         * Then (birdX, birdY) + container top matches the same on-screen position as when FLYING ends.
+         */
+        const translateAtFlyFinished = (
+            videoWidth: number,
+            phaseContainerTop: number,
+            rightStyle: number
+        ) => ({
+            x: SCREEN_WIDTH / 2 - SCREEN_WIDTH - rightStyle + videoWidth / 2,
+            y: birdYAtFlyEnd + (flyContainerTop - phaseContainerTop),
+        });
 
         switch (phase) {
             case BirdAnimationPhase.APPEARING:
@@ -250,13 +293,29 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                 break;
 
 
-            case BirdAnimationPhase.FLYING:
-                birdX.value = withTiming(config.FLY_TARGET.x, {
+            case BirdAnimationPhase.FLYING: {
+                const flyVideoWidth = VIDEO_SIZE_CONFIG[BirdAnimationPhase.FLYING].width;
+                const walkVideoWidth = VIDEO_SIZE_CONFIG[BirdAnimationPhase.WALKING].width;
+                const walkContainerTop = CONTAINER_TOP_CONFIG[BirdAnimationPhase.WALKING];
+                const { x: flyTargetX } = translateAtFlyFinished(
+                    flyVideoWidth,
+                    flyContainerTop,
+                    RIGHT_ANCHOR_FLYING
+                );
+                const { y: walkingStartYBase } = translateAtFlyFinished(
+                    walkVideoWidth,
+                    walkContainerTop,
+                    rightDefault
+                );
+                const walkingStartY = walkingStartYBase + 20;
+                // Same on-screen position as first frame of WALKING: containerTop + translateY matches.
+                const flyTargetY = walkContainerTop + walkingStartY - flyContainerTop;
+
+                birdX.value = withTiming(flyTargetX, {
                     duration: config.DURATIONS.FLY_TO_BOTTOM,
                     easing: Easing.inOut(Easing.ease),
                 });
-                const flyVideoHeight = VIDEO_SIZE_CONFIG[BirdAnimationPhase.FLYING].height;
-                birdY.value = withTiming(config.FLY_TARGET.y - insets.bottom - COMPONENT_HEIGHT - flyVideoHeight - headerHeight, {
+                birdY.value = withTiming(flyTargetY, {
                     duration: config.DURATIONS.FLY_TO_BOTTOM,
                     easing: Easing.inOut(Easing.ease),
                 }, finished => {
@@ -265,14 +324,22 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                     }
                 });
                 break;
+            }
 
             case BirdAnimationPhase.WALKING: {
-                const videoWidth = VIDEO_SIZE_CONFIG[BirdAnimationPhase.WALKING].width;
-                const rightOffset = config.INITIAL_POSITION.right;
-                // Use measured checkbox x when available; fallback to WALKING_STOP_OFFSET when 0
+                const walkVideoWidth = VIDEO_SIZE_CONFIG[BirdAnimationPhase.WALKING].width - (VIDEO_SIZE);
+                const walkContainerTop = CONTAINER_TOP_CONFIG[BirdAnimationPhase.WALKING];
+                const { x: walkingStartX, y: walkingStartY } = translateAtFlyFinished(
+                    walkVideoWidth,
+                    walkContainerTop,
+                    rightDefault
+                );
+                birdX.value = walkingStartX;
+                birdY.value = walkingStartY + 20;
+
                 const targetCheckboxX = checkboxAreaX > 0 ? checkboxAreaX : config.WALKING_STOP_OFFSET;
-                // Bird's left edge = SCREEN_WIDTH + rightOffset - videoWidth + translateX; solve for translateX to align with checkbox
-                const walkingTargetX = targetCheckboxX - SCREEN_WIDTH - rightOffset + videoWidth - (VIDEO_SIZE_CONFIG[BirdAnimationPhase.WALKING].width / 2);
+                const walkingTargetX =
+                    targetCheckboxX - SCREEN_WIDTH - rightDefault + walkVideoWidth / 2;
                 birdX.value = withTiming(walkingTargetX, {
                     duration: config.DURATIONS.WALKING,
                     easing: Easing.linear,
@@ -285,19 +352,8 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
             }
 
             case BirdAnimationPhase.PECKING:
+                // Keep birdX / birdY from end of WALKING; same container top, right, and WebView size as walk.
                 break;
-
-            // case BirdAnimationPhase.FLYING_AWAY:
-            //     birdX.value = withTiming(SCREEN_WIDTH + VIDEO_SIZE_CONFIG[BirdAnimationPhase.FLYING_AWAY].width, {
-            //         duration: config.DURATIONS.FLYING_AWAY,
-            //         easing: Easing.in(Easing.ease),
-            //     }, finished => {
-            //         if (finished) {
-            //             scheduleOnRN(handleFlyingAwayComplete);
-            //         }
-            //     });
-            //     break;
-
             case BirdAnimationPhase.FINISHED:
             default:
                 break;
@@ -308,9 +364,14 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
     // TRIGGER TAKEOFF WHEN ALL CHECKBOXES ARE CHECKED
     // ========================================================================
     useEffect(() => {
-        if (allChecked && phase === BirdAnimationPhase.SITTING && !isAnimationComplete.current) {
-            setPhase(BirdAnimationPhase.TAKEOFF);
+        if (
+            !allChecked ||
+            isAnimationComplete.current ||
+            (phase !== BirdAnimationPhase.SITTING && phase !== BirdAnimationPhase.APPEARING)
+        ) {
+            return;
         }
+        setPhase(BirdAnimationPhase.TAKEOFF);
     }, [allChecked, phase]);
 
     // ========================================================================
@@ -327,7 +388,12 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
             const data = JSON.parse(message);
 
             if (data.type === WEBVIEW_MESSAGES.VIDEO_ENDED) {
-                const isLoopedPhase = LOOPED_PHASES.includes(phase);
+                const currentPhase = phaseRef.current;
+                const endedPhase = data.phase as BirdAnimationPhase | undefined;
+                if (endedPhase !== undefined && endedPhase !== currentPhase) {
+                    return;
+                }
+                const isLoopedPhase = LOOPED_PHASES.includes(currentPhase);
 
                 if (isLoopedPhase) {
                     webViewRef.current?.injectJavaScript(`
@@ -340,9 +406,14 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                         })();
                     `);
                 } else {
-                    switch (phase) {
+                    const phaseForTransition = endedPhase ?? currentPhase;
+                    switch (phaseForTransition) {
                         case BirdAnimationPhase.APPEARING:
-                            setPhase(BirdAnimationPhase.SITTING);
+                            setPhase(
+                                allCheckedRef.current
+                                    ? BirdAnimationPhase.TAKEOFF
+                                    : BirdAnimationPhase.SITTING
+                            );
                             break;
                         case BirdAnimationPhase.TAKEOFF:
                             setPhase(BirdAnimationPhase.FLYING);
@@ -366,7 +437,7 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                 setDOMReady(true);
             }
         }
-    }, [phase]);
+    }, []);
 
     // ========================================================================
     // RENDER
@@ -377,7 +448,10 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                 style={[
                     {
                         position: 'absolute',
-                        right: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
+                        right:
+                            phase === BirdAnimationPhase.FLYING
+                                ? RIGHT_ANCHOR_FLYING
+                                : BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
                     },
                     animatedStyle,
                 ]}
@@ -434,7 +508,6 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                                             autoplay
                                             id="video"
                                             playsinline
-                                            onended="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_ENDED}' }))"
                                             onerror="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_FAILED}' }))"
                                             onloadeddata="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_LOADED}' }))"
                                         >

@@ -621,10 +621,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 ? <BirdAnimation allChecked={birdAnimationStep} checkboxAreaX={checkboxAreaX} />
                 : null
             }
-            {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
-                ? <SeedAnimation ref={seedAnimationRef} />
-                : null
-            }
             <View style={[styles.title, isFutureDate && styles.opacity]}>
                 <View>
                     <Text style={styles.titleText}>
