@@ -68,7 +68,7 @@ export enum BirdAnimationPhase {
 export const VIDEO_SIZE_CONFIG: Record<BirdAnimationPhase, { width: number; height: number }> = {
     [BirdAnimationPhase.APPEARING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
     [BirdAnimationPhase.SITTING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
-    [BirdAnimationPhase.TAKEOFF]: { width: VIDEO_SIZE + 68, height: VIDEO_SIZE + 68 },
+    [BirdAnimationPhase.TAKEOFF]: { width: VIDEO_SIZE + 96, height: VIDEO_SIZE + 96 },
     [BirdAnimationPhase.FLYING]: { width: VIDEO_SIZE + 10, height: VIDEO_SIZE + 10 },
     [BirdAnimationPhase.WALKING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
     [BirdAnimationPhase.PECKING]: { width: VIDEO_SIZE + 10, height: VIDEO_SIZE + 10 },
@@ -80,7 +80,7 @@ export const VIDEO_SIZE_CONFIG: Record<BirdAnimationPhase, { width: number; heig
 export const CONTAINER_TOP_CONFIG: Record<BirdAnimationPhase, number> = {
     [BirdAnimationPhase.APPEARING]: 40,
     [BirdAnimationPhase.SITTING]: 40,
-    [BirdAnimationPhase.TAKEOFF]: 30,
+    [BirdAnimationPhase.TAKEOFF]: 24,
     [BirdAnimationPhase.FLYING]: 34,
     [BirdAnimationPhase.WALKING]: 30,
     // Same as WALKING so peck starts exactly where the walk ended (no container jump).
@@ -129,7 +129,7 @@ interface BirdAnimationProps {
 // ============================================================================
 export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAnimationProps) => {
     const webViewRef = useRef<WebView>(null);
-    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.APPEARING  );
+    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.SITTING  );
     const [DOMReady, setDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
     const [videoCache, setVideoCache] = useState<Map<BirdAnimationPhase, string>>(new Map());
@@ -443,7 +443,13 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
     // RENDER
     // ========================================================================
     return phase === BirdAnimationPhase.FINISHED ? null : (
-        <View style={[styles.container, { top: CONTAINER_TOP_CONFIG[phase] }]} key="bird-animation">
+        <View style={[
+          styles.container, 
+          { 
+            top: CONTAINER_TOP_CONFIG[phase],
+            right: phase === BirdAnimationPhase.TAKEOFF ? -7 : -1
+          }
+          ]} key="bird-animation">
             <Animated.View
                 style={[
                     {
@@ -539,7 +545,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 0,
         left: 0,
-        right: 0,
         zIndex: 19999997,
         pointerEvents: 'none',
     },
