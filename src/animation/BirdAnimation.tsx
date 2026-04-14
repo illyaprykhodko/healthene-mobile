@@ -37,13 +37,13 @@ export const BIRD_ANIMATION_CONFIG = {
     TAKEOFF_OFFSET_Y: -30,
     /** Vertical target for the flying phase; horizontal end is screen center (computed in the effect). */
     FLY_TARGET: {
-        y: SCREEN_HEIGHT,
+        y: SCREEN_HEIGHT - 25,
     },
     // X position (from left) where the bird stops under the checkbox - listItem paddingLeft(20) + checkbox marginLeft(15) + half checkbox(11) ≈ 46
-    WALKING_STOP_OFFSET: 50,
+    WALKING_STOP_OFFSET: 40,
     DURATIONS: {
         TAKEOFF_LIFT: 500,
-        FLY_TO_BOTTOM: 3200,
+        FLY_TO_BOTTOM: 2200,
         WALKING: 2000,
         FLYING_AWAY: 6500,
     },
@@ -69,7 +69,7 @@ export const VIDEO_SIZE_CONFIG: Record<BirdAnimationPhase, { width: number; heig
     [BirdAnimationPhase.APPEARING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
     [BirdAnimationPhase.SITTING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
     [BirdAnimationPhase.TAKEOFF]: { width: VIDEO_SIZE + 96, height: VIDEO_SIZE + 96 },
-    [BirdAnimationPhase.FLYING]: { width: VIDEO_SIZE + 10, height: VIDEO_SIZE + 10 },
+    [BirdAnimationPhase.FLYING]: { width: VIDEO_SIZE + 30, height: VIDEO_SIZE + 30 },
     [BirdAnimationPhase.WALKING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
     [BirdAnimationPhase.PECKING]: { width: VIDEO_SIZE + 10, height: VIDEO_SIZE + 10 },
     [BirdAnimationPhase.FLYING_AWAY]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
@@ -81,7 +81,7 @@ export const CONTAINER_TOP_CONFIG: Record<BirdAnimationPhase, number> = {
     [BirdAnimationPhase.APPEARING]: 40,
     [BirdAnimationPhase.SITTING]: 40,
     [BirdAnimationPhase.TAKEOFF]: 24,
-    [BirdAnimationPhase.FLYING]: 34,
+    [BirdAnimationPhase.FLYING]: 54,
     [BirdAnimationPhase.WALKING]: 30,
     // Same as WALKING so peck starts exactly where the walk ended (no container jump).
     [BirdAnimationPhase.PECKING]: 30,
@@ -129,7 +129,7 @@ interface BirdAnimationProps {
 // ============================================================================
 export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAnimationProps) => {
     const webViewRef = useRef<WebView>(null);
-    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.SITTING  );
+    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.TAKEOFF  );
     const [DOMReady, setDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
     const [videoCache, setVideoCache] = useState<Map<BirdAnimationPhase, string>>(new Map());
