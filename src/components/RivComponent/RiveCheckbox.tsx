@@ -1,7 +1,9 @@
 // outsource dependencies
 import React, { useCallback, useEffect, useRef } from 'react';
-import { Pressable, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, StyleProp, ViewStyle, View } from 'react-native';
 import Rive, { Alignment, Fit, RiveRef } from 'rive-react-native';
+import { RiveGeneralEvent, RiveOpenUrlEvent } from 'rive-react-native/lib/typescript/types';
+import log from 'eslint-plugin-react/lib/util/log';
 
 const checkboxRiv = require('../../../assets/riv/checkbox.riv');
 
@@ -10,7 +12,7 @@ const INPUT_IS_CHECKED = 'isChecked';
 
 export interface RiveCheckboxProps {
     checked: boolean;
-    onCheckedChange: (next: boolean) => void;
+    onCheckedChange: () => void;
     disabled?: boolean;
     /** Outer hit target and Rive bounds; default 32. */
     size?: number;
@@ -20,46 +22,43 @@ export interface RiveCheckboxProps {
 
 export const RiveCheckbox: React.FC<RiveCheckboxProps> = ({
     checked,
+    size = 44,
     onCheckedChange,
     disabled = false,
-    size = 32,
     style,
     testID,
 }) => {
     const riveRef = useRef<RiveRef>(null);
+    const isRiveReady = useRef(false);
 
-    const syncRive = useCallback(() => {
+    useEffect(() => {
+        if (!isRiveReady.current) { return; }
         riveRef.current?.setInputState(STATE_MACHINE, INPUT_IS_CHECKED, checked);
     }, [checked]);
 
-    useEffect(() => {
-        syncRive();
-    }, [syncRive]);
-
-    const handlePlay = useCallback(() => {
-        syncRive();
-    }, [syncRive]);
-
     return (
         <Pressable
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked, disabled }}
-            disabled={disabled}
-            hitSlop={8}
-            onPress={() => onCheckedChange(!checked)}
-            style={[styles.hit, { width: size, height: size }, style]}
             testID={testID}
+            disabled={disabled}
+            onPress={onCheckedChange}
+            style={{ width: size, height: size }}
         >
-            <Rive
-                ref={riveRef}
-                source={checkboxRiv}
-                stateMachineName={STATE_MACHINE}
-                style={styles.rive}
-                autoplay
-                fit={Fit.Contain}
-                alignment={Alignment.Center}
-                onPlay={handlePlay}
-            />
+            <View pointerEvents="none" style={{ width: '100%', height: '100%' }}>
+                <Rive
+                    autoplay
+                    ref={riveRef}
+                    fit={Fit.Contain}
+                    style={styles.rive}
+                    source={checkboxRiv}
+                    alignment={Alignment.Center}
+                    stateMachineName={STATE_MACHINE}
+                    onPlay={() => {
+                        isRiveReady.current = true;
+                        // Устанавливаем начальное состояние
+                        riveRef.current?.setInputState(STATE_MACHINE, INPUT_IS_CHECKED, checked);
+                    }}
+                />
+            </View>
         </Pressable>
     );
 };

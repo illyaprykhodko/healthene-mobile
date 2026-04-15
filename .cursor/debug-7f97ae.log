@@ -1,0 +1,32 @@
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:mount","message":"effect run","data":{"checked":false,"instanceId":"rive_cb_7ujxf2g"},"timestamp":1776242587999}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:syncRive","message":"before setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_7ujxf2g","hasRef":true},"timestamp":1776242588002}
+{"sessionId":"7f97ae","hypothesisId":"H-C","location":"RiveCheckbox.tsx:syncRive","message":"after setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_7ujxf2g"},"timestamp":1776242588005}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:mount","message":"effect run","data":{"checked":false,"instanceId":"rive_cb_hfx0oms"},"timestamp":1776242588007}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:syncRive","message":"before setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_hfx0oms","hasRef":true},"timestamp":1776242588009}
+{"sessionId":"7f97ae","hypothesisId":"H-C","location":"RiveCheckbox.tsx:syncRive","message":"after setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_hfx0oms"},"timestamp":1776242588012}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:mount","message":"effect run","data":{"checked":false,"instanceId":"rive_cb_1lcy01q"},"timestamp":1776242588014}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:syncRive","message":"before setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_1lcy01q","hasRef":true},"timestamp":1776242588016}
+{"sessionId":"7f97ae","hypothesisId":"H-C","location":"RiveCheckbox.tsx:syncRive","message":"after setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_1lcy01q"},"timestamp":1776242588020}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:mount","message":"effect run","data":{"checked":false,"instanceId":"rive_cb_mvwnngx"},"timestamp":1776242588024}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:syncRive","message":"before setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_mvwnngx","hasRef":true},"timestamp":1776242588026}
+{"sessionId":"7f97ae","hypothesisId":"H-C","location":"RiveCheckbox.tsx:syncRive","message":"after setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_mvwnngx"},"timestamp":1776242588028}
+{"sessionId":"7f97ae","hypothesisId":"H-B","location":"RiveCheckbox.tsx:cleanup","message":"unmount","data":{"instanceId":"rive_cb_7ujxf2g","checked":false},"timestamp":1776242589395}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:mount","message":"effect run","data":{"checked":true,"instanceId":"rive_cb_lnp8fu5"},"timestamp":1776242589397}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:syncRive","message":"before setInputState","data":{"source":"effect","checked":true,"instanceId":"rive_cb_lnp8fu5","hasRef":true},"timestamp":1776242589399}
+{"sessionId":"7f97ae","hypothesisId":"H-C","location":"RiveCheckbox.tsx:syncRive","message":"after setInputState","data":{"source":"effect","checked":true,"instanceId":"rive_cb_lnp8fu5"},"timestamp":1776242589401}
+{"sessionId":"7f97ae","hypothesisId":"H-B","location":"RiveCheckbox.tsx:cleanup","message":"unmount","data":{"instanceId":"rive_cb_lnp8fu5","checked":true},"timestamp":1776242590584}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:mount","message":"effect run","data":{"checked":false,"instanceId":"rive_cb_ilj9ezn"},"timestamp":1776242590590}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:syncRive","message":"before setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_ilj9ezn","hasRef":true},"timestamp":1776242590595}
+{"sessionId":"7f97ae","hypothesisId":"H-C","location":"RiveCheckbox.tsx:syncRive","message":"after setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_ilj9ezn"},"timestamp":1776242590597}
+{"sessionId":"7f97ae","hypothesisId":"H-B","location":"RiveCheckbox.tsx:cleanup","message":"unmount","data":{"instanceId":"rive_cb_ilj9ezn","checked":false},"timestamp":1776242591823}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:mount","message":"effect run","data":{"checked":true,"instanceId":"rive_cb_k36lhj2"},"timestamp":1776242591829}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:syncRive","message":"before setInputState","data":{"source":"effect","checked":true,"instanceId":"rive_cb_k36lhj2","hasRef":true},"timestamp":1776242591831}
+{"sessionId":"7f97ae","hypothesisId":"H-C","location":"RiveCheckbox.tsx:syncRive","message":"after setInputState","data":{"source":"effect","checked":true,"instanceId":"rive_cb_k36lhj2"},"timestamp":1776242591834}
+{"sessionId":"7f97ae","hypothesisId":"H-B","location":"RiveCheckbox.tsx:cleanup","message":"unmount","data":{"instanceId":"rive_cb_k36lhj2","checked":true},"timestamp":1776242592886}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:mount","message":"effect run","data":{"checked":false,"instanceId":"rive_cb_2s7fna5"},"timestamp":1776242592893}
+{"sessionId":"7f97ae","hypothesisId":"H-A","location":"RiveCheckbox.tsx:syncRive","message":"before setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_2s7fna5","hasRef":true},"timestamp":1776242592895}
+{"sessionId":"7f97ae","hypothesisId":"H-C","location":"RiveCheckbox.tsx:syncRive","message":"after setInputState","data":{"source":"effect","checked":false,"instanceId":"rive_cb_2s7fna5"},"timestamp":1776242592899}
+{"sessionId":"7f97ae","hypothesisId":"H-B","location":"RiveCheckbox.tsx:cleanup","message":"unmount","data":{"instanceId":"rive_cb_2s7fna5","checked":false},"timestamp":1776242607259}
+{"sessionId":"7f97ae","hypothesisId":"H-B","location":"RiveCheckbox.tsx:cleanup","message":"unmount","data":{"instanceId":"rive_cb_1lcy01q","checked":false},"timestamp":1776242607267}
+{"sessionId":"7f97ae","hypothesisId":"H-B","location":"RiveCheckbox.tsx:cleanup","message":"unmount","data":{"instanceId":"rive_cb_mvwnngx","checked":false},"timestamp":1776242607269}
+{"sessionId":"7f97ae","hypothesisId":"H-B","location":"RiveCheckbox.tsx:cleanup","message":"unmount","data":{"instanceId":"rive_cb_hfx0oms","checked":false},"timestamp":1776242607264}
