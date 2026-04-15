@@ -30,13 +30,14 @@ import { groupBy, isEmpty } from 'utils/general';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppSelector, useAppDispatch } from 'store';
 import { RootStackParamList } from 'services/navigation';
+import { BirdAnimation } from 'animation/BirdAnimation.tsx';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
+import { SeedAnimation, SeedAnimationRef } from 'animation/SeedAnimation';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
-
 
 interface EditProps {
     date?: string;
@@ -54,7 +55,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const dispatch = useAppDispatch();
     const { date: currentDate } = useAppSelector(selectDayOverview);
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  
+
     const [scrollEnabled, setScrollEnabled] = useState(true);
     const [localItems, setLocalItems] = useState<PhaseItem[]>([]);
     const [isAddingAddedItem, setIsAddingAddedItem] = useState(false);
@@ -70,7 +71,17 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
-  
+
+    const [birdAnimationStep, setBirdAnimationStep] = useState(false);
+    const [checkboxAreaX, setCheckboxAreaX] = useState(0);
+    const seedAnimationRef = useRef<SeedAnimationRef>(null);
+    useEffect(() => {
+        if ((localItems || []).length > 0) {
+            const allDone = localItems.every(item => item.status === 'DONE');
+            setBirdAnimationStep(allDone);
+        }
+    }, [localItems]);
+
     const { data: dayOverviewData, isLoading: isDayOverviewLoading } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
     });
@@ -90,7 +101,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
     //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
-  
+
     const getItemTitle = (item: any) =>
         item.food?.name
         || item.recipe?.name
@@ -99,10 +110,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         || item.supplement?.name
         || item.physicalActivity?.name
         || 'Item';
-    
+
     const items = useMemo(() => {
         if (!phaseItems) { return []; }
-    
+
         return Object.values(phaseItems)
             .flat()
             .map(item => ({
@@ -156,7 +167,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         const excludeIds = computeExcludeIds();
         const entityType = mapPhaseTypeToEntityType();
-  
+
         const isMealPhase = currentPhase?.type === OVERVIEW_TYPE.MEAL || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT;
         if (isMealPhase) {
             navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
@@ -181,7 +192,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             initialAmount: selectedItem?.amount || 1,
                             section: selectedItem?.section || 'Added',
                             // initialAmount: selectedItem?.servingAmount || 1,
-                            
+
                         };
                         if (itemEntityType === ENTITY_TYPE.FOOD || itemEntityType === 'PATIENT_FOOD' || itemEntityType === 'PATIENT_DRINK') {
                             itemData.food = { id: selectedItem.id };
@@ -300,7 +311,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             });
             return;
         }
-        
+
         navigation.navigate(ROUTES.ADD_REPLACE_ITEM, {
             date: targetDate,
             prevItem: null,
@@ -556,7 +567,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     };
 
     const isLoading = isDayOverviewLoading || isPhaseItemsLoading;
-  
+
     if (isLoading) {
         return (
             <View style={styles.section}>
@@ -610,6 +621,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
+            {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
+                ? <BirdAnimation allChecked={birdAnimationStep} checkboxAreaX={checkboxAreaX} />
+                : null
+            }
             <View style={[styles.title, isFutureDate && styles.opacity]}>
                 <View>
                     <Text style={styles.titleText}>

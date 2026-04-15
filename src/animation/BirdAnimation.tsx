@@ -35,7 +35,7 @@ export const BIRD_ANIMATION_CONFIG = {
         right: -3,
     },
     WALKING_INITIAL_POSITION: {
-      right: 24,
+        right: 24,
     },
     TAKEOFF_OFFSET_Y: -30,
     /** Vertical target for the flying phase; horizontal end is screen center (computed in the effect). */
@@ -144,7 +144,7 @@ interface BirdAnimationProps {
 // ============================================================================
 export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAnimationProps) => {
     const webViewRef = useRef<WebView>(null);
-    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.WALKING  );
+    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.WALKING);
     const [DOMReady, setDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
     const [videoCache, setVideoCache] = useState<Map<BirdAnimationPhase, string>>(new Map());
@@ -281,12 +281,12 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
         const innerRightGrounded = ANIMATED_VIEW_RIGHT_CONFIG[BirdAnimationPhase.WALKING];
         const flyVideoHeight = VIDEO_SIZE_CONFIG[BirdAnimationPhase.FLYING].height;
         const flyContainerTop = CONTAINER_TOP_CONFIG[BirdAnimationPhase.FLYING];
-        const birdYAtFlyEnd =
-            config.FLY_TARGET.y -
-            insets.bottom -
-            COMPONENT_HEIGHT -
-            flyVideoHeight -
-            headerHeight;
+        const birdYAtFlyEnd
+            = config.FLY_TARGET.y
+            - insets.bottom
+            - COMPONENT_HEIGHT
+            - flyVideoHeight
+            - headerHeight;
 
         /**
          * `rightStyle` must match `ANIMATED_VIEW_RIGHT_CONFIG` for that phase.
@@ -355,8 +355,8 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                 birdY.value = walkingStartY + 20;
 
                 const targetCheckboxX = checkboxAreaX > 0 ? checkboxAreaX : config.WALKING_STOP_OFFSET;
-                const walkingTargetX =
-                    targetCheckboxX - SCREEN_WIDTH - innerRightGrounded + walkVideoWidth / 2;
+                const walkingTargetX
+                    = targetCheckboxX - SCREEN_WIDTH - innerRightGrounded + walkVideoWidth / 2;
                 birdX.value = withTiming(walkingTargetX, {
                     duration: config.DURATIONS.WALKING,
                     easing: Easing.linear,
@@ -382,9 +382,9 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
     // ========================================================================
     useEffect(() => {
         if (
-            !allChecked ||
-            isAnimationComplete.current ||
-            (phase !== BirdAnimationPhase.SITTING && phase !== BirdAnimationPhase.APPEARING)
+            !allChecked
+            || isAnimationComplete.current
+            || (phase !== BirdAnimationPhase.SITTING && phase !== BirdAnimationPhase.APPEARING)
         ) {
             return;
         }
@@ -461,12 +461,12 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
     // ========================================================================
     return phase === BirdAnimationPhase.FINISHED ? null : (
         <View style={[
-          styles.container, 
-          { 
-            top: CONTAINER_TOP_CONFIG[phase],
-            right: phase === BirdAnimationPhase.TAKEOFF ? -7 : -1
-          }
-          ]} key="bird-animation">
+            styles.container,
+            {
+                top: CONTAINER_TOP_CONFIG[phase],
+                right: phase === BirdAnimationPhase.TAKEOFF ? -7 : -1
+            }
+        ]} key="bird-animation">
             <Animated.View
                 style={[
                     {
