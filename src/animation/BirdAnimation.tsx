@@ -229,6 +229,13 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
     const [activeCheckClipName, setActiveCheckClipName] = useState<string | null>(null);
     const [mainDOMReady, setMainDOMReady] = useState<boolean>(false);
     const [actionDOMReady, setActionDOMReady] = useState<boolean>(false);
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAnimationProps) => {
+    const webViewRef = useRef<WebView>(null);
+    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.WALKING);
+    const [DOMReady, setDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
     const [videoCache, setVideoCache] = useState<Map<BirdAnimationPhase, string>>(new Map());
     const [checkVideoCache, setCheckVideoCache] = useState<Map<string, string>>(new Map());
