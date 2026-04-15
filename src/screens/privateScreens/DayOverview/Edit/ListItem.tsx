@@ -341,11 +341,6 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     checkboxContainer: {
-        borderWidth: 2,
-        borderRadius: 5,
-        borderColor: '#8A95A3',
-        paddingHorizontal: 3,
-        paddingVertical: 1,
         marginRight: 5,
         marginLeft: 15,
     },
@@ -404,7 +399,7 @@ const styles = StyleSheet.create({
     notEatText: {
         alignItems: 'center',
         justifyContent: 'center',
-        
+
     },
     buttonContainer: {
         display: 'flex',
