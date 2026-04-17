@@ -17,6 +17,13 @@ export const linking: LinkingOptions<any> = {
                 screens: {
                     Drawer: {
                         screens: {
+                            [ROUTES.DAILY_PLAN]: {
+                                screens: {
+                                    [ROUTES.WEIGHT_MEASUREMENT]: {
+                                        path: 'public/app-redirect/measurements/weight',
+                                    },
+                                },
+                            },
                             [ROUTES.MESSENGER]: {
                                 screens: {
                                     [ROUTES.READ_MESSAGE]: {

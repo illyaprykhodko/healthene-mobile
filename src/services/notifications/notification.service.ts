@@ -1,8 +1,14 @@
 // outsource dependencies
-import { Platform } from 'react-native';
+import { Platform, Linking } from 'react-native';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
-import { PERMISSIONS, RESULTS, check, request, Permission } from 'react-native-permissions';
+import {
+    check,
+    request,
+    RESULTS,
+    Permission,
+    PERMISSIONS,
+} from 'react-native-permissions';
 
 const DEFAULT_CHANNEL_ID = 'default-channel-id';
 
@@ -34,6 +40,14 @@ class NotificationService {
             acc[key] = typeof value === 'string' ? value : JSON.stringify(value);
             return acc;
         }, {});
+    }
+
+    private static resolveDeepLink (data: FirebaseMessagingTypes.RemoteMessage['data']): string | null {
+        const rawLink = data?.deepLink || data?.url || data?.link;
+        if (!rawLink || typeof rawLink !== 'string') {
+            return null;
+        }
+        return rawLink.trim();
     }
 
     private async ensureAndroidPermission (): Promise<boolean> {
@@ -135,11 +149,19 @@ class NotificationService {
 
     private handleNotificationOpen (remoteMessage: FirebaseMessagingTypes.RemoteMessage | null): void {
         if (!remoteMessage) { return; }
-        // TODO: map payload -> route and navigate when notification deep-link contract is finalized.
-        // this.log('Opened notification', {
-        //     messageId: remoteMessage.messageId,
-        //     data: remoteMessage.data,
-        // });
+        const deepLink = NotificationService.resolveDeepLink(remoteMessage.data);
+        if (!deepLink) { return; }
+
+        void (async () => {
+            try {
+                await Linking.openURL(deepLink);
+            } catch (error) {
+                this.log('Failed to open notification deep link', {
+                    error,
+                    deepLink,
+                });
+            }
+        })();
     }
 
     public async initialize (): Promise<void> {
