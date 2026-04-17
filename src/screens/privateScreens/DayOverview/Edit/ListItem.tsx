@@ -11,6 +11,7 @@ import { ROUTES } from 'constants/routes';
 import Checkbox from 'components/Checkbox';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE, VIDEO_LIBRARY_TYPE, QUESTION_TYPE } from 'constants/spec';
+import { RiveCheckbox } from 'components/RivComponent';
 interface ListItemProps {
   item: any;
   date?: string;
@@ -48,7 +49,7 @@ export const ListItem: React.FC<ListItemProps> = ({
         || currentQuestion?.foodCategory?.relatedToDayOverviewItemQuestionExists
     );
 
-    const handleCheckboxPress = (next: boolean) => {
+    const handleCheckboxPress = () => {
         if (handleCheckboxStatus && !disabled && !isFutureDate) {
             handleCheckboxStatus({ ...item, status: (isDone || isDidNotEat) ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
         }
@@ -61,15 +62,16 @@ export const ListItem: React.FC<ListItemProps> = ({
     };
 
     const renderCheckbox = () => (
-        <Checkbox
-            size={22}
-            isDayOverview
-            status={item.status}
-            onChange={handleCheckboxPress}
-            style={styles.checkboxContainer}
-            editable={!disabled && !isFutureDate}
-            value={item.status === PHASE_ITEM_STATUS.DONE}
-        />
+        <RiveCheckbox checked={item.status === PHASE_ITEM_STATUS.DONE} onCheckedChange={handleCheckboxPress}/>
+        // <Checkbox
+        //     size={22}
+        //     isDayOverview
+        //     status={item.status}
+        //     onChange={handleCheckboxPress}
+        //     style={styles.checkboxContainer}
+        //     editable={!disabled && !isFutureDate}
+        //     value={item.status === PHASE_ITEM_STATUS.DONE}
+        // />
     );
 
     const renderStatusText = () => {
