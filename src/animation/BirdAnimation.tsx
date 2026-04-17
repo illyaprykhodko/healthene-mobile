@@ -1,157 +1,155 @@
 // outsource dependencies
-import Animated, {
-    Easing,
-    withTiming,
-    useSharedValue,
-    useAnimatedStyle,
-} from 'react-native-reanimated';
 import { WebView } from 'react-native-webview';
 import RNBlobUtil from 'react-native-blob-util';
-import { scheduleOnRN } from 'react-native-worklets';
-import { Dimensions, StyleSheet, View } from 'react-native';
-import { useHeaderHeight } from '@react-navigation/elements';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
 
 // local dependencies
-import { COMPONENT_HEIGHT } from '../components/AnytimeMenu/constants';
-
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ============================================================================
-// CONFIGURABLE CONSTANTS - Adjust these values to fine-tune animation positions
+// CONFIGURABLE CONSTANTS
 // ============================================================================
 
-// Video size constant - all videos use the same dimensions (adjust this value as needed)
 export const VIDEO_SIZE = 80;
-
-/** Must match `Animated.View` `right` while phase is FLYING (wider clip is inset from the edge). */
-const RIGHT_ANCHOR_FLYING = VIDEO_SIZE / 2;
 
 export const BIRD_ANIMATION_CONFIG = {
     INITIAL_POSITION: {
-        top: 40,
+        top: 46,
         right: -3,
     },
-    WALKING_INITIAL_POSITION: {
-        right: 24,
+    APPEARING_POSITION: {
+        top: 33.5,
+        right: -4,
     },
-    TAKEOFF_OFFSET_Y: -30,
-    /** Vertical target for the flying phase; horizontal end is screen center (computed in the effect). */
-    FLY_TARGET: {
-        y: SCREEN_HEIGHT - 25,
-    },
-    // X position (from left) where the bird stops under the checkbox - listItem paddingLeft(20) + checkbox marginLeft(15) + half checkbox(11) ≈ 46
-    WALKING_STOP_OFFSET: 40,
-    DURATIONS: {
-        TAKEOFF_LIFT: 500,
-        FLY_TO_BOTTOM: 2200,
-        WALKING: 2000,
-        FLYING_AWAY: 6500,
+    ACTION_POSITION: {
+        top: 0,
+        right: 0,
     },
 };
 
 // ============================================================================
-// ANIMATION PHASES
+// ANIMATION PHASES: appearing → sitting (loop) → action (single.mov) → finished
 // ============================================================================
-/* eslint-disable @typescript-eslint/no-unused-vars -- enum members used via BirdAnimationPhase.X */
-export enum BirdAnimationPhase {
-    APPEARING = 'APPEARING',
-    SITTING = 'SITTING',
-    TAKEOFF = 'TAKEOFF',
-    FLYING = 'FLYING',
-    WALKING = 'WALKING',
-    PECKING = 'PECKING',
-    FLYING_AWAY = 'FLYING_AWAY',
-    FINISHED = 'FINISHED',
-}
+export const BirdAnimationPhase = {
+    APPEARING: 'APPEARING',
+    SITTING: 'SITTING',
+    ACTION: 'ACTION',
+    FINISHED: 'FINISHED',
+} as const;
 
-// Video size per phase - centralized configuration
+export type BirdAnimationPhase = (typeof BirdAnimationPhase)[keyof typeof BirdAnimationPhase];
+
 export const VIDEO_SIZE_CONFIG: Record<BirdAnimationPhase, { width: number; height: number }> = {
-    [BirdAnimationPhase.APPEARING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
-    [BirdAnimationPhase.SITTING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
-    [BirdAnimationPhase.TAKEOFF]: { width: VIDEO_SIZE + 96, height: VIDEO_SIZE + 96 },
-    [BirdAnimationPhase.FLYING]: { width: VIDEO_SIZE + 30, height: VIDEO_SIZE + 30 },
-    [BirdAnimationPhase.WALKING]: { width: VIDEO_SIZE + 10, height: VIDEO_SIZE + 10 },
-    [BirdAnimationPhase.PECKING]: { width: VIDEO_SIZE + 22, height: VIDEO_SIZE + 22 },
-    [BirdAnimationPhase.FLYING_AWAY]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
+    [BirdAnimationPhase.APPEARING]: { width: VIDEO_SIZE + 92, height: VIDEO_SIZE + 92 },
+    [BirdAnimationPhase.SITTING]: { width: VIDEO_SIZE - 4, height: VIDEO_SIZE - 4 },
+    [BirdAnimationPhase.ACTION]: { width: 250, height: 500, },
     [BirdAnimationPhase.FINISHED]: { width: 0, height: 0 },
 };
 
-// Container top position per phase
 export const CONTAINER_TOP_CONFIG: Record<BirdAnimationPhase, number> = {
-    [BirdAnimationPhase.APPEARING]: 40,
-    [BirdAnimationPhase.SITTING]: 40,
-    [BirdAnimationPhase.TAKEOFF]: 24,
-    [BirdAnimationPhase.FLYING]: 54,
-    [BirdAnimationPhase.WALKING]: 30,
-    // Same as WALKING so peck starts exactly where the walk ended (no container jump).
-    [BirdAnimationPhase.PECKING]: 28,
-    [BirdAnimationPhase.FLYING_AWAY]: 10,
+    [BirdAnimationPhase.APPEARING]: BIRD_ANIMATION_CONFIG.APPEARING_POSITION.top,
+    [BirdAnimationPhase.SITTING]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top,
+    [BirdAnimationPhase.ACTION]: BIRD_ANIMATION_CONFIG.ACTION_POSITION.top,
     [BirdAnimationPhase.FINISHED]: 0,
 };
 
-/** `Animated.View` `right` per phase; FLYING uses wider clip inset (must stay aligned with `translateAtFlyFinished`). */
 export const ANIMATED_VIEW_RIGHT_CONFIG: Record<BirdAnimationPhase, number> = {
-    [BirdAnimationPhase.APPEARING]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
+    [BirdAnimationPhase.APPEARING]: BIRD_ANIMATION_CONFIG.APPEARING_POSITION.right,
     [BirdAnimationPhase.SITTING]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
-    [BirdAnimationPhase.TAKEOFF]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
-    [BirdAnimationPhase.FLYING]: RIGHT_ANCHOR_FLYING,
-    [BirdAnimationPhase.WALKING]: BIRD_ANIMATION_CONFIG.WALKING_INITIAL_POSITION.right,
-    [BirdAnimationPhase.PECKING]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
-    [BirdAnimationPhase.FLYING_AWAY]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
+    [BirdAnimationPhase.ACTION]: BIRD_ANIMATION_CONFIG.ACTION_POSITION.right,
     [BirdAnimationPhase.FINISHED]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
 };
 
-// Video file mapping for each phase
 const PHASE_VIDEO_MAP: Record<BirdAnimationPhase, string | null> = {
     [BirdAnimationPhase.APPEARING]: 'appearing.mov',
     [BirdAnimationPhase.SITTING]: 'sitting.mov',
-    [BirdAnimationPhase.TAKEOFF]: 'takeoff.mov',
-    [BirdAnimationPhase.FLYING]: 'flying.mov',
-    [BirdAnimationPhase.WALKING]: 'walking.mov',
-    [BirdAnimationPhase.PECKING]: 'pecking.mov',
-    [BirdAnimationPhase.FLYING_AWAY]: 'flyingAway.mov',
+    [BirdAnimationPhase.ACTION]: 'single.mov',
     [BirdAnimationPhase.FINISHED]: null,
 };
 
-// Phases that should loop their video
-const LOOPED_PHASES: BirdAnimationPhase[] = [
-    BirdAnimationPhase.SITTING,
-    BirdAnimationPhase.FLYING,
-    BirdAnimationPhase.WALKING,
-];
+const LOOPED_PHASES: BirdAnimationPhase[] = [BirdAnimationPhase.SITTING];
 
-// WebView message types
 export const WEBVIEW_MESSAGES = {
     VIDEO_LOADED: 'VIDEO_LOADED',
     VIDEO_FAILED: 'VIDEO_FAILED',
     VIDEO_ENDED: 'VIDEO_ENDED',
-    DOM_READY: 'DOM_READY',
+    DOM_READY_MAIN: 'BIRD_DOM_READY_MAIN',
+    DOM_READY_ACTION: 'BIRD_DOM_READY_ACTION',
 };
 
-// ============================================================================
-// COMPONENT PROPS
-// ============================================================================
+function createBirdWebViewHtml (domReadyMessage: string): string {
+    return `
+                            <html>
+                                <head>
+                                    <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
+                                    <style>
+                                        * {
+                                            margin: 0;
+                                            padding: 0;
+                                            box-sizing: border-box;
+                                        }
+                                        html, body {
+                                            width: 100%;
+                                            height: 100%;
+                                            background: transparent;
+                                            overflow: visible;
+                                        }
+                                        #videoContainer {
+                                            width: 100%;
+                                            height: 100%;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            overflow: visible;
+                                        }
+                                        video {
+                                            width: 100%;
+                                            height: 100%;
+                                            object-fit: contain;
+                                        }
+                                    </style>
+                                    <script>
+                                        document.addEventListener("DOMContentLoaded", function() {
+                                            window.ReactNativeWebView.postMessage("${domReadyMessage}");
+                                        });
+                                    </script>
+                                </head>
+                                <body>
+                                    <div id="videoContainer">
+                                        <video
+                                            muted
+                                            autoplay
+                                            id="video"
+                                            playsinline
+                                            onerror="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_FAILED}' }))"
+                                            onloadeddata="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_LOADED}' }))"
+                                        >
+                                            <source id="source" type="video/quicktime" />
+                                        </video>
+                                    </div>
+                                </body>
+                            </html>
+                        `;
+}
+
 interface BirdAnimationProps {
     allChecked: boolean;
     checkboxAreaX?: number;
 }
 
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
-export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAnimationProps) => {
-    const webViewRef = useRef<WebView>(null);
-    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.WALKING);
-    const [DOMReady, setDOMReady] = useState<boolean>(false);
+export const BirdAnimation = (props: BirdAnimationProps) => {
+    const { allChecked = false } = props;
+    const mainWebViewRef = useRef<WebView>(null);
+    const actionWebViewRef = useRef<WebView>(null);
+    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.APPEARING);
+    const [mainDOMReady, setMainDOMReady] = useState<boolean>(false);
+    const [actionDOMReady, setActionDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
     const [videoCache, setVideoCache] = useState<Map<BirdAnimationPhase, string>>(new Map());
     const isAnimationComplete = useRef<boolean>(false);
     const allCheckedRef = useRef(allChecked);
     const phaseRef = useRef(phase);
-    const headerHeight = useHeaderHeight();
 
     useEffect(() => {
         allCheckedRef.current = allChecked;
@@ -160,13 +158,7 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
     useEffect(() => {
         phaseRef.current = phase;
     }, [phase]);
-    const insets = useSafeAreaInsets();
 
-    console.log('PHASE', phase);
-    
-    // ========================================================================
-    // VIDEO PRELOADING
-    // ========================================================================
     useEffect(() => {
         const preloadAllVideos = async () => {
             const cache = new Map<BirdAnimationPhase, string>();
@@ -194,22 +186,14 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
         preloadAllVideos();
     }, []);
 
-    // ========================================================================
-    // VIDEO INJECTION
-    // ========================================================================
-    const getVideoTransform = (_targetPhase: BirdAnimationPhase): string => {
-        return 'none';
-    };
+    const injectVideo = useCallback(
+        (targetPhase: BirdAnimationPhase, ref: RefObject<WebView | null>) => {
+            const base64 = videoCache.get(targetPhase);
+            if (!base64 || !ref.current) {
+                return;
+            }
 
-    const injectVideo = useCallback((targetPhase: BirdAnimationPhase) => {
-        const base64 = videoCache.get(targetPhase);
-        if (!base64 || !webViewRef.current) {
-            return;
-        }
-
-        const transformValue = getVideoTransform(targetPhase);
-
-        webViewRef.current.injectJavaScript(`
+            ref.current.injectJavaScript(`
             (function() {
                 try {
                     if (!window.__VIDEO__) window.__VIDEO__ = document.getElementById("video");
@@ -227,159 +211,32 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                     window.__VIDEO__.load();
                     window.__VIDEO__.play();
                     
-                    window.__VIDEO__.style.transform = "${transformValue}";
+                    window.__VIDEO__.style.transform = "none";
                     window.__VIDEO__.style.transformOrigin = "center";
+                    window.__VIDEO__.style.objectFit = "contain";
                 } catch (e) { 
                     console.log("Inject error", e);
                 }
                 true;
             })();
         `);
-    }, [videoCache]);
+        },
+        [videoCache]
+    );
 
-    // Inject video when phase changes or videos are loaded
     useEffect(() => {
-        if (DOMReady && videosLoaded && phase !== BirdAnimationPhase.FINISHED) {
-            injectVideo(phase);
+        if (!videosLoaded || phase === BirdAnimationPhase.FINISHED) {
+            return;
         }
-    }, [phase, DOMReady, videosLoaded, injectVideo]);
-
-    // ========================================================================
-    // POSITION ANIMATION VALUES
-    // ========================================================================
-    const birdX = useSharedValue(0);
-    const birdY = useSharedValue(0);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-        transform: [
-            { translateX: birdX.value },
-            { translateY: birdY.value },
-        ],
-    }));
-
-    // ========================================================================
-    // PHASE TRANSITION CALLBACKS
-    // ========================================================================
-    const handleFlyingComplete = useCallback(() => {
-        setPhase(BirdAnimationPhase.WALKING);
-    }, []);
-
-    const handleWalkingComplete = useCallback(() => {
-        setPhase(BirdAnimationPhase.PECKING);
-    }, []);
-
-    const handleFlyingAwayComplete = useCallback(() => {
-        setPhase(BirdAnimationPhase.FINISHED);
-        isAnimationComplete.current = true;
-    }, []);
-
-    // ========================================================================
-    // POSITION ANIMATIONS FOR EACH PHASE
-    // ========================================================================
-    useEffect(() => {
-        const config = BIRD_ANIMATION_CONFIG;
-        const innerRightGrounded = ANIMATED_VIEW_RIGHT_CONFIG[BirdAnimationPhase.WALKING];
-        const flyVideoHeight = VIDEO_SIZE_CONFIG[BirdAnimationPhase.FLYING].height;
-        const flyContainerTop = CONTAINER_TOP_CONFIG[BirdAnimationPhase.FLYING];
-        const birdYAtFlyEnd
-            = config.FLY_TARGET.y
-            - insets.bottom
-            - COMPONENT_HEIGHT
-            - flyVideoHeight
-            - headerHeight;
-
-        /**
-         * `rightStyle` must match `ANIMATED_VIEW_RIGHT_CONFIG` for that phase.
-         * Then (birdX, birdY) + container top matches the same on-screen position as when FLYING ends.
-         */
-        const translateAtFlyFinished = (
-            videoWidth: number,
-            phaseContainerTop: number,
-            rightStyle: number
-        ) => ({
-            x: SCREEN_WIDTH / 2 - SCREEN_WIDTH - rightStyle + videoWidth / 2,
-            y: birdYAtFlyEnd + (flyContainerTop - phaseContainerTop),
-        });
-
-        switch (phase) {
-            case BirdAnimationPhase.APPEARING:
-            case BirdAnimationPhase.SITTING:
-            case BirdAnimationPhase.TAKEOFF:
-                birdX.value = 0;
-                birdY.value = 0;
-                break;
-
-
-            case BirdAnimationPhase.FLYING: {
-                const flyVideoWidth = VIDEO_SIZE_CONFIG[BirdAnimationPhase.FLYING].width;
-                const walkVideoWidth = VIDEO_SIZE_CONFIG[BirdAnimationPhase.WALKING].width;
-                const walkContainerTop = CONTAINER_TOP_CONFIG[BirdAnimationPhase.WALKING];
-                const { x: flyTargetX } = translateAtFlyFinished(
-                    flyVideoWidth,
-                    flyContainerTop,
-                    ANIMATED_VIEW_RIGHT_CONFIG[BirdAnimationPhase.FLYING]
-                );
-                const { y: walkingStartYBase } = translateAtFlyFinished(
-                    walkVideoWidth,
-                    walkContainerTop,
-                    innerRightGrounded
-                );
-                const walkingStartY = walkingStartYBase + 20;
-                // Same on-screen position as first frame of WALKING: containerTop + translateY matches.
-                const flyTargetY = walkContainerTop + walkingStartY - flyContainerTop;
-
-                birdX.value = withTiming(flyTargetX, {
-                    duration: config.DURATIONS.FLY_TO_BOTTOM,
-                    easing: Easing.inOut(Easing.ease),
-                });
-                birdY.value = withTiming(flyTargetY, {
-                    duration: config.DURATIONS.FLY_TO_BOTTOM,
-                    easing: Easing.inOut(Easing.ease),
-                }, finished => {
-                    if (finished) {
-                        scheduleOnRN(handleFlyingComplete);
-                    }
-                });
-                break;
+        if (phase === BirdAnimationPhase.ACTION) {
+            if (actionDOMReady) {
+                injectVideo(BirdAnimationPhase.ACTION, actionWebViewRef);
             }
-
-            case BirdAnimationPhase.WALKING: {
-                const walkVideoWidth = VIDEO_SIZE_CONFIG[BirdAnimationPhase.WALKING].width - (VIDEO_SIZE);
-                const walkContainerTop = CONTAINER_TOP_CONFIG[BirdAnimationPhase.WALKING];
-                const { x: walkingStartX, y: walkingStartY } = translateAtFlyFinished(
-                    walkVideoWidth,
-                    walkContainerTop,
-                    innerRightGrounded
-                );
-                birdX.value = walkingStartX;
-                birdY.value = walkingStartY + 20;
-
-                const targetCheckboxX = checkboxAreaX > 0 ? checkboxAreaX : config.WALKING_STOP_OFFSET;
-                const walkingTargetX
-                    = targetCheckboxX - SCREEN_WIDTH - innerRightGrounded + walkVideoWidth / 2;
-                birdX.value = withTiming(walkingTargetX, {
-                    duration: config.DURATIONS.WALKING,
-                    easing: Easing.linear,
-                }, finished => {
-                    if (finished) {
-                        scheduleOnRN(handleWalkingComplete);
-                    }
-                });
-                break;
-            }
-
-            case BirdAnimationPhase.PECKING:
-                // Keep birdX / birdY from end of WALKING; same container top, right, and WebView size as walk.
-                break;
-            case BirdAnimationPhase.FINISHED:
-            default:
-                break;
+        } else if (mainDOMReady) {
+            injectVideo(phase, mainWebViewRef);
         }
-    }, [phase, checkboxAreaX, birdX, birdY, handleFlyingComplete, handleWalkingComplete, handleFlyingAwayComplete, headerHeight, insets.bottom]);
+    }, [phase, mainDOMReady, actionDOMReady, videosLoaded, injectVideo]);
 
-    // ========================================================================
-    // TRIGGER TAKEOFF WHEN ALL CHECKBOXES ARE CHECKED
-    // ========================================================================
     useEffect(() => {
         if (
             !allChecked
@@ -388,12 +245,9 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
         ) {
             return;
         }
-        setPhase(BirdAnimationPhase.TAKEOFF);
+        setPhase(BirdAnimationPhase.ACTION);
     }, [allChecked, phase]);
 
-    // ========================================================================
-    // WEBVIEW MESSAGE HANDLER
-    // ========================================================================
     const handleMessage = useCallback((event: WebViewMessageEvent) => {
         const message = event.nativeEvent.data;
 
@@ -413,7 +267,7 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                 const isLoopedPhase = LOOPED_PHASES.includes(currentPhase);
 
                 if (isLoopedPhase) {
-                    webViewRef.current?.injectJavaScript(`
+                    mainWebViewRef.current?.injectJavaScript(`
                         (function() {
                             if (window.__VIDEO__) {
                                 window.__VIDEO__.currentTime = 0;
@@ -428,138 +282,135 @@ export const BirdAnimation = ({ allChecked = false, checkboxAreaX = 0 }: BirdAni
                         case BirdAnimationPhase.APPEARING:
                             setPhase(
                                 allCheckedRef.current
-                                    ? BirdAnimationPhase.TAKEOFF
+                                    ? BirdAnimationPhase.ACTION
                                     : BirdAnimationPhase.SITTING
                             );
                             break;
-                        case BirdAnimationPhase.TAKEOFF:
-                            setPhase(BirdAnimationPhase.FLYING);
-                            break;
-                        case BirdAnimationPhase.PECKING:
-                            // setPhase(BirdAnimationPhase.FLYING_AWAY);
+                        case BirdAnimationPhase.ACTION:
                             setPhase(BirdAnimationPhase.FINISHED);
                             isAnimationComplete.current = true;
                             break;
-                        // case BirdAnimationPhase.FLYING_AWAY:
-                        //     setPhase(BirdAnimationPhase.FINISHED);
-                        //     isAnimationComplete.current = true;
-                        //     break;
                         default:
                             break;
                     }
                 }
             }
         } catch {
-            if (message === WEBVIEW_MESSAGES.DOM_READY) {
-                setDOMReady(true);
+            if (message === WEBVIEW_MESSAGES.DOM_READY_MAIN) {
+                setMainDOMReady(true);
+            } else if (message === WEBVIEW_MESSAGES.DOM_READY_ACTION) {
+                setActionDOMReady(true);
             }
         }
     }, []);
 
-    // ========================================================================
-    // RENDER
-    // ========================================================================
-    return phase === BirdAnimationPhase.FINISHED ? null : (
-        <View style={[
-            styles.container,
-            {
-                top: CONTAINER_TOP_CONFIG[phase],
-                right: phase === BirdAnimationPhase.TAKEOFF ? -7 : -1
-            }
-        ]} key="bird-animation">
-            <Animated.View
-                style={[
-                    {
-                        position: 'absolute',
-                        right: ANIMATED_VIEW_RIGHT_CONFIG[phase],
-                    },
-                    animatedStyle,
-                ]}
-            >
-                <WebView
-                    ref={webViewRef}
-                    incognito={true}
-                    cacheEnabled={false}
-                    onMessage={handleMessage}
-                    cacheMode="LOAD_NO_CACHE"
-                    onLoadEnd={() => setDOMReady(true)}
-                    source={{
-                        html: `
-                            <html>
-                                <head>
-                                    <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
-                                    <style>
-                                        * {
-                                            margin: 0;
-                                            padding: 0;
-                                            box-sizing: border-box;
-                                        }
-                                        html, body {
-                                            width: 100%;
-                                            height: 100%;
-                                            background: transparent;
-                                            overflow: visible;
-                                        }
-                                        #videoContainer {
-                                            width: 100%;
-                                            height: 100%;
-                                            display: flex;
-                                            align-items: center;
-                                            justify-content: center;
-                                            /*border: #1BA8CB 1px solid;*/
-                                            overflow: visible;
-                                        }
-                                        video {
-                                            width: 100%;
-                                            height: 100%;
-                                            object-fit: contain;
-                                        }
-                                    </style>
-                                    <script>
-                                        document.addEventListener("DOMContentLoaded", function() {
-                                            window.ReactNativeWebView.postMessage("${WEBVIEW_MESSAGES.DOM_READY}");
-                                        });
-                                    </script>
-                                </head>
-                                <body>
-                                    <div id="videoContainer">
-                                        <video
-                                            muted
-                                            autoplay
-                                            id="video"
-                                            playsinline
-                                            onerror="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_FAILED}' }))"
-                                            onloadeddata="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_LOADED}' }))"
-                                        >
-                                            <source id="source" type="video/quicktime" />
-                                        </video>
-                                    </div>
-                                </body>
-                            </html>
-                        `,
-                    }}
-                    style={{
-                        backgroundColor: 'transparent',
-                        width: VIDEO_SIZE_CONFIG[phase].width,
-                        height: VIDEO_SIZE_CONFIG[phase].height,
-                    }}
-                    onError={_e => {}}
-                    allowsInlineMediaPlayback={true}
-                    mediaPlaybackRequiresUserAction={false}
-                    javaScriptEnabled={true}
-                    originWhitelist={['*']}
-                />
-            </Animated.View>
+    if (phase === BirdAnimationPhase.FINISHED) {
+        return null;
+    }
+
+    const showMain
+        = phase === BirdAnimationPhase.APPEARING || phase === BirdAnimationPhase.SITTING;
+    const showActionLayer = videosLoaded;
+    const actionVisible = phase === BirdAnimationPhase.ACTION;
+
+    const webViewCommonProps = {
+        incognito: true,
+        cacheEnabled: false,
+        onMessage: handleMessage,
+        cacheMode: 'LOAD_NO_CACHE' as const,
+        onError: (_e: unknown) => {},
+        allowsInlineMediaPlayback: true,
+        mediaPlaybackRequiresUserAction: false,
+        javaScriptEnabled: true,
+        originWhitelist: ['*'],
+    };
+
+    return (
+        <View style={styles.birdRoot} key="bird-animation">
+            {showMain && (
+                <View
+                    style={[
+                        styles.container,
+                        styles.containerGrounded,
+                        styles.layerMain,
+                        { top: CONTAINER_TOP_CONFIG[phase], right: -1 },
+                    ]}
+                >
+                    <View
+                        style={{ position: 'absolute', right: ANIMATED_VIEW_RIGHT_CONFIG[phase] }}
+                    >
+                        <WebView
+                            ref={mainWebViewRef}
+                            {...webViewCommonProps}
+                            source={{ html: createBirdWebViewHtml(WEBVIEW_MESSAGES.DOM_READY_MAIN) }}
+                            style={{
+                                backgroundColor: 'transparent',
+                                width: VIDEO_SIZE_CONFIG[phase].width,
+                                height: VIDEO_SIZE_CONFIG[phase].height,
+                            }}
+                        />
+                    </View>
+                </View>
+            )}
+
+            {showActionLayer && (
+                <View
+                    style={[
+                        styles.container,
+                        styles.containerGrounded,
+                        styles.layerAction,
+                        {
+                            top: CONTAINER_TOP_CONFIG[BirdAnimationPhase.ACTION],
+                            right: -1,
+                        },
+                    ]}
+                >
+                    <View
+                        style={{
+                            position: 'absolute',
+                            right: ANIMATED_VIEW_RIGHT_CONFIG[BirdAnimationPhase.ACTION],
+                        }}
+                    >
+                        <WebView
+                            ref={actionWebViewRef}
+                            {...webViewCommonProps}
+                            source={{ html: createBirdWebViewHtml(WEBVIEW_MESSAGES.DOM_READY_ACTION) }}
+                            style={{
+                                backgroundColor: 'transparent',
+                                width: VIDEO_SIZE_CONFIG[BirdAnimationPhase.ACTION].width,
+                                height: VIDEO_SIZE_CONFIG[BirdAnimationPhase.ACTION].height,
+                                opacity: actionVisible ? 1 : 0,
+                            }}
+                        />
+                    </View>
+                </View>
+            )}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
+    birdRoot: {
         position: 'absolute',
-        bottom: 0,
         left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
         zIndex: 19999997,
         pointerEvents: 'none',
+    },
+    container: {
+        position: 'absolute',
+        pointerEvents: 'none',
+    },
+    containerGrounded: {
+        bottom: 0,
+        left: 0,
+    },
+    layerMain: {
+        zIndex: 2,
+    },
+    layerAction: {
+        zIndex: 1,
     },
 });
