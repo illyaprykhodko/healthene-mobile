@@ -2,12 +2,10 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, StyleProp, ViewStyle, View } from 'react-native';
 import Rive, { Alignment, Fit, RiveRef } from 'rive-react-native';
-import { RiveGeneralEvent, RiveOpenUrlEvent } from 'rive-react-native/lib/typescript/types';
-import log from 'eslint-plugin-react/lib/util/log';
 
 const checkboxRiv = require('../../../assets/riv/checkbox.riv');
 
-const STATE_MACHINE = 'State Machine 1';
+const STATE_MACHINE = 'CheckboxStateMachine';
 const INPUT_IS_CHECKED = 'isChecked';
 
 export interface RiveCheckboxProps {
@@ -29,12 +27,17 @@ export const RiveCheckbox: React.FC<RiveCheckboxProps> = ({
     testID,
 }) => {
     const riveRef = useRef<RiveRef>(null);
-    const isRiveReady = useRef(false);
 
-    useEffect(() => {
-        if (!isRiveReady.current) { return; }
-        riveRef.current?.setInputState(STATE_MACHINE, INPUT_IS_CHECKED, checked);
-    }, [checked]);
+    // useEffect(() => {
+    //     const rive = riveRef.current;
+    //     if (!rive) { return; }
+    //     console.log('STATE_MACHINE ', STATE_MACHINE);
+    //     console.log('INPUT_IS_CHECKED ', INPUT_IS_CHECKED);
+    //     console.log('checked: ', checked);
+    //     rive.setInputState(STATE_MACHINE, INPUT_IS_CHECKED, checked);
+    //     console.log('rive', rive);
+    // }, [checked]);
+
 
     return (
         <Pressable
@@ -45,18 +48,13 @@ export const RiveCheckbox: React.FC<RiveCheckboxProps> = ({
         >
             <View pointerEvents="none" style={{ width: '100%', height: '100%' }}>
                 <Rive
-                    autoplay
                     ref={riveRef}
                     fit={Fit.Contain}
                     style={styles.rive}
                     source={checkboxRiv}
                     alignment={Alignment.Center}
                     stateMachineName={STATE_MACHINE}
-                    onPlay={() => {
-                        isRiveReady.current = true;
-                        // Устанавливаем начальное состояние
-                        riveRef.current?.setInputState(STATE_MACHINE, INPUT_IS_CHECKED, checked);
-                    }}
+                    dataBinding={{ type: 'autobind', value: !checked }}
                 />
             </View>
         </Pressable>
