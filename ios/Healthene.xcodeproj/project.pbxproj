@@ -20,8 +20,8 @@
 		63507697A9D14AD4A042FAD4 /* NunitoSans-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C87833C5F8D49ED9D3F168D /* NunitoSans-Black.ttf */; };
 		67B4FE943FD14474B4FF58CB /* NunitoSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 465EED1DBCB847ADBEDA9675 /* NunitoSans-Bold.ttf */; };
 		6AAB5F792F8FBF42008E9753 /* appearing.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AAB5F772F8FBF42008E9753 /* appearing.mov */; };
-		6AAB5F7A2F8FBF42008E9753 /* single.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AAB5F782F8FBF42008E9753 /* single.mov */; };
 		6AAB5F7C2F8FBF50008E9753 /* sitting.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AAB5F7B2F8FBF50008E9753 /* sitting.mov */; };
+		6AAB5F7E2F90C6C4008E9753 /* single.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AAB5F7D2F90C6C4008E9753 /* single.mov */; };
 		6C0AC7EDF48546859601243E /* NunitoSans-LightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8628FE74FBF74E148EB947F5 /* NunitoSans-LightItalic.ttf */; };
 		6C8A4E8528284AA5B1FC0850 /* NunitoSans-SemiBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4A33CA98310A4ABBA7F1E38F /* NunitoSans-SemiBoldItalic.ttf */; };
 		6CD51BC470CF416F930471C1 /* Outfit-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0024D639C6AC42E29DE74308 /* Outfit-Light.ttf */; };
@@ -67,8 +67,8 @@
 		5FD25C3A52834B2AA91DDC95 /* Outfit-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-ExtraBold.ttf"; path = "../assets/fonts/Outfit-ExtraBold.ttf"; sourceTree = "<group>"; };
 		61BEC2FDFDD14C89A5D4F5A3 /* Outfit-Thin.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-Thin.ttf"; path = "../assets/fonts/Outfit-Thin.ttf"; sourceTree = "<group>"; };
 		6AAB5F772F8FBF42008E9753 /* appearing.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = appearing.mov; sourceTree = "<group>"; };
-		6AAB5F782F8FBF42008E9753 /* single.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = single.mov; sourceTree = "<group>"; };
 		6AAB5F7B2F8FBF50008E9753 /* sitting.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = sitting.mov; sourceTree = "<group>"; };
+		6AAB5F7D2F90C6C4008E9753 /* single.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = single.mov; sourceTree = "<group>"; };
 		6AD77D9D2F47179B002CEDBC /* Healthene.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Healthene.entitlements; path = Healthene/Healthene.entitlements; sourceTree = "<group>"; };
 		7219FF88BD68C1492B435792 /* Pods-Healthene.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Healthene.release.xcconfig"; path = "Target Support Files/Pods-Healthene/Pods-Healthene.release.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Healthene/AppDelegate.swift; sourceTree = "<group>"; };
@@ -162,8 +162,8 @@
 		8B8DBEFD42404722A07E4B22 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				6AAB5F7D2F90C6C4008E9753 /* single.mov */,
 				6AAB5F772F8FBF42008E9753 /* appearing.mov */,
-				6AAB5F782F8FBF42008E9753 /* single.mov */,
 				2C87833C5F8D49ED9D3F168D /* NunitoSans-Black.ttf */,
 				DDE8D75F4E29491EB5A19E0D /* NunitoSans-BlackItalic.ttf */,
 				465EED1DBCB847ADBEDA9675 /* NunitoSans-Bold.ttf */,
@@ -273,10 +273,10 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				82971B106F7EBC737841CF29 /* PrivacyInfo.xcprivacy in Resources */,
 				63507697A9D14AD4A042FAD4 /* NunitoSans-Black.ttf in Resources */,
+				6AAB5F7E2F90C6C4008E9753 /* single.mov in Resources */,
 				E59E07D726914468A3931687 /* NunitoSans-BlackItalic.ttf in Resources */,
 				67B4FE943FD14474B4FF58CB /* NunitoSans-Bold.ttf in Resources */,
 				6AAB5F792F8FBF42008E9753 /* appearing.mov in Resources */,
-				6AAB5F7A2F8FBF42008E9753 /* single.mov in Resources */,
 				21B9FED8C2DC45F59EDC6A40 /* NunitoSans-BoldItalic.ttf in Resources */,
 				2E83705D25664DDB8BF5D579 /* NunitoSans-ExtraBold.ttf in Resources */,
 				1FB61EE2F6CC40AB9B3A9BB3 /* NunitoSans-ExtraBoldItalic.ttf in Resources */,
