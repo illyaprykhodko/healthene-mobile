@@ -3,7 +3,9 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from './baseApi';
 import { MeasurementType } from 'types';
-import { PhaseItem, PatientFoodCategoryQuestion, AddPhaseItemData } from 'types/overview';
+import {
+    PhaseItem, PatientFoodCategoryQuestion, AddPhaseItemData
+} from 'types/overview';
 
 export interface Phase {
     type: string;
@@ -142,7 +144,14 @@ export interface FoodFilter {
 export const dayOverviewApi = createApi({
     reducerPath: 'dayOverviewApi',
     baseQuery,
-    tagTypes: ['DayOverview', 'Questions', 'Anytime', 'PhaseItems', 'PhaseItem', 'AvailableItems'],
+    tagTypes: [
+        'Anytime',
+        'Questions',
+        'PhaseItem',
+        'PhaseItems',
+        'DayOverview',
+        'AvailableItems'
+    ],
     endpoints: builder => ({
         // Create measurement record (manual or third-party)
         addMeasurementRecord: builder.mutation<any, {
@@ -183,8 +192,7 @@ export const dayOverviewApi = createApi({
                                 'MEASUREMENT',
                                 'ADDED_BY_PATIENT',
                                 'PHYSICAL_ACTIVITY',
-                            ].includes(item.type)
-                        )
+                            ].includes(item.type))
                         .sort((a: Phase, b: Phase) => (a.order ?? 0) - (b.order ?? 0)),
                     anytime: anytimePhase,
                     patient: (success?.phases || []).find((i: Phase) => i.type === 'ADDED_BY_PATIENT'),
@@ -417,10 +425,7 @@ export const dayOverviewApi = createApi({
                 url: `/patient-service/patients/day-overview/phase/item/${id}`,
                 method: 'DELETE',
             }),
-            invalidatesTags: (result, error, { id, phaseId }) => [
-                { type: 'PhaseItem', id },
-                { type: 'PhaseItems', id: phaseId },
-            ],
+            invalidatesTags: (result, error, { id, phaseId }) => [{ type: 'PhaseItem', id }, { type: 'PhaseItems', id: phaseId },],
             async onQueryStarted ({ id, phaseId }, { dispatch, queryFulfilled }) {
                 const patch = dispatch(
                     dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
@@ -471,10 +476,7 @@ export const dayOverviewApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: (result, error, { phaseId }) => [
-                { type: 'PhaseItems', id: phaseId },
-                'DayOverview',
-            ],
+            invalidatesTags: (result, error, { phaseId }) => [{ type: 'PhaseItems', id: phaseId }, 'DayOverview',],
         }),
         // Add custom recipe (with modified ingredients)
         addPhaseCustomRecipe: builder.mutation<PhaseItem, { phaseId: number | string; data: any }>({
@@ -483,10 +485,7 @@ export const dayOverviewApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: (result, error, { phaseId }) => [
-                { type: 'PhaseItems', id: phaseId },
-                'DayOverview',
-            ],
+            invalidatesTags: (result, error, { phaseId }) => [{ type: 'PhaseItems', id: phaseId }, 'DayOverview',],
         }),
         addPhaseMealItem: builder.mutation<PhaseItem, { phaseId: number | string; data: AddPhaseItemData }>({
             query: ({ phaseId, data }) => ({
@@ -561,10 +560,7 @@ export const dayOverviewApi = createApi({
                     replacement: { id: replacementId },
                 },
             }),
-            invalidatesTags: (result, error, { itemId, phaseId }) => [
-                { type: 'PhaseItem', id: itemId },
-                { type: 'PhaseItems', id: phaseId },
-            ],
+            invalidatesTags: (result, error, { itemId, phaseId }) => [{ type: 'PhaseItem', id: itemId }, { type: 'PhaseItems', id: phaseId },],
             async onQueryStarted ({ itemId, phaseId }, { dispatch, queryFulfilled }) {
                 try {
                     const { data: replaced } = await queryFulfilled;
@@ -598,10 +594,7 @@ export const dayOverviewApi = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [
-                { type: 'PhaseItems', id },
-                'DayOverview',
-            ],
+            invalidatesTags: (result, error, { id }) => [{ type: 'PhaseItems', id }, 'DayOverview',],
         }),
 
         // Physical Activity detail for a phase item
@@ -770,6 +763,13 @@ export const dayOverviewApi = createApi({
         // Menu badges - incomplete questions/videos count for daily plan
         getIncompleteQuestionsVideos: builder.query<number, string>({
             query: date => `/patient-service/patients/me/day-overview/${date}/questions-videos`,
+            providesTags: (result, error, date) => [{ type: 'DayOverview', id: `menu-badges-${date}` }],
+        }),
+
+        // Menu badges - untracked measurements count for daily plan
+        getUntrackedMeasurements: builder.query<number, string>({
+            query: date => `/patient-service/patients/me/day-overview/${date}/untracked-measurements`,
+            providesTags: (result, error, date) => [{ type: 'DayOverview', id: `menu-badges-${date}` }],
         }),
 
         // Menu badges - library items with total count
@@ -1146,5 +1146,6 @@ export const {
     useGetMedicalProblemsQuery,
     useGetMedicationAllergiesQuery,
     useGetLibraryItemsTotalTreeQuery,
+    useGetUntrackedMeasurementsQuery,
     useGetIncompleteQuestionsVideosQuery,
 } = dayOverviewApi;

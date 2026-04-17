@@ -5,7 +5,9 @@ import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
-import { View, StyleSheet, TouchableOpacity, Pressable, Alert } from 'react-native';
+import {
+    View, StyleSheet, TouchableOpacity, Pressable, Alert
+} from 'react-native';
 
 // local dependencies
 import { RootState } from 'store';
@@ -21,6 +23,7 @@ import {
     useGetMedicalProblemsQuery,
     useGetMedicationAllergiesQuery,
     useGetLibraryItemsTotalTreeQuery,
+    useGetUntrackedMeasurementsQuery,
     useGetIncompleteQuestionsVideosQuery,
 } from 'store/api/dayOverviewApi';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -114,6 +117,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     // Fetch badge data
     const currentDate = useMemo(() => moment().format('YYYY-MM-DD'), []);
     const { data: dailyPlanCounter } = useGetIncompleteQuestionsVideosQuery(currentDate);
+    const { data: untrackedMeasurementsCounter } = useGetUntrackedMeasurementsQuery(currentDate);
     const { data: libraryItemsTree } = useGetLibraryItemsTotalTreeQuery();
     const { data: medicalProblems } = useGetMedicalProblemsQuery();
     const { data: medicationAllergies } = useGetMedicationAllergiesQuery();
@@ -130,6 +134,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
             _.flatMap(medicationAllergies || [], ({ readyToSeeAttachments }) => readyToSeeAttachments)
         );
         const healthProfileBadge = medicalProblemsCount + medicationAllergiesCount;
+        const dailyPlanBadge = (dailyPlanCounter || 0) + (untrackedMeasurementsCounter || 0);
 
         // Get badges from list by destination
         const getBadgeByDestination = (destination: string): number | null => {
@@ -138,13 +143,19 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         };
 
         return {
-            dailyPlan: dailyPlanCounter || null,
-            shoppingList: getBadgeByDestination(DESTINATIONS.SHOPPING_LIST),
+            dailyPlan: dailyPlanBadge > 0 ? dailyPlanBadge : null,
             messages: getBadgeByDestination(DESTINATIONS.MESSAGES),
             aboutPlan: getBadgeByDestination(DESTINATIONS.ABOUT_PLAN),
+            shoppingList: getBadgeByDestination(DESTINATIONS.SHOPPING_LIST),
             healthProfile: healthProfileBadge > 0 ? healthProfileBadge : null,
         };
-    }, [dailyPlanCounter, libraryItemsTree, medicalProblems, medicationAllergies]);
+    }, [
+        medicalProblems,
+        dailyPlanCounter,
+        libraryItemsTree,
+        medicationAllergies,
+        untrackedMeasurementsCounter,
+    ]);
 
     const handleLogout = async () => {
         Alert.alert(

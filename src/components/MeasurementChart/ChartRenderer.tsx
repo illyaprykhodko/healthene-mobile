@@ -1,20 +1,20 @@
 
 // outsource dependencies
 import {
-    Svg,
     G,
+    Svg,
     Rect,
     Line,
+    Path,
     Circle,
     Text as TextSVG,
-    Path,
 } from 'react-native-svg';
 import React, {
     memo,
     useMemo,
     useState,
-    useMemo as useReactMemo,
     useEffect,
+    useMemo as useReactMemo,
 } from 'react';
 import {
     View,
@@ -32,9 +32,10 @@ import {
     type MeasurementTab,
 } from 'constants/measurement-chart';
 import {
-    getHorizontalLabels,
-    calculateInterval,
     getDateRangeText,
+    calculateInterval,
+    getHorizontalLabels,
+    getHorizontalLabelPositions,
 } from './chart-helpers';
 
 import Animated, {
@@ -46,8 +47,9 @@ import Animated, {
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const { width, height } = Dimensions.get('window');
+// const column = width / 12;
 const column = width / 12;
-const graphWidth = column * 10;
+const graphWidth = column * 9.5;
 const paddingShift = 15;
 const paddingTopChart = 0;
 const horizontalLabelsShift = 20;
@@ -118,11 +120,10 @@ const buildSmoothPath = (pts: ScreenPoint[]): string | null => {
         const p2 = pts[i + 1];
         const p3 = i + 2 < pts.length ? pts[i + 2] : pts[pts.length - 1];
 
-        // we only need control points around p1 and p2
-        const [c1] = getControlPoints(p0, p1, p2);
-        const [, c2] = getControlPoints(p1, p2, p3);
+        const [, cp1] = getControlPoints(p0, p1, p2);
+        const [cp2] = getControlPoints(p1, p2, p3);
 
-        d += ` C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${p2.x} ${p2.y}`;
+        d += ` C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${p2.x} ${p2.y}`;
     }
 
     return d;
@@ -134,9 +135,9 @@ const shouldShowXLabel = (
     maxLabels: number
 ): boolean => {
     if (total <= maxLabels) { return true; }
-    if (index === 0 || index === total - 1) { return true; }
     const step = Math.ceil(total / maxLabels);
-    return index % step === 0;
+    const distFromEnd = (total - 1) - index;
+    return distFromEnd % step === 0;
 };
 
 interface ChartRendererProps {
@@ -176,7 +177,11 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
     useEffect(() => {
         progress.value = 0;
         progress.value = withTiming(1, { duration: 2000 });
-    }, [points, restPoints, activeTab]);
+    }, [
+        points,
+        restPoints,
+        activeTab
+    ]);
 
     const animatedProps = useAnimatedProps(() => ({
         strokeDasharray: [1000],
@@ -213,6 +218,11 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
     const horizontalLabels = getHorizontalLabels(
         activeTab.name,
         activeTab.options.endDate,
+        activeTab.count
+    );
+
+    const labelDataPositions = getHorizontalLabelPositions(
+        activeTab.name,
         activeTab.count
     );
 
@@ -282,25 +292,36 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
 
     const systolicPath = useMemo(() => {
         if (!hasData || !validPrimaryPoints.length) { return null; }
-        const pts: ScreenPoint[] = validPrimaryPoints.map(p => ({
-            x: getCx(p.x),
-            y: getCy(p.y),
-        }));
+        const pts: ScreenPoint[] = validPrimaryPoints
+            .map(p => ({ x: getCx(p.x), y: getCy(p.y) }))
+            .sort((a, b) => a.x - b.x);
         return buildSmoothPath(pts);
-    }, [validPrimaryPoints, hasData, minValue, maxValue, activeTab, isCentered]);
+    }, [
+        hasData,
+        minValue,
+        maxValue,
+        activeTab,
+        isCentered,
+        validPrimaryPoints,
+    ]);
 
     const diastolicPath = useMemo(() => {
         if (!isBloodPressure || !validSecondaryPoints.length) { return null; }
-        const pts: ScreenPoint[] = validSecondaryPoints.map(p => ({
-            x: getCx(p.x),
-            y: getCy(p.y),
-        }));
+        const pts: ScreenPoint[] = validSecondaryPoints
+            .map(p => ({ x: getCx(p.x), y: getCy(p.y) }))
+            .sort((a, b) => a.x - b.x);
         return buildSmoothPath(pts);
-    }, [validSecondaryPoints, isBloodPressure, minValue, maxValue, activeTab, isCentered]);
+    }, [
+        minValue,
+        maxValue,
+        activeTab,
+        isCentered,
+        isBloodPressure,
+        validSecondaryPoints,
+    ]);
 
-    // Limit label count depending on available width (approx 60px per label)
     const maxLabels
-        = containerW > 0 ? Math.max(2, Math.floor(containerW / 60)) : 6;
+        = containerW > 0 ? Math.max(2, Math.floor(containerW / 40)) : 8;
     return (
         <View style={styles.container} onLayout={handleLayout}>
             <View style={{ opacity: tooltip ? 0 : 1, minHeight: 100 }}>
@@ -318,19 +339,13 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                             <View style={styles.currentInformation}>
                                 <View style={styles.currentValueContainer}>
                                     <Text
-                                        style={[
-                                            styles.currentLabel,
-                                            { color: theme.colors.textSecondary },
-                                        ]}
+                                        style={[styles.currentLabel, { color: theme.colors.textSecondary },]}
                                     >
                                     Current
                                     </Text>
                                     <View style={styles.currentValueRow}>
                                         <Text
-                                            style={[
-                                                styles.currentValue,
-                                                { color: theme.colors.text },
-                                            ]}
+                                            style={[styles.currentValue, { color: theme.colors.text },]}
                                         >
                                             {currentValue?.value?.toFixed
                                                 ? currentValue.value.toFixed(1)
@@ -350,10 +365,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                                         </Text>
                                     </View>
                                     <Text
-                                        style={[
-                                            styles.dateText,
-                                            { color: theme.colors.textSecondary },
-                                        ]}
+                                        style={[styles.dateText, { color: theme.colors.textSecondary },]}
                                     >
                                         {dateRange}
                                     </Text>
@@ -378,10 +390,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                         ]}
                     >
                         <Text
-                            style={[
-                                styles.tooltipValue,
-                                { color: theme.colors.text },
-                            ]}
+                            style={[styles.tooltipValue, { color: theme.colors.text },]}
                         >
                             {bpDisplayValue ?? '--'}
                             <Text
@@ -400,10 +409,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                             </Text>
                         </Text>
                         <Text
-                            style={[
-                                styles.tooltipDate,
-                                { color: theme.colors.textSecondary },
-                            ]}
+                            style={[styles.tooltipDate, { color: theme.colors.textSecondary },]}
                             numberOfLines={1}
                         >
                             {tooltip.dateTime || dateRange}
@@ -446,13 +452,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                             return null;
                         }
 
-                        const shift
-                            = index === 0
-                                ? paddingX
-                                : paddingX
-                                  + column
-                                      * (index
-                                          * (10 / horizontalLabels.length));
+                        const shift = getCx(labelDataPositions[index]);
 
                         return (
                             <G key={index}>
@@ -635,9 +635,9 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                                                 cx,
                                                 cy,
                                                 isDiastolic: false,
-                                                dateTime: point.displayFromDate || point.fromDate,
                                                 unit: currentValue?.unit,
                                                 pairY: restPoints[index]?.y,
+                                                dateTime: point.displayFromDate || point.fromDate,
                                             });
                                             e?.preventDefault();
                                         }}
@@ -687,10 +687,10 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                     <G>
                         {diastolicPath && (
                             <AnimatedPath
-                                d={diastolicPath}
-                                stroke="#156F93"
-                                strokeWidth={2}
                                 fill="none"
+                                strokeWidth={2}
+                                stroke="#156F93"
+                                d={diastolicPath}
                                 animatedProps={animatedProps}
                             />
                         )}
@@ -707,9 +707,9 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                                     {/* active highlight behind point */}
                                     {isActive && (
                                         <Circle
+                                            r={10}
                                             cx={cx}
                                             cy={cy}
-                                            r={10}
                                             fill="rgba(233, 18, 24, 0.12)" // soft glow
                                         />
                                     )}
@@ -741,8 +741,8 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                                                 cy,
                                                 isDiastolic: true,
                                                 pairY: points[index]?.y,
-                                                dateTime: point.displayFromDate || point.fromDate,
                                                 unit: currentValue?.unit,
+                                                dateTime: point.displayFromDate || point.fromDate,
                                             });
                                             e?.preventDefault();
                                         }}

@@ -1,8 +1,8 @@
-import { store } from '../../store';
-import { add, clear } from './slice';
 import { Message } from './types';
 import Toast from 'react-native-toast-message';
-import { Alert, Platform, AlertType } from 'react-native';
+import {
+    Alert, Platform, AlertType
+} from 'react-native';
 
 // Constants
 const DEFAULT_TITLE = 'Whoops!';
@@ -11,14 +11,10 @@ const DEFAULT_MESSAGE = 'Something went wrong.\n We are working to fix it.';
 const DEFAULT_TOAST_CONFIG = {
     position: 'top' as const,
     visibilityTime: 4000,
+    bottomOffset: 40,
     autoHide: true,
     topOffset: 40,
-    bottomOffset: 40,
 } as const;
-
-// Utility functions
-const generateUid = (base: string): string =>
-    base.replace(/./g, () => (Math.random() * 32 | 0).toString(32));
 
 const showToast = (type: Message['type'], title: string, message: string, options?: any) =>
     Toast.show({
@@ -46,14 +42,23 @@ export const MessageService = {
     toastSuccess: (message: string, options?: any) =>
         showToast('success', 'Success', message, options),
 
-    dispatch: (options: Message) =>
-        store.dispatch(add({
-            uid: generateUid('random string'),
-            explanation: null,
-            ...options
-        })),
+    dispatch: (options: Message) => {
+        if (!options?.message) {
+            return;
+        }
 
-    clearAll: () => store.dispatch(clear()),
+        const type = options.type || 'info';
+        const title = options.title || (type === 'warning' ? 'Warning' : type === 'success' ? 'Success' : 'Info');
+
+        if (typeof options.toast === 'function') {
+            options.toast(options.message);
+            return;
+        }
+
+        showToast(type, title, options.message, options.toast);
+    },
+
+    clearAll: () => Toast.hide(),
 
     error: (options: Message) => {
         const message = options.debugCode
@@ -69,18 +74,10 @@ export const MessageService = {
     },
 
     warning: (options: Message) =>
-        MessageService.dispatch({
-            toast: MessageService.toastWarning,
-            type: 'warning',
-            ...options
-        }),
+        MessageService.toastWarning(options.message, options.toast),
 
     success: (options: Message) =>
-        MessageService.dispatch({
-            toast: MessageService.toastSuccess,
-            type: 'success',
-            ...options
-        }),
+        MessageService.toastSuccess(options.message, options.toast),
 
     confirm: (options: Message) =>
         new Promise<void>((resolve, reject) =>
@@ -88,17 +85,10 @@ export const MessageService = {
                 options.title || 'Alert Title',
                 options.message || 'Alert Msg',
                 Platform.OS === 'ios'
-                    ? [
-                        { text: options.okText || 'Ok', onPress: () => resolve() },
-                        { text: options.cancelText || 'Cancel', style: 'cancel', onPress: () => reject() },
-                    ]
-                    : [
-                        { text: options.cancelText || 'Cancel', style: 'cancel', onPress: () => reject() },
-                        { text: options.okText || 'Ok', onPress: () => resolve() },
-                    ],
+                    ? [{ text: options.okText || 'Ok', onPress: () => resolve() }, { text: options.cancelText || 'Cancel', style: 'cancel', onPress: () => reject() },]
+                    : [{ text: options.cancelText || 'Cancel', style: 'cancel', onPress: () => reject() }, { text: options.okText || 'Ok', onPress: () => resolve() },],
                 { cancelable: false }
-            )
-        ),
+            )),
 
     redirect: (options: Message) =>
         new Promise<void>(resolve =>
@@ -107,8 +97,7 @@ export const MessageService = {
                 options.message || 'Alert Msg',
                 [{ text: options.okText || 'Ok', onPress: () => resolve() }],
                 { cancelable: false }
-            )
-        ),
+            )),
 
     prompt: (options: Message) =>
         new Promise<string>((resolve, reject) => {

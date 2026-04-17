@@ -14,7 +14,12 @@ export const getHorizontalLabels = (
 
     switch (period) {
         case DATE_PERIOD.DAY:
-            return ['12AM', '6', '12PM', '6'];
+            return [
+                '12AM',
+                '6',
+                '12PM',
+                '6'
+            ];
 
         case DATE_PERIOD.WEEK:
             for (let i = count - 1; i >= 0; i--) {
@@ -22,14 +27,17 @@ export const getHorizontalLabels = (
             }
             break;
 
-        case DATE_PERIOD.MONTH:
-            return [
-                moment(date).subtract(30, 'days').format('D'),
-                moment(date).subtract(22, 'days').format('D'),
-                moment(date).subtract(15, 'days').format('D'),
-                moment(date).subtract(8, 'days').format('D'),
-                moment(date).format('D'),
+        case DATE_PERIOD.MONTH: {
+            const step = Math.floor(count / 4);
+            const indices = [
+                0,
+                step,
+                step * 2,
+                step * 3,
+                count - 1,
             ];
+            return indices.map(i => moment(date).subtract(count - 1 - i, 'days').format('D'));
+        }
 
         case DATE_PERIOD.SIX_MONTH:
             for (let i = count; i > 0; i--) {
@@ -39,12 +47,49 @@ export const getHorizontalLabels = (
 
         case DATE_PERIOD.YEAR:
             for (let i = count; i > 0; i--) {
-                labels.push(moment().month(moment(date).month() - i + 1).format('MMM')[0]);
+                labels.push(moment().month(moment(date).month() - i + 1).format('MMM'));
             }
             break;
     }
 
     return labels;
+};
+
+/**
+ * Returns the data-space X position for each horizontal label.
+ * These values should be passed to getCx() to get pixel positions,
+ * ensuring labels align perfectly with data points.
+ */
+export const getHorizontalLabelPositions = (
+    period: DatePeriod,
+    count: number
+): number[] => {
+    switch (period) {
+        case DATE_PERIOD.DAY:
+            return [
+                0,
+                6,
+                12,
+                18,
+            ];
+        case DATE_PERIOD.WEEK:
+            return Array.from({ length: count }, (_, i) => i + 0.5);
+        case DATE_PERIOD.MONTH: {
+            const step = Math.floor(count / 4);
+            return [
+                0,
+                step,
+                step * 2,
+                step * 3,
+                count - 1,
+            ];
+        }
+        case DATE_PERIOD.SIX_MONTH:
+        case DATE_PERIOD.YEAR:
+            return Array.from({ length: count }, (_, i) => i + 0.5);
+        default:
+            return [];
+    }
 };
 
 /**
@@ -102,7 +147,7 @@ export const calculateXCoordinate = (
             //     });
             // }
             
-            return labelIndex !== -1 ? labelIndex - 1 : 0;
+            return labelIndex !== -1 ? labelIndex : 0;
         }
 
         case DATE_PERIOD.SIX_MONTH:
