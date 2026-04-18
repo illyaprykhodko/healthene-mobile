@@ -1,5 +1,5 @@
 // outsource dependencies
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 // local dependencies
@@ -9,9 +9,9 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import Checkbox from 'components/Checkbox';
+import { CheckboxBurstEffect } from 'components/CheckboxBurstEffect';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE, VIDEO_LIBRARY_TYPE, QUESTION_TYPE } from 'constants/spec';
-import { RiveCheckbox } from 'components/RivComponent';
 interface ListItemProps {
   item: any;
   date?: string;
@@ -33,6 +33,8 @@ export const ListItem: React.FC<ListItemProps> = ({
 }) => {
     const theme = useTheme();
     const navigation = useNavigation();
+    const [burstSignal, setBurstSignal] = useState(0);
+    const checkboxBurstAnchorRef = useRef<View>(null);
     const isFood = item.type === ENTITY_TYPE.FOOD;
     const isRecipe = item.type === ENTITY_TYPE.RECIPE;
     const isDone = item.status === PHASE_ITEM_STATUS.DONE;
@@ -51,7 +53,11 @@ export const ListItem: React.FC<ListItemProps> = ({
 
     const handleCheckboxPress = () => {
         if (handleCheckboxStatus && !disabled && !isFutureDate) {
-            handleCheckboxStatus({ ...item, status: (isDone || isDidNotEat) ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE });
+            const nextStatus = (isDone || isDidNotEat) ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE;
+            if (nextStatus === PHASE_ITEM_STATUS.DONE) {
+                setBurstSignal(s => s + 1);
+            }
+            handleCheckboxStatus({ ...item, status: nextStatus });
         }
     };
 
@@ -62,15 +68,21 @@ export const ListItem: React.FC<ListItemProps> = ({
     };
 
     const renderCheckbox = () => (
-        <Checkbox
-            size={22}
-            isDayOverview
-            status={item.status}
-            onChange={handleCheckboxPress}
-            style={styles.checkboxContainer}
-            editable={!disabled && !isFutureDate}
-            value={item.status === PHASE_ITEM_STATUS.DONE}
-        />
+        <View ref={checkboxBurstAnchorRef} style={styles.checkboxBurstWrapper} collapsable={false}>
+            <Checkbox
+                size={22}
+                isDayOverview
+                status={item.status}
+                onChange={handleCheckboxPress}
+                editable={!disabled && !isFutureDate}
+                value={item.status === PHASE_ITEM_STATUS.DONE}
+            />
+            <CheckboxBurstEffect
+                anchorRef={checkboxBurstAnchorRef}
+                burstSignal={burstSignal}
+                checked={item.status === PHASE_ITEM_STATUS.DONE}
+            />
+        </View>
     );
 
     const renderStatusText = () => {
@@ -334,6 +346,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#E9E9E9',
         borderRightColor: '#8EF9F3',
         borderRightWidth: 7,
+        overflow: 'visible',
     },
     listItemLink: {
         maxWidth: '55%',
@@ -341,9 +354,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flex: 1,
     },
-    checkboxContainer: {
+    checkboxBurstWrapper: {
+        position: 'relative',
         marginRight: 5,
         marginLeft: 15,
+        width: 44,
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'visible',
     },
     image: {
         width: 40,

@@ -692,7 +692,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 onRowDidClose={handleScrollEnabled}
                                 onSwipeValueChange={handleScrollDisabled}
                                 handleCheckboxStatus={handleCheckboxStatus}
-                                keyExtractor={({ id, status }) => String(status + id)}
+                                keyExtractor={({ id }) => String(id)}
                                 renderItem={({ item, index }, ...restProps) => {
                                     return <ListItem
                                         item={item}
