@@ -62,16 +62,15 @@ export const ListItem: React.FC<ListItemProps> = ({
     };
 
     const renderCheckbox = () => (
-        <RiveCheckbox checked={item.status === PHASE_ITEM_STATUS.DONE} onCheckedChange={handleCheckboxPress}/>
-        // <Checkbox
-        //     size={22}
-        //     isDayOverview
-        //     status={item.status}
-        //     onChange={handleCheckboxPress}
-        //     style={styles.checkboxContainer}
-        //     editable={!disabled && !isFutureDate}
-        //     value={item.status === PHASE_ITEM_STATUS.DONE}
-        // />
+        <Checkbox
+            size={22}
+            isDayOverview
+            status={item.status}
+            onChange={handleCheckboxPress}
+            style={styles.checkboxContainer}
+            editable={!disabled && !isFutureDate}
+            value={item.status === PHASE_ITEM_STATUS.DONE}
+        />
     );
 
     const renderStatusText = () => {
