@@ -1,24 +1,30 @@
 // outsource dependencies
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, StyleProp, ViewStyle, View } from 'react-native';
-import Rive, { Alignment, Fit, RiveRef } from 'rive-react-native';
+import {
+    Alignment,
+    Fit,
+    RiveView,
+    useRiveFile,
+    useRiveBoolean,
+    useViewModelInstance, useRive, useRiveTrigger,
+} from '@rive-app/react-native';
 
 const checkboxRiv = require('../../../assets/riv/checkbox.riv');
 
+const IS_CHECKED = 'isChecked';
 const STATE_MACHINE = 'CheckboxStateMachine';
-const INPUT_IS_CHECKED = 'isChecked';
 
 export interface RiveCheckboxProps {
     checked: boolean;
     onCheckedChange: () => void;
     disabled?: boolean;
-    /** Outer hit target and Rive bounds; default 32. */
     size?: number;
     style?: StyleProp<ViewStyle>;
     testID?: string;
 }
 
-export const RiveCheckbox: React.FC<RiveCheckboxProps> = ({
+export const RiveCheckbox: React.FC<RiveCheckboxProps> = memo(({
     checked,
     size = 44,
     onCheckedChange,
@@ -26,45 +32,41 @@ export const RiveCheckbox: React.FC<RiveCheckboxProps> = ({
     style,
     testID,
 }) => {
-    const riveRef = useRef<RiveRef>(null);
-
-    // useEffect(() => {
-    //     const rive = riveRef.current;
-    //     if (!rive) { return; }
-    //     console.log('STATE_MACHINE ', STATE_MACHINE);
-    //     console.log('INPUT_IS_CHECKED ', INPUT_IS_CHECKED);
-    //     console.log('checked: ', checked);
-    //     rive.setInputState(STATE_MACHINE, INPUT_IS_CHECKED, checked);
-    //     console.log('rive', rive);
-    // }, [checked]);
-
+    const { riveFile } = useRiveFile(checkboxRiv);
+    const { riveViewRef, setHybridRef } = useRive();
+    const [isChecked, setIsChecked] = useState<boolean>(false);
+    const { instance: viewModelInstance } = useViewModelInstance(riveFile);
+    const { setValue: setRiveChecked } = useRiveBoolean(IS_CHECKED, viewModelInstance);
 
     return (
         <Pressable
             testID={testID}
             disabled={disabled}
-            onPress={onCheckedChange}
-            style={{ width: size, height: size }}
+            onPress={() => {
+                setIsChecked(prev => {
+                    const next = !prev;
+                    setRiveChecked(next);
+                    return next;
+                });
+            }}
+            style={[{ width: size, height: size }, style]}
         >
-            <View pointerEvents="none" style={{ width: '100%', height: '100%' }}>
-                <Rive
-                    ref={riveRef}
-                    fit={Fit.Contain}
-                    style={styles.rive}
-                    source={checkboxRiv}
-                    alignment={Alignment.Center}
-                    stateMachineName={STATE_MACHINE}
-                    dataBinding={{ type: 'autobind', value: !checked }}
-                />
+            <View style={{ width: '100%', height: '100%' }}>
+                {riveFile && viewModelInstance && (
+                    <RiveView
+                        file={riveFile}
+                        fit={Fit.Contain}
+                        style={styles.rive}
+                        alignment={Alignment.Center}
+                        stateMachineName={STATE_MACHINE}
+                    />
+                )}
             </View>
         </Pressable>
     );
-};
+});
 
 const styles = StyleSheet.create({
-    hit: {
-        overflow: 'hidden',
-    },
     rive: {
         width: '100%',
         height: '100%',
