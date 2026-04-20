@@ -7,6 +7,8 @@ export const STAR_CONFIG = {
     RAY_LENGTH: 5,
     SCALE_ANIMATION: 1.15,
     SCALE_DURATION: 300,
+    /** Opacity fade-out after grains + pulse + counter bump complete (ms). */
+    FADE_OUT_AFTER_REWARD_MS: 1000,
     /**
      * Placement inside the full-screen reward overlay (dp). The overlay already sits below the
      * app header / stack chrome, so `TOP_FROM_SAFE_AREA: 0` is the top of that layer — not the

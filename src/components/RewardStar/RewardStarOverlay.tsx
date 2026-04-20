@@ -1,5 +1,5 @@
 // outsource dependencies
-import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Text,
     Image,
@@ -7,7 +7,6 @@ import {
     useWindowDimensions,
     View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Polygon } from 'react-native-svg';
 import Animated, {
     cancelAnimation,
@@ -188,7 +187,6 @@ interface RewardStarOverlayProps {
 }
 
 export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHandlerRef }) => {
-    const insets = useSafeAreaInsets();
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const overlayRef = useRef<View>(null);
     const starMeasureRef = useRef<View>(null);
@@ -235,7 +233,8 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
         }
     }, []);
 
-    const onBumpDone = useCallback(() => {
+    const afterCounterBumpAndStarHidden = useCallback(() => {
+        hasRevealedStarRef.current = false;
         finishChain();
     }, [finishChain]);
 
@@ -244,13 +243,27 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
         const next = before + ANIMATION_CONFIG.COUNTER_INCREMENT;
         counterDisplayRef.current = next;
         setCounterDisplay(next);
+        const fadeMs = STAR_CONFIG.FADE_OUT_AFTER_REWARD_MS;
         counterBump.value = withSequence(
             withTiming(1.12, { duration: 90, easing: Easing.out(Easing.quad) }),
-            withTiming(1, { duration: 110, easing: Easing.inOut(Easing.quad) }, () => {
-                runOnJS(onBumpDone)();
+            withTiming(1, { duration: 110, easing: Easing.inOut(Easing.quad) }, bumpDone => {
+                if (bumpDone === false) {
+                    runOnJS(finishChain)();
+                    return;
+                }
+                starOpacity.value = withTiming(0, {
+                    duration: fadeMs,
+                    easing: Easing.in(Easing.quad),
+                }, hideDone => {
+                    if (hideDone === false) {
+                        runOnJS(finishChain)();
+                        return;
+                    }
+                    runOnJS(afterCounterBumpAndStarHidden)();
+                });
             })
         );
-    }, [counterBump, onBumpDone]);
+    }, [afterCounterBumpAndStarHidden, counterBump, finishChain, starOpacity]);
 
     const flyFromMeasuredLayout = useCallback(
         (layout: FlightLayout) => {
@@ -410,37 +423,6 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
             },
         ];
     }, [windowWidth]);
-
-    // #region agent log
-    useLayoutEffect(() => {
-        const topStyle = STAR_CONFIG.POSITION.TOP_FROM_SAFE_AREA;
-        const raf = globalThis.requestAnimationFrame.bind(globalThis);
-        const craf = globalThis.cancelAnimationFrame.bind(globalThis);
-        const id = raf(() => {
-            overlayRef.current?.measureInWindow((ox, oy, ow, oh) => {
-                fetch('http://127.0.0.1:7242/ingest/22fa9c9c-e95b-479f-8129-737150d9b0b6', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '9628eb' },
-                    body: JSON.stringify({
-                        sessionId: '9628eb',
-                        runId: 'post-fix-star-top',
-                        hypothesisId: 'H1',
-                        location: 'RewardStarOverlay.tsx:useLayoutEffect',
-                        message: 'star_top_overlay_rect',
-                        data: {
-                            insetTop: insets.top,
-                            topFromConfig: topStyle,
-                            overlayWindow: { ox, oy, ow, oh },
-                            approxStarBoxTopWindow: oy + topStyle,
-                        },
-                        timestamp: Date.now(),
-                    }),
-                }).catch(() => {});
-            });
-        });
-        return () => craf(id);
-    }, [insets.top, windowWidth, windowHeight]);
-    // #endregion
 
     const starAnimatedStyle = useAnimatedStyle(() => ({
         transform: [{ scale: starScale.value }],
