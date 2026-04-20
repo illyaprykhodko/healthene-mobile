@@ -34,7 +34,7 @@ import { BirdAnimation } from 'animation/BirdAnimation.tsx';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
-import { SeedAnimation, SeedAnimationRef } from 'animation/SeedAnimation';
+import { RewardStarProvider } from 'components/RewardStar';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
@@ -73,8 +73,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const targetPhaseId = phaseId || route.params?.phaseId;
 
     const [birdAnimationStep, setBirdAnimationStep] = useState(false);
-    const [checkboxAreaX, setCheckboxAreaX] = useState(0);
-    const seedAnimationRef = useRef<SeedAnimationRef>(null);
+    const [checkboxAreaX] = useState(0);
     useEffect(() => {
         if ((localItems || []).length > 0) {
             const allDone = localItems.every(item => item.status === 'DONE');
@@ -620,39 +619,40 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const isFutureDate = moment(targetDate).isAfter(moment(), 'day');
 
     return (
-        <Screen initialized={!isLoading} style={styles.container}>
-            {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
-                ? <BirdAnimation allChecked={birdAnimationStep} checkboxAreaX={checkboxAreaX} />
-                : null
-            }
-            <View style={[styles.title, isFutureDate && styles.opacity]}>
-                <View>
-                    <Text style={styles.titleText}>
-                        {title}
-                    </Text>
-                </View>
-                {currentPhase?.type === OVERVIEW_TYPE.MEAL && !isPastDate && (
-                    <View style={styles.titleButtons}>
-                        <TouchableOpacity onPress={() => {
-                            if (includeRescueFoodsInShoppingList) {
-                                navigation.navigate(ROUTES.REPLACEMENT, {
-                                    list: [],
-                                    date: targetDate,
-                                    phaseId: targetPhaseId,
-                                    isRestaurantMode: false,
-                                });
-                            } else {
-                                setShowRescueFoodsModal(true);
-                            }
-                        }}>
-                            <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
-                Change Meal
-                            </Text>
-                        </TouchableOpacity>
+        <RewardStarProvider>
+            <Screen initialized={!isLoading} style={styles.container}>
+                {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
+                    ? <BirdAnimation allChecked={birdAnimationStep} checkboxAreaX={checkboxAreaX} />
+                    : null
+                }
+                <View style={[styles.title, isFutureDate && styles.opacity]}>
+                    <View>
+                        <Text style={styles.titleText}>
+                            {title}
+                        </Text>
                     </View>
-                )}
-            </View>
-            {/* if (onlyPhaseItemsFetching) {
+                    {currentPhase?.type === OVERVIEW_TYPE.MEAL && !isPastDate && (
+                        <View style={styles.titleButtons}>
+                            <TouchableOpacity onPress={() => {
+                                if (includeRescueFoodsInShoppingList) {
+                                    navigation.navigate(ROUTES.REPLACEMENT, {
+                                        list: [],
+                                        date: targetDate,
+                                        phaseId: targetPhaseId,
+                                        isRestaurantMode: false,
+                                    });
+                                } else {
+                                    setShowRescueFoodsModal(true);
+                                }
+                            }}>
+                                <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
+                Change Meal
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
+                {/* if (onlyPhaseItemsFetching) {
                 sortedSections.push(['Added', [{
                     id: 'skeleton',
                     type: ENTITY_TYPE.FOOD,
@@ -662,62 +662,62 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     section: 'Added',
                 } as PhaseItem]])
             } */}
-            <View style={styles.list}>
-                <ScrollView
-                    ref={scrollViewRef}
-                    style={isFutureDate && styles.opacity}
-                    scrollEnabled={scrollEnabled}
-                    onContentSizeChange={() => {
-                        if (shouldScrollToAddedEnd && !isAddingAddedItem) {
-                            setTimeout(() => {
-                                scrollViewRef.current?.scrollToEnd({ animated: true });
-                            }, 0);
-                            setShouldScrollToAddedEnd(false);
-                        }
-                    }}
-                >
-                    {!isEmpty(localItems) ? (
-                        sortedSections.map(([section, sectionItems]) => (
-                            <SwipeList
-                                key={section}
-                                data={sectionItems}
-                                scrollEnabled={false}
-                                isPastDate={isPastDate}
-                                isFutureDate={isFutureDate}
-                                onDelete={handleDeleteItem}
-                                onReplace={handleReplaceItem}
-                                recipeReplacementEnable={true}
-                                type={currentPhase?.type || ''}
-                                noReplaceItem={handleNoReplaceItem}
-                                onRowDidClose={handleScrollEnabled}
-                                onSwipeValueChange={handleScrollDisabled}
-                                handleCheckboxStatus={handleCheckboxStatus}
-                                keyExtractor={({ id }) => String(id)}
-                                renderItem={({ item, index }, ...restProps) => {
-                                    return <ListItem
-                                        item={item}
-                                        disabled={false}
-                                        date={targetDate}
-                                        isFutureDate={isFutureDate}
-                                        updateData={updatePhaseItem}
-                                        handleCheckboxStatus={handleCheckboxStatus}
-                                    />;
-                                    // return (
-                                    //     isPhaseItemsFetching
-                                    //     ?
-                                    //     <>
-                                    //     <ListItem
-                                    //        item={item}
-                                    //        disabled={false}
-                                    //        date={targetDate}
-                                    //        isFutureDate={isFutureDate}
-                                    //        updateData={updatePhaseItem}
-                                    //        nextSection={item?.section || ''}
-                                    //        handleCheckboxStatus={handleCheckboxStatus}
-                                    //    />;
-                                    //        nextSection={item?.section || ''}
-                                    //        handleCheckboxStatus={handleCheckboxStatus}
-                                    //    />;
+                <View style={styles.list}>
+                    <ScrollView
+                        ref={scrollViewRef}
+                        style={isFutureDate && styles.opacity}
+                        scrollEnabled={scrollEnabled}
+                        onContentSizeChange={() => {
+                            if (shouldScrollToAddedEnd && !isAddingAddedItem) {
+                                setTimeout(() => {
+                                    scrollViewRef.current?.scrollToEnd({ animated: true });
+                                }, 0);
+                                setShouldScrollToAddedEnd(false);
+                            }
+                        }}
+                    >
+                        {!isEmpty(localItems) ? (
+                            sortedSections.map(([section, sectionItems]) => (
+                                <SwipeList
+                                    key={section}
+                                    data={sectionItems}
+                                    scrollEnabled={false}
+                                    isPastDate={isPastDate}
+                                    isFutureDate={isFutureDate}
+                                    onDelete={handleDeleteItem}
+                                    onReplace={handleReplaceItem}
+                                    recipeReplacementEnable={true}
+                                    type={currentPhase?.type || ''}
+                                    noReplaceItem={handleNoReplaceItem}
+                                    onRowDidClose={handleScrollEnabled}
+                                    onSwipeValueChange={handleScrollDisabled}
+                                    handleCheckboxStatus={handleCheckboxStatus}
+                                    keyExtractor={({ id }) => String(id)}
+                                    renderItem={({ item, index }, ...restProps) => {
+                                        return <ListItem
+                                            item={item}
+                                            disabled={false}
+                                            date={targetDate}
+                                            isFutureDate={isFutureDate}
+                                            updateData={updatePhaseItem}
+                                            handleCheckboxStatus={handleCheckboxStatus}
+                                        />;
+                                        // return (
+                                        //     isPhaseItemsFetching
+                                        //     ?
+                                        //     <>
+                                        //     <ListItem
+                                        //        item={item}
+                                        //        disabled={false}
+                                        //        date={targetDate}
+                                        //        isFutureDate={isFutureDate}
+                                        //        updateData={updatePhaseItem}
+                                        //        nextSection={item?.section || ''}
+                                        //        handleCheckboxStatus={handleCheckboxStatus}
+                                        //    />;
+                                        //        nextSection={item?.section || ''}
+                                        //        handleCheckboxStatus={handleCheckboxStatus}
+                                        //    />;
 
                                     //         <Skeleton width={200} height={20} />
                                     //         </>
@@ -731,76 +731,74 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                     //             handleCheckboxStatus={handleCheckboxStatus}
                                     //         />
                                     // );
-                                }}
-                                ListHeaderComponent={() => (
-                                    (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
-                                        <View style={[
-                                            styles.separatorWrapper,
-                                            {
+                                    }}
+                                    ListHeaderComponent={() => (
+                                        (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
+                                            <View style={[
+                                                styles.separatorWrapper,
+                                                {
                                                 // borderTopColor: theme.colors.black,
                                                 // borderTopWidth: section === 'Added' ? 0 : 1,
-                                                backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}`
-                                            }
-                                        ]}>
-                                            <Text variant="h3" style={styles.offset}>
-                                                {section || 'No section'}
-                                            </Text>
-                                        </View>
-                                    ) : null
-                                )}
-                                ListFooterComponent={() => (
-                                    section === 'Added' && isAddingAddedItem ? (
-                                        <View style={styles.addedSkeletonContainer}>
-                                            <View style={styles.addedSkeletonRow}>
-                                                <ListItemSkeleton />
-                                                <Skeleton width={25} height={25} />
+                                                    backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}`
+                                                }
+                                            ]}>
+                                                <Text variant="h3" style={styles.offset}>
+                                                    {section || 'No section'}
+                                                </Text>
                                             </View>
-                                        </View>
-                                    ) : null
-                                )}
-                            />
-                        ))
-                    ) : (
-                        <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
+                                        ) : null
+                                    )}
+                                    ListFooterComponent={() => (
+                                        section === 'Added' && isAddingAddedItem ? (
+                                            <View style={styles.addedSkeletonContainer}>
+                                                <View style={styles.addedSkeletonRow}>
+                                                    <ListItemSkeleton />
+                                                    <Skeleton width={25} height={25} />
+                                                </View>
+                                            </View>
+                                        ) : null
+                                    )}
+                                />
+                            ))
+                        ) : (
+                            <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
               No items found
-                        </Text>
-                    )}
-                </ScrollView>
+                            </Text>
+                        )}
+                    </ScrollView>
 
-                {/* {(currentPhase?.type === OVERVIEW_TYPE.MEAL
+                    {/* {(currentPhase?.type === OVERVIEW_TYPE.MEAL
                   || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? ( */}
-                <View style={styles.buttonContainer}>
-                    <Button
-                        icon="plus"
-                        title="Add"
-                        variant="primary"
-                        onPress={handleAddItem}
-                        textStyle={styles.textAddButton}
-                        style={{
-                            ...styles.button,
-                            ...styles.addButtonActive,
-                            width: isFutureDate ? '100%' : '45%',
-                            backgroundColor: theme.colors.transparent,
-                        }}
-                    />
-                    {!isFutureDate && (
+                    <View style={styles.buttonContainer}>
                         <Button
-                            title="Meal Done"
-                            variant="secondary"
-                            // disabled={!allItemsDone}
-                            disabled={isLoading}
-                            onPress={handlePhaseDone}
-                            textStyle={styles.textMealDoneButton}
+                            icon="plus"
+                            title="Add"
+                            variant="primary"
+                            onPress={handleAddItem}
+                            textStyle={styles.textAddButton}
                             style={{
                                 ...styles.button,
-                                ...styles.mealDoneButton,
-                                ...(isLoading ? styles.mealDoneButtonDisabled : {}),
-                                // ...(!allItemsDone && styles.mealDoneButtonDisabled),
+                                ...styles.addButtonActive,
+                                width: isFutureDate ? '100%' : '45%',
+                                backgroundColor: theme.colors.transparent,
                             }}
                         />
-                    )}
-                </View>
-                {/* ) : (
+                        {!isFutureDate && (
+                            <Button
+                                title="Meal Done"
+                                variant="secondary"
+                                disabled={!allItemsDone || isLoading}
+                                onPress={handlePhaseDone}
+                                textStyle={styles.textMealDoneButton}
+                                style={{
+                                    ...styles.button,
+                                    ...styles.mealDoneButton,
+                                    ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
+                                }}
+                            />
+                        )}
+                    </View>
+                    {/* ) : (
                         <Button
                             icon="plus"
                             title="Add"
@@ -817,40 +815,41 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             }}
                         />
                     )} */}
-            </View>
+                </View>
 
-            {/* Rescue Foods Modal */}
-            <ReplaceItemModal
-                visible={showRescueFoodsModal}
-                onClose={() => setShowRescueFoodsModal(false)}
-                onApply={async () => {
-                    try {
-                        await updateIncludeRescueFoods({ includeRescueFoodsInShoppingList: true }).unwrap();
-                        navigation.navigate(ROUTES.REPLACEMENT, {
-                            list: [],
-                            date: targetDate,
-                            phaseId: targetPhaseId,
-                            isRestaurantMode: false,
-                        });
-                    } catch (error) {
-                        console.error('Change Meal error:', error);
-                    }
-                }}
-            />
+                {/* Rescue Foods Modal */}
+                <ReplaceItemModal
+                    visible={showRescueFoodsModal}
+                    onClose={() => setShowRescueFoodsModal(false)}
+                    onApply={async () => {
+                        try {
+                            await updateIncludeRescueFoods({ includeRescueFoodsInShoppingList: true }).unwrap();
+                            navigation.navigate(ROUTES.REPLACEMENT, {
+                                list: [],
+                                date: targetDate,
+                                phaseId: targetPhaseId,
+                                isRestaurantMode: false,
+                            });
+                        } catch (error) {
+                            console.error('Change Meal error:', error);
+                        }
+                    }}
+                />
 
-            <ConfirmationReplaceModal
-                visible={showConfirmationModal}
-                prevItem={replacementData.prevItem}
-                nextItem={replacementData.nextItem}
-                onClose={() => {
-                    setShowConfirmationModal(false);
-                    setReplacementData({ prevItem: null, nextItem: null });
-                }}
-                onApply={handleConfirmationModalApply}
-            />
+                <ConfirmationReplaceModal
+                    visible={showConfirmationModal}
+                    prevItem={replacementData.prevItem}
+                    nextItem={replacementData.nextItem}
+                    onClose={() => {
+                        setShowConfirmationModal(false);
+                        setReplacementData({ prevItem: null, nextItem: null });
+                    }}
+                    onApply={handleConfirmationModalApply}
+                />
 
-            <AnytimeMenu date={targetDate} />
-        </Screen>
+                <AnytimeMenu date={targetDate} />
+            </Screen>
+        </RewardStarProvider>
     );
 };
 

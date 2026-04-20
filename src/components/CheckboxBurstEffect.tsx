@@ -327,12 +327,7 @@ const CheckboxBurstEffectInner: React.FC<CheckboxBurstEffectProps> = ({ burstSig
                     ]}
                 >
                     {particles.map((config, index) => (
-                        <BurstParticle
-                            key={`${burstId}-${index}`}
-                            burstId={burstId}
-                            config={config}
-                            particleIndex={index}
-                        />
+                        <BurstParticle key={`${burstId}-${index}`} burstId={burstId} config={config} />
                     ))}
                 </View>
             </View>

@@ -10,6 +10,7 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import Checkbox from 'components/Checkbox';
 import { CheckboxBurstEffect } from 'components/CheckboxBurstEffect';
+import { useRewardStar } from 'components/RewardStar';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE, VIDEO_LIBRARY_TYPE, QUESTION_TYPE } from 'constants/spec';
 interface ListItemProps {
@@ -33,6 +34,7 @@ export const ListItem: React.FC<ListItemProps> = ({
 }) => {
     const theme = useTheme();
     const navigation = useNavigation();
+    const rewardStar = useRewardStar();
     const [burstSignal, setBurstSignal] = useState(0);
     const checkboxBurstAnchorRef = useRef<View>(null);
     const isFood = item.type === ENTITY_TYPE.FOOD;
@@ -56,6 +58,11 @@ export const ListItem: React.FC<ListItemProps> = ({
             const nextStatus = (isDone || isDidNotEat) ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DONE;
             if (nextStatus === PHASE_ITEM_STATUS.DONE) {
                 setBurstSignal(s => s + 1);
+                checkboxBurstAnchorRef.current?.measureInWindow((x, y, w, h) => {
+                    const cx = x + w / 2;
+                    const cy = y + h / 2;
+                    rewardStar?.scheduleRewardFromCheckboxCenter(cx, cy);
+                });
             }
             handleCheckboxStatus({ ...item, status: nextStatus });
         }
