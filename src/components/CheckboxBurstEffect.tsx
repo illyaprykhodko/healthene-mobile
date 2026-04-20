@@ -15,9 +15,9 @@ export const PARTICLE_CONFIG = {
     /** Fixed travel distance from checkbox center (px); all particles use this value. */
     MAX_RADIUS: 200,
     SIZE: 40,
-    DURATION: 1700,
-    /** Stagger between particle start times (ms): delay = index * STAGGER_MS. */
-    STAGGER_MS: 20,
+    DURATION: 700,
+    /** Stagger between particle start times (ms): delay = index * STAGGER_MS. Use 0 so all particles start together. */
+    STAGGER_MS: 0,
     COLORS: [
         '#22C55E',
         '#EC4899',
@@ -44,7 +44,7 @@ export interface BurstParticleConfig {
 
 const SHAPES: ParticleShape[] = ['circle', 'square', 'triangle', 'cross'];
 
-/** Even angles: 360° / COUNT (e.g. 6 → 0°, 60°, …). Fixed distance. Stagger by index. */
+/** Even angles: 360° / COUNT (e.g. 6 → 0°, 60°, …). Fixed distance. Optional stagger via STAGGER_MS. */
 function generateBurstParticles (): BurstParticleConfig[] {
     const { COUNT, MAX_RADIUS, STAGGER_MS } = PARTICLE_CONFIG;
     const angleStepRad = (Math.PI * 2) / COUNT;
@@ -68,54 +68,46 @@ interface BurstParticleProps {
     burstId: number;
 }
 
-/** Radial motion from center; tLinear = time for scale/opacity; tMove = eased travel distance. */
+/** Single timeline t ∈ [0,1]: translate is strictly outward (linear); scale/opacity handle pop + vanish in place. */
 const BurstParticle: React.FC<BurstParticleProps> = memo(({ config, burstId }) => {
-    const tLinear = useRef(new Animated.Value(0)).current;
-    const tMove = useRef(new Animated.Value(0)).current;
+    const t = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        tLinear.setValue(0);
-        tMove.setValue(0);
+        t.setValue(0);
         const { delay } = config;
         const duration = PARTICLE_CONFIG.DURATION;
         const anim = Animated.sequence([
             Animated.delay(delay),
-            Animated.parallel([
-                Animated.timing(tLinear, {
-                    toValue: 1,
-                    duration,
-                    easing: RNEasing.linear,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(tMove, {
-                    toValue: 1,
-                    duration,
-                    easing: RNEasing.out(RNEasing.exp),
-                    useNativeDriver: true,
-                }),
-            ]),
+            Animated.timing(t, {
+                toValue: 1,
+                duration,
+                easing: RNEasing.linear,
+                useNativeDriver: true,
+            }),
         ]);
         anim.start();
         return () => {
             anim.stop();
         };
-    }, [burstId, config.delay, PARTICLE_CONFIG.DURATION, tLinear, tMove]);
+    }, [burstId, config.delay, PARTICLE_CONFIG.DURATION, t]);
 
-    const tx = tMove.interpolate({
+    const tx = t.interpolate({
         inputRange: [0, 1],
         outputRange: [0, Math.cos(config.angle) * config.distance],
     });
-    const ty = tMove.interpolate({
+    const ty = t.interpolate({
         inputRange: [0, 1],
         outputRange: [0, Math.sin(config.angle) * config.distance],
     });
-    const scale = tLinear.interpolate({
-        inputRange: [0, 0.12, 0.5, 1],
-        outputRange: [0, 1, 1, 0],
+    /** 0 → 1 → 0 with peak at ~50% (max visual size mid-flight). */
+    const scale = t.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0, 1, 0],
     });
-    const opacity = tLinear.interpolate({
-        inputRange: [0, 0.12, 0.72, 1],
-        outputRange: [0, 1, 1, 0],
+    /** Visible while moving; fade out in the last segment at the outer position (no return motion). */
+    const opacity = t.interpolate({
+        inputRange: [0, 0.65, 1],
+        outputRange: [1, 1, 0],
     });
 
     const shapeEl = useMemo(() => {
@@ -197,7 +189,7 @@ const BurstParticle: React.FC<BurstParticleProps> = memo(({ config, burstId }) =
                 styles.particle,
                 {
                     opacity,
-                    transform: [{ scale }, { translateX: tx }, { translateY: ty }],
+                    transform: [{ translateX: tx }, { translateY: ty }, { scale }],
                 },
             ]}
         >
@@ -335,7 +327,12 @@ const CheckboxBurstEffectInner: React.FC<CheckboxBurstEffectProps> = ({ burstSig
                     ]}
                 >
                     {particles.map((config, index) => (
-                        <BurstParticle key={`${burstId}-${index}`} burstId={burstId} config={config} />
+                        <BurstParticle
+                            key={`${burstId}-${index}`}
+                            burstId={burstId}
+                            config={config}
+                            particleIndex={index}
+                        />
                     ))}
                 </View>
             </View>
