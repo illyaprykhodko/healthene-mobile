@@ -21,11 +21,12 @@ import CameraControls from 'components/Camera/CameraControls.tsx';
 import NoCameraPermissions from 'components/Camera/NoCameraPermissions.tsx';
 
 interface CameraProps {
-    cameraPosition?: CameraPosition
-    onCapture: (item: Attachment) => void
+    cameraPosition?: CameraPosition;
+    captureMode?: 'photo' | 'video';
+    onCapture: (item: Attachment) => void;
 }
 
-const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
+const Camera = ({ cameraPosition = 'back', captureMode = 'photo', onCapture }: CameraProps) => {
     const appState = useAppState();
     const isFocused = useIsFocused();
     const camera = useRef<RNCamera>(null);
@@ -63,7 +64,20 @@ const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
                 });
             }
         })();
-    }, [device, hasCameraPermission, hasMicPermission, requestCameraPermission, requestMicPermission]);
+    }, [
+        device,
+        hasMicPermission,
+        hasCameraPermission,
+        requestMicPermission,
+        requestCameraPermission,
+    ]);
+
+    useEffect(() => () => {
+        if (recordingTimerRef.current) {
+            clearInterval(recordingTimerRef.current);
+            recordingTimerRef.current = null;
+        }
+    }, []);
 
     if (!hasCameraPermission || !hasMicPermission) {
         return <NoCameraPermissions
@@ -112,8 +126,6 @@ const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
             setRecordingDuration(Math.floor(elapsedMs / 1000));
         }, 500);
 
-        setIsRecording(true);
-
         camera.current.startRecording({
             onRecordingFinished: (video: VideoFile) => {
                 setIsRecording(false);
@@ -121,11 +133,11 @@ const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
                 setResult(video);
             },
             onRecordingError: error => {
-                setIsRecording(false);
+                stopRecordingTimer();
                 Toast.show({
                     type: 'error',
-                    text1: 'Recording failed',
                     text2: error.message,
+                    text1: 'Recording failed',
                 });
             },
         });
@@ -135,6 +147,14 @@ const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
         if (!isRecording || !camera.current) { return; }
 
         await camera.current.stopRecording();
+    };
+
+    const toggleRecording = async () => {
+        if (isRecording) {
+            await stopRecording();
+            return;
+        }
+        await startRecording();
     };
 
     return <View style={styles.flex}>
@@ -150,10 +170,10 @@ const Camera = ({ cameraPosition = 'back', onCapture }: CameraProps) => {
                     style={StyleSheet.absoluteFill}
                 />
                 <CameraControls
-                    onPress={takePhoto}
+                    onTakePhoto={takePhoto}
+                    captureMode={captureMode}
                     isRecording={isRecording}
-                    onStopRecording={stopRecording}
-                    onStartRecording={startRecording}
+                    onToggleRecording={toggleRecording}
                     recordingDuration={recordingDuration}
                     changePosition={toggleCameraPosition}
                 />

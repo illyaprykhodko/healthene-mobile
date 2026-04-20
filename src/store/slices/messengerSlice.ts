@@ -30,6 +30,10 @@ const messengerSlice = createSlice({
         setAttachment: (state, action: PayloadAction<Attachment>) => {
             state.initialValues.attachments.push(action.payload);
         },
+        removeAttachment: (state, action: PayloadAction<number>) => {
+            state.initialValues.attachments = state.initialValues.attachments
+                .filter(item => item.id !== action.payload);
+        },
         saveMessageForm: (state, action: PayloadAction<MessageForm>) => {
             state.initialValues = { ...state.initialValues, ...action.payload };
         }
@@ -41,6 +45,7 @@ export const {
     setAttachment,
     saveMessageForm,
     setReplyMessage,
+    removeAttachment,
     clearReplyMessage
 } = messengerSlice.actions;
 

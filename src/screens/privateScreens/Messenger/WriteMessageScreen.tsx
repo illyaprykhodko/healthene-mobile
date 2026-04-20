@@ -9,11 +9,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { pick, types } from '@react-native-documents/picker';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // local dependencies
+import { config } from 'constants';
 import Text from 'components/Text.tsx';
 import { filters } from 'services/filter';
 import Screen from 'components/Screen.tsx';
@@ -27,27 +28,27 @@ import { RootState, useAppSelector } from 'store';
 import ProfileImage from 'components/ProfileImage.tsx';
 import { RootStackParamList } from 'services/navigation';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
-import { useUploadAttachmentMutation } from 'store/api/s3ServiceApi.ts';
-import { setAttachment, saveMessageForm } from 'store/slices/messengerSlice.ts';
 import Attachments from 'screens/privateScreens/Messenger/components/Attachments.tsx';
 import { useCreateChainMutation, useReplyToChainMutation } from 'store/api/messengerApi.ts';
+import { useDeleteFileMutation, useUploadAttachmentMutation } from 'store/api/s3ServiceApi.ts';
+import { setAttachment, saveMessageForm, removeAttachment, } from 'store/slices/messengerSlice.ts';
 
 // configure
 const ATTACHMENTS = {
+    FILE: 'FILE',
     VIDEO: 'VIDEO',
     AUDIO: 'AUDIO',
-    FILE: 'FILE',
 };
 type AttachmentType = typeof ATTACHMENTS[keyof typeof ATTACHMENTS];
 const validationSchema = yup.object().shape({
     subject: yup.string()
         .trim()
         .required('Subject is required.')
-        .min(5, 'Subject should contain at least 5 symbol character.'),
+        .min(3, 'Subject should contain at least 3 symbol character.'),
     text: yup.string()
         .trim()
         .required('Subject is required.')
-        .min(5, 'Subject should contain at least 5 symbol character.'),
+        .min(3, 'Subject should contain at least 3 symbol character.'),
 });
 
 const WriteMessageScreen = () => {
@@ -63,6 +64,7 @@ const WriteMessageScreen = () => {
     const [replyChain] = useReplyToChainMutation();
     const [createChain] = useCreateChainMutation();
     const [uploadFile] = useUploadAttachmentMutation();
+    const [deleteFile] = useDeleteFileMutation();
     const formInitialValues: MessageForm = chain
         ? { ...initialValues, subject: chain.subject }
         : initialValues;
@@ -84,21 +86,29 @@ const WriteMessageScreen = () => {
         // reset form fields
         formikHelpers?.resetForm({
             values: {
-                subject: '',
                 text: '',
+                subject: '',
                 attachments: []
             }
         });
 
         // clear attachments in redux
         dispatch(saveMessageForm({
-            subject: '',
             text: '',
+            subject: '',
             attachments: []
         } as any));
 
         navigation.navigate(ROUTES.MESSAGE_LIST);
-    }, [chain, navigation, dispatch, replyChain, createChain, initialValues, user]);
+    }, [
+        user,
+        chain,
+        dispatch,
+        replyChain,
+        navigation,
+        createChain,
+        initialValues,
+    ]);
 
     const handleAttachFile = useCallback(async () => {
         try {
@@ -131,14 +141,71 @@ const WriteMessageScreen = () => {
         }
     }, []);
 
+    const resolveAttachmentDeleteUrl = useCallback((attachment: MessageForm['attachments'][number]) => {
+        if (attachment.url) { return attachment.url; }
+        return `${config.serviceUrl}/${config.apiPath}/s3-service/attachment/${attachment.id}`;
+    }, []);
+
+    const handleRemoveAttachment = useCallback(async (attachment: MessageForm['attachments'][number]) => {
+        try {
+            setPreloader(true);
+            const deleteUrl = resolveAttachmentDeleteUrl(attachment);
+            await deleteFile([{ url: deleteUrl }]).unwrap();
+
+            dispatch(removeAttachment(attachment.id));
+            Toast.show({
+                type: 'success',
+                text1: 'Attachment removed',
+                text2: 'File removed successfully',
+            });
+        } catch (error) {
+            Sentry.captureException(error);
+            Toast.show({
+                type: 'error',
+                text1: 'Remove failed',
+                text2: 'Unable to remove the file. Please try again.',
+            });
+        } finally {
+            setPreloader(false);
+        }
+    }, [
+        deleteFile,
+        dispatch,
+        resolveAttachmentDeleteUrl
+    ]);
+
+    const showCaptureModeSelector = useCallback((onSave: () => void) => {
+        Alert.alert(
+            'Attach from camera',
+            'Choose what you want to capture',
+            [
+                {
+                    text: 'Photo',
+                    onPress: () => {
+                        onSave();
+                        navigation.navigate(ROUTES.MESSENGER_CAMERA, { captureMode: 'photo' });
+                    },
+                },
+                {
+                    text: 'Video',
+                    onPress: () => {
+                        onSave();
+                        navigation.navigate(ROUTES.MESSENGER_CAMERA, { captureMode: 'video' });
+                    },
+                },
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+            ]
+        );
+    }, [navigation]);
+
     const getAttachment = useCallback((item: AttachmentType, onSave: () => void) => {
         switch (item) {
             default: return <Pressable
                 key={item}
-                onPress={() => {
-                    onSave();
-                    navigation.navigate(ROUTES.MESSENGER_CAMERA);
-                }}
+                onPress={() => showCaptureModeSelector(onSave)}
                 style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
             >
                 <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
@@ -170,7 +237,7 @@ const WriteMessageScreen = () => {
                 <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
             </Pressable>;
         }
-    }, [handleAttachFile]);
+    }, [handleAttachFile, showCaptureModeSelector]);
 
     return <>
         <LoadingOverlay init={preloader} />
@@ -222,7 +289,15 @@ const WriteMessageScreen = () => {
                                     onChangeText={handleChange('text')}
                                     error={touched.text && errors.text ? { text: errors.text } : undefined}
                                 />
-                                {initialValues.attachments.map(item => <Attachments isUploadFile onPreloader={setPreloader} key={item?.id} {...item}/>)}
+                                {initialValues.attachments.map(item => (
+                                    <Attachments
+                                        isUploadFile
+                                        key={item?.id}
+                                        onPreloader={setPreloader}
+                                        onRemove={() => { void handleRemoveAttachment(item); }}
+                                        {...item}
+                                    />
+                                ))}
                                 <View style={styles.attachmentsContainer}>
                                     {Object.values(ATTACHMENTS).map(item => getAttachment(item, () => saveForm(values)))}
                                 </View>

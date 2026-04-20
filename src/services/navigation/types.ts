@@ -49,7 +49,6 @@ export type RootStackParamList = {
   [ROUTES.FOOD_ALLERGIES]: undefined;
   [ROUTES.CHANGE_PASSWORD]: undefined;
   [ROUTES.MESSENGER_AUDIO]: undefined;
-  [ROUTES.MESSENGER_CAMERA]: undefined;
   [ROUTES.ACCOUNT_SETTINGS]: undefined;
   [ROUTES.MEAL_PREFERENCES]: undefined;
   [ROUTES.FOOD_PREFERENCES]: undefined;
@@ -59,6 +58,9 @@ export type RootStackParamList = {
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
   [ROUTES.MEAL_PREFERENCES_MEALS_LIST]: undefined;
+  [ROUTES.MESSENGER_CAMERA]: {
+    captureMode?: 'photo' | 'video';
+  } | undefined;
   [ROUTES.READ_MESSAGE]: {
     id?: number;
     chainId?: number;

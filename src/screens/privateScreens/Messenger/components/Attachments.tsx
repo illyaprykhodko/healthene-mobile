@@ -17,11 +17,20 @@ import { sessionManager } from 'store/api/baseApi.ts';
 
 // configure
 interface AttachmentsProps extends Attachment{
+    onRemove?: () => void;
     isUploadFile?: boolean;
     onPreloader: (preloader: boolean) => void;
 }
 
-const Attachments = ({ title, mimeType, id, fileName, onPreloader, isUploadFile = false }: AttachmentsProps) => {
+const Attachments = ({
+    id,
+    title,
+    mimeType,
+    fileName,
+    onRemove,
+    onPreloader,
+    isUploadFile = false,
+}: AttachmentsProps) => {
     const theme = useTheme();
     const attachmentType = mimeType.split('/')[0];
     const [isDownload, setIsDownload] = React.useState(false);
@@ -104,10 +113,7 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader, isUploadFile 
     };
 
     return <View
-        style={[
-            styles.container,
-            { borderColor: theme.colors.border, borderRadius: theme.borderRadius.md },
-        ]}
+        style={[styles.container, { borderColor: theme.colors.border, borderRadius: theme.borderRadius.md },]}
     >
         <Pressable
             style={styles.row}
@@ -116,7 +122,17 @@ const Attachments = ({ title, mimeType, id, fileName, onPreloader, isUploadFile 
             {getIcon()}
             <Text style={styles.flexShrink} numberOfLines={1}>{title}</Text>
         </Pressable>
-        {isUploadFile ? null : <Pressable onPress={downloadFile}>
+        {isUploadFile ? (
+            <Pressable onPress={onRemove} hitSlop={8}>
+                <Icon
+                    size={16}
+                    iconStyle="solid"
+                    style={styles.icon}
+                    name="times-circle"
+                    color={theme.colors.error || theme.colors.darkGrey}
+                />
+            </Pressable>
+        ) : <Pressable onPress={downloadFile}>
             {isDownload
                 ? <MaterialIndicator style={styles.icon} color={theme.colors.darkGrey} size={14}/>
                 : <Icon iconStyle="solid" style={styles.icon} name="download" size={14} color={theme.colors.darkGrey}/>
