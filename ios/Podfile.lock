@@ -2801,7 +2801,6 @@ PODS:
     - React-perflogger (= 0.81.4)
     - React-utils (= 0.81.4)
     - SocketRocket
-  - RiveRuntime (6.18.2)
   - RNAppleHealthKit (1.7.0):
     - React
   - RNCAsyncStorage (2.1.2):
@@ -3134,36 +3133,6 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - RNWorklets
-    - SocketRocket
-    - Yoga
-  - RNRive (0.4.3):
-    - boost
-    - DoubleConversion
-    - fast_float
-    - fmt
-    - glog
-    - hermes-engine
-    - NitroModules
-    - RCT-Folly
-    - RCT-Folly/Fabric
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - RiveRuntime (= 6.18.2)
     - SocketRocket
     - Yoga
   - RNScreens (4.24.0):
@@ -3519,7 +3488,6 @@ DEPENDENCIES:
   - "RNNotifee (from `../node_modules/@notifee/react-native`)"
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
-  - "RNRive (from `../node_modules/@rive-app/react-native`)"
   - RNScreens (from `../node_modules/react-native-screens`)
   - "RNSentry (from `../node_modules/@sentry/react-native`)"
   - RNSVG (from `../node_modules/react-native-svg`)
@@ -3541,7 +3509,6 @@ SPEC REPOS:
     - MultiplatformBleAdapter
     - nanopb
     - PromisesObjC
-    - RiveRuntime
     - Sentry
     - SocketRocket
     - TOCropViewController
@@ -3750,8 +3717,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-permissions"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
-  RNRive:
-    :path: "../node_modules/@rive-app/react-native"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   RNSentry:
@@ -3867,7 +3832,6 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: b20fba6c3d091a393925890009999472c8f94d95
   ReactCodegen: 58dc2eb138a27145826ad7d5568610159dfcadee
   ReactCommon: 00df7b9f859c9d02181844255bb89a8bca544374
-  RiveRuntime: 55c7a7badd9a8389d20fc8a75b7c6accc851b69a
   RNAppleHealthKit: 60a6beefdd89a75811e9a8873a5e24f351dee681
   RNCAsyncStorage: a9e087b68308fd829e66f5e932976f23c4e1005b
   RNDeviceInfo: d79872e11c8e9c4de0d65b0ee6e0cee719f37fea
@@ -3879,7 +3843,6 @@ SPEC CHECKSUMS:
   RNNotifee: 4a6ee5c7deaf00e005050052d73ee6315dff7ec9
   RNPermissions: d4a9346b5152404224c89a7220e46e0aff489a87
   RNReanimated: 053cf7797d3c03683844f28291a9a4dcd7206af4
-  RNRive: e32a9698466912d335c44bf4a9505a0d429f3fc8
   RNScreens: 7179cc1ba31b4e18ed29f10abf20c24a7961cf4c
   RNSentry: f07853ff3fcbb69df26da1d9744e95ee97f683fd
   RNSVG: 81134639f861f002d999de10df56c26c5e496d71

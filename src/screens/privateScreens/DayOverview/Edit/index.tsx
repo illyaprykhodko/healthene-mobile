@@ -34,7 +34,7 @@ import { BirdAnimation } from 'animation/BirdAnimation.tsx';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
-import { RewardStarProvider } from 'components/RewardStar';
+import { RewardStarOverlay } from 'components/RewardStar';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
@@ -613,7 +613,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const isFutureDate = moment(targetDate).isAfter(moment(), 'day');
 
     return (
-        <RewardStarProvider>
             <Screen initialized={!isLoading} style={styles.container}>
                 {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
                     ? <BirdAnimation allChecked={birdAnimationStep} checkboxAreaX={checkboxAreaX} />
@@ -841,9 +840,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     onApply={handleConfirmationModalApply}
                 />
 
+                <RewardStarOverlay />
+
                 <AnytimeMenu date={targetDate} />
             </Screen>
-        </RewardStarProvider>
     );
 };
 
