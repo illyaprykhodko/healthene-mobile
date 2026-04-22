@@ -1,25 +1,26 @@
 // outsource dependencies
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Text,
+    View,
     Image,
     StyleSheet,
     useWindowDimensions,
-    View,
 } from 'react-native';
-import Svg, { Polygon } from 'react-native-svg';
 import Animated, {
-    cancelAnimation,
     Easing,
-    runOnJS,
-    runOnUI,
-    useAnimatedStyle,
-    useSharedValue,
-    withSequence,
     withTiming,
+    withSequence,
+    useSharedValue,
+    cancelAnimation,
+    useAnimatedStyle,
     type SharedValue,
 } from 'react-native-reanimated';
+import Svg, { Polygon } from 'react-native-svg';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
+import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 // local dependencies
+import { useAppDispatch, useAppSelector } from 'store';
+import { addStarPoints, selectRewardStar, selectStarPoints } from 'store/slices/rewardStarSlice';
 import { ANIMATION_CONFIG, COUNTER_CONFIG, STAR_CONFIG, getGrainFlightTotalDurationMs } from './config';
 
 type DeferCancelHandle = { cancel: () => void };
@@ -182,11 +183,11 @@ const FlyingGrain = memo(({ index, masterProgress, startX, startY, endX, endY }:
     );
 });
 
-interface RewardStarOverlayProps {
-    flightHandlerRef: React.MutableRefObject<((cx: number, cy: number) => void) | null>;
-}
+export const RewardStarOverlay: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const { lastTrigger, cx: triggerCx, cy: triggerCy } = useAppSelector(selectRewardStar);
+    const counterDisplay = useAppSelector(selectStarPoints);
 
-export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHandlerRef }) => {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const overlayRef = useRef<View>(null);
     const starMeasureRef = useRef<View>(null);
@@ -198,9 +199,6 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
     const endY = useSharedValue(0);
     const starScale = useSharedValue(1);
     const starOpacity = useSharedValue(0);
-    /** Integer label; updated once per completed reward (avoids TextInput + animatedProps sync issues). */
-    const [counterDisplay, setCounterDisplay] = useState<number>(COUNTER_CONFIG.INITIAL_VALUE);
-    const counterDisplayRef = useRef<number>(COUNTER_CONFIG.INITIAL_VALUE);
     const counterBump = useSharedValue(1);
 
     const queueRef = useRef<{ cx: number; cy: number }[]>([]);
@@ -209,7 +207,7 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
     const mountedRef = useRef(true);
     const deferCancelHandleRef = useRef<DeferCancelHandle | null>(null);
 
-    const starPoints = useMemo(
+    const starPolygonPoints = useMemo(
         () => buildStarPolygonPoints(
             STAR_CONFIG.WIDTH,
             STAR_CONFIG.HEIGHT,
@@ -239,16 +237,13 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
     }, [finishChain]);
 
     const applyCounterAfterPulse = useCallback(() => {
-        const before = counterDisplayRef.current;
-        const next = before + ANIMATION_CONFIG.COUNTER_INCREMENT;
-        counterDisplayRef.current = next;
-        setCounterDisplay(next);
+        dispatch(addStarPoints());
         const fadeMs = STAR_CONFIG.FADE_OUT_AFTER_REWARD_MS;
         counterBump.value = withSequence(
             withTiming(1.12, { duration: 90, easing: Easing.out(Easing.quad) }),
             withTiming(1, { duration: 110, easing: Easing.inOut(Easing.quad) }, bumpDone => {
                 if (bumpDone === false) {
-                    runOnJS(finishChain)();
+                    scheduleOnRN(finishChain);
                     return;
                 }
                 starOpacity.value = withTiming(0, {
@@ -256,14 +251,14 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
                     easing: Easing.in(Easing.quad),
                 }, hideDone => {
                     if (hideDone === false) {
-                        runOnJS(finishChain)();
+                        scheduleOnRN(finishChain);
                         return;
                     }
-                    runOnJS(afterCounterBumpAndStarHidden)();
+                    scheduleOnRN(afterCounterBumpAndStarHidden);
                 });
             })
         );
-    }, [afterCounterBumpAndStarHidden, counterBump, finishChain, starOpacity]);
+    }, [afterCounterBumpAndStarHidden, counterBump, dispatch, finishChain, starOpacity]);
 
     const flyFromMeasuredLayout = useCallback(
         (layout: FlightLayout) => {
@@ -274,7 +269,7 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
             endY.value = endYWin - oy;
 
             /** Measure callback runs on JS; starting the driver on the UI runtime keeps Reanimated from cancelling the grain timeline immediately. */
-            runOnUI(() => {
+            const grainFlightOnUI = () => {
                 'worklet';
                 cancelAnimation(masterProgress);
                 masterProgress.value = 0;
@@ -284,7 +279,7 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
                 }, finished => {
                     // Only bail on explicit failure; `finished` can be undefined in some Reanimated paths.
                     if (finished === false) {
-                        runOnJS(finishChain)();
+                        scheduleOnRN(finishChain);
                         return;
                     }
                     starScale.value = withSequence(
@@ -297,14 +292,15 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
                             easing: Easing.inOut(Easing.quad),
                         }, pulseDone => {
                             if (pulseDone === false) {
-                                runOnJS(finishChain)();
+                                scheduleOnRN(finishChain);
                                 return;
                             }
-                            runOnJS(applyCounterAfterPulse)();
+                            scheduleOnRN(applyCounterAfterPulse);
                         })
                     );
                 });
-            })();
+            };
+            scheduleOnUI(grainFlightOnUI);
         },
         [
             applyCounterAfterPulse,
@@ -395,12 +391,14 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
         [startFlightWork]
     );
 
+    const prevTriggerRef = useRef(0);
     useEffect(() => {
-        flightHandlerRef.current = schedule;
-        return () => {
-            flightHandlerRef.current = null;
-        };
-    }, [flightHandlerRef, schedule]);
+        if (lastTrigger <= prevTriggerRef.current) {
+            return;
+        }
+        prevTriggerRef.current = lastTrigger;
+        schedule(triggerCx, triggerCy);
+    }, [lastTrigger, triggerCx, triggerCy, schedule]);
 
     const starWrapStyle = useMemo(() => {
         const { WIDTH, HEIGHT, POSITION } = STAR_CONFIG;
@@ -452,7 +450,7 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({ flightHand
                 <View ref={starMeasureRef} style={starWrapStyle} pointerEvents="none" collapsable={false}>
                     <Animated.View style={[styles.starInner, starAnimatedStyle]}>
                         <Svg width={STAR_CONFIG.WIDTH} height={STAR_CONFIG.HEIGHT}>
-                            <Polygon points={starPoints} fill="#DC2626" />
+                            <Polygon points={starPolygonPoints} fill="#DC2626" />
                         </Svg>
                         <Animated.View style={[styles.counterHit, counterTextStyle]}>
                             <Text style={styles.counterText} pointerEvents="none">

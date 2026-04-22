@@ -28,6 +28,7 @@ import { mealPreferencesApi } from 'store/api/mealPreferencesApi.ts';
 import foodPreferencesSlice from 'store/slices/foodPreferrencesSlice.ts';
 import { cuisineDistributionApi } from 'store/api/cuisineDistributionApi.ts';
 
+import rewardStarReducer from './slices/rewardStarSlice';
 export const sentryApiMiddleware: Middleware = () => next => (action: any) => {
 
     if (typeof action?.type === 'string' && action.type.endsWith('/rejected')) {
@@ -80,6 +81,7 @@ export const store = configureStore({
         messenger: messengerSlice,
         dayOverview: dayOverviewReducer,
         forgotPassword: forgotPasswordReducer,
+        rewardStar: rewardStarReducer,
         foodPreferences: foodPreferencesSlice,
         [authApi.reducerPath]: authApi.reducer,
         [planApi.reducerPath]: planApi.reducer,

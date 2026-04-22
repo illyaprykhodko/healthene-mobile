@@ -5,14 +5,16 @@ import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { filters } from 'services/filter';
+import { useAppDispatch } from 'store';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import Checkbox from 'components/Checkbox';
 import { CheckboxBurstEffect } from 'components/CheckboxBurstEffect';
-import { useRewardStar } from 'components/RewardStar';
+import { triggerReward } from "store/slices/rewardStarSlice";
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE, VIDEO_LIBRARY_TYPE, QUESTION_TYPE } from 'constants/spec';
+
 interface ListItemProps {
   item: any;
   date?: string;
@@ -34,7 +36,7 @@ export const ListItem: React.FC<ListItemProps> = ({
 }) => {
     const theme = useTheme();
     const navigation = useNavigation();
-    const rewardStar = useRewardStar();
+    const dispatch = useAppDispatch();
     const [burstSignal, setBurstSignal] = useState(0);
     const checkboxBurstAnchorRef = useRef<View>(null);
     const isFood = item.type === ENTITY_TYPE.FOOD;
@@ -61,7 +63,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                 checkboxBurstAnchorRef.current?.measureInWindow((x, y, w, h) => {
                     const cx = x + w / 2;
                     const cy = y + h / 2;
-                    rewardStar?.scheduleRewardFromCheckboxCenter(cx, cy);
+                    dispatch(triggerReward({ cx, cy }));
                 });
             }
             handleCheckboxStatus({ ...item, status: nextStatus });
