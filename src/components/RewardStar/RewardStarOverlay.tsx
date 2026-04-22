@@ -2,6 +2,7 @@
 import {
     Text,
     View,
+    Image,
     StyleSheet,
     useWindowDimensions,
 } from 'react-native';
@@ -12,23 +13,175 @@ import Animated, {
     useSharedValue,
     cancelAnimation,
     useAnimatedStyle,
+    type SharedValue,
 } from 'react-native-reanimated';
 import Svg, { Polygon } from 'react-native-svg';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 // local dependencies
-import {
-    STAR_PULSE_PEAK,
-    type FlightLayout,
-    type DeferCancelHandle,
-    buildStarPolygonPoints,
-    deferTwoFramesCancelable,
-    getStarFallbackCenterWindow,
-} from './rewardStarOverlayHelpers';
-import { FlyingGrain } from './FlyingGrain';
 import { useAppDispatch, useAppSelector } from 'store';
 import { addStarPoints, selectRewardStar, selectStarPoints } from 'store/slices/rewardStarSlice';
 import { ANIMATION_CONFIG, COUNTER_CONFIG, STAR_CONFIG, getGrainFlightTotalDurationMs } from './config';
+
+type DeferCancelHandle = { cancel: () => void };
+
+/**
+ * Two RAFs after tap: enough separation from CheckboxBurstEffect’s Modal mount without blocking on
+ * InteractionManager (logs showed ~400ms deferral then `finished:false` at progress 0 — IM was a bad fit).
+ */
+function deferTwoFramesCancelable (onReady: () => void): DeferCancelHandle {
+    let cancelled = false;
+    let id2: number | null = null;
+    const raf = globalThis.requestAnimationFrame.bind(globalThis);
+    const craf = globalThis.cancelAnimationFrame.bind(globalThis);
+    const id1 = raf(() => {
+        if (cancelled) {
+            return;
+        }
+        id2 = raf(() => {
+            if (cancelled) {
+                return;
+            }
+            id2 = null;
+            onReady();
+        });
+    });
+    return {
+        cancel () {
+            cancelled = true;
+            craf(id1);
+            if (id2 != null) {
+                craf(id2);
+            }
+        },
+    };
+}
+
+const STAR_PULSE_PEAK = STAR_CONFIG.SCALE_ANIMATION;
+const GRAIN_SIZE = 20;
+const GRAIN_HALF = GRAIN_SIZE / 2;
+const ARC_CAP_PX = 36;
+
+const seedImage = require('../../../assets/seed.png');
+
+/** Star center in window space when the star view has not laid out yet (uses overlay rect from measure). */
+function getStarFallbackCenterWindow (
+    overlayOx: number,
+    overlayOy: number,
+    overlayW: number
+): { cx: number; cy: number } {
+    const { WIDTH, HEIGHT, POSITION } = STAR_CONFIG;
+    const cy = overlayOy + POSITION.TOP_FROM_SAFE_AREA + HEIGHT / 2;
+    const align = POSITION.ALIGN_HORIZONTAL ?? 'center';
+    const { OFFSET_X } = POSITION;
+    let cx: number;
+    if (align === 'left') {
+        cx = overlayOx + OFFSET_X + WIDTH / 2;
+    } else if (align === 'right') {
+        cx = overlayOx + overlayW - WIDTH / 2 + OFFSET_X;
+    } else {
+        cx = overlayOx + overlayW / 2 + OFFSET_X;
+    }
+    return { cx, cy };
+}
+
+function buildStarPolygonPoints (width: number, height: number, rays: number, rayLength: number): string {
+    const cx = width / 2;
+    const cy = height / 2;
+    const fit = Math.min(width, height);
+    const innerR = Math.max(4, fit * 0.12);
+    const outerR = innerR + rayLength;
+    const pts: string[] = [];
+    const steps = rays * 2;
+    for (let i = 0; i < steps; i++) {
+        const angle = (i * Math.PI) / rays - Math.PI / 2;
+        const r = i % 2 === 0 ? outerR : innerR;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        pts.push(`${x},${y}`);
+    }
+    return pts.join(' ');
+}
+
+interface FlyingGrainProps {
+    index: number;
+    masterProgress: SharedValue<number>;
+    startX: SharedValue<number>;
+    startY: SharedValue<number>;
+    endX: SharedValue<number>;
+    endY: SharedValue<number>;
+}
+
+type FlightLayout = {
+    ox: number;
+    oy: number;
+    cxWin: number;
+    cyWin: number;
+    endXWin: number;
+    endYWin: number;
+};
+
+/** One grain: staggered segment of master timeline; absolute left/top in overlay space. */
+const FlyingGrain = memo(({ index, masterProgress, startX, startY, endX, endY }: FlyingGrainProps) => {
+    const n = ANIMATION_CONFIG.GRAIN_COUNT;
+    const stagger = ANIMATION_CONFIG.GRAIN_STAGGER_MS;
+    const flyDur = ANIMATION_CONFIG.FLY_DURATION;
+    const totalMs = getGrainFlightTotalDurationMs();
+    const spread = ANIMATION_CONFIG.SEED_SPREAD_PX;
+
+    const style = useAnimatedStyle(() => {
+        const m = masterProgress.value;
+        const elapsed = m * totalMs;
+        const t0 = index * stagger;
+        let grainP = (elapsed - t0) / flyDur;
+        if (grainP < 0) {
+            grainP = 0;
+        }
+        if (grainP > 1) {
+            grainP = 1;
+        }
+
+        const sx = startX.value;
+        const sy = startY.value;
+        const ex = endX.value;
+        const ey = endY.value;
+        const dx = ex - sx;
+        const dy = ey - sy;
+        const len = Math.hypot(dx, dy) || 1;
+        const px = -dy / len;
+        const py = dx / len;
+        const arc = Math.sin(grainP * Math.PI)
+            * Math.min(ANIMATION_CONFIG.PARTICLE_RADIUS * 0.35, ARC_CAP_PX);
+        const fan = (index - (n - 1) / 2) * spread;
+        const x = sx + dx * grainP + px * arc + fan * (1 - grainP);
+        const y = sy + dy * grainP + py * arc;
+
+        let sc = 1;
+        if (grainP < 0.4) {
+            sc = 0.4 + (1 - 0.4) * (grainP / 0.4);
+        } else if (grainP < 0.55) {
+            sc = 1;
+        } else {
+            sc = 1 + (0.35 - 1) * ((grainP - 0.55) / 0.45);
+        }
+        const op = grainP <= 0 ? 0 : Math.min(1, grainP * 14) * (1 - grainP);
+        return {
+            position: 'absolute' as const,
+            left: x - GRAIN_HALF,
+            top: y - GRAIN_HALF,
+            width: GRAIN_SIZE,
+            height: GRAIN_SIZE,
+            opacity: op,
+            transform: [{ scale: sc }],
+        };
+    }, [index, n, spread, stagger, flyDur, totalMs]);
+
+    return (
+        <Animated.View pointerEvents="none" style={style}>
+            <Image source={seedImage} style={styles.grainImg} resizeMode="contain" />
+        </Animated.View>
+    );
+});
 
 export const RewardStarOverlay: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -238,8 +391,7 @@ export const RewardStarOverlay: React.FC = () => {
         [startFlightWork]
     );
 
-    /** Match Redux counter on mount so remounting the screen does not replay the last reward (prev was always 0 before). */
-    const prevTriggerRef = useRef(lastTrigger);
+    const prevTriggerRef = useRef(0);
     useEffect(() => {
         if (lastTrigger <= prevTriggerRef.current) {
             return;
@@ -290,9 +442,9 @@ export const RewardStarOverlay: React.FC = () => {
     return (
         <View
             ref={overlayRef}
-            collapsable={false}
-            pointerEvents="box-none"
             style={[styles.overlay, { width: windowWidth, height: windowHeight }]}
+            pointerEvents="box-none"
+            collapsable={false}
         >
             <Animated.View style={starVisibilityStyle} pointerEvents="none">
                 <View ref={starMeasureRef} style={starWrapStyle} pointerEvents="none" collapsable={false}>
@@ -312,11 +464,11 @@ export const RewardStarOverlay: React.FC = () => {
                 <FlyingGrain
                     key={i}
                     index={i}
+                    masterProgress={masterProgress}
+                    startX={startX}
+                    startY={startY}
                     endX={endX}
                     endY={endY}
-                    startY={startY}
-                    startX={startX}
-                    masterProgress={masterProgress}
                 />
             ))}
         </View>
@@ -355,5 +507,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         minWidth: 28,
         includeFontPadding: false,
+    },
+    grainImg: {
+        width: GRAIN_SIZE,
+        height: GRAIN_SIZE,
     },
 });
