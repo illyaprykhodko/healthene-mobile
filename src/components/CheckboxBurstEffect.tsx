@@ -1,14 +1,14 @@
 // outsource dependencies
-import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-    Animated,
-    Easing as RNEasing,
+    View,
     Modal,
+    Animated,
     Platform,
     StyleSheet,
+    Easing as RNEasing,
     useWindowDimensions,
-    View,
 } from 'react-native';
+import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 export const PARTICLE_CONFIG = {
     COUNT: 6,
@@ -142,14 +142,14 @@ const BurstParticle: React.FC<BurstParticleProps> = memo(({ config, burstId }) =
                         style={{
                             width: 0,
                             height: 0,
-                            backgroundColor: 'transparent',
                             borderStyle: 'solid',
                             borderLeftWidth: s / 2,
                             borderRightWidth: s / 2,
+                            borderBottomColor: color,
                             borderBottomWidth: s * 0.866,
+                            backgroundColor: 'transparent',
                             borderLeftColor: 'transparent',
                             borderRightColor: 'transparent',
-                            borderBottomColor: color,
                         }}
                     />
                 );

@@ -41,7 +41,7 @@ export const ANIMATION_CONFIG = {
     /** Arc perpendicular offset scale (max px capped in overlay). */
     PARTICLE_RADIUS: 48,
     STAR_SCALE: 1.15,
-    COUNTER_INCREMENT: 10,
+    COUNTER_INCREMENT: 1,
     /** Slight horizontal spread at launch (px). */
     SEED_SPREAD_PX: 5,
 } as const;
