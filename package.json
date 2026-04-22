@@ -53,7 +53,6 @@
     "@react-navigation/native-stack": "^7.3.26",
     "@react-navigation/stack": "7.3.2",
     "@reduxjs/toolkit": "2.8.2",
-    "@rive-app/react-native": "^0.4.3",
     "@sentry/react-native": "^8.0.0",
     "@types/react-native-htmlview": "^0.16.6",
     "axios": "1.9.0",
