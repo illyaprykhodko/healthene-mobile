@@ -11,7 +11,7 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import Checkbox from 'components/Checkbox';
 import { CheckboxBurstEffect } from 'components/CheckboxBurstEffect';
-import { triggerReward } from "store/slices/rewardStarSlice";
+import { subtractStarPoints, triggerReward } from 'store/slices/rewardStarSlice';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE, VIDEO_LIBRARY_TYPE, QUESTION_TYPE } from 'constants/spec';
 
@@ -41,7 +41,8 @@ export const ListItem: React.FC<ListItemProps> = ({
     const checkboxBurstAnchorRef = useRef<View>(null);
     const isFood = item.type === ENTITY_TYPE.FOOD;
     const isRecipe = item.type === ENTITY_TYPE.RECIPE;
-    const isDone = item.status === PHASE_ITEM_STATUS.DONE;
+    const isDone = typeof item?.status === 'string'
+        && item.status.toUpperCase() === PHASE_ITEM_STATUS.DONE;
     const isIngredients = item.type === ENTITY_TYPE.INGREDIENTS;
     const isCustomRecipe = item.type === ENTITY_TYPE.CUSTOM_RECIPE;
     const isDidNotEat = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
@@ -65,6 +66,8 @@ export const ListItem: React.FC<ListItemProps> = ({
                     const cy = y + h / 2;
                     dispatch(triggerReward({ cx, cy }));
                 });
+            } else if (nextStatus === PHASE_ITEM_STATUS.PENDING && isDone) {
+                dispatch(subtractStarPoints());
             }
             handleCheckboxStatus({ ...item, status: nextStatus });
         }

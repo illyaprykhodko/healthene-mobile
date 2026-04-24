@@ -391,14 +391,48 @@ export const RewardStarOverlay: React.FC = () => {
         [startFlightWork]
     );
 
-    const prevTriggerRef = useRef(0);
+    /**
+     * First effect run per overlay instance: align with store only (no animation).
+     * Avoids replaying an accumulated `lastTrigger` when this component remounts (e.g. opening Edit).
+     */
+    const prevTriggerRef = useRef<number | null>(null);
     useEffect(() => {
+        if (prevTriggerRef.current === null) {
+            prevTriggerRef.current = lastTrigger;
+            return;
+        }
         if (lastTrigger <= prevTriggerRef.current) {
             return;
         }
         prevTriggerRef.current = lastTrigger;
         schedule(triggerCx, triggerCy);
     }, [lastTrigger, triggerCx, triggerCy, schedule]);
+
+    /** After reward, the star is hidden (`starOpacity` 0) so Redux counter changes are invisible — briefly show it on decrease. */
+    const prevStarPointsRef = useRef<number | null>(null);
+    useEffect(() => {
+        if (prevStarPointsRef.current === null) {
+            prevStarPointsRef.current = counterDisplay;
+            return;
+        }
+        if (counterDisplay < prevStarPointsRef.current && !runningRef.current) {
+            scheduleOnUI(() => {
+                'worklet';
+                cancelAnimation(starOpacity);
+                cancelAnimation(counterBump);
+                starOpacity.value = withSequence(
+                    withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) }),
+                    withTiming(1, { duration: 550 }),
+                    withTiming(0, { duration: 700, easing: Easing.in(Easing.quad) })
+                );
+                counterBump.value = withSequence(
+                    withTiming(0.86, { duration: 120, easing: Easing.out(Easing.quad) }),
+                    withTiming(1, { duration: 180, easing: Easing.inOut(Easing.quad) })
+                );
+            });
+        }
+        prevStarPointsRef.current = counterDisplay;
+    }, [counterDisplay, counterBump, starOpacity]);
 
     const starWrapStyle = useMemo(() => {
         const { WIDTH, HEIGHT, POSITION } = STAR_CONFIG;

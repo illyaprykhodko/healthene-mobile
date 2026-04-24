@@ -331,8 +331,8 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
                 <View
                     style={[
                         styles.container,
-                        styles.containerGrounded,
                         styles.layerMain,
+                        styles.containerGrounded,
                         { top: CONTAINER_TOP_CONFIG[phase], right: -1 },
                     ]}
                 >

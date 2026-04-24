@@ -31,10 +31,14 @@ export const rewardStarSlice = createSlice({
             const delta = action.payload ?? ANIMATION_CONFIG.COUNTER_INCREMENT;
             state.starPoints += delta;
         },
+        subtractStarPoints: (state, action: PayloadAction<number | undefined>) => {
+            const delta = action.payload ?? ANIMATION_CONFIG.COUNTER_INCREMENT;
+            state.starPoints = Math.max(0, state.starPoints - delta);
+        },
     },
 });
 
-export const { triggerReward, addStarPoints } = rewardStarSlice.actions;
+export const { triggerReward, addStarPoints, subtractStarPoints } = rewardStarSlice.actions;
 
 export const selectRewardStar = (state: RootState) => state.rewardStar;
 
