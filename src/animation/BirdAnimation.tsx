@@ -18,12 +18,8 @@ export const BIRD_ANIMATION_CONFIG = {
         top: 46,
         right: -3,
     },
-    APPEARING_POSITION: {
-        top: 33.5,
-        right: -4,
-    },
     ACTION_POSITION: {
-        top: 0,
+        top: 13,
         right: 0,
     },
 };
@@ -41,21 +37,21 @@ export const BirdAnimationPhase = {
 export type BirdAnimationPhase = (typeof BirdAnimationPhase)[keyof typeof BirdAnimationPhase];
 
 export const VIDEO_SIZE_CONFIG: Record<BirdAnimationPhase, { width: number; height: number }> = {
-    [BirdAnimationPhase.APPEARING]: { width: VIDEO_SIZE + 92, height: VIDEO_SIZE + 92 },
-    [BirdAnimationPhase.SITTING]: { width: VIDEO_SIZE - 4, height: VIDEO_SIZE - 4 },
-    [BirdAnimationPhase.ACTION]: { width: 250, height: 500, },
+    [BirdAnimationPhase.APPEARING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
+    [BirdAnimationPhase.SITTING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
+    [BirdAnimationPhase.ACTION]: { width: 200, height: 400, },
     [BirdAnimationPhase.FINISHED]: { width: 0, height: 0 },
 };
 
 export const CONTAINER_TOP_CONFIG: Record<BirdAnimationPhase, number> = {
-    [BirdAnimationPhase.APPEARING]: BIRD_ANIMATION_CONFIG.APPEARING_POSITION.top,
+    [BirdAnimationPhase.APPEARING]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top,
     [BirdAnimationPhase.SITTING]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top,
     [BirdAnimationPhase.ACTION]: BIRD_ANIMATION_CONFIG.ACTION_POSITION.top,
     [BirdAnimationPhase.FINISHED]: 0,
 };
 
 export const ANIMATED_VIEW_RIGHT_CONFIG: Record<BirdAnimationPhase, number> = {
-    [BirdAnimationPhase.APPEARING]: BIRD_ANIMATION_CONFIG.APPEARING_POSITION.right,
+    [BirdAnimationPhase.APPEARING]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
     [BirdAnimationPhase.SITTING]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
     [BirdAnimationPhase.ACTION]: BIRD_ANIMATION_CONFIG.ACTION_POSITION.right,
     [BirdAnimationPhase.FINISHED]: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
@@ -142,7 +138,7 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
     const { allChecked = false } = props;
     const mainWebViewRef = useRef<WebView>(null);
     const actionWebViewRef = useRef<WebView>(null);
-    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.APPEARING);
+    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.SITTING);
     const [mainDOMReady, setMainDOMReady] = useState<boolean>(false);
     const [actionDOMReady, setActionDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
