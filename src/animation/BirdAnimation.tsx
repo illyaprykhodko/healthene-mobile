@@ -2,8 +2,8 @@
 import { WebView } from 'react-native-webview';
 import RNBlobUtil from 'react-native-blob-util';
 import { StyleSheet, View } from 'react-native';
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
 // local dependencies
 
@@ -114,7 +114,6 @@ function createBirdWebViewHtml (domReadyMessage: string): string {
                                 <body>
                                     <div id="videoContainer">
                                         <video
-                                            muted
                                             autoplay
                                             id="video"
                                             playsinline
@@ -138,7 +137,7 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
     const { allChecked = false } = props;
     const mainWebViewRef = useRef<WebView>(null);
     const actionWebViewRef = useRef<WebView>(null);
-    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.SITTING);
+    const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.APPEARING);
     const [mainDOMReady, setMainDOMReady] = useState<boolean>(false);
     const [actionDOMReady, setActionDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
