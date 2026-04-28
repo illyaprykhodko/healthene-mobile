@@ -20,6 +20,7 @@ import { settingsApi } from 'store/api/settingsApi.ts';
 import { s3ServiceApi } from 'store/api/s3ServiceApi.ts';
 import { messengerApi } from 'store/api/messengerApi.ts';
 import messengerSlice from 'store/slices/messengerSlice.ts';
+import { gamblingPointsApi } from './api/gamblingPointsApi';
 import { dayOverviewReducer } from './slices/dayOverviewSlice';
 import { categoryTreeApi } from 'store/api/categoryTreeApi.ts';
 import forgotPasswordReducer from './slices/forgotPasswordSlice';
@@ -95,6 +96,7 @@ export const store = configureStore({
         [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
         [categoryTreeApi.reducerPath]: categoryTreeApi.reducer,
         [healthProfileApi.reducerPath]: healthProfileApi.reducer,
+        [gamblingPointsApi.reducerPath]: gamblingPointsApi.reducer,
         [mealPreferencesApi.reducerPath]: mealPreferencesApi.reducer,
         [cuisineDistributionApi.reducerPath]: cuisineDistributionApi.reducer,
     },
@@ -114,6 +116,7 @@ export const store = configureStore({
                 dayOverviewApi.middleware,
                 categoryTreeApi.middleware,
                 healthProfileApi.middleware,
+                gamblingPointsApi.middleware,
                 mealPreferencesApi.middleware,
                 cuisineDistributionApi.middleware,
             ),

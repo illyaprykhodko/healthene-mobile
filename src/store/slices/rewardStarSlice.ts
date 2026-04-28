@@ -2,20 +2,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 // local dependencies
 import type { RootState } from '../index';
-import { ANIMATION_CONFIG } from '../../components/RewardStar/config';
 
 export interface RewardStarState {
     lastTrigger: number;
     cx: number;
     cy: number;
-    starPoints: number;
 }
 
 const initialState: RewardStarState = {
     lastTrigger: 0,
     cx: 0,
     cy: 0,
-    starPoints: 0,
 };
 
 export const rewardStarSlice = createSlice({
@@ -27,21 +24,11 @@ export const rewardStarSlice = createSlice({
             state.cx = action.payload.cx;
             state.cy = action.payload.cy;
         },
-        addStarPoints: (state, action: PayloadAction<number | undefined>) => {
-            const delta = action.payload ?? ANIMATION_CONFIG.COUNTER_INCREMENT;
-            state.starPoints += delta;
-        },
-        subtractStarPoints: (state, action: PayloadAction<number | undefined>) => {
-            const delta = action.payload ?? ANIMATION_CONFIG.COUNTER_INCREMENT;
-            state.starPoints = Math.max(0, state.starPoints - delta);
-        },
     },
 });
 
-export const { triggerReward, addStarPoints, subtractStarPoints } = rewardStarSlice.actions;
+export const { triggerReward } = rewardStarSlice.actions;
 
 export const selectRewardStar = (state: RootState) => state.rewardStar;
-
-export const selectStarPoints = (state: RootState) => state.rewardStar.starPoints;
 
 export default rewardStarSlice.reducer;

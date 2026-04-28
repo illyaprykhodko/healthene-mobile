@@ -4,15 +4,15 @@ import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
-import { filters } from 'services/filter';
 import { useAppDispatch } from 'store';
+import { filters } from 'services/filter';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import Checkbox from 'components/Checkbox';
-import { CheckboxBurstEffect } from 'components/CheckboxBurstEffect';
-import { subtractStarPoints, triggerReward } from 'store/slices/rewardStarSlice';
+import { triggerReward } from 'store/slices/rewardStarSlice';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
+import { CheckboxBurstEffect } from 'components/CheckboxBurstEffect';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE, VIDEO_LIBRARY_TYPE, QUESTION_TYPE } from 'constants/spec';
 
 interface ListItemProps {
@@ -66,8 +66,6 @@ export const ListItem: React.FC<ListItemProps> = ({
                     const cy = y + h / 2;
                     dispatch(triggerReward({ cx, cy }));
                 });
-            } else if (nextStatus === PHASE_ITEM_STATUS.PENDING && isDone) {
-                dispatch(subtractStarPoints());
             }
             handleCheckboxStatus({ ...item, status: nextStatus });
         }

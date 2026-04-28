@@ -30,12 +30,13 @@ import { groupBy, isEmpty } from 'utils/general';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppSelector, useAppDispatch } from 'store';
 import { RootStackParamList } from 'services/navigation';
+import { RewardStarOverlay } from 'components/RewardStar';
 import { BirdAnimation } from 'animation/BirdAnimation.tsx';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
-import { RewardStarOverlay } from 'components/RewardStar';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
+import { useUpdatePatientGamblingPointsMutation } from 'store/api/gamblingPointsApi';
 import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
 
@@ -112,6 +113,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const [replacePhaseItem] = useReplacePhaseItemMutation();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
+    const [updatePatientGamblingPoints] = useUpdatePatientGamblingPointsMutation();
     //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
 
@@ -407,6 +409,14 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     };
 
     const handleCheckboxStatus = async (item: PhaseItem) => {
+        const prevFromList = localItems.find(prevItem => prevItem.id === item.id);
+        const wasDone = prevFromList?.status === PHASE_ITEM_STATUS.DONE;
+        const isNowDone = item.status === PHASE_ITEM_STATUS.DONE;
+        const isMealLikePhase = currentPhase?.type === OVERVIEW_TYPE.MEAL
+            || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT;
+        const mealDatePast = moment(targetDate).isBefore(moment(), 'day');
+        const mealDateFuture = moment(targetDate).isAfter(moment(), 'day');
+
         setLocalItems(prevItems => {
             const nextItems = prevItems.map(prevItem =>
                 (prevItem.id === item.id ? { ...item } : prevItem)
@@ -430,6 +440,17 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 },
                 date: targetDate,
             });
+            if (isMealLikePhase && !mealDatePast && !mealDateFuture) {
+                if (!wasDone && isNowDone) {
+                    updatePatientGamblingPoints({ action: 'EARN', amount: 1 }).unwrap().catch((gamblingPointsError: unknown) => {
+                        console.error('Gambling points EARN failed:', gamblingPointsError);
+                    });
+                } else if (wasDone && !isNowDone) {
+                    updatePatientGamblingPoints({ action: 'SPEND', amount: 1 }).unwrap().catch((gamblingPointsError: unknown) => {
+                        console.error('Gambling points SPEND failed:', gamblingPointsError);
+                    });
+                }
+            }
             setLocalItems(currentItems => {
                 const allItemsDoneNow = currentItems.every(
                     listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
@@ -642,243 +663,250 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const isFutureDate = moment(targetDate).isAfter(moment(), 'day');
 
     return (
-            <Screen initialized={!isLoading} style={styles.container}>
-                {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
-                    ? (
-                        <BirdAnimation
-                            allChecked={birdAnimationStep}
-                            checkTrigger={birdCheckTrigger}
-                            checkboxAreaX={checkboxAreaX}
-                        />
-                    )
-                    : null
-                }
-                <View style={[styles.title, isFutureDate && styles.opacity]}>
-                    <View>
-                        <Text style={styles.titleText}>
-                            {title}
-                        </Text>
-                    </View>
-                    {currentPhase?.type === OVERVIEW_TYPE.MEAL && !isPastDate && (
-                        <View style={styles.titleButtons}>
-                            <TouchableOpacity onPress={() => {
-                                if (includeRescueFoodsInShoppingList) {
-                                    navigation.navigate(ROUTES.REPLACEMENT, {
-                                        list: [],
-                                        date: targetDate,
-                                        phaseId: targetPhaseId,
-                                        isRestaurantMode: false,
-                                    });
-                                } else {
-                                    setShowRescueFoodsModal(true);
-                                }
-                            }}>
-                                <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
-                Change Meal
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
+        <Screen initialized={!isLoading} style={styles.container}>
+            {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
+                ? (
+                    <BirdAnimation
+                        allChecked={birdAnimationStep}
+                        checkTrigger={birdCheckTrigger}
+                        checkboxAreaX={checkboxAreaX}
+                    />
+                )
+                : null
+            }
+            <View style={[styles.title, isFutureDate && styles.opacity]}>
+                <View>
+                    <Text style={styles.titleText}>
+                        {title}
+                    </Text>
                 </View>
-                {/* if (onlyPhaseItemsFetching) {
-                sortedSections.push(['Added', [{
-                    id: 'skeleton',
-                    type: ENTITY_TYPE.FOOD,
-                    title: 'Loading...',
-                    rating: null,
-                    order: 0,
-                    section: 'Added',
-                } as PhaseItem]])
-            } */}
-                <View style={styles.list}>
-                    <ScrollView
-                        ref={scrollViewRef}
-                        style={isFutureDate && styles.opacity}
-                        scrollEnabled={scrollEnabled}
-                        onContentSizeChange={() => {
-                            if (shouldScrollToAddedEnd && !isAddingAddedItem) {
-                                setTimeout(() => {
-                                    scrollViewRef.current?.scrollToEnd({ animated: true });
-                                }, 0);
-                                setShouldScrollToAddedEnd(false);
+                {currentPhase?.type === OVERVIEW_TYPE.MEAL && !isPastDate && (
+                    <View style={styles.titleButtons}>
+                        <TouchableOpacity onPress={() => {
+                            if (includeRescueFoodsInShoppingList) {
+                                navigation.navigate(ROUTES.REPLACEMENT, {
+                                    list: [],
+                                    date: targetDate,
+                                    phaseId: targetPhaseId,
+                                    isRestaurantMode: false,
+                                });
+                            } else {
+                                setShowRescueFoodsModal(true);
                             }
-                        }}
-                    >
-                        {!isEmpty(localItems) ? (
-                            sortedSections.map(([section, sectionItems]) => (
-                                <SwipeList
-                                    key={section}
-                                    data={sectionItems}
-                                    scrollEnabled={false}
-                                    isPastDate={isPastDate}
-                                    isFutureDate={isFutureDate}
-                                    onDelete={handleDeleteItem}
-                                    onReplace={handleReplaceItem}
-                                    recipeReplacementEnable={true}
-                                    type={currentPhase?.type || ''}
-                                    noReplaceItem={handleNoReplaceItem}
-                                    onRowDidClose={handleScrollEnabled}
-                                    onSwipeValueChange={handleScrollDisabled}
-                                    handleCheckboxStatus={handleCheckboxStatus}
-                                    keyExtractor={({ id }) => String(id)}
-                                    renderItem={({ item, index }, ...restProps) => {
-                                        return <ListItem
-                                            item={item}
-                                            disabled={false}
-                                            date={targetDate}
-                                            isFutureDate={isFutureDate}
-                                            updateData={updatePhaseItem}
-                                            handleCheckboxStatus={handleCheckboxStatus}
-                                        />;
-                                        // return (
-                                        //     isPhaseItemsFetching
-                                        //     ?
-                                        //     <>
-                                        //     <ListItem
-                                        //        item={item}
-                                        //        disabled={false}
-                                        //        date={targetDate}
-                                        //        isFutureDate={isFutureDate}
-                                        //        updateData={updatePhaseItem}
-                                        //        nextSection={item?.section || ''}
-                                        //        handleCheckboxStatus={handleCheckboxStatus}
-                                        //    />;
-                                        //        nextSection={item?.section || ''}
-                                        //        handleCheckboxStatus={handleCheckboxStatus}
-                                        //    />;
-
-                                    //         <Skeleton width={200} height={20} />
-                                    //         </>
-                                    //         : <ListItem
-                                    //             item={item}
-                                    //             disabled={false}
-                                    //             date={targetDate}
-                                    //             isFutureDate={isFutureDate}
-                                    //             updateData={updatePhaseItem}
-                                    //             nextSection={item?.section || ''}
-                                    //             handleCheckboxStatus={handleCheckboxStatus}
-                                    //         />
-                                    // );
-                                    }}
-                                    ListHeaderComponent={() => (
-                                        (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
-                                            <View style={[
-                                                styles.separatorWrapper,
-                                                {
-                                                // borderTopColor: theme.colors.black,
-                                                // borderTopWidth: section === 'Added' ? 0 : 1,
-                                                    backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}`
-                                                }
-                                            ]}>
-                                                <Text variant="h3" style={styles.offset}>
-                                                    {section || 'No section'}
-                                                </Text>
-                                            </View>
-                                        ) : null
-                                    )}
-                                    ListFooterComponent={() => (
-                                        section === 'Added' && isAddingAddedItem ? (
-                                            <View style={styles.addedSkeletonContainer}>
-                                                <View style={styles.addedSkeletonRow}>
-                                                    <ListItemSkeleton />
-                                                    <Skeleton width={25} height={25} />
-                                                </View>
-                                            </View>
-                                        ) : null
-                                    )}
-                                />
-                            ))
-                        ) : (
-                            <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
-              No items found
+                        }}>
+                            <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
+            Change Meal
                             </Text>
-                        )}
-                    </ScrollView>
-
-                    {/* {(currentPhase?.type === OVERVIEW_TYPE.MEAL
-                  || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? ( */}
-                    <View style={styles.buttonContainer}>
-                        <Button
-                            icon="plus"
-                            title="Add"
-                            variant="primary"
-                            onPress={handleAddItem}
-                            textStyle={styles.textAddButton}
-                            style={{
-                                ...styles.button,
-                                ...styles.addButtonActive,
-                                width: isFutureDate ? '100%' : '45%',
-                                backgroundColor: theme.colors.transparent,
-                            }}
-                        />
-                        {!isFutureDate && (
-                            <Button
-                                title="Meal Done"
-                                variant="secondary"
-                                disabled={!allItemsDone || isLoading}
-                                onPress={handlePhaseDone}
-                                textStyle={styles.textMealDoneButton}
-                                style={{
-                                    ...styles.button,
-                                    ...styles.mealDoneButton,
-                                    ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
-                                }}
-                            />
-                        )}
+                        </TouchableOpacity>
                     </View>
-                    {/* ) : (
-                        <Button
-                            icon="plus"
-                            title="Add"
-                            variant="primary"
-                            onPress={handleAddItem}
-                            textStyle={{ color: '#7BAAC2' }}
-                            style={{
-                                // ...styles.button,
-                                // ...styles.addButton,
-                                ...styles.button,
-                                ...styles.addButtonActive,
-                                // width: isFutureDate ? '100%' : '45%',
-                                backgroundColor: theme.colors.transparent,
-                            }}
-                        />
-                    )} */}
-                </View>
-
-                {/* Rescue Foods Modal */}
-                <ReplaceItemModal
-                    visible={showRescueFoodsModal}
-                    onClose={() => setShowRescueFoodsModal(false)}
-                    onApply={async () => {
-                        try {
-                            await updateIncludeRescueFoods({ includeRescueFoodsInShoppingList: true }).unwrap();
-                            navigation.navigate(ROUTES.REPLACEMENT, {
-                                list: [],
-                                date: targetDate,
-                                phaseId: targetPhaseId,
-                                isRestaurantMode: false,
-                            });
-                        } catch (error) {
-                            console.error('Change Meal error:', error);
+                )}
+            </View>
+            {/* if (onlyPhaseItemsFetching) {
+            sortedSections.push(['Added', [{
+                id: 'skeleton',
+                type: ENTITY_TYPE.FOOD,
+                title: 'Loading...',
+                rating: null,
+                order: 0,
+                section: 'Added',
+            } as PhaseItem]])
+        } */}
+            <View style={styles.list}>
+                <ScrollView
+                    ref={scrollViewRef}
+                    style={isFutureDate && styles.opacity}
+                    scrollEnabled={scrollEnabled}
+                    onContentSizeChange={() => {
+                        if (shouldScrollToAddedEnd && !isAddingAddedItem) {
+                            setTimeout(() => {
+                                scrollViewRef.current?.scrollToEnd({ animated: true });
+                            }, 0);
+                            setShouldScrollToAddedEnd(false);
                         }
                     }}
-                />
+                >
+                    {!isEmpty(localItems) ? (
+                        sortedSections.map(([section, sectionItems]) => (
+                            <SwipeList
+                                key={section}
+                                data={sectionItems}
+                                scrollEnabled={false}
+                                isPastDate={isPastDate}
+                                isFutureDate={isFutureDate}
+                                onDelete={handleDeleteItem}
+                                onReplace={handleReplaceItem}
+                                recipeReplacementEnable={true}
+                                type={currentPhase?.type || ''}
+                                noReplaceItem={handleNoReplaceItem}
+                                onRowDidClose={handleScrollEnabled}
+                                onSwipeValueChange={handleScrollDisabled}
+                                handleCheckboxStatus={handleCheckboxStatus}
+                                keyExtractor={({ id }) => String(id)}
+                                renderItem={({ item, index }, ...restProps) => {
+                                    return <ListItem
+                                        item={item}
+                                        disabled={false}
+                                        date={targetDate}
+                                        isFutureDate={isFutureDate}
+                                        updateData={updatePhaseItem}
+                                        handleCheckboxStatus={handleCheckboxStatus}
+                                    />;
+                                    // return (
+                                    //     isPhaseItemsFetching
+                                    //     ?
+                                    //     <>
+                                    //     <ListItem
+                                    //        item={item}
+                                    //        disabled={false}
+                                    //        date={targetDate}
+                                    //        isFutureDate={isFutureDate}
+                                    //        updateData={updatePhaseItem}
+                                    //        nextSection={item?.section || ''}
+                                    //        handleCheckboxStatus={handleCheckboxStatus}
+                                    //    />;
+                                    //        nextSection={item?.section || ''}
+                                    //        handleCheckboxStatus={handleCheckboxStatus}
+                                    //    />;
 
-                <ConfirmationReplaceModal
-                    visible={showConfirmationModal}
-                    prevItem={replacementData.prevItem}
-                    nextItem={replacementData.nextItem}
-                    onClose={() => {
-                        setShowConfirmationModal(false);
-                        setReplacementData({ prevItem: null, nextItem: null });
-                    }}
-                    onApply={handleConfirmationModalApply}
-                />
+                                //         <Skeleton width={200} height={20} />
+                                //         </>
+                                //         : <ListItem
+                                //             item={item}
+                                //             disabled={false}
+                                //             date={targetDate}
+                                //             isFutureDate={isFutureDate}
+                                //             updateData={updatePhaseItem}
+                                //             nextSection={item?.section || ''}
+                                //             handleCheckboxStatus={handleCheckboxStatus}
+                                //         />
+                                // );
+                                }}
+                                ListHeaderComponent={() => (
+                                    (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
+                                        <View style={[
+                                            styles.separatorWrapper,
+                                            {
+                                            // borderTopColor: theme.colors.black,
+                                            // borderTopWidth: section === 'Added' ? 0 : 1,
+                                                backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}`
+                                            }
+                                        ]}>
+                                            <Text variant="h3" style={styles.offset}>
+                                                {section || 'No section'}
+                                            </Text>
+                                        </View>
+                                    ) : null
+                                )}
+                                ListFooterComponent={() => (
+                                    section === 'Added' && isAddingAddedItem ? (
+                                        <View style={styles.addedSkeletonContainer}>
+                                            <View style={styles.addedSkeletonRow}>
+                                                <ListItemSkeleton />
+                                                <Skeleton width={25} height={25} />
+                                            </View>
+                                        </View>
+                                    ) : null
+                                )}
+                            />
+                        ))
+                    ) : (
+                        <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
+          No items found
+                        </Text>
+                    )}
+                </ScrollView>
 
-                <RewardStarOverlay />
+                {/* {(currentPhase?.type === OVERVIEW_TYPE.MEAL
+              || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? ( */}
+                <View style={styles.buttonContainer}>
+                    <Button
+                        icon="plus"
+                        title="Add"
+                        variant="primary"
+                        onPress={handleAddItem}
+                        textStyle={styles.textAddButton}
+                        style={{
+                            ...styles.button,
+                            ...styles.addButtonActive,
+                            width: isFutureDate ? '100%' : '45%',
+                            backgroundColor: theme.colors.transparent,
+                        }}
+                    />
+                    {!isFutureDate && (
+                        <Button
+                            title="Meal Done"
+                            variant="secondary"
+                            disabled={!allItemsDone || isLoading}
+                            onPress={handlePhaseDone}
+                            textStyle={styles.textMealDoneButton}
+                            style={{
+                                ...styles.button,
+                                ...styles.mealDoneButton,
+                                ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
+                            }}
+                        />
+                    )}
+                </View>
+                {/* ) : (
+                    <Button
+                        icon="plus"
+                        title="Add"
+                        variant="primary"
+                        onPress={handleAddItem}
+                        textStyle={{ color: '#7BAAC2' }}
+                        style={{
+                            // ...styles.button,
+                            // ...styles.addButton,
+                            ...styles.button,
+                            ...styles.addButtonActive,
+                            // width: isFutureDate ? '100%' : '45%',
+                            backgroundColor: theme.colors.transparent,
+                        }}
+                    />
+                )} */}
+            </View>
 
-                <AnytimeMenu date={targetDate} />
-            </Screen>
+            {/* Rescue Foods Modal */}
+            <ReplaceItemModal
+                visible={showRescueFoodsModal}
+                onClose={() => setShowRescueFoodsModal(false)}
+                onApply={async () => {
+                    try {
+                        await updateIncludeRescueFoods({ includeRescueFoodsInShoppingList: true }).unwrap();
+                        navigation.navigate(ROUTES.REPLACEMENT, {
+                            list: [],
+                            date: targetDate,
+                            phaseId: targetPhaseId,
+                            isRestaurantMode: false,
+                        });
+                    } catch (error) {
+                        console.error('Change Meal error:', error);
+                    }
+                }}
+            />
+
+            <ConfirmationReplaceModal
+                visible={showConfirmationModal}
+                prevItem={replacementData.prevItem}
+                nextItem={replacementData.nextItem}
+                onClose={() => {
+                    setShowConfirmationModal(false);
+                    setReplacementData({ prevItem: null, nextItem: null });
+                }}
+                onApply={handleConfirmationModalApply}
+            />
+
+            <RewardStarOverlay
+                gamblingPointsQueryEnabled={
+                    (currentPhase?.type === OVERVIEW_TYPE.MEAL
+                        || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT)
+                    && !isPastDate
+                    && !isFutureDate
+                }
+            />
+
+            <AnytimeMenu date={targetDate} />
+        </Screen>
     );
 };
 

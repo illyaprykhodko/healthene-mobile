@@ -20,11 +20,5 @@ const config = {};
 
 const defaultConfig = getDefaultConfig(__dirname);
 
-const merged = mergeConfig(defaultConfig, {
-    ...config,
-    resolver: {
-        ...defaultConfig.resolver,
-        assetExts: [...defaultConfig.resolver.assetExts, 'riv'],
-    },
-});
+const merged = mergeConfig(defaultConfig, config);
 module.exports = withSentryConfig(wrapWithReanimatedMetroConfig(merged));
