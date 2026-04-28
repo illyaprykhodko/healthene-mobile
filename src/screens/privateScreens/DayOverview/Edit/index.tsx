@@ -73,13 +73,27 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const targetPhaseId = phaseId || route.params?.phaseId;
 
     const [birdAnimationStep, setBirdAnimationStep] = useState(false);
+    const [birdCheckTrigger, setBirdCheckTrigger] = useState(0);
     const [checkboxAreaX] = useState(0);
     useEffect(() => {
         if ((localItems || []).length > 0) {
-            const allDone = localItems.every(item => item.status === 'DONE');
+            const allDone = localItems.every(
+                listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
+            );
             setBirdAnimationStep(allDone);
         }
     }, [localItems]);
+
+    const allItemsDone = useMemo(
+        () =>
+            localItems.length > 0
+            && localItems.every(
+                listItem =>
+                    listItem.status === PHASE_ITEM_STATUS.DONE
+                    || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
+            ),
+        [localItems]
+    );
 
     const { data: dayOverviewData, isLoading: isDayOverviewLoading } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
@@ -393,9 +407,18 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     };
 
     const handleCheckboxStatus = async (item: PhaseItem) => {
-        setLocalItems(prevItems =>
-            prevItems.map(prevItem =>
-                (prevItem.id === item.id ? { ...item } : prevItem)));
+        setLocalItems(prevItems => {
+            const nextItems = prevItems.map(prevItem =>
+                (prevItem.id === item.id ? { ...item } : prevItem)
+            );
+            const allDoneNow = nextItems.every(
+                listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
+            );
+            if (item.status === PHASE_ITEM_STATUS.DONE && !allDoneNow) {
+                Promise.resolve().then(() => setBirdCheckTrigger(t => t + 1));
+            }
+            return nextItems;
+        });
 
         try {
             await updatePhaseItem({
@@ -621,7 +644,13 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     return (
             <Screen initialized={!isLoading} style={styles.container}>
                 {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
-                    ? <BirdAnimation allChecked={birdAnimationStep} checkboxAreaX={checkboxAreaX} />
+                    ? (
+                        <BirdAnimation
+                            allChecked={birdAnimationStep}
+                            checkTrigger={birdCheckTrigger}
+                            checkboxAreaX={checkboxAreaX}
+                        />
+                    )
                     : null
                 }
                 <View style={[styles.title, isFutureDate && styles.opacity]}>
