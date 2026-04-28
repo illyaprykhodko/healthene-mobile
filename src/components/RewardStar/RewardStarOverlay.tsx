@@ -19,8 +19,9 @@ import Svg, { Polygon } from 'react-native-svg';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 // local dependencies
-import { useAppDispatch, useAppSelector } from 'store';
-import { addStarPoints, selectRewardStar, selectStarPoints } from 'store/slices/rewardStarSlice';
+import { useAppSelector } from 'store';
+import { selectRewardStar } from 'store/slices/rewardStarSlice';
+import { useGetPatientGamblingPointsQuery } from 'store/api/gamblingPointsApi';
 import { ANIMATION_CONFIG, COUNTER_CONFIG, STAR_CONFIG, getGrainFlightTotalDurationMs } from './config';
 
 type DeferCancelHandle = { cancel: () => void };
@@ -183,10 +184,19 @@ const FlyingGrain = memo(({ index, masterProgress, startX, startY, endX, endY }:
     );
 });
 
-export const RewardStarOverlay: React.FC = () => {
-    const dispatch = useAppDispatch();
+export interface RewardStarOverlayProps {
+    /** When true, counter reflects GET /gambling-points; when false, counter shows 0 (query skipped). */
+    gamblingPointsQueryEnabled?: boolean;
+}
+
+export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({
+    gamblingPointsQueryEnabled = false,
+}) => {
     const { lastTrigger, cx: triggerCx, cy: triggerCy } = useAppSelector(selectRewardStar);
-    const counterDisplay = useAppSelector(selectStarPoints);
+    const { data: gamblingPointsData } = useGetPatientGamblingPointsQuery(undefined, {
+        skip: !gamblingPointsQueryEnabled,
+    });
+    const counterDisplay = gamblingPointsQueryEnabled ? (gamblingPointsData ?? 0) : 0;
 
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const overlayRef = useRef<View>(null);
@@ -237,7 +247,6 @@ export const RewardStarOverlay: React.FC = () => {
     }, [finishChain]);
 
     const applyCounterAfterPulse = useCallback(() => {
-        dispatch(addStarPoints());
         const fadeMs = STAR_CONFIG.FADE_OUT_AFTER_REWARD_MS;
         counterBump.value = withSequence(
             withTiming(1.12, { duration: 90, easing: Easing.out(Easing.quad) }),
@@ -258,7 +267,7 @@ export const RewardStarOverlay: React.FC = () => {
                 });
             })
         );
-    }, [afterCounterBumpAndStarHidden, counterBump, dispatch, finishChain, starOpacity]);
+    }, [afterCounterBumpAndStarHidden, counterBump, finishChain, starOpacity]);
 
     const flyFromMeasuredLayout = useCallback(
         (layout: FlightLayout) => {

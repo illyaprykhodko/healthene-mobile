@@ -1,5 +1,3 @@
-source 'https://cdn.cocoapods.org/'
-
 # Resolve react_native_pods.rb with node to allow for hoisting
 def node_require(script)
    # Resolve script with node to allow for hoisting
@@ -47,7 +45,11 @@ if linkage != nil
 end
 
 target 'Healthene' do
-  config = use_native_modules!
+  config_command = [
+    'cat',
+    File.join(__dir__, 'build/generated/autolinking/autolinking.json')
+  ]
+  config = use_native_modules!(config_command)
 
   pod 'react-native-blob-util',
       :path => '../node_modules/react-native-blob-util'
