@@ -231,7 +231,17 @@ export const EditFood: React.FC = () => {
         }
         navigation.goBack();
         setTimeout(() => navigation.goBack(), 100);
-    }, [item, amount, localIngredients, prevItem, substanceType, entityType, onApply, navigation, isRecipe]);
+    }, [
+        item,
+        amount,
+        onApply,
+        prevItem,
+        isRecipe,
+        entityType,
+        navigation,
+        substanceType,
+        localIngredients,
+    ]);
 
     const handleUpdateAmount = useCallback((newAmount: number) => {
         setAmount(newAmount);
@@ -266,11 +276,14 @@ export const EditFood: React.FC = () => {
                     });
                 }
                 setLocalIngredients(prev =>
-                    prev.map(i => (i.id === updatedIngredient.id ? updatedIngredient : i))
-                );
+                    prev.map(i => (i.id === updatedIngredient.id ? updatedIngredient : i)));
             }
         });
-    }, [navigation, item, localIngredients]);
+    }, [
+        item,
+        navigation,
+        localIngredients
+    ]);
 
     const renderOverviewTab = () => (
         <View
@@ -493,10 +506,7 @@ export const EditFood: React.FC = () => {
                             onPress={() => setActiveTab(tab.value)}
                         >
                             <Text
-                                style={[
-                                    styles.tabText,
-                                    ...(isActive ? [styles.activeTabText] : []),
-                                ]}
+                                style={[styles.tabText, ...(isActive ? [styles.activeTabText] : []),]}
                             >
                                 {tab.label}
                             </Text>
