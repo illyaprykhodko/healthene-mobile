@@ -1,5 +1,6 @@
 // outsource dependencies
-import React, { useEffect, useState } from 'react';
+import Toast from 'react-native-toast-message';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 
@@ -32,7 +33,11 @@ const ITEM_TABS = {
 
 // Returns true if tab should be HIDDEN for surrogate recipes
 const isShownSurrogateRecipe = (tab: string, item: any) => (
-    [ITEM_TABS.RECIPE, ITEM_TABS.INGREDIENTS, ITEM_TABS.OVERVIEW].includes(tab)
+    [
+        ITEM_TABS.RECIPE,
+        ITEM_TABS.INGREDIENTS,
+        ITEM_TABS.OVERVIEW
+    ].includes(tab)
     && (item?.recipe?.surrogateRecipe ?? false)
 );
 // [ITEM_TABS.RECIPE, ITEM_TABS.INGREDIENTS, ITEM_TABS.OVERVIEW].includes(tab)
@@ -101,20 +106,80 @@ const Item: React.FC = () => {
         return [];
     };
 
-    const handleUpdateItem = async (updatedItem: any) => {
+    const pendingRatingSaveRef = useRef<Promise<unknown> | null>(null);
+    const continueNavigationAfterSaveRef = useRef(false);
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', e => {
+            if (!pendingRatingSaveRef.current || continueNavigationAfterSaveRef.current) {
+                return;
+            }
+
+            e.preventDefault();
+            const pendingPromise = pendingRatingSaveRef.current;
+
+            if (!pendingPromise) {
+                navigation.dispatch(e.data.action);
+                return;
+            }
+
+            pendingPromise.finally(() => {
+                continueNavigationAfterSaveRef.current = true;
+                navigation.dispatch(e.data.action);
+                continueNavigationAfterSaveRef.current = false;
+            });
+        });
+
+        return unsubscribe;
+    }, [navigation]);
+
+    const handleUpdateItem = async (
+        updatedItem: any,
+        options?: { isRatingUpdate?: boolean }
+    ) => {
         if (!itemId || !item?.phase?.id) {
             return;
         }
-        
+
+        const previousRating = item?.rating || 0;
+        const nextRating = updatedItem?.rating || 0;
+        const isRatingUpdate = Boolean(options?.isRatingUpdate);
+
         try {
-            await updatePhaseItem({
+            const updatePromise = updatePhaseItem({
                 id: itemId,
                 phaseId: item.phase.id,
                 data: updatedItem,
                 date,
             }).unwrap();
+
+            if (isRatingUpdate) {
+                pendingRatingSaveRef.current = updatePromise;
+            }
+
+            await updatePromise;
+
+            if (isRatingUpdate) {
+                Toast.show({
+                    type: 'success',
+                    text1: previousRating > 0 && previousRating !== nextRating
+                        ? 'Rating updated'
+                        : 'Rating saved',
+                });
+            }
         } catch (error) {
             console.error('Failed to update item:', error);
+            if (isRatingUpdate) {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Failed to save rating',
+                    text2: 'Please try again.',
+                });
+            }
+        } finally {
+            if (isRatingUpdate) {
+                pendingRatingSaveRef.current = null;
+            }
         }
     };
 
@@ -175,10 +240,7 @@ const Item: React.FC = () => {
                             onPress={() => setActiveTab(tab.value)}
                         >
                             <Text
-                                style={[
-                                    styles.tabText,
-                                    ...(isActive ? [styles.activeTabText] : []),
-                                ]}
+                                style={[styles.tabText, ...(isActive ? [styles.activeTabText] : []),]}
                             >
                                 {tab.label}
                             </Text>

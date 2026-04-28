@@ -116,13 +116,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             setLocalItems(items);
         }
     }, [items]);
-    const allItemsDone = useMemo(() => {
-        if (localItems.length === 0) { return false; }
-        return localItems.every(item =>
-            item.status === PHASE_ITEM_STATUS.DONE || item.status === PHASE_ITEM_STATUS.DID_NOT_EAT
-        );
-    }, [localItems]);
-
     const computeExcludeIds = (): string[] => {
         switch (currentPhase?.type) {
             default:
@@ -356,30 +349,43 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     };
 
     const handlePhaseDone = async () => {
-        if (!targetPhaseId || !currentPhase) { return; }
-    
+        if (!targetPhaseId || !currentPhase) {
+            navigation.navigate(ROUTES.DAY_OVERVIEW);
+            return;
+        }
+
         try {
             const { items, ...phaseWithoutItems } = currentPhase as any;
+            const allItemsDoneNow = localItems.every(
+                listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
+            );
+
+            const nextPhaseStatus = allItemsDoneNow
+                ? PHASE_ITEM_STATUS.DONE
+                : PHASE_ITEM_STATUS.PENDING;
+
             await updatePhase({
                 id: targetPhaseId,
                 data: {
                     ...phaseWithoutItems,
-                    status: PHASE_ITEM_STATUS.DONE
+                    status: nextPhaseStatus
                 }
             });
-            dispatch(addRecentlyCompletedPhase(targetPhaseId));
-            navigation.navigate(ROUTES.DAY_OVERVIEW);
+
+            if (nextPhaseStatus === PHASE_ITEM_STATUS.DONE) {
+                dispatch(addRecentlyCompletedPhase(targetPhaseId));
+            }
         } catch (error) {
             console.error('Error marking phase as done:', error);
         }
+
+        navigation.navigate(ROUTES.DAY_OVERVIEW);
     };
 
     const handleCheckboxStatus = async (item: PhaseItem) => {
         setLocalItems(prevItems =>
             prevItems.map(prevItem =>
-                (prevItem.id === item.id ? { ...item } : prevItem)
-            )
-        );
+                (prevItem.id === item.id ? { ...item } : prevItem)));
 
         try {
             await updatePhaseItem({
@@ -766,13 +772,15 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         <Button
                             title="Meal Done"
                             variant="secondary"
-                            disabled={!allItemsDone}
+                            // disabled={!allItemsDone}
+                            disabled={isLoading}
                             onPress={handlePhaseDone}
                             textStyle={styles.textMealDoneButton}
                             style={{
                                 ...styles.button,
                                 ...styles.mealDoneButton,
-                                ...(!allItemsDone && styles.mealDoneButtonDisabled),
+                                ...(isLoading ? styles.mealDoneButtonDisabled : {}),
+                                // ...(!allItemsDone && styles.mealDoneButtonDisabled),
                             }}
                         />
                     )}

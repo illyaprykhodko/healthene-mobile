@@ -365,6 +365,13 @@ export const dayOverviewApi = createApi({
                       }
                   })
               );
+              const singleItemPatch = dispatch(
+                  dayOverviewApi.util.updateQueryData('getPhaseItem', id, (draft: any) => {
+                      if (draft) {
+                          Object.assign(draft, data);
+                      }
+                  })
+              );
 
               // Optimistically update DayOverview cache if we know the date
               let dayOverviewPatched: any | null = null;
@@ -392,6 +399,19 @@ export const dayOverviewApi = createApi({
               try {
                   const { data: serverItem } = await queryFulfilled;
                   dispatch(
+                      dayOverviewApi.util.updateQueryData('getPhaseItem', id, (draft: any) => {
+                          if (!draft) { return; }
+                          const mergedServerItem = { ...serverItem } as any;
+                          if (mergedServerItem?.patientFoodCategoryQuestion == null && draft?.patientFoodCategoryQuestion) {
+                              mergedServerItem.patientFoodCategoryQuestion = draft.patientFoodCategoryQuestion;
+                          }
+                          if (mergedServerItem?.patientFoodCategoryAttachment == null && draft?.patientFoodCategoryAttachment) {
+                              mergedServerItem.patientFoodCategoryAttachment = draft.patientFoodCategoryAttachment;
+                          }
+                          Object.assign(draft, mergedServerItem);
+                      })
+                  );
+                  dispatch(
                       dayOverviewApi.util.updateQueryData('getPhaseItems', phaseId, (draft: Record<string, any[]>) => {
                           for (const arr of Object.values(draft) as any[][]) {
                               const found = arr.find(x => x.id === id);
@@ -415,6 +435,7 @@ export const dayOverviewApi = createApi({
               } catch {
                   // Revert optimistic updates on error
                   patch.undo();
+                  singleItemPatch.undo();
                   if (dayOverviewPatched) { dayOverviewPatched.undo(); }
               }
           },

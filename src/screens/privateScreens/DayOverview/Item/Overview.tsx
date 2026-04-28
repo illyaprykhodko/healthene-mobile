@@ -17,7 +17,7 @@ interface OverviewProps {
     item: PhaseItem;
     disabled?: boolean;
     isSurrogateRecipe?: boolean;
-    updateItem: (data: any) => void;
+    updateItem: (data: any, options?: { isRatingUpdate?: boolean }) => void;
 }
 
 const Overview: React.FC<OverviewProps> = ({
@@ -57,7 +57,7 @@ const Overview: React.FC<OverviewProps> = ({
                             value={rating || 0}
                             disabled={disabled}
                             style={styles.rating}
-                            onApply={({ rating }) => updateItem({ ...item, rating })}
+                            onApply={({ rating }) => updateItem({ ...item, rating }, { isRatingUpdate: true })}
                         />
                         <View style={[styles.center, { marginBottom: OFFSET.VERTICAL }]}>
                             <DefImage
@@ -99,7 +99,7 @@ const Overview: React.FC<OverviewProps> = ({
                             value={rating || 0}
                             disabled={disabled}
                             style={styles.rating}
-                            onApply={({ rating }) => updateItem({ ...item, rating })}
+                            onApply={({ rating }) => updateItem({ ...item, rating }, { isRatingUpdate: true })}
                         />
                         <View style={[styles.center, { marginBottom: OFFSET.VERTICAL }]}>
                             <DefImage
@@ -147,7 +147,7 @@ const Overview: React.FC<OverviewProps> = ({
                             value={rating || 0}
                             disabled={disabled}
                             style={styles.rating}
-                            onApply={({ rating }) => updateItem({ ...item, rating })}
+                            onApply={({ rating }) => updateItem({ ...item, rating }, { isRatingUpdate: true })}
                         />
                         <View style={[styles.center, styles.marginBottom]}>
                             <DefImage

@@ -217,6 +217,28 @@ const TimelineSVG: React.FC<{ phases: PhaseItem[]; incompleteDay?: boolean }> = 
         if (currentNonMealStart !== null && nonMealDots.length > 0) {
             const endY = (phases.length - 1) * ROW_HEIGHT + ROW_HEIGHT / 2;
             const startY = currentNonMealStart;
+
+            // If the trailing non-meal series is preceded by a meal phase (e.g. Dinner → Exercise),
+            // draw a connector at the non-meal column from just below the previous meal down to just
+            // above the first non-meal dot. This mirrors the meal → non-meal visual used between
+            // meals so the timeline stays continuous all the way down.
+            const firstTailNonMealIdx = phases.length - nonMealDots.length;
+            const prevPhase = firstTailNonMealIdx > 0 ? phases[firstTailNonMealIdx - 1] : null;
+            if (prevPhase && isMealPhase(prevPhase.type)) {
+                const prevMealY = (firstTailNonMealIdx - 1) * ROW_HEIGHT + ROW_HEIGHT / 2;
+                elements.push(
+                    <Line
+                        x1={offsetLineX}
+                        x2={offsetLineX}
+                        y1={prevMealY + 30}
+                        y2={startY - GAP_SIZE}
+                        stroke={theme.colors.grey}
+                        strokeWidth={CONNECTOR_WIDTH}
+                        key={`tail-meal-to-non-meal-${firstTailNonMealIdx}`}
+                    />
+                );
+            }
+
             for (let i = 0; i < nonMealDots.length; i++) {
                 const dotY = nonMealDots[i];
                 const isNextPhaseHasMeal = isMealPhase(phases[i + 1].type);

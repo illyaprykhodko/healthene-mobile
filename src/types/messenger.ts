@@ -62,6 +62,7 @@ export interface MessageForm {
 
 export interface Attachment {
     id: number;
+    url?: string;
     title: string;
     mimeType: string;
     fileName: string;

@@ -33,9 +33,16 @@ export const s3ServiceApi = createApi({
                 url: '/s3-service/attachment/upload',
             }),
         }),
+        deleteFile: builder.mutation<void, Array<{ url: string }>>({
+            query: body => ({
+                body,
+                method: 'DELETE',
+                url: '/s3-service/files',
+            }),
+        }),
     })
 });
 
-export const { useUploadAttachmentMutation } = s3ServiceApi;
 export const uploadImageInitiate = s3ServiceApi.endpoints.uploadImage.initiate;
+export const { useUploadAttachmentMutation, useDeleteFileMutation } = s3ServiceApi;
 export const uploadAttachmentInitiate = s3ServiceApi.endpoints.uploadAttachment.initiate;

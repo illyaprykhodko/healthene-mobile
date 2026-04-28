@@ -1,6 +1,8 @@
 // outsource dependencies
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import {
+    Pressable, StyleSheet, View
+} from 'react-native';
 import Icon from '@react-native-vector-icons/material-icons';
 
 // local dependencies
@@ -12,27 +14,52 @@ import { formatDuration } from 'utils/general.ts';
 // configure
 const BUTTON_SIZE = 60;
 const CAMERA_SWITCH_SIZE = 48;
+const WAIT_BUTTON_SIZE = BUTTON_SIZE - (BUTTON_SIZE * 0.15) * 2;
+const STOP_BUTTON_SIZE = BUTTON_SIZE - (BUTTON_SIZE * 0.35) * 2;
 
 interface CameraControlsProps {
-    onPress: () => void;
     isRecording: boolean;
-    recordingDuration: number
+    onTakePhoto: () => void;
+    recordingDuration: number;
     changePosition: () => void;
-    onStopRecording: () => void;
-    onStartRecording: () => void;
+    onToggleRecording: () => void;
+    captureMode: 'photo' | 'video';
 }
 
-const CameraControls = ({ isRecording, onPress, changePosition, onStopRecording, onStartRecording, recordingDuration }: CameraControlsProps) => {
+const CameraControls = ({
+    captureMode,
+    isRecording,
+    onTakePhoto,
+    changePosition,
+    recordingDuration,
+    onToggleRecording,
+}: CameraControlsProps) => {
     const theme = useTheme();
 
-    const controlBtn = () => <Pressable
-        onPress={onPress}
-        onTouchEnd={onStopRecording}
-        onLongPress={onStartRecording}
-        style={[styles.buttonContainer, { backgroundColor: theme.colors.lighterGrey }]}
-    >
-        <View style={[styles.waitBtn, { backgroundColor: theme.colors.red }]} />
-    </Pressable>;
+    const controlBtn = () => {
+        const isVideo = captureMode === 'video';
+        const onPress = isVideo ? onToggleRecording : onTakePhoto;
+        const innerStyle = isVideo && isRecording
+            ? styles.stopBtn
+            : styles.waitBtn;
+
+        return (
+            <Pressable
+                onPress={onPress}
+                style={[styles.buttonContainer, { backgroundColor: theme.colors.lighterGrey }]}
+            >
+                <View style={[
+                    innerStyle,
+                    {
+                        backgroundColor: theme.colors.red,
+                        borderRadius: isVideo && isRecording ? 8 : WAIT_BUTTON_SIZE / 2,
+                    },
+                ]}
+                />
+            </Pressable>
+        );
+    };
+
     return <View style={styles.container}>
         {isRecording && <Text style={styles.timer} color={theme.colors.white}>{formatDuration(recordingDuration)}</Text>}
         <Pressable onPress={changePosition} style={styles.cameraSwitch}>
@@ -63,9 +90,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     waitBtn: {
-        width: BUTTON_SIZE - (BUTTON_SIZE * 0.15) * 2,
-        height: BUTTON_SIZE - (BUTTON_SIZE * 0.15) * 2,
-        borderRadius: (BUTTON_SIZE - (BUTTON_SIZE * 0.15) * 2) / 2,
+        width: WAIT_BUTTON_SIZE,
+        height: WAIT_BUTTON_SIZE,
+        borderRadius: WAIT_BUTTON_SIZE / 2,
+    },
+    stopBtn: {
+        width: STOP_BUTTON_SIZE,
+        height: STOP_BUTTON_SIZE,
     },
     cameraSwitch: {
         position: 'absolute',
