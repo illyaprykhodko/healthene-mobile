@@ -1,11 +1,25 @@
 // outsource dependencies
 import { WebView } from 'react-native-webview';
 import RNBlobUtil from 'react-native-blob-util';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 
 // local dependencies
+
+// ============================================================================
+// PLATFORM ASSET RESOLUTION
+// ============================================================================
+// iOS ships .mov in the app bundle (Xcode Resources phase); Android ships .webm
+// inside android/app/src/main/assets/videos/ which Gradle auto-bundles into the APK.
+const VIDEO_EXT = Platform.OS === 'ios' ? 'mov' : 'webm';
+const VIDEO_MIME = Platform.OS === 'ios' ? 'video/quicktime' : 'video/webm';
+
+function getVideoAssetPath (name: string): string {
+    return Platform.OS === 'ios'
+        ? `${RNBlobUtil.fs.dirs.MainBundleDir}/${name}.${VIDEO_EXT}`
+        : `bundle-assets://videos/${name}.${VIDEO_EXT}`;
+}
 
 // ============================================================================
 // CONFIGURABLE CONSTANTS
@@ -25,11 +39,12 @@ export const BIRD_ANIMATION_CONFIG = {
 };
 
 /**
- * One entry per check clip: filename + on-screen layout box and container position.
+ * One entry per check clip: logical name (no extension) + on-screen layout box and container position.
+ * Real file is resolved per-platform via {@link getVideoAssetPath}.
  * width/height are the visible footprint; the WebView always draws at VIDEO_SIZE and scales up (iOS-friendly).
  */
 export type BirdCheckClipConfig = {
-    file: string;
+    name: string;
     width: number;
     height: number;
     containerTop: number;
@@ -38,35 +53,35 @@ export type BirdCheckClipConfig = {
 
 export const BIRD_CHECK_VIDEO_CLIPS: BirdCheckClipConfig[] = [
     {
-        file: 'check1.mov',
+        name: 'check1',
         width: VIDEO_SIZE,
         height: VIDEO_SIZE,
         containerTop: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top,
         right: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
     },
     {
-        file: 'check2.mov',
+        name: 'check2',
         width: VIDEO_SIZE,
         height: VIDEO_SIZE,
         containerTop: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top,
         right: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
     },
     {
-        file: 'check3.mov',
+        name: 'check3',
         width: VIDEO_SIZE,
         height: VIDEO_SIZE,
         containerTop: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top,
         right: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
     },
     {
-        file: 'check4.mov',
+        name: 'check4',
         width: VIDEO_SIZE + 10,
         height: VIDEO_SIZE + 10,
         containerTop: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top - 6,
         right: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
     },
     {
-        file: 'check5.mov',
+        name: 'check5',
         width: VIDEO_SIZE,
         height: VIDEO_SIZE,
         containerTop: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top,
@@ -74,15 +89,15 @@ export const BIRD_CHECK_VIDEO_CLIPS: BirdCheckClipConfig[] = [
     },
 ];
 
-function getCheckClipLayout (filename: string | null): BirdCheckClipConfig | null {
-    if (!filename) {
+function getCheckClipLayout (name: string | null): BirdCheckClipConfig | null {
+    if (!name) {
         return null;
     }
-    return BIRD_CHECK_VIDEO_CLIPS.find(c => c.file === filename) ?? null;
+    return BIRD_CHECK_VIDEO_CLIPS.find(c => c.name === name) ?? null;
 }
 
 // ============================================================================
-// ANIMATION PHASES: appearing → sitting (loop) → action (single.mov) → finished
+// ANIMATION PHASES: appearing → sitting (loop) → action (single clip) → finished
 // ============================================================================
 export const BirdAnimationPhase = {
     APPEARING: 'APPEARING',
@@ -119,10 +134,10 @@ export const ANIMATED_VIEW_RIGHT_CONFIG: Record<BirdAnimationPhase, number> = {
 };
 
 const PHASE_VIDEO_MAP: Record<BirdAnimationPhase, string | null> = {
-    [BirdAnimationPhase.APPEARING]: 'appearing.mov',
-    [BirdAnimationPhase.SITTING]: 'sitting.mov',
+    [BirdAnimationPhase.APPEARING]: 'appearing',
+    [BirdAnimationPhase.SITTING]: 'sitting',
     [BirdAnimationPhase.CHECK]: null,
-    [BirdAnimationPhase.ACTION]: 'single.mov',
+    [BirdAnimationPhase.ACTION]: 'single',
     [BirdAnimationPhase.FINISHED]: null,
 };
 
@@ -183,7 +198,7 @@ function createBirdWebViewHtml (domReadyMessage: string): string {
                                             onerror="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_FAILED}' }))"
                                             onloadeddata="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_LOADED}' }))"
                                         >
-                                            <source id="source" type="video/quicktime" />
+                                            <source id="source" type="${VIDEO_MIME}" />
                                         </video>
                                     </div>
                                 </body>
@@ -198,12 +213,12 @@ interface BirdAnimationProps {
     checkboxAreaX?: number;
 }
 
-function pickRandomCheckClipFile (): string {
+function pickRandomCheckClipName (): string {
     const clips = BIRD_CHECK_VIDEO_CLIPS;
     if (clips.length === 0) {
-        return 'check1.mov';
+        return 'check1';
     }
-    return clips[Math.floor(Math.random() * clips.length)].file;
+    return clips[Math.floor(Math.random() * clips.length)].name;
 }
 
 export const BirdAnimation = (props: BirdAnimationProps) => {
@@ -211,7 +226,7 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
     const mainWebViewRef = useRef<WebView>(null);
     const actionWebViewRef = useRef<WebView>(null);
     const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.APPEARING);
-    const [activeCheckClipFile, setActiveCheckClipFile] = useState<string | null>(null);
+    const [activeCheckClipName, setActiveCheckClipName] = useState<string | null>(null);
     const [mainDOMReady, setMainDOMReady] = useState<boolean>(false);
     const [actionDOMReady, setActionDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
@@ -253,11 +268,13 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
             ) as BirdAnimationPhase[];
 
             for (const p of phases) {
-                const videoFile = PHASE_VIDEO_MAP[p];
-                if (videoFile) {
+                const clipName = PHASE_VIDEO_MAP[p];
+                if (clipName) {
                     try {
-                        const path = `${RNBlobUtil.fs.dirs.MainBundleDir}/${videoFile}`;
-                        const base64 = await RNBlobUtil.fs.readFile(path, 'base64');
+                        const base64 = await RNBlobUtil.fs.readFile(
+                            getVideoAssetPath(clipName),
+                            'base64'
+                        );
                         cache.set(p, base64);
                     } catch (error) {
                         console.error(`Error loading video for phase ${p}:`, error);
@@ -267,11 +284,13 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
 
             for (const clip of BIRD_CHECK_VIDEO_CLIPS) {
                 try {
-                    const path = `${RNBlobUtil.fs.dirs.MainBundleDir}/${clip.file}`;
-                    const base64 = await RNBlobUtil.fs.readFile(path, 'base64');
-                    checkCache.set(clip.file, base64);
+                    const base64 = await RNBlobUtil.fs.readFile(
+                        getVideoAssetPath(clip.name),
+                        'base64'
+                    );
+                    checkCache.set(clip.name, base64);
                 } catch (error) {
-                    console.error(`Error loading check clip ${clip.file}:`, error);
+                    console.error(`Error loading check clip ${clip.name}:`, error);
                 }
             }
 
@@ -314,7 +333,7 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
                         window.__birdSitSeeked = null;
                     }
                     v.pause();
-                    window.__SOURCE__.src = "data:video/quicktime;base64,${base64}";
+                    window.__SOURCE__.src = "data:${VIDEO_MIME};base64,${base64}";
                     var phaseTag = "${targetPhase}";
                     var resumeLoopInPage = ${resumeLoopInPage ? 'true' : 'false'};
                     var isSitting = phaseTag === "${BirdAnimationPhase.SITTING}";
@@ -356,8 +375,8 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
     );
 
     const injectCheckClip = useCallback(
-        (clipFile: string, ref: RefObject<WebView | null>) => {
-            const base64 = checkVideoCache.get(clipFile);
+        (clipName: string, ref: RefObject<WebView | null>) => {
+            const base64 = checkVideoCache.get(clipName);
             if (!base64 || !ref.current) {
                 return;
             }
@@ -372,7 +391,7 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
                     window.__VIDEO__.pause();
                     window.__VIDEO__.loop = false;
                     window.__VIDEO__.removeAttribute("loop");
-                    window.__SOURCE__.src = "data:video/quicktime;base64,${base64}";
+                    window.__SOURCE__.src = "data:${VIDEO_MIME};base64,${base64}";
                     var phaseTag = "${phaseTag}";
                     window.__VIDEO__.onended = function() {
                         window.ReactNativeWebView.postMessage(JSON.stringify({
@@ -405,8 +424,8 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
                 injectVideo(BirdAnimationPhase.ACTION, actionWebViewRef);
             }
         } else if (phase === BirdAnimationPhase.CHECK) {
-            if (mainDOMReady && activeCheckClipFile) {
-                injectCheckClip(activeCheckClipFile, mainWebViewRef);
+            if (mainDOMReady && activeCheckClipName) {
+                injectCheckClip(activeCheckClipName, mainWebViewRef);
             }
         } else if (mainDOMReady) {
             // If deferred state was partially cleared, do not leave `playDeferred` stuck true (would block the check-trigger effect forever).
@@ -433,7 +452,7 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
         videosLoaded,
         injectVideo,
         injectCheckClip,
-        activeCheckClipFile,
+        activeCheckClipName,
     ]);
 
     // Parent bumps `checkTrigger` when a meal item is marked done while the list is still incomplete → CHECK clip.
@@ -475,7 +494,7 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
         playDeferredCheckAfterFirstSittingLoopRef.current = false;
         deferredCheckTriggerWhileAppearingRef.current = 0;
         lastCheckTriggerConsumed.current = checkTrigger;
-        setActiveCheckClipFile(pickRandomCheckClipFile());
+        setActiveCheckClipName(pickRandomCheckClipName());
         phaseRef.current = BirdAnimationPhase.CHECK;
         setPhase(BirdAnimationPhase.CHECK);
     }, [checkTrigger, videosLoaded, allChecked]);
@@ -529,7 +548,7 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
                             const latestTrigger = checkTriggerPropRef.current;
                             const consumeThrough = Math.max(dTrigger, latestTrigger);
                             lastCheckTriggerConsumed.current = consumeThrough;
-                            setActiveCheckClipFile(pickRandomCheckClipFile());
+                            setActiveCheckClipName(pickRandomCheckClipName());
                             phaseRef.current = BirdAnimationPhase.CHECK;
                             setPhase(BirdAnimationPhase.CHECK);
                             return;
@@ -569,7 +588,7 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
                         }
                         case BirdAnimationPhase.CHECK:
                             if (!allCheckedRef.current) {
-                                setActiveCheckClipFile(null);
+                                setActiveCheckClipName(null);
                                 phaseRef.current = BirdAnimationPhase.SITTING;
                                 playDeferredCheckAfterFirstSittingLoopRef.current = false;
                                 deferredCheckTriggerWhileAppearingRef.current = 0;
@@ -627,7 +646,7 @@ export const BirdAnimation = (props: BirdAnimationProps) => {
     };
 
     const checkLayout = phase === BirdAnimationPhase.CHECK
-        ? getCheckClipLayout(activeCheckClipFile)
+        ? getCheckClipLayout(activeCheckClipName)
         : null;
     /** Layout box on screen (can be larger than the WebView render size below). */
     const mainLayoutWidth = checkLayout?.width ?? VIDEO_SIZE_CONFIG[phase].width;
