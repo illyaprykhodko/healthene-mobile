@@ -4,7 +4,7 @@ import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View, RefreshControl } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -20,7 +20,7 @@ import { MessageService } from 'services/messages';
 import { RootStackParamList } from 'services/navigation';
 import { clearReplyMessage, setReplyMessage } from 'store/slices/messengerSlice.ts';
 import { Message } from 'screens/privateScreens/Messenger/components/MessageItem.tsx';
-import { useGetChainMessagesQuery, useDeleteChainsMutation } from 'store/api/messengerApi.ts';
+import { useDeleteChainsMutation, useGetChainMessagesInfiniteQuery } from 'store/api/messengerApi.ts';
 
 interface RowMap {
     [key: string]: { closeRow: () => void } | undefined;
@@ -39,8 +39,22 @@ const MessengerList = () => {
     }, [dispatch, navigation]);
     const init = useCallback(() => dispatch(clearReplyMessage()), [dispatch]);
 
-    const [page, setPage] = useState(0);
-    const { data: messages, refetch } = useGetChainMessagesQuery({ params: { page } });
+    // NOTE Native infinite query — RTK Query owns the `{ pages, pageParams }`
+    // structure. Tag invalidation (`ListOfChain`) from `createChain` /
+    // `replyToChain` / `deleteChains` automatically refetches every cached page
+    // sequentially, so the new chain shows up on top without any manual cache
+    // busting from the consumer side.
+    const {
+        data,
+        refetch,
+        isFetching,
+        hasNextPage,
+        fetchNextPage,
+    } = useGetChainMessagesInfiniteQuery();
+    const messages = useMemo(
+        () => data?.pages.flatMap(p => p.content) ?? [],
+        [data]
+    );
 
     // Handle delete chain messages
     const [deleteChain] = useDeleteChainsMutation();
@@ -73,10 +87,10 @@ const MessengerList = () => {
     // Handle preloader
     const [initialized, setInitialized] = useState(false);
     useEffect(() => {
-        if (messages) {
+        if (data) {
             setInitialized(true);
         }
-    }, [messages]);
+    }, [data]);
 
     // SwipeList handle
     const onRowOpen = (rowKey: string, rowMap: RowMap) => {
@@ -99,7 +113,6 @@ const MessengerList = () => {
         try {
             setRefreshing(true);
             await refetch();
-            setPage(0);
         } catch (error) {
             Toast.show({
                 type: 'error',
@@ -113,21 +126,24 @@ const MessengerList = () => {
 
     // Lazy load handle
     const loadMore = useCallback(() => {
-        if (messages && messages.page < messages.totalPages) {
-            setPage(messages.page + 1);
-        }
-    }, [messages, setPage]);
+        if (!hasNextPage || isFetching) { return; }
+        void fetchNextPage();
+    }, [
+        hasNextPage,
+        isFetching,
+        fetchNextPage,
+    ]);
 
     return (
         <Screen initialized={initialized} init={init}>
             <SwipeListView
                 useFlatList
+                data={messages}
                 disableRightSwipe
                 onRowOpen={onRowOpen}
                 initialNumToRender={10}
                 onEndReached={loadMore}
                 onEndReachedThreshold={0.6}
-                data={messages?.data ?? []}
                 rightOpenValue={-ITEM_HIDDEN_SIZE}
                 renderHiddenItem={renderHiddenItem}
                 contentContainerStyle={styles.flexGrow}

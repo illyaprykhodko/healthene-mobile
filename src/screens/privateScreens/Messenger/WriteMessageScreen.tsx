@@ -4,11 +4,11 @@ import moment from 'moment';
 import { Formik } from 'formik';
 import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
-import React, { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { pick, types } from '@react-native-documents/picker';
+import React, { useCallback, useMemo, useState } from 'react';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -23,15 +23,21 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
-import { MessageForm } from 'types/messenger.ts';
 import { RootState, useAppSelector } from 'store';
 import ProfileImage from 'components/ProfileImage.tsx';
+import { getClinicRoleLabel } from 'constants/spec.ts';
 import { RootStackParamList } from 'services/navigation';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
+import { MessageForm, Recipient } from 'types/messenger.ts';
 import Attachments from 'screens/privateScreens/Messenger/components/Attachments.tsx';
 import { useCreateChainMutation, useReplyToChainMutation } from 'store/api/messengerApi.ts';
 import { useDeleteFileMutation, useUploadAttachmentMutation } from 'store/api/s3ServiceApi.ts';
-import { setAttachment, saveMessageForm, removeAttachment, } from 'store/slices/messengerSlice.ts';
+import {
+    setAttachment,
+    saveMessageForm,
+    clearCollocutor,
+    removeAttachment,
+} from 'store/slices/messengerSlice.ts';
 
 // configure
 const ATTACHMENTS = {
@@ -57,7 +63,7 @@ const WriteMessageScreen = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     const user = useAppSelector((state: RootState) => state.app.user);
-    const { reply: chain, initialValues } = useSelector((state: RootState) => state.messenger);
+    const { reply: chain, initialValues, collocutor: pickedCollocutor } = useSelector((state: RootState) => state.messenger);
 
     const [preloader, setPreloader] = useState<boolean>(false);
 
@@ -68,6 +74,46 @@ const WriteMessageScreen = () => {
     const formInitialValues: MessageForm = chain
         ? { ...initialValues, subject: chain.subject }
         : initialValues;
+
+    const recipient = useMemo<Recipient | null>(() => {
+        if (pickedCollocutor) { return pickedCollocutor; }
+        if (chain?.collocutor || chain?.owner) {
+            const source = chain.collocutor ?? chain.owner;
+            return {
+                id: source.id,
+                name: source.name,
+                coverImage: source.coverImage,
+            } as Recipient;
+        }
+        if (user?.physician) {
+            return {
+                id: user.physician.id,
+                name: user.physician.name,
+                clinicRole: user.physician.clinicRole,
+                coverImage: user.physician.coverImage as Recipient['coverImage'],
+            };
+        }
+        return null;
+    }, [
+        pickedCollocutor,
+        chain,
+        user,
+    ]);
+
+    const recipientName = recipient?.name
+        || [recipient?.firstName, recipient?.lastName].filter(Boolean).join(' ')
+        || null;
+    const roleLabel = recipient?.clinicRole ? getClinicRoleLabel(recipient.clinicRole) : 'Physician';
+    // NOTE not allowed to change recipient when replying inside an existing chain
+    const canPickRecipient = !chain;
+    const handleOpenRecipientPicker = useCallback(() => {
+        if (!canPickRecipient) { return; }
+        navigation.navigate(ROUTES.SELECT_RECIPIENT, { selectedId: recipient?.id });
+    }, [
+        canPickRecipient,
+        navigation,
+        recipient,
+    ]);
     const saveForm = useCallback(
         (values: MessageForm) => {
             dispatch(saveMessageForm(values));
@@ -75,12 +121,26 @@ const WriteMessageScreen = () => {
         [dispatch]
     );
     const handleSubmit = useCallback(async (data: MessageForm, formikHelpers?: any) => {
-        if (chain) {
-            await replyChain({ chain, ...data, attachments: initialValues.attachments }).unwrap();
-        } else {
-            if (user?.physician?.id) {
-                await createChain({ ...data, attachments: initialValues.attachments, collocutor: { id: user.physician.id } });
+        try {
+            if (chain) {
+                await replyChain({ chain, ...data, attachments: initialValues.attachments }).unwrap();
+            } else if (recipient?.id) {
+                await createChain({
+                    ...data,
+                    attachments: initialValues.attachments,
+                    collocutor: { id: recipient.id },
+                }).unwrap();
+            } else {
+                return;
             }
+        } catch (error) {
+            Sentry.captureException(error);
+            Toast.show({
+                type: 'error',
+                text1: 'Send failed',
+                text2: 'We couldn’t send your message. Please try again.',
+            });
+            return;
         }
 
         // reset form fields
@@ -98,12 +158,13 @@ const WriteMessageScreen = () => {
             subject: '',
             attachments: []
         } as any));
+        dispatch(clearCollocutor());
 
         navigation.navigate(ROUTES.MESSAGE_LIST);
     }, [
-        user,
         chain,
         dispatch,
+        recipient,
         replyChain,
         navigation,
         createChain,
@@ -249,17 +310,32 @@ const WriteMessageScreen = () => {
                     extraScrollHeight={80}
                     contentContainerStyle={styles.flexGrow}
                 >
-                    <View style={styles.row}>
-                        <ProfileImage style={{ ...styles.profileImg, borderColor: theme.colors.grey }} uri={user?.physician?.coverImage?.url} />
-                        <View>
-                            <Text>
-                        To:
-                        &nbsp;
-                                {user?.physician?.name ?? '-'}
+                    <Pressable
+                        style={styles.row}
+                        disabled={!canPickRecipient}
+                        onPress={handleOpenRecipientPicker}
+                    >
+                        <ProfileImage
+                            uri={recipient?.coverImage?.url}
+                            style={{ ...styles.profileImg, borderColor: theme.colors.grey }}
+                        />
+                        <View style={styles.recipientBody}>
+                            <Text numberOfLines={1}>
+                                To:
+                                &nbsp;
+                                {recipientName ?? 'Select recipient'}
                             </Text>
-                            <Text variant="caption" color={theme.colors.grey}>Physician</Text>
+                            <Text variant="caption" color={theme.colors.grey}>{roleLabel}</Text>
                         </View>
-                    </View>
+                        {canPickRecipient && (
+                            <Icon
+                                size={14}
+                                iconStyle="solid"
+                                name="chevron-right"
+                                color={theme.colors.darkGrey}
+                            />
+                        )}
+                    </Pressable>
                     <Formik<MessageForm>
                         enableReinitialize
                         initialValues={formInitialValues}
@@ -305,6 +381,7 @@ const WriteMessageScreen = () => {
                                     variant="outline"
                                     title="SEND MESSAGE"
                                     onPress={handleSubmit}
+                                    disabled={!chain && !recipient?.id}
                                 />
                             </View>;
                         }}
@@ -350,7 +427,11 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
     row: {
-        flexDirection: 'row'
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    recipientBody: {
+        flex: 1,
     },
     flex: {
         flex: 1,

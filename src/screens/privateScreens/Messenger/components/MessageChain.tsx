@@ -1,12 +1,12 @@
 // outsource dependencies
 import Toast from 'react-native-toast-message';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet } from 'react-native';
 
 // local dependencies
 import { OFFSET } from 'constants/offset.ts';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
-import { useGetMessagesChainQuery } from 'store/api/messengerApi.ts';
+import { useGetMessagesChainInfiniteQuery } from 'store/api/messengerApi.ts';
 import MessageChainItem from 'screens/privateScreens/Messenger/components/MessageChainItem.tsx';
 
 interface MessageChainProps {
@@ -15,19 +15,29 @@ interface MessageChainProps {
 
 const MessageChain = ({ id }: MessageChainProps) => {
     const [preloader, setPreloader] = useState<boolean>(false);
-    // Handle message chain
-    const [page, setPage] = useState<number>(0);
-    const { data: messageChain, refetch } = useGetMessagesChainQuery(
-        { chainId: id, params: { page, size: 10 } },
+    const {
+        data,
+        refetch,
+        isFetching,
+        hasNextPage,
+        fetchNextPage,
+    } = useGetMessagesChainInfiniteQuery(
+        { chainId: id },
         { refetchOnFocus: true }
     );
+    const messages = useMemo(
+        () => data?.pages.flatMap(p => p.content) ?? [],
+        [data]
+    );
 
-    // Lazy load handle
     const loadMore = useCallback(() => {
-        if (messageChain && messageChain.page < messageChain.totalPages) {
-            setPage(messageChain.page + 1);
-        }
-    }, [messageChain, setPage]);
+        if (!hasNextPage || isFetching) { return; }
+        void fetchNextPage();
+    }, [
+        isFetching,
+        hasNextPage,
+        fetchNextPage,
+    ]);
 
     // Refresh control
     const [refreshing, setRefreshing] = useState(false);
@@ -35,7 +45,6 @@ const MessageChain = ({ id }: MessageChainProps) => {
         try {
             setRefreshing(true);
             await refetch();
-            setPage(0);
         } catch (error) {
             Toast.show({
                 type: 'error',
@@ -50,10 +59,10 @@ const MessageChain = ({ id }: MessageChainProps) => {
     return <>
         <LoadingOverlay init={preloader} />
         <FlatList
+            data={messages}
             onEndReached={loadMore}
             style={styles.container}
             onEndReachedThreshold={0.6}
-            data={messageChain?.data ?? []}
             showsVerticalScrollIndicator={false}
             keyExtractor={({ id }) => String(id)}
             contentContainerStyle={styles.flexGrow}

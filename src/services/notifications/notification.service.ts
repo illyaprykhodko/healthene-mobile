@@ -1,4 +1,5 @@
 // outsource dependencies
+import moment from 'moment';
 import { Platform, Linking } from 'react-native';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
@@ -10,7 +11,23 @@ import {
     PERMISSIONS,
 } from 'react-native-permissions';
 
+// local dependencies
+import { store } from 'store';
+import { ROUTES } from 'constants/routes';
+import { navigationRef } from 'services/navigation';
+import {
+    isWeightDeepLink,
+    getNotificationDeepLink,
+    isMessageThreadDeepLink,
+    getMessageThreadIdFromDeepLink,
+} from 'services/deepLink';
+
 const DEFAULT_CHANNEL_ID = 'default-channel-id';
+// NOTE max time we wait for the navigation tree + auth state to settle before
+// giving up on a tapped deep link. 80 * 250ms = 20s — same upper bound as the
+// v1 saga (`waitForPrivateNavigationReady`).
+const NAVIGATION_READY_MAX_ATTEMPTS = 80;
+const NAVIGATION_READY_POLL_MS = 250;
 
 class NotificationService {
     private initialized = false;
@@ -42,40 +59,23 @@ class NotificationService {
         }, {});
     }
 
-    private static resolveDeepLink (data: FirebaseMessagingTypes.RemoteMessage['data']): string | null {
-        const rawLink = data?.deepLink || data?.url || data?.link;
-        if (!rawLink || typeof rawLink !== 'string') {
-            return null;
-        }
-        return rawLink.trim();
-    }
-
     private async ensureAndroidPermission (): Promise<boolean> {
         if (Platform.OS !== 'android') { return true; }
         const permission = (PERMISSIONS.ANDROID as Record<string, Permission>).POST_NOTIFICATIONS;
-        if (!permission) {
-            // this.log('POST_NOTIFICATIONS is not available in current permissions package');
-            return true;
-        }
+        if (!permission) { return true; }
         const currentStatus = await check(permission);
-        // this.log(`Android POST_NOTIFICATIONS status: ${currentStatus}`);
         if (currentStatus === RESULTS.GRANTED) { return true; }
         const requestedStatus = await request(permission);
-        // this.log(`Android POST_NOTIFICATIONS request result: ${requestedStatus}`);
         return requestedStatus === RESULTS.GRANTED;
     }
 
     private async ensureMessagingPermission (): Promise<boolean> {
         const androidGranted = await this.ensureAndroidPermission();
-        if (!androidGranted) {
-            // this.log('Messaging permission blocked by Android permission');
-            return false;
-        }
+        if (!androidGranted) { return false; }
 
         try {
             await messaging().setAutoInitEnabled(true);
             await messaging().registerDeviceForRemoteMessages();
-            // this.log('Device registered for remote messages');
         } catch (error) {
             this.log('registerDeviceForRemoteMessages skipped/failed', error);
         }
@@ -85,12 +85,10 @@ class NotificationService {
             status === messaging.AuthorizationStatus.AUTHORIZED
             || status === messaging.AuthorizationStatus.PROVISIONAL
         );
-        // this.log(`Messaging authorization status: ${status}. Authorized: ${authorized}`);
 
         if (Platform.OS === 'ios') {
             try {
-                const apnsToken = await messaging().getAPNSToken();
-                // this.log('APNS token', apnsToken);
+                await messaging().getAPNSToken();
             } catch (error) {
                 this.log('Failed to get APNS token', error);
             }
@@ -109,7 +107,6 @@ class NotificationService {
             description: 'A default channel',
             importance: AndroidImportance.HIGH,
         });
-        // this.log(`Android channel ensured: ${DEFAULT_CHANNEL_ID}`);
     }
 
     private async displayForegroundNotification (remoteMessage: FirebaseMessagingTypes.RemoteMessage): Promise<void> {
@@ -121,17 +118,7 @@ class NotificationService {
             || (typeof dataMessage === 'string' ? dataMessage : undefined)
             || (typeof dataBody === 'string' ? dataBody : undefined);
         const normalizedData = NotificationService.normalizeNotificationData(remoteMessage.data);
-        // this.log('Incoming message for local display', {
-        //     messageId: remoteMessage.messageId,
-        //     from: remoteMessage.from,
-        //     title,
-        //     body,
-        //     data: normalizedData,
-        // });
-        if (!title && !body) {
-            // this.log('Message has no visible content, skip local display');
-            return;
-        }
+        if (!title && !body) { return; }
         await notifee.displayNotification({
             body: body || '',
             data: normalizedData,
@@ -144,76 +131,104 @@ class NotificationService {
                 smallIcon: 'ic_launcher',
             },
         });
-        // this.log('Local notification displayed');
+    }
+
+    /**
+     * Block (poll) until the navigation container is mounted AND the auth
+     * pipeline finished (`auth + initialized`), or give up after the timeout.
+     * Mirrors v1's `waitForPrivateNavigationReady` saga so deep links opened
+     * from a cold start (where `getInitialNotification()` resolves before the
+     * NavigationContainer is mounted) still land on the correct screen.
+     */
+    private async waitForNavigationReady (): Promise<boolean> {
+        for (let attempt = 0; attempt < NAVIGATION_READY_MAX_ATTEMPTS; attempt++) {
+            const isReady = navigationRef.isReady();
+            const { auth, initialized } = store.getState().app;
+            if (isReady && auth && initialized) { return true; }
+            await new Promise<void>(resolve => { setTimeout(resolve, NAVIGATION_READY_POLL_MS); });
+        }
+        return false;
+    }
+
+    /**
+     * Translate a parsed deep link into an in-app navigation. Handles the two
+     * shapes we currently emit from the backend:
+     *  - weight reminder: `/public/app-redirect/measurements/weight`
+     *  - message thread:  `/public/app-redirect/messages/thread/:id`
+     *
+     * Falls back to `Linking.openURL` for anything we don't know about — this
+     * lets `linking` config in `RootNavigator` still pick it up if it matches
+     * a configured path, and otherwise hands off to the OS as a last resort.
+     */
+    private async navigateFromDeepLink (deepLink: string): Promise<void> {
+        const ready = await this.waitForNavigationReady();
+        if (!ready) {
+            this.log('Skipping deep link — navigation/auth not ready', { deepLink });
+            return;
+        }
+
+        if (isWeightDeepLink(deepLink)) {
+            const date = moment().format('YYYY-MM-DD');
+            navigationRef.navigate(ROUTES.WEIGHT_MEASUREMENT, { date });
+            return;
+        }
+
+        if (isMessageThreadDeepLink(deepLink)) {
+            const threadId = getMessageThreadIdFromDeepLink(deepLink);
+            const numericId = threadId ? Number(threadId) : NaN;
+            if (Number.isFinite(numericId)) {
+                navigationRef.navigate(ROUTES.READ_MESSAGE, { id: numericId });
+                return;
+            }
+        }
+
+        try {
+            await Linking.openURL(deepLink);
+        } catch (error) {
+            this.log('Failed to open deep link', {
+                error,
+                deepLink,
+            });
+        }
     }
 
     private handleNotificationOpen (remoteMessage: FirebaseMessagingTypes.RemoteMessage | null): void {
         if (!remoteMessage) { return; }
-        const deepLink = NotificationService.resolveDeepLink(remoteMessage.data);
+        const deepLink = getNotificationDeepLink(remoteMessage);
         if (!deepLink) { return; }
-
-        void (async () => {
-            try {
-                await Linking.openURL(deepLink);
-            } catch (error) {
-                this.log('Failed to open notification deep link', {
-                    error,
-                    deepLink,
-                });
-            }
-        })();
+        void this.navigateFromDeepLink(deepLink);
     }
 
     public async initialize (): Promise<void> {
-        if (this.initialized) {
-            // this.log('initialize skipped (already initialized)');
-            return;
-        }
+        if (this.initialized) { return; }
         this.initialized = true;
 
         await this.createDefaultChannel();
-        const hasPermission = await this.ensureMessagingPermission();
-        // this.log(`initialize permission granted: ${hasPermission}`);
+        await this.ensureMessagingPermission();
 
         this.unsubscribeOnMessage = messaging().onMessage(async remoteMessage => {
-            // this.log('onMessage received', {
-            //     data: remoteMessage.data,
-            //     messageId: remoteMessage.messageId,
-            //     notification: remoteMessage.notification,
-            // });
             await this.displayForegroundNotification(remoteMessage);
         });
 
         this.unsubscribeOpenedApp = messaging().onNotificationOpenedApp(remoteMessage => {
-            // this.log('onNotificationOpenedApp received', {
-            //     messageId: remoteMessage?.messageId,
-            //     data: remoteMessage?.data,
-            // });
             this.handleNotificationOpen(remoteMessage);
         });
 
-        this.unsubscribeTokenRefresh = messaging().onTokenRefresh(token => {
-            // this.log('FCM token refreshed', token);
+        this.unsubscribeTokenRefresh = messaging().onTokenRefresh(() => {
+            // NOTE intentionally a no-op for now — backend re-registration of the
+            // refreshed token lives elsewhere (auth flow); keep the subscription
+            // here only to avoid the listener being garbage-collected.
         });
 
         const initialMessage = await messaging().getInitialNotification();
-        // this.log('getInitialNotification result', {
-        //     messageId: initialMessage?.messageId,
-        //     data: initialMessage?.data,
-        // });
         this.handleNotificationOpen(initialMessage);
-        // this.log('initialize complete');
     }
 
     public async getDeviceToken (): Promise<string | null> {
         try {
             const hasPermission = await this.ensureMessagingPermission();
-            if (!hasPermission) {
-                // this.log('getDeviceToken aborted: permission denied');
-                return null;
-            }
+            if (!hasPermission) { return null; }
             const token = await messaging().getToken();
-            // this.log('FCM token obtained', token);
             return token;
         } catch (error) {
             console.error('[NotificationService] Failed to get FCM token:', error);
@@ -224,7 +239,6 @@ class NotificationService {
     public async deleteDeviceToken (): Promise<void> {
         try {
             await messaging().deleteToken();
-            // this.log('FCM token deleted');
         } catch (error) {
             console.error('[NotificationService] Failed to delete FCM token:', error);
         }
@@ -248,7 +262,6 @@ class NotificationService {
         this.unsubscribeTokenRefresh?.();
         this.unsubscribeTokenRefresh = null;
         this.initialized = false;
-        // this.log('cleanup complete');
     }
 }
 

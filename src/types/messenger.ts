@@ -67,3 +67,18 @@ export interface Attachment {
     mimeType: string;
     fileName: string;
 }
+
+/**
+ * Recipient (doctor) returned by `POST patient-service/doctors/filter`.
+ * Mirrors the v1 shape and is used by the SelectRecipient picker screen and
+ * stored in `messenger.collocutor` once chosen.
+ */
+export interface Recipient {
+    id: number;
+    name?: string;
+    firstName?: string;
+    lastName?: string;
+    clinicRole?: string;
+    coverImage?: { url?: string };
+    clinic?: { id: number; name?: string };
+}

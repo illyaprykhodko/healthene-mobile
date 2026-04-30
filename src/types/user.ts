@@ -172,6 +172,10 @@ export interface User {
     };
   };
   physician?: Physician;
+  // NOTE backend response carries clinic/tenant ids on the authenticated patient;
+  // they are required by `POST /doctors/filter` to scope the recipient list.
+  clinic?: Clinic;
+  tenant?: { id: number; name?: string };
   addresses?: Address[];
   health?: {
     bloodType?: string;

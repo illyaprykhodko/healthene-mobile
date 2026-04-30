@@ -2,15 +2,22 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // local dependencies
-import { Attachment, MessageForm, MessageItem } from 'types/messenger.ts';
+import { Attachment, MessageForm, MessageItem, Recipient } from 'types/messenger.ts';
 
 interface MessengerState {
     reply: MessageItem | null;
+    /**
+     * Recipient explicitly chosen by the user on the Select Recipient screen.
+     * Falls back to the user's primary physician when null (see WriteMessageScreen).
+     * Cleared on send/leave.
+     */
+    collocutor: Recipient | null;
     initialValues: MessageForm
 }
 
 const initialState: MessengerState = {
     reply: null,
+    collocutor: null,
     initialValues: {
         text: '',
         subject: '',
@@ -27,6 +34,10 @@ const messengerSlice = createSlice({
         setReplyMessage: (state, action: PayloadAction<MessageItem | null>) => {
             state.reply = action.payload;
         },
+        setCollocutor: (state, action: PayloadAction<Recipient | null>) => {
+            state.collocutor = action.payload;
+        },
+        clearCollocutor: state => { state.collocutor = null; },
         setAttachment: (state, action: PayloadAction<Attachment>) => {
             state.initialValues.attachments.push(action.payload);
         },
@@ -43,10 +54,12 @@ const messengerSlice = createSlice({
 export const {
     clear,
     setAttachment,
+    setCollocutor,
     saveMessageForm,
     setReplyMessage,
+    clearCollocutor,
     removeAttachment,
-    clearReplyMessage
+    clearReplyMessage,
 } = messengerSlice.actions;
 
 export default messengerSlice.reducer;

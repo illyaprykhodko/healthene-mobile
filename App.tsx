@@ -5,8 +5,8 @@
  * @format
  */
 // outsource dependencies
-import React from 'react';
 import { Provider } from 'react-redux';
+import React, { useEffect } from 'react';
 import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import { Platform, StyleSheet } from 'react-native';
@@ -24,6 +24,7 @@ import { useAppInitialization } from 'hooks/useAppInitialization.ts';
 import { useAppUpdateGate } from 'hooks/useAppUpdateGate';
 import { SoftUpdateModal } from 'components/update/SoftUpdateModal';
 import { ForceUpdateScreen } from 'components/update/ForceUpdateScreen';
+import notificationService from 'services/notifications/notification.service';
 
 export const navigationIntegration = Sentry.reactNavigationIntegration({
     enableTimeToInitialDisplay: true,
@@ -65,6 +66,17 @@ function AppContent (): React.JSX.Element {
     } = useAppUpdateGate();
     const insets = useSafeAreaInsets();
     const styles = createStyles(insets);
+
+    // NOTE Boot the FCM/notifee pipeline once the app shell mounts. The service
+    // is idempotent (`initialized` guard) and waits for `navigationRef.isReady()`
+    // + auth state inside before consuming any tapped deep link, so it's safe
+    // to call before the navigator is rendered.
+    useEffect(() => {
+        void notificationService.initialize();
+        return () => {
+            notificationService.cleanup();
+        };
+    }, []);
     // if (isInitializing) { return <BoxHolder active />; }
     if (isHealthLoading) { return <BoxHolder active />; }
     // if (!isHealthy) { return <MaintenanceHolder active />; }
