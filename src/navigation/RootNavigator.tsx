@@ -12,6 +12,7 @@ import { RootStackParamList, navigationRef } from 'services/navigation';
 import { useAuth } from 'hooks/useAuth';
 import { RootState, useAppSelector } from 'store';
 // navigation
+import { linking } from './linking';
 import { PublicStack } from './PublicStack';
 import { PrivateStack } from './PrivateStack';
 
@@ -28,6 +29,7 @@ export function RootNavigator () {
 
     return (
         <NavigationContainer
+            linking={linking}
             ref={navigationRef}
             onReady={() => {
                 navigationIntegration.registerNavigationContainer(navigationRef);

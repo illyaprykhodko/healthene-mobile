@@ -17,6 +17,7 @@ import {
 const ALLOWED_NOTIFICATION_TYPES = new Set([
     'UNREAD_MESSAGE',
     'SHOPPING_LIST_GENERATED',
+    'WEIGHT_TRACKING_REMINDER',
 ]);
 
 const humanizeNotificationType = (value: string): string =>

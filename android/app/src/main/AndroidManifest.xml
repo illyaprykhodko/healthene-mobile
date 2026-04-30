@@ -53,6 +53,49 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
+        <!--
+            Android App Links — https hosts that should open the app instead of
+            the browser when the user taps a URL like
+            `https://app.healthene.com/public/app-redirect/...`.
+            Each `autoVerify="true"` filter requires a matching
+            `/.well-known/assetlinks.json` on the host; otherwise Android falls
+            back to the chooser. Mirror the v1 manifest 1:1.
+        -->
+        <intent-filter android:autoVerify="true">
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" android:host="app.healthene.com" />
+        </intent-filter>
+        <intent-filter android:autoVerify="true">
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" android:host="clinic-healthene.intelliceed.com" />
+        </intent-filter>
+        <intent-filter android:autoVerify="true">
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" android:host="clinic-dev-healthene.intelliceed.com" />
+        </intent-filter>
+        <intent-filter android:autoVerify="true">
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" android:host="clinic-staging-healthene.intelliceed.com" />
+        </intent-filter>
+        <!--
+            Custom URL scheme fallback — works without server-side verification,
+            useful for local testing (`adb shell am start -W -a android.intent.action.VIEW
+            -d "healthene://public/app-redirect/measurements/weight" com.healthene`).
+        -->
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="healthene" />
+        </intent-filter>
       </activity>
     </application>
 </manifest>

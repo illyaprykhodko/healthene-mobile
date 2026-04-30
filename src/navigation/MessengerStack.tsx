@@ -15,6 +15,7 @@ import AudioScreen from 'screens/privateScreens/Messenger/AudioScreen.tsx';
 import CameraScreen from 'screens/privateScreens/Messenger/CameraScreen.tsx';
 import ReadMessageScreen from 'screens/privateScreens/Messenger/ReadMessageScreen.tsx';
 import WriteMessageScreen from 'screens/privateScreens/Messenger/WriteMessageScreen.tsx';
+import SelectRecipientScreen from 'screens/privateScreens/Messenger/SelectRecipientScreen.tsx';
 
 const Stack = createStackNavigator();
 const MessengerStack = () => {
@@ -51,8 +52,14 @@ const MessengerStack = () => {
             <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.READ_MESSAGE} component={ReadMessageScreen} />
             <Stack.Screen options={{ title: 'Record Audio' }} name={ROUTES.MESSENGER_AUDIO} component={AudioScreen} />
             <Stack.Screen
-                name={ROUTES.WRITE_MESSAGE} component={WriteMessageScreen}
+                name={ROUTES.WRITE_MESSAGE}
+                component={WriteMessageScreen}
                 options={({ route }: {route: { params?: MessageEntity }}) => ({ title: route.params?.id ? 'Message' : 'New Message' })}
+            />
+            <Stack.Screen
+                name={ROUTES.SELECT_RECIPIENT}
+                component={SelectRecipientScreen}
+                options={{ title: 'Select Recipient' }}
             />
         </Stack.Navigator>
     );

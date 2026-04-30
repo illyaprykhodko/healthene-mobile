@@ -258,6 +258,60 @@ export const VIDEO_LIBRARY_TYPE = {
 
 export type VideoLibraryType = typeof VIDEO_LIBRARY_TYPE[keyof typeof VIDEO_LIBRARY_TYPE];
 
+// NOTE keep in sync with backend `ClinicRole` enum.
+// Used as a local fallback for role labels until the API returns them localized.
+export const CLINIC_ROLE = {
+    BILLER: 'BILLER',
+    PATIENT: 'PATIENT',
+    DIETITIAN: 'DIETITIAN',
+    PHYSICIAN: 'PHYSICIAN',
+    ML_DOCTOR: 'ML_DOCTOR',
+    ASSISTANT: 'ASSISTANT',
+    OFFICE_MANAGER: 'OFFICE_MANAGER',
+    CARE_COORDINATOR: 'CARE_COORDINATOR',
+    QUALITY_ASSURANCE: 'QUALITY_ASSURANCE',
+    DIETETICS_TECHNICIAN: 'DIETETICS_TECHNICIAN',
+} as const;
+
+export type ClinicRole = typeof CLINIC_ROLE[keyof typeof CLINIC_ROLE];
+
+export const CLINIC_ROLE_LABEL: Record<string, string> = {
+    [CLINIC_ROLE.BILLER]: 'Biller',
+    [CLINIC_ROLE.PATIENT]: 'Patient',
+    [CLINIC_ROLE.ML_DOCTOR]: 'Doctor',
+    [CLINIC_ROLE.PHYSICIAN]: 'Physician',
+    [CLINIC_ROLE.ASSISTANT]: 'Assistant',
+    [CLINIC_ROLE.DIETITIAN]: 'Dietitian',
+    [CLINIC_ROLE.OFFICE_MANAGER]: 'Office Manager',
+    [CLINIC_ROLE.CARE_COORDINATOR]: 'Care Coordinator',
+    [CLINIC_ROLE.QUALITY_ASSURANCE]: 'Quality Assurance',
+    [CLINIC_ROLE.DIETETICS_TECHNICIAN]: 'Dietetics Technician',
+};
+
+// Order used to sort sections on the recipient picker screen.
+// Roles not listed here fall back to alphabetical order after the listed ones.
+export const CLINIC_ROLE_ORDER: ClinicRole[] = [
+    CLINIC_ROLE.PHYSICIAN,
+    CLINIC_ROLE.ML_DOCTOR,
+    CLINIC_ROLE.CARE_COORDINATOR,
+    CLINIC_ROLE.DIETITIAN,
+    CLINIC_ROLE.DIETETICS_TECHNICIAN,
+    CLINIC_ROLE.ASSISTANT,
+    CLINIC_ROLE.OFFICE_MANAGER,
+    CLINIC_ROLE.BILLER,
+    CLINIC_ROLE.QUALITY_ASSURANCE,
+    CLINIC_ROLE.PATIENT,
+];
+
+export const getClinicRoleLabel = (role?: string | null): string => {
+    if (!role) { return ''; }
+    if (CLINIC_ROLE_LABEL[role]) { return CLINIC_ROLE_LABEL[role]; }
+    return String(role)
+        .replace(/_/g, ' ')
+        .toLowerCase()
+        .replace(/\b\w/g, s => s.toUpperCase());
+};
+
 // Library destinations (for getting questions/videos by destination)
 export const DESTINATIONS = {
     GAMES: 'GAMES',

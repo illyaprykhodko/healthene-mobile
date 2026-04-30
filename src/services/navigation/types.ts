@@ -40,7 +40,7 @@ export type RootStackParamList = {
   [ROUTES.MESSAGE_LIST]: undefined;
   [ROUTES.GAMBLING_HOME]: undefined;
   [ROUTES.GAMBLING_BANK]: undefined;
-  [ROUTES.WRITE_MESSAGE]: undefined;
+  // [ROUTES.WRITE_MESSAGE]: undefined;
   [ROUTES.NOTIFICATIONS]: undefined;
   [ROUTES.PROFILE_STATS]: undefined;
   [ROUTES.GAMBLING_GAMES]: undefined;
@@ -64,6 +64,9 @@ export type RootStackParamList = {
   [ROUTES.READ_MESSAGE]: {
     id?: number;
     chainId?: number;
+  } | undefined;
+  [ROUTES.SELECT_RECIPIENT]: {
+    selectedId?: number;
   } | undefined;
   
   // Example of a screen that requires params
@@ -138,6 +141,9 @@ export type RootStackParamList = {
   };
   [ROUTES.GAMBLING_SLOT_MACHINE]: {
     gameType?: 'SLOTS' | 'BLACKJACK';
+  } | undefined;
+  [ROUTES.WRITE_MESSAGE]: {
+    refetchMessages?: () => void;
   } | undefined;
 };
 
