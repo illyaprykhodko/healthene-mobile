@@ -19,6 +19,7 @@
 		58EE5A5728574B648FC8D6E1 /* NunitoSans-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C58CBEA71F1C4A63A23B5847 /* NunitoSans-Light.ttf */; };
 		63507697A9D14AD4A042FAD4 /* NunitoSans-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2C87833C5F8D49ED9D3F168D /* NunitoSans-Black.ttf */; };
 		67B4FE943FD14474B4FF58CB /* NunitoSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 465EED1DBCB847ADBEDA9675 /* NunitoSans-Bold.ttf */; };
+		6A7E939C2FA8C72500A818F2 /* nest_bird.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6A7E939B2FA8C72500A818F2 /* nest_bird.mov */; };
 		6AAB5F7C2F8FBF50008E9753 /* sitting.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AAB5F7B2F8FBF50008E9753 /* sitting.mov */; };
 		6AAB5F802F9B5B39008E9753 /* single.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AAB5F7F2F9B5B39008E9753 /* single.mov */; };
 		6AAB5F822F9B5B71008E9753 /* appearing.mov in Resources */ = {isa = PBXBuildFile; fileRef = 6AAB5F812F9B5B71008E9753 /* appearing.mov */; };
@@ -71,6 +72,7 @@
 		4A33CA98310A4ABBA7F1E38F /* NunitoSans-SemiBoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "NunitoSans-SemiBoldItalic.ttf"; path = "../assets/fonts/NunitoSans-SemiBoldItalic.ttf"; sourceTree = "<group>"; };
 		5FD25C3A52834B2AA91DDC95 /* Outfit-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-ExtraBold.ttf"; path = "../assets/fonts/Outfit-ExtraBold.ttf"; sourceTree = "<group>"; };
 		61BEC2FDFDD14C89A5D4F5A3 /* Outfit-Thin.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Outfit-Thin.ttf"; path = "../assets/fonts/Outfit-Thin.ttf"; sourceTree = "<group>"; };
+		6A7E939B2FA8C72500A818F2 /* nest_bird.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = nest_bird.mov; sourceTree = "<group>"; };
 		6AAB5F7B2F8FBF50008E9753 /* sitting.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = sitting.mov; sourceTree = "<group>"; };
 		6AAB5F7F2F9B5B39008E9753 /* single.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = single.mov; sourceTree = "<group>"; };
 		6AAB5F812F9B5B71008E9753 /* appearing.mov */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = appearing.mov; sourceTree = "<group>"; };
@@ -139,6 +141,23 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		6A7E939D2FA8C73100A818F2 /* BirdAnimation */ = {
+			isa = PBXGroup;
+			children = (
+				6A7E939B2FA8C72500A818F2 /* nest_bird.mov */,
+				6AAB5F7F2F9B5B39008E9753 /* single.mov */,
+				6AAB5F832F9B5C17008E9753 /* check1.mov */,
+				6AAB5F842F9B5C17008E9753 /* check2.mov */,
+				6AAB5F852F9B5C17008E9753 /* check3.mov */,
+				6AAB5F862F9B5C17008E9753 /* check4.mov */,
+				6AAB5F872F9B5C17008E9753 /* check5.mov */,
+				6AAB5F882F9B5C17008E9753 /* check6.mov */,
+				6AAB5F7B2F8FBF50008E9753 /* sitting.mov */,
+				6AAB5F812F9B5B71008E9753 /* appearing.mov */,
+			);
+			path = BirdAnimation;
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -172,13 +191,7 @@
 		8B8DBEFD42404722A07E4B22 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				6AAB5F7F2F9B5B39008E9753 /* single.mov */,
-				6AAB5F832F9B5C17008E9753 /* check1.mov */,
-				6AAB5F842F9B5C17008E9753 /* check2.mov */,
-				6AAB5F852F9B5C17008E9753 /* check3.mov */,
-				6AAB5F862F9B5C17008E9753 /* check4.mov */,
-				6AAB5F872F9B5C17008E9753 /* check5.mov */,
-				6AAB5F882F9B5C17008E9753 /* check6.mov */,
+				6A7E939D2FA8C73100A818F2 /* BirdAnimation */,
 				2C87833C5F8D49ED9D3F168D /* NunitoSans-Black.ttf */,
 				DDE8D75F4E29491EB5A19E0D /* NunitoSans-BlackItalic.ttf */,
 				465EED1DBCB847ADBEDA9675 /* NunitoSans-Bold.ttf */,
@@ -207,8 +220,6 @@
 				F7E0DDAB33F3407F8137D738 /* icomoon.eot */,
 				8E9CE330C5584C06B9A13F50 /* icomoon.svg */,
 				FA1ED7F0EA5640B3A8435D71 /* icomoon.woff */,
-				6AAB5F7B2F8FBF50008E9753 /* sitting.mov */,
-				6AAB5F812F9B5B71008E9753 /* appearing.mov */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -313,6 +324,7 @@
 				BE140B0A2D114FD882470720 /* Outfit-Black.ttf in Resources */,
 				3DE8FE07308B4EDFAECE5452 /* Outfit-Bold.ttf in Resources */,
 				7EB244B40A714274925FA249 /* Outfit-ExtraBold.ttf in Resources */,
+				6A7E939C2FA8C72500A818F2 /* nest_bird.mov in Resources */,
 				8718D080F10B4156A7A6D697 /* Outfit-ExtraLight.ttf in Resources */,
 				6CD51BC470CF416F930471C1 /* Outfit-Light.ttf in Resources */,
 				D623EA3A4BF14056A8ACD420 /* Outfit-Medium.ttf in Resources */,
