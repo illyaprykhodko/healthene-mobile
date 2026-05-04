@@ -9,6 +9,7 @@ import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
 import { RootStackParamList } from 'services/navigation';
+import { NestBird } from 'animation/NestBird.tsx';
 
 type GameType = 'SLOTS' | 'BLACKJACK';
 type Navigation = NativeStackNavigationProp<RootStackParamList>;
@@ -59,13 +60,16 @@ const GameSelection: React.FC = () => {
             </View>
 
             <View style={styles.footer}>
-                <TouchableOpacity
-                    activeOpacity={0.85}
-                    onPress={() => navigation.goBack()}
-                    style={[styles.backButton, styles.shadowBtn]}
-                >
-                    <Text variant="h4" style={styles.backButtonText}>Back</Text>
-                </TouchableOpacity>
+                <View style={styles.footerLeft}>
+                    <NestBird />
+                    <TouchableOpacity
+                        activeOpacity={0.85}
+                        onPress={() => navigation.goBack()}
+                        style={[styles.backButton, styles.shadowBtn]}
+                    >
+                        <Text variant="h4" style={styles.backButtonText}>Back</Text>
+                    </TouchableOpacity>
+                </View>
 
                 <TouchableOpacity
                     activeOpacity={0.85}
@@ -157,7 +161,10 @@ const styles = StyleSheet.create({
         marginTop: 'auto',
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-end',
+    },
+    footerLeft: {
+        alignItems: 'flex-start',
     },
     backButton: {
         backgroundColor: '#FFA5A5',
