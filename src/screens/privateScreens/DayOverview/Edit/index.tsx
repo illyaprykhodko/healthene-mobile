@@ -36,6 +36,7 @@ import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
+import { useUpdatePatientGamblingPointsMutation } from 'store/api/gamblingPointsApi.ts';
 import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
 
