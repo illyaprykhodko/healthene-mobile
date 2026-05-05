@@ -30,10 +30,13 @@ import { groupBy, isEmpty } from 'utils/general';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppSelector, useAppDispatch } from 'store';
 import { RootStackParamList } from 'services/navigation';
+import { RewardStarOverlay } from 'components/RewardStar';
+import { BirdAnimation } from 'animation/BirdAnimation.tsx';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
+import { useUpdatePatientGamblingPointsMutation } from 'store/api/gamblingPointsApi.ts';
 import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
 
@@ -56,7 +59,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const dispatch = useAppDispatch();
     const { date: currentDate } = useAppSelector(selectDayOverview);
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  
+
     const [scrollEnabled, setScrollEnabled] = useState(true);
     const [localItems, setLocalItems] = useState<PhaseItem[]>([]);
     const [isAddingAddedItem, setIsAddingAddedItem] = useState(false);
@@ -72,7 +75,30 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
-  
+
+    const [birdAnimationStep, setBirdAnimationStep] = useState(false);
+    const [birdCheckTrigger, setBirdCheckTrigger] = useState(0);
+    const [checkboxAreaX] = useState(0);
+    useEffect(() => {
+        if ((localItems || []).length > 0) {
+            const allDone = localItems.every(
+                listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
+            );
+            setBirdAnimationStep(allDone);
+        }
+    }, [localItems]);
+
+    const allItemsDone = useMemo(
+        () =>
+            localItems.length > 0
+            && localItems.every(
+                listItem =>
+                    listItem.status === PHASE_ITEM_STATUS.DONE
+                    || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
+            ),
+        [localItems]
+    );
+
     const { data: dayOverviewData, isLoading: isDayOverviewLoading } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
     });
@@ -90,9 +116,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const [replacePhaseItem] = useReplacePhaseItemMutation();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
+    const [updatePatientGamblingPoints] = useUpdatePatientGamblingPointsMutation();
     //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
-  
+
     const getItemTitle = (item: any) =>
         item.food?.name
         || item.recipe?.name
@@ -101,10 +128,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         || item.supplement?.name
         || item.physicalActivity?.name
         || 'Item';
-    
+
     const items = useMemo(() => {
         if (!phaseItems) { return []; }
-    
+
         return Object.values(phaseItems)
             .flat()
             .map(item => ({
@@ -158,7 +185,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         const excludeIds = computeExcludeIds();
         const entityType = mapPhaseTypeToEntityType();
-  
+
         const isMealPhase = currentPhase?.type === OVERVIEW_TYPE.MEAL || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT;
         if (isMealPhase) {
             navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
@@ -183,7 +210,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             initialAmount: selectedItem?.amount || 1,
                             section: selectedItem?.section || 'Added',
                             // initialAmount: selectedItem?.servingAmount || 1,
-                            
+
                         };
                         if (itemEntityType === ENTITY_TYPE.FOOD || itemEntityType === 'PATIENT_FOOD' || itemEntityType === 'PATIENT_DRINK') {
                             itemData.food = { id: selectedItem.id };
@@ -302,7 +329,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             });
             return;
         }
-        
+
         navigation.navigate(ROUTES.ADD_REPLACE_ITEM, {
             date: targetDate,
             prevItem: null,
@@ -385,9 +412,26 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     };
 
     const handleCheckboxStatus = async (item: PhaseItem) => {
-        setLocalItems(prevItems =>
-            prevItems.map(prevItem =>
-                (prevItem.id === item.id ? { ...item } : prevItem)));
+        const prevFromList = localItems.find(prevItem => prevItem.id === item.id);
+        const wasDone = prevFromList?.status === PHASE_ITEM_STATUS.DONE;
+        const isNowDone = item.status === PHASE_ITEM_STATUS.DONE;
+        const isMealLikePhase = currentPhase?.type === OVERVIEW_TYPE.MEAL
+            || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT;
+        const mealDatePast = moment(targetDate).isBefore(moment(), 'day');
+        const mealDateFuture = moment(targetDate).isAfter(moment(), 'day');
+
+        setLocalItems(prevItems => {
+            const nextItems = prevItems.map(prevItem =>
+                (prevItem.id === item.id ? { ...item } : prevItem)
+            );
+            const allDoneNow = nextItems.every(
+                listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
+            );
+            if (item.status === PHASE_ITEM_STATUS.DONE && !allDoneNow) {
+                Promise.resolve().then(() => setBirdCheckTrigger(t => t + 1));
+            }
+            return nextItems;
+        });
 
         try {
             await updatePhaseItem({
@@ -399,6 +443,17 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 },
                 date: targetDate,
             });
+            if (isMealLikePhase && !mealDatePast && !mealDateFuture) {
+                if (!wasDone && isNowDone) {
+                    updatePatientGamblingPoints({ action: 'EARN', amount: 1 }).unwrap().catch((gamblingPointsError: unknown) => {
+                        console.error('Gambling points EARN failed:', gamblingPointsError);
+                    });
+                } else if (wasDone && !isNowDone) {
+                    updatePatientGamblingPoints({ action: 'SPEND', amount: 1 }).unwrap().catch((gamblingPointsError: unknown) => {
+                        console.error('Gambling points SPEND failed:', gamblingPointsError);
+                    });
+                }
+            }
             setLocalItems(currentItems => {
                 const allItemsDoneNow = currentItems.every(
                     listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
@@ -624,6 +679,16 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
+            {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
+                ? (
+                    <BirdAnimation
+                        allChecked={birdAnimationStep}
+                        checkTrigger={birdCheckTrigger}
+                        checkboxAreaX={checkboxAreaX}
+                    />
+                )
+                : null
+            }
             <View style={[styles.title, isFutureDate && styles.opacity]}>
                 <View>
                     <Text style={styles.titleText}>
@@ -645,22 +710,22 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             }
                         }}>
                             <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
-                Change Meal
+            Change Meal
                             </Text>
                         </TouchableOpacity>
                     </View>
                 )}
             </View>
             {/* if (onlyPhaseItemsFetching) {
-                sortedSections.push(['Added', [{
-                    id: 'skeleton',
-                    type: ENTITY_TYPE.FOOD,
-                    title: 'Loading...',
-                    rating: null,
-                    order: 0,
-                    section: 'Added',
-                } as PhaseItem]])
-            } */}
+            sortedSections.push(['Added', [{
+                id: 'skeleton',
+                type: ENTITY_TYPE.FOOD,
+                title: 'Loading...',
+                rating: null,
+                order: 0,
+                section: 'Added',
+            } as PhaseItem]])
+        } */}
             <View style={styles.list}>
                 <ScrollView
                     ref={scrollViewRef}
@@ -693,7 +758,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 directionalDistanceChangeThreshold={10}
                                 onSwipeValueChange={handleScrollDisabled}
                                 handleCheckboxStatus={handleCheckboxStatus}
-                                keyExtractor={({ id, status }) => String(status + id)}
+                                keyExtractor={({ id }) => String(id)}
                                 renderItem={({ item, index }, ...restProps) => {
                                     return <ListItem
                                         item={item}
@@ -720,26 +785,26 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                     //        handleCheckboxStatus={handleCheckboxStatus}
                                     //    />;
 
-                                    //         <Skeleton width={200} height={20} />
-                                    //         </>
-                                    //         : <ListItem
-                                    //             item={item}
-                                    //             disabled={false}
-                                    //             date={targetDate}
-                                    //             isFutureDate={isFutureDate}
-                                    //             updateData={updatePhaseItem}
-                                    //             nextSection={item?.section || ''}
-                                    //             handleCheckboxStatus={handleCheckboxStatus}
-                                    //         />
-                                    // );
+                                //         <Skeleton width={200} height={20} />
+                                //         </>
+                                //         : <ListItem
+                                //             item={item}
+                                //             disabled={false}
+                                //             date={targetDate}
+                                //             isFutureDate={isFutureDate}
+                                //             updateData={updatePhaseItem}
+                                //             nextSection={item?.section || ''}
+                                //             handleCheckboxStatus={handleCheckboxStatus}
+                                //         />
+                                // );
                                 }}
                                 ListHeaderComponent={() => (
                                     (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
                                         <View style={[
                                             styles.separatorWrapper,
                                             {
-                                                // borderTopColor: theme.colors.black,
-                                                // borderTopWidth: section === 'Added' ? 0 : 1,
+                                            // borderTopColor: theme.colors.black,
+                                            // borderTopWidth: section === 'Added' ? 0 : 1,
                                                 backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}`
                                             }
                                         ]}>
@@ -763,13 +828,13 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         ))
                     ) : (
                         <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
-              No items found
+          No items found
                         </Text>
                     )}
                 </ScrollView>
 
                 {/* {(currentPhase?.type === OVERVIEW_TYPE.MEAL
-                  || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? ( */}
+              || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? ( */}
                 <View style={styles.buttonContainer}>
                     <Button
                         icon="plus"
@@ -788,36 +853,34 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         <Button
                             title="Meal Done"
                             variant="secondary"
-                            // disabled={!allItemsDone}
-                            disabled={isLoading}
+                            disabled={!allItemsDone || isLoading}
                             onPress={handlePhaseDone}
                             textStyle={styles.textMealDoneButton}
                             style={{
                                 ...styles.button,
                                 ...styles.mealDoneButton,
-                                ...(isLoading ? styles.mealDoneButtonDisabled : {}),
-                                // ...(!allItemsDone && styles.mealDoneButtonDisabled),
+                                ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
                             }}
                         />
                     )}
                 </View>
                 {/* ) : (
-                        <Button
-                            icon="plus"
-                            title="Add"
-                            variant="primary"
-                            onPress={handleAddItem}
-                            textStyle={{ color: '#7BAAC2' }}
-                            style={{
-                                // ...styles.button,
-                                // ...styles.addButton,
-                                ...styles.button,
-                                ...styles.addButtonActive,
-                                // width: isFutureDate ? '100%' : '45%',
-                                backgroundColor: theme.colors.transparent,
-                            }}
-                        />
-                    )} */}
+                    <Button
+                        icon="plus"
+                        title="Add"
+                        variant="primary"
+                        onPress={handleAddItem}
+                        textStyle={{ color: '#7BAAC2' }}
+                        style={{
+                            // ...styles.button,
+                            // ...styles.addButton,
+                            ...styles.button,
+                            ...styles.addButtonActive,
+                            // width: isFutureDate ? '100%' : '45%',
+                            backgroundColor: theme.colors.transparent,
+                        }}
+                    />
+                )} */}
             </View>
 
             {/* Rescue Foods Modal */}
@@ -848,6 +911,15 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     setReplacementData({ prevItem: null, nextItem: null });
                 }}
                 onApply={handleConfirmationModalApply}
+            />
+
+            <RewardStarOverlay
+                gamblingPointsQueryEnabled={
+                    (currentPhase?.type === OVERVIEW_TYPE.MEAL
+                        || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT)
+                    && !isPastDate
+                    && !isFutureDate
+                }
             />
 
             <AnytimeMenu date={targetDate} />
