@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // local dependencies
+import Text from 'components/Text';
 import BackBtn from 'components/BackBtn';
 import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
@@ -12,9 +13,8 @@ import { OFFSET } from 'constants/offset';
 // import { TextLogo } from 'components/TextLogo';
 import { Hamburger } from 'components/Hamburger';
 import MyResultsScreen from 'screens/privateScreens/MyResultsScreen';
-import MeasurementChartScreen from 'screens/privateScreens/MeasurementChartScreen';
 import AllRecordedDataScreen from 'screens/privateScreens/AllRecordedDataScreen';
-import Text from 'components/Text';
+import MeasurementChartScreen from 'screens/privateScreens/MeasurementChartScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,9 +29,10 @@ const MyResultsStack: React.FC = () => {
             <View style={[styles.headerSide, styles.headerSideLeft]}>
                 {/* {options?.showBackButton !== false && headerProps.back ? ( */}
                 <BackBtn
-                    label={headerProps.back?.title}
-                    onPress={() => headerProps.navigation.goBack()}
+                    label="Back"
                     color={theme.colors.white}
+                    // label={headerProps.back?.title}
+                    onPress={() => headerProps.navigation.goBack()}
                 />
                 {/* ) : null} */}
             </View>

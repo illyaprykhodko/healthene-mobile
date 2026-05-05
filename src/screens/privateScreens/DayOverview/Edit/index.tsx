@@ -51,6 +51,8 @@ const convertTypeToTitle = (type: string, capitalize = false) => {
     return capitalize ? title.charAt(0).toUpperCase() + title.slice(1) : title;
 };
 
+const SWIPE_LOCK_THRESHOLD = 12;
+
 export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const theme = useTheme();
     const route = useRoute<any>();
@@ -603,12 +605,24 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     };
 
-    const handleScrollEnabled = () => setScrollEnabled(true);
+    const handleScrollEnabled = () => {
+        setScrollEnabled(true);
+        // restore native-stack swipe-back gesture once the row is closed
+        navigation.setOptions({ gestureEnabled: true } as any);
+    };
     const handleScrollDisabled = (sv: SwipeValueChange) => {
-        if (sv.value !== 0) {
+        if (Math.abs(sv.value) > SWIPE_LOCK_THRESHOLD) {
             setScrollEnabled(false);
+            // prevent iOS swipe-back from triggering while a row is open
+            navigation.setOptions({ gestureEnabled: false } as any);
         }
     };
+
+    useEffect(() => {
+        return () => {
+            navigation.setOptions({ gestureEnabled: true } as any);
+        };
+    }, [navigation]);
 
     const isLoading = isDayOverviewLoading || isPhaseItemsLoading;
 
@@ -732,6 +746,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 key={section}
                                 data={sectionItems}
                                 scrollEnabled={false}
+                                closeOnScroll={false}
                                 isPastDate={isPastDate}
                                 isFutureDate={isFutureDate}
                                 onDelete={handleDeleteItem}
@@ -740,6 +755,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 type={currentPhase?.type || ''}
                                 noReplaceItem={handleNoReplaceItem}
                                 onRowDidClose={handleScrollEnabled}
+                                directionalDistanceChangeThreshold={10}
                                 onSwipeValueChange={handleScrollDisabled}
                                 handleCheckboxStatus={handleCheckboxStatus}
                                 keyExtractor={({ id }) => String(id)}
