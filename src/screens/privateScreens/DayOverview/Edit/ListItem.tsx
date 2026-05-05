@@ -12,6 +12,7 @@ import { ROUTES } from 'constants/routes';
 import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
 import { triggerReward } from 'store/slices/rewardStarSlice';
+import DefImage from 'components/DefImage';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { CheckboxBurstEffect } from 'components/CheckboxBurstEffect';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE, VIDEO_LIBRARY_TYPE, QUESTION_TYPE } from 'constants/spec';

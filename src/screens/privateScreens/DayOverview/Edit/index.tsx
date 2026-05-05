@@ -627,7 +627,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     }, [navigation]);
 
     const isLoading = isDayOverviewLoading || isPhaseItemsLoading;
-  
+
     // if (isLoading) {
     //     return (
     //         <View style={styles.section}>
