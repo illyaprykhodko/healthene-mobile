@@ -26,6 +26,7 @@ interface SwipeListProps {
     styleHiddenItem?: any;
     isFutureDate?: boolean;
     scrollEnabled?: boolean;
+    closeOnScroll?: boolean;
     onRowDidClose?: () => void;
     onDelete?: (item: any) => void;
     onReplace?: (item: any) => void;
@@ -33,6 +34,7 @@ interface SwipeListProps {
     keyExtractor?: (item: any) => string;
     noReplaceItem?: (item: any) => boolean;
     handleCheckboxStatus?: (item: any) => void;
+    directionalDistanceChangeThreshold?: number;
     onSwipeValueChange?: (item: SwipeValueChange) => void;
     ListHeaderComponent?: () => React.ReactElement | null;
     ListFooterComponent?: () => React.ReactElement | null;
@@ -61,10 +63,12 @@ export const SwipeList: React.FC<SwipeListProps> = ({
     handleCheckboxStatus,
     isFutureDate = false,
     scrollEnabled = true,
+    closeOnScroll = true,
     styleHiddenItem = null,
     noReplaceItem = () => false,
     recipeReplacementEnable = true,
     keyExtractor = ({ id }) => String(id),
+    directionalDistanceChangeThreshold = 2,
 }) => {
     const handleReplaceButton = (item: any) => {
         const { status = PHASE_ITEM_STATUS.PENDING } = item;
@@ -80,19 +84,20 @@ export const SwipeList: React.FC<SwipeListProps> = ({
         <SwipeListView
             data={data}
             useFlatList
-            closeOnScroll
             disableRightSwipe
             style={styles.list}
             rightOpenValue={-width}
             recalculateHiddenLayout
             renderItem={renderItem}
             keyExtractor={keyExtractor}
+            closeOnScroll={closeOnScroll}
             scrollEnabled={scrollEnabled}
             onRowDidClose={onRowDidClose}
             onSwipeValueChange={onSwipeValueChange}
             ListHeaderComponent={ListHeaderComponent}
             ListFooterComponent={ListFooterComponent}
             disableLeftSwipe={isFutureDate || (noDelete && noReplace)}
+            directionalDistanceChangeThreshold={directionalDistanceChangeThreshold}
             renderHiddenItem={({ item }) => {
                 // const isDidNotEatStatus = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
                 return (
@@ -120,8 +125,7 @@ export const SwipeList: React.FC<SwipeListProps> = ({
                                             handleCheckboxStatus?.({
                                                 ...item,
                                                 status: PHASE_ITEM_STATUS.DID_NOT_EAT
-                                            }
-                                            );
+                                            });
                                             // handleCheckboxStatus?.(
                                             //     isDidNotEatStatus
                                             //         ? { ...item, status: PHASE_ITEM_STATUS.DID_NOT_EAT }

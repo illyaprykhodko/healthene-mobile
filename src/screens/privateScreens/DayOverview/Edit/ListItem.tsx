@@ -9,6 +9,7 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import Checkbox from 'components/Checkbox';
+import DefImage from 'components/DefImage';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { PHASE_ITEM_STATUS, ENTITY_TYPE, VIDEO_LIBRARY_TYPE, QUESTION_TYPE } from 'constants/spec';
 interface ListItemProps {
@@ -113,9 +114,7 @@ export const ListItem: React.FC<ListItemProps> = ({
             const { entity } = item;
             return (
                 <View style={styles.recipeContainer}>
-                    {imageUrl && (
-                        <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
-                    )}
+                    <DefImage src={imageUrl} style={StyleSheet.flatten([styles.image, isOpacity])} />
                     <View style={styles.main}>
                         <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Recipe'}`}
@@ -137,9 +136,7 @@ export const ListItem: React.FC<ListItemProps> = ({
             const { entity } = item;
             return (
                 <View style={styles.recipeContainer}>
-                    {imageUrl && (
-                        <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
-                    )}
+                    <DefImage src={imageUrl} style={StyleSheet.flatten([styles.image, isOpacity])} />
                     <View style={styles.main}>
                         <Text style={[styles.title, { fontSize: 18, color: theme.colors.black }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Ingredient'}`}
@@ -161,9 +158,7 @@ export const ListItem: React.FC<ListItemProps> = ({
             return (
                 <View style={styles.recipeContentContainer}>
                     <View style={styles.recipeContainer}>
-                        {imageUrl && (
-                            <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
-                        )}
+                        <DefImage src={imageUrl} style={StyleSheet.flatten([styles.image, isOpacity])} />
                         <View style={styles.main}>
                             <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
                                 {item.recipe?.name || item.title || 'Recipe'}
@@ -335,10 +330,10 @@ const styles = StyleSheet.create({
         borderRightWidth: 7,
     },
     listItemLink: {
-        maxWidth: '55%',
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
+        minWidth: 0,
     },
     checkboxContainer: {
         borderWidth: 2,
@@ -391,6 +386,7 @@ const styles = StyleSheet.create({
     },
     main: {
         flex: 1,
+        minWidth: 0,
     },
     title: {
         paddingTop: OFFSET.VERTICAL,
@@ -419,6 +415,7 @@ const styles = StyleSheet.create({
     },
     itemContent: {
         // width: '35%',
+        flexShrink: 0,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
