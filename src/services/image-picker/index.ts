@@ -2,12 +2,11 @@
 import { Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
 import ImagePicker, { Image as PickerImage } from 'react-native-image-crop-picker';
-import { check, PERMISSIONS, request, RESULTS, openSettings } from 'react-native-permissions';
+import { check, PERMISSIONS, request, RESULTS, openSettings, type Permission } from 'react-native-permissions';
 
 // local dependencies
 import { store } from 'store';
 import { uploadImageInitiate, DIR } from 'store/api/s3ServiceApi.ts';
-import type { Permission } from 'react-native-permissions/src/types.ts';
 
 const openAppSettings = () => {
     openSettings().catch(() => console.warn('Cannot open app settings'));
