@@ -12,13 +12,9 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import ImagePicker from 'react-native-image-crop-picker';
+import { CodeScanner } from 'react-native-vision-camera-barcode-scanner';
 import { useNavigation, useRoute, useIsFocused } from '@react-navigation/native';
-import {
-    Camera,
-    useCodeScanner,
-    useCameraDevice,
-    useCameraPermission,
-} from 'react-native-vision-camera';
+import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 
 // local dependencies
 import { store } from 'store';
@@ -257,9 +253,9 @@ const UPCScan: React.FC = () => {
         try {
             const foodsResult = await store.dispatch(
                 dayOverviewApi.endpoints.getFoods.initiate({
-                    filter: { upc: upcValue },
                     page: 0,
                     size: 10,
+                    filter: { upc: upcValue },
                 })
             );
             const foodItem = _.first((foodsResult as any)?.data?.content);
@@ -351,17 +347,6 @@ const UPCScan: React.FC = () => {
         filterFoodToCreate,
         handleFoodNotInExtendedDB,
     ]);
-
-    const codeScanner = useCodeScanner({
-        codeTypes: ['ean-13', 'ean-8', 'upc-a', 'upc-e', 'code-128', 'code-39'],
-        onCodeScanned: codes => {
-            if (isProcessing || processingRef.current) { return; }
-            const code = codes[0];
-            if (!code?.value) { return; }
-            if (code.type === 'qr') { return; }
-            handleUpcLookup(code.value);
-        },
-    });
 
     const handleManualSearch = useCallback(() => {
         if (manualUpc.trim()) {
@@ -462,11 +447,23 @@ const UPCScan: React.FC = () => {
         <Screen initialized style={styles.container}>
             <View style={styles.cameraContainer}>
                 {device && !isCameraSuspended ? (
-                    <Camera
-                        device={device}
+                    <CodeScanner
                         isActive={isActive}
-                        codeScanner={codeScanner}
                         style={StyleSheet.absoluteFill}
+                        barcodeFormats={['ean-13', 'ean-8', 'upc-a', 'upc-e', 'code-128', 'code-39']}
+                        onBarcodeScanned={barcodes => {
+                            if (isProcessing || processingRef.current) { return; }
+                            const code = barcodes[0];
+                            if (!code?.rawValue || code.format === 'qr-code') { return; }
+                            handleUpcLookup(code.rawValue);
+                        }}
+                        onError={error => {
+                            Toast.show({
+                                type: 'error',
+                                text2: error.message,
+                                text1: 'Scanner error',
+                            });
+                        }}
                     />
                 ) : (
                     <View style={styles.noCameraContainer}>
@@ -533,16 +530,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     scanTitle: {
-        position: 'absolute',
         top: '10%',
         fontSize: 18,
         fontWeight: '500',
         color: COLORS.WHITE,
         textAlign: 'center',
+        textShadowRadius: 3,
+        position: 'absolute',
         paddingHorizontal: 20,
         textShadowColor: 'rgba(0, 0, 0, 0.7)',
         textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 3,
     },
     scanFrame: {
         width: 250,
@@ -569,8 +566,8 @@ const styles = StyleSheet.create({
     },
     permissionContainer: {
         flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
         padding: OFFSET.HORIZONTAL * 2,
     },
     permissionTitle: {
@@ -578,23 +575,23 @@ const styles = StyleSheet.create({
         marginBottom: OFFSET.VERTICAL,
     },
     permissionText: {
+        fontSize: 16,
         textAlign: 'center',
         color: COLORS.DARK_GREY,
         marginBottom: OFFSET.VERTICAL * 2,
-        fontSize: 16,
     },
     permissionButton: {
         minWidth: 200,
     },
     noCameraContainer: {
         flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
         backgroundColor: COLORS.BLACK,
     },
     noCameraText: {
-        color: COLORS.WHITE,
         fontSize: 18,
+        color: COLORS.WHITE,
     },
     manualEntryContainer: {
         flex: 1,
@@ -607,46 +604,46 @@ const styles = StyleSheet.create({
     questionCircle: {
         width: 145,
         height: 145,
-        backgroundColor: COLORS.LIGHT_GREY,
         borderRadius: 72.5,
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
         marginBottom: OFFSET.VERTICAL,
+        backgroundColor: COLORS.LIGHT_GREY,
     },
     questionMark: {
         fontSize: 80,
-        color: COLORS.DARK_GREY,
         fontWeight: '300',
+        color: COLORS.DARK_GREY,
     },
     manualTitle: {
+        maxWidth: 200,
         textAlign: 'center',
         marginBottom: OFFSET.VERTICAL,
-        maxWidth: 200,
     },
     manualSubtitle: {
+        fontSize: 15,
+        maxWidth: 200,
         textAlign: 'center',
         color: COLORS.DARK_GREY,
-        fontSize: 15,
         marginBottom: OFFSET.VERTICAL,
-        maxWidth: 200,
     },
     manualInput: {
+        fontSize: 18,
         width: '100%',
         borderWidth: 1,
-        borderColor: COLORS.GREY,
         borderRadius: 8,
-        paddingHorizontal: 16,
         paddingVertical: 12,
-        fontSize: 18,
         textAlign: 'center',
-        backgroundColor: COLORS.WHITE,
         color: COLORS.BLACK,
+        paddingHorizontal: 16,
+        borderColor: COLORS.GREY,
+        backgroundColor: COLORS.WHITE,
         marginBottom: OFFSET.VERTICAL,
     },
     manualButtons: {
-        flexDirection: 'row',
         gap: 16,
         width: '100%',
+        flexDirection: 'row',
     },
     manualBtn: {
         flex: 1,

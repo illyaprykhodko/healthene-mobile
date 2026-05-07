@@ -11,7 +11,7 @@ end
 node_require('react-native/scripts/react_native_pods.rb')
 node_require('react-native-permissions/scripts/setup.rb')
 
-platform :ios, min_ios_version_supported
+platform :ios, '16.6'
 prepare_react_native_project!
 project 'Healthene.xcodeproj'
 
@@ -73,5 +73,41 @@ target 'Healthene' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # react_native_post_install resets every Pod target's IPHONEOS_DEPLOYMENT_TARGET to
+    # React Native's min_ios_version_supported (e.g. 15.1). That leaves VisionCamera v5
+    # (Nitro / Swift–C++ interop) compiling as `-target arm64-apple-ios15.1`, which has
+    # triggered Swift/LLVM verifier crashes in Release (TestFlight) on newer Xcode SDKs,
+    # and is below Google ML Kit 8.x requirements anyway. Align all Pods with the app.
+    deployment_target = '16.6'
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |bc|
+        bc.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = deployment_target
+      end
+    end
+
+    # VisionCamera v5 + Nitro use Swift C++ interop. On Xcode 16+ / iOS 26 SDK, Release
+    # builds can crash swift-frontend during LLVM verify with:
+    #   "Global is external, but doesn't have external or weak linkage"
+    # when `LLVMCodeGenThreads` runs (`-num-threads 8` in the driver). This is a toolchain
+    # bug, not app code. Disabling parallel WMO IR generation for these pods only avoids it.
+    nitro_swift_interop_targets = %w[
+      VisionCamera
+      VisionCameraBarcodeScanner
+      NitroModules
+      NitroImage
+      NitroSound
+    ]
+    installer.pods_project.targets.each do |target|
+      next unless nitro_swift_interop_targets.include?(target.name)
+
+      target.build_configurations.each do |bc|
+        next unless bc.name.downcase.include?('release')
+
+        bc.build_settings['SWIFT_USE_PARALLEL_WHOLE_MODULE_OPTIMIZATION'] = 'NO'
+        bc.build_settings['SWIFT_ENABLE_BATCH_MODE'] = 'NO'
+        bc.build_settings['SWIFT_COMPILATION_MODE'] = 'singlefile'
+      end
+    end
   end
 end

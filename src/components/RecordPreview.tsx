@@ -3,7 +3,6 @@ import Video from 'react-native-video';
 import React, { useState } from 'react';
 import Icon from '@react-native-vector-icons/material-icons';
 import { ReactNativeBlobUtilStat } from 'react-native-blob-util';
-import { VideoFile, PhotoFile } from 'react-native-vision-camera';
 import { Dimensions, Image, Platform, StyleSheet, View } from 'react-native';
 
 // local dependencies
@@ -16,16 +15,22 @@ import AudioPlayer from 'components/AudioPlayer.tsx';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { handleCapture } from 'utils/attachment/mediaCapture.ts';
 
+export interface CapturedMedia {
+    path: string;
+    duration?: number;
+    type: 'photo' | 'video';
+}
+
 interface RecordPreviewProps {
     onRetake: () => void;
     recordType: 'camera' | 'audio'
     onCapture: (item: Attachment) => void;
-    file: PhotoFile | VideoFile | ReactNativeBlobUtilStat | null,
+    file: CapturedMedia | ReactNativeBlobUtilStat | null,
 }
 
 export const RecordPreview = ({ file, onRetake, onCapture, recordType }: RecordPreviewProps) => {
     const theme = useTheme();
-    const isVideo = Boolean(file && 'duration' in file);
+    const isVideo = Boolean(file && 'type' in file && file.type === 'video');
     const [preloader, setPreloader] = useState<boolean>(false);
 
     const getCaptureType = () => {

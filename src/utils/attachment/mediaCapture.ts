@@ -4,17 +4,17 @@ import moment from 'moment/moment';
 import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import { ReactNativeBlobUtilStat } from 'react-native-blob-util';
-import { VideoFile, PhotoFile } from 'react-native-vision-camera';
 
 // local dependencies
 import { store } from 'store';
+import { CapturedMedia } from 'components/RecordPreview.tsx';
 import { uploadAttachmentInitiate } from 'store/api/s3ServiceApi.ts';
 import { Platform } from 'react-native';
 
 type captureType = 'video' | 'image' | 'audio'
 interface CaptureProps {
     captureType: captureType,
-    file: PhotoFile | VideoFile | ReactNativeBlobUtilStat,
+    file: CapturedMedia | ReactNativeBlobUtilStat,
     setPreloader: React.Dispatch<React.SetStateAction<boolean>>
 }
 export const handleCapture = async ({
