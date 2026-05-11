@@ -17,7 +17,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Polygon } from 'react-native-svg';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
-import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, {
+    memo,
+    useRef,
+    useMemo,
+    useEffect,
+    useCallback,
+    type RefObject,
+} from 'react';
 // local dependencies
 import { useAppSelector } from 'store';
 import { selectRewardStar } from 'store/slices/rewardStarSlice';
@@ -187,10 +194,13 @@ const FlyingGrain = memo(({ index, masterProgress, startX, startY, endX, endY }:
 export interface RewardStarOverlayProps {
     /** When true, counter reflects GET /gambling-points; when false, counter shows 0 (query skipped). */
     gamblingPointsQueryEnabled?: boolean;
+    /** Wired by `RewardStarProvider` so `scheduleRewardFromCheckboxCenter` can enqueue the flight. */
+    flightHandlerRef?: RefObject<((cx: number, cy: number) => void) | null>;
 }
 
 export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({
     gamblingPointsQueryEnabled = false,
+    flightHandlerRef,
 }) => {
     const { lastTrigger, cx: triggerCx, cy: triggerCy } = useAppSelector(selectRewardStar);
     const { data: gamblingPointsData } = useGetPatientGamblingPointsQuery(undefined, {
@@ -399,6 +409,16 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({
         },
         [startFlightWork]
     );
+
+    useEffect(() => {
+        if (!flightHandlerRef) {
+            return;
+        }
+        flightHandlerRef.current = schedule;
+        return () => {
+            flightHandlerRef.current = null;
+        };
+    }, [flightHandlerRef, schedule]);
 
     /**
      * First effect run per overlay instance: align with store only (no animation).

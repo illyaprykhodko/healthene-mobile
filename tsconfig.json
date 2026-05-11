@@ -14,5 +14,10 @@
     }
   },
   "include": ["src/**/*", "App.tsx"],
-  "exclude": ["node_modules", "babel.config.js", "metro.config.js"]
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js",
+    "src/types/patient/__tests__/**/*"
+  ]
 }
