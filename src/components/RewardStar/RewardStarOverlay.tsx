@@ -19,11 +19,11 @@ import Svg, { Polygon } from 'react-native-svg';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 import React, {
     memo,
-    useCallback,
-    useEffect,
-    useMemo,
     useRef,
-    type MutableRefObject,
+    useMemo,
+    useEffect,
+    useCallback,
+    type RefObject,
 } from 'react';
 // local dependencies
 import { useAppSelector } from 'store';
@@ -195,7 +195,7 @@ export interface RewardStarOverlayProps {
     /** When true, counter reflects GET /gambling-points; when false, counter shows 0 (query skipped). */
     gamblingPointsQueryEnabled?: boolean;
     /** Wired by `RewardStarProvider` so `scheduleRewardFromCheckboxCenter` can enqueue the flight. */
-    flightHandlerRef?: MutableRefObject<((cx: number, cy: number) => void) | null>;
+    flightHandlerRef?: RefObject<((cx: number, cy: number) => void) | null>;
 }
 
 export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({
