@@ -20,6 +20,7 @@ import { settingsApi } from 'store/api/settingsApi.ts';
 import { s3ServiceApi } from 'store/api/s3ServiceApi.ts';
 import { messengerApi } from 'store/api/messengerApi.ts';
 import messengerSlice from 'store/slices/messengerSlice.ts';
+import { gamblingPointsApi } from './api/gamblingPointsApi';
 import { dayOverviewReducer } from './slices/dayOverviewSlice';
 import { categoryTreeApi } from 'store/api/categoryTreeApi.ts';
 import forgotPasswordReducer from './slices/forgotPasswordSlice';
@@ -28,6 +29,7 @@ import { mealPreferencesApi } from 'store/api/mealPreferencesApi.ts';
 import foodPreferencesSlice from 'store/slices/foodPreferrencesSlice.ts';
 import { cuisineDistributionApi } from 'store/api/cuisineDistributionApi.ts';
 
+import rewardStarReducer from './slices/rewardStarSlice';
 export const sentryApiMiddleware: Middleware = () => next => (action: any) => {
 
     if (typeof action?.type === 'string' && action.type.endsWith('/rejected')) {
@@ -80,6 +82,7 @@ export const store = configureStore({
         messenger: messengerSlice,
         dayOverview: dayOverviewReducer,
         forgotPassword: forgotPasswordReducer,
+        rewardStar: rewardStarReducer,
         foodPreferences: foodPreferencesSlice,
         [authApi.reducerPath]: authApi.reducer,
         [planApi.reducerPath]: planApi.reducer,
@@ -93,6 +96,7 @@ export const store = configureStore({
         [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
         [categoryTreeApi.reducerPath]: categoryTreeApi.reducer,
         [healthProfileApi.reducerPath]: healthProfileApi.reducer,
+        [gamblingPointsApi.reducerPath]: gamblingPointsApi.reducer,
         [mealPreferencesApi.reducerPath]: mealPreferencesApi.reducer,
         [cuisineDistributionApi.reducerPath]: cuisineDistributionApi.reducer,
     },
@@ -112,6 +116,7 @@ export const store = configureStore({
                 dayOverviewApi.middleware,
                 categoryTreeApi.middleware,
                 healthProfileApi.middleware,
+                gamblingPointsApi.middleware,
                 mealPreferencesApi.middleware,
                 cuisineDistributionApi.middleware,
             ),
