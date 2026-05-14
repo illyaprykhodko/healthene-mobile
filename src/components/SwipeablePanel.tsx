@@ -1,7 +1,7 @@
 // outsource dependencies
 import {
-    BottomSheetView,
     BottomSheetModal,
+    BottomSheetView,
     BottomSheetBackdrop,
     BottomSheetModalProps,
     BottomSheetBackdropProps,
@@ -55,6 +55,7 @@ export const SwipeablePanel = forwardRef<SwipeablePanelRef, SwipeablePanelProps>
             enableDynamicSizing = true,
             snapPoints = ['50%', '80%'],
             enablePanDownToClose = true,
+            keyboardBehavior = 'interactive',
             enableContentPanningGesture = true,
         },
         ref
@@ -116,8 +117,8 @@ export const SwipeablePanel = forwardRef<SwipeablePanelRef, SwipeablePanelProps>
                 snapPoints={snapPoints}
                 onChange={handleSheetChanges}
                 keyboardBlurBehavior="restore"
-                keyboardBehavior = "interactive"
                 backdropComponent={renderBackdrop}
+                keyboardBehavior={keyboardBehavior}
                 android_keyboardInputMode="adjustResize"
                 enableDynamicSizing={enableDynamicSizing}
                 enablePanDownToClose={enablePanDownToClose}
