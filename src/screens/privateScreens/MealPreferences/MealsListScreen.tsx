@@ -1,7 +1,7 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/fontawesome5';
-import React, { useCallback, useState, useEffect, useLayoutEffect } from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import React, { useCallback, useState, useEffect, useLayoutEffect, useMemo } from 'react';
 
 // local dependencies
 import Text from 'components/Text';
@@ -15,10 +15,9 @@ import { Button } from 'components/Button';
 import { RangeSlider } from 'components/RangeSlider';
 import ConfirmationAlert from 'components/ConfirmationAlert';
 import {
-    // Meal,
     MealPreferenceType,
     MealWithPreferences,
-    MealTemplatePreference,
+    MealTemplatePreference
 } from 'types/mealPreferences';
 import {
     useGetMealsQuery,
@@ -31,11 +30,24 @@ interface MealsListScreenProps {
     navigation: any;
 }
 
+const MEAL_NAMES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const;
+
+const useMealData = (mealName: string, enabled: boolean) => {
+    const { data: prefs } = useGetMealPreferencesQuery(
+        { type: MealPreferenceType.PREFERENCE, meal: mealName },
+        { skip: !enabled }
+    );
+    const { data: newTemplates } = useGetNewMealTemplatesQuery(
+        { type: MealPreferenceType.PREFERENCE, meal: mealName },
+        { skip: !enabled }
+    );
+    return useMemo(() => ({ prefs, newTemplates }), [prefs, newTemplates]);
+};
+
 interface MealItemProps {
     navigation: any;
     isDirtyForm: boolean;
     item: MealWithPreferences;
-    setIsDirtyForm: (dirty: boolean) => void;
     onUpdateItem: (item: MealWithPreferences) => void;
 }
 
@@ -44,7 +56,6 @@ const MealItem: React.FC<MealItemProps> = ({
     navigation,
     isDirtyForm,
     onUpdateItem,
-    setIsDirtyForm,
 }) => {
     const theme = useTheme();
     const [isOpen, setIsOpen] = useState(true);
@@ -62,8 +73,7 @@ const MealItem: React.FC<MealItemProps> = ({
                 : element)
         );
         onUpdateItem({ ...item, preferences: updatedPreferences });
-        setIsDirtyForm(true);
-    }, [item, onUpdateItem, setIsDirtyForm]);
+    }, [item, onUpdateItem]);
 
     return (
         <View>
@@ -119,66 +129,25 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
 
     const { data: mealsList, isLoading: isLoadingMeals } = useGetMealsQuery(MealPreferenceType.PREFERENCE);
 
-    const { data: breakfastPrefs } = useGetMealPreferencesQuery(
-        { type: MealPreferenceType.PREFERENCE, meal: 'Breakfast' },
-        { skip: !mealsList?.some(m => m.name === 'Breakfast') }
-    );
-    const { data: lunchPrefs } = useGetMealPreferencesQuery(
-        { type: MealPreferenceType.PREFERENCE, meal: 'Lunch' },
-        { skip: !mealsList?.some(m => m.name === 'Lunch') }
-    );
-    const { data: dinnerPrefs } = useGetMealPreferencesQuery(
-        { type: MealPreferenceType.PREFERENCE, meal: 'Dinner' },
-        { skip: !mealsList?.some(m => m.name === 'Dinner') }
-    );
-    const { data: snackPrefs } = useGetMealPreferencesQuery(
-        { type: MealPreferenceType.PREFERENCE, meal: 'Snack' },
-        { skip: !mealsList?.some(m => m.name === 'Snack') }
-    );
+    const breakfast = useMealData('Breakfast', !!mealsList?.some(m => m.name === 'Breakfast'));
+    const lunch = useMealData('Lunch', !!mealsList?.some(m => m.name === 'Lunch'));
+    const dinner = useMealData('Dinner', !!mealsList?.some(m => m.name === 'Dinner'));
+    const snack = useMealData('Snack', !!mealsList?.some(m => m.name === 'Snack'));
 
-    const { data: breakfastNewTemplates } = useGetNewMealTemplatesQuery(
-        { type: MealPreferenceType.PREFERENCE, meal: 'Breakfast' },
-        { skip: !mealsList?.some(m => m.name === 'Breakfast') }
-    );
-    const { data: lunchNewTemplates } = useGetNewMealTemplatesQuery(
-        { type: MealPreferenceType.PREFERENCE, meal: 'Lunch' },
-        { skip: !mealsList?.some(m => m.name === 'Lunch') }
-    );
-    const { data: dinnerNewTemplates } = useGetNewMealTemplatesQuery(
-        { type: MealPreferenceType.PREFERENCE, meal: 'Dinner' },
-        { skip: !mealsList?.some(m => m.name === 'Dinner') }
-    );
-    const { data: snackNewTemplates } = useGetNewMealTemplatesQuery(
-        { type: MealPreferenceType.PREFERENCE, meal: 'Snack' },
-        { skip: !mealsList?.some(m => m.name === 'Snack') }
-    );
+    const mealDataMap = useMemo(() => ({
+        Breakfast: breakfast,
+        Lunch: lunch,
+        Dinner: dinner,
+        Snack: snack,
+    }), [breakfast, lunch, dinner, snack]);
 
     const [updateFrequency, { isLoading: isUpdating }] = useUpdateMealPreferencesFrequencyMutation();
-    // console.log('%c MealsListScreen ', 'color: #FF6766; font-weight: bolder; font-size: 12px;'
-    //     , '\n mealsList:', mealsList
-    //     , '\n breakfastPrefs:', breakfastPrefs
-    //     , '\n lunchPrefs:', lunchPrefs
-    //     , '\n dinnerPrefs:', dinnerPrefs
-    //     , '\n snackPrefs:', snackPrefs
-    // );
-
-    const prefsMap: Record<string, MealTemplatePreference[] | undefined> = {
-        Breakfast: breakfastPrefs,
-        Dinner: dinnerPrefs,
-        Lunch: lunchPrefs,
-        Snack: snackPrefs,
-    };
-    const newTemplatesMap: Record<string, MealTemplatePreference[] | undefined> = {
-        Breakfast: breakfastNewTemplates,
-        Dinner: dinnerNewTemplates,
-        Lunch: lunchNewTemplates,
-        Snack: snackNewTemplates,
-    };
 
     // True only once mealsList and every relevant prefs / new-templates query have resolved.
-    const areQueriesReady = !!mealsList && mealsList.every(meal =>
-        prefsMap[meal.name] !== undefined && newTemplatesMap[meal.name] !== undefined
-    );
+    const areQueriesReady = !!mealsList && mealsList.every(meal => {
+        const data = mealDataMap[meal.name as typeof MEAL_NAMES[number]];
+        return data?.prefs !== undefined && data?.newTemplates !== undefined;
+    });
 
     useLayoutEffect(() => {
         if (!mealsList || !areQueriesReady) { return; }
@@ -186,14 +155,17 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
         const combined = mealsList
             .map(meal => ({
                 ...meal,
-                preferences: prefsMap[meal.name] || [],
+                preferences: mealDataMap[meal.name as typeof MEAL_NAMES[number]]?.prefs ?? [],
             }))
-            .filter(meal => meal.preferences.length > 0 || (newTemplatesMap[meal.name]?.length ?? 0) > 0)
+            .filter(meal =>
+                meal.preferences.length > 0
+                || (mealDataMap[meal.name as typeof MEAL_NAMES[number]]?.newTemplates?.length ?? 0) > 0
+            )
             .sort((a, b) => a.order - b.order);
 
         setMealsWithPreferences(combined);
         const initial = combined.reduce<Record<number, number>>((acc, meal) => {
-            (meal.preferences || []).forEach(pref => {
+            meal.preferences.forEach(pref => {
                 if (typeof pref.id === 'number') {
                     acc[pref.id] = pref.relativeFrequency || 1;
                 }
@@ -202,16 +174,11 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
         }, {});
         setInitialFrequencies(initial);
         setIsHydrated(true);
-    }, [
-        mealsList,
-        areQueriesReady,
-        breakfastPrefs, lunchPrefs, dinnerPrefs, snackPrefs,
-        breakfastNewTemplates, lunchNewTemplates, dinnerNewTemplates, snackNewTemplates,
-    ]);
+    }, [mealsList, areQueriesReady, mealDataMap]);
 
-    const currentFrequencies = React.useMemo(
+    const currentFrequencies = useMemo(
         () => mealsWithPreferences.reduce<Record<number, number>>((acc, meal) => {
-            (meal.preferences || []).forEach(pref => {
+            meal.preferences.forEach(pref => {
                 if (typeof pref.id === 'number') {
                     acc[pref.id] = pref.relativeFrequency || 1;
                 }
@@ -221,13 +188,18 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
         [mealsWithPreferences]
     );
 
-    const hasUnsavedChanges = React.useMemo(() => {
+    const hasUnsavedChanges = useMemo(() => {
         if (!isHydrated) { return false; }
-        const keys = Array.from(new Set([
+        const keys = new Set([
             ...Object.keys(initialFrequencies),
             ...Object.keys(currentFrequencies),
-        ])).sort();
-        return keys.some(key => initialFrequencies[Number(key)] !== currentFrequencies[Number(key)]);
+        ]);
+        for (const key of keys) {
+            if (initialFrequencies[Number(key)] !== currentFrequencies[Number(key)]) {
+                return true;
+            }
+        }
+        return false;
     }, [isHydrated, initialFrequencies, currentFrequencies]);
 
     useEffect(() => {
@@ -278,7 +250,6 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
         <MealItem
             item={item}
             navigation={navigation}
-            setIsDirtyForm={() => {}}
             isDirtyForm={hasUnsavedChanges}
             onUpdateItem={handleUpdateItem}
         />
