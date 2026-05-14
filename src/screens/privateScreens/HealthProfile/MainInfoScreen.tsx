@@ -1,4 +1,5 @@
 // outsource dependencies
+import moment from 'moment';
 import React, { memo, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View, ScrollView } from 'react-native';
@@ -31,6 +32,10 @@ const roundDigits = (value: number | undefined | null, digits: number): string =
     return value.toFixed(digits);
 };
 
+// Configure
+const timeFormatInput = 'YYYY-MM-DD';
+const timeFormatOutput = 'MMMM DD, YYYY';
+
 const MainInfoScreen: React.FC = () => {
     const theme = useTheme();
     const navigation = useNavigation<DrawerNavigationProp<any>>();
@@ -60,18 +65,20 @@ const MainInfoScreen: React.FC = () => {
 
     const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown' : 'Unknown';
     const goal = (user as any)?.plan?.goal;
-    const physicianName = user?.physician?.name || 'Unknown';
+    const physicianName = user?.physician?.name || 'Not Specified Yet';
     const heightFt = (user as any)?.heightFt ?? 0;
     const heightInches = (user as any)?.heightInches ?? 0;
     const weightLb = (user as any)?.weightLb;
     const gender = (user as any)?.gender;
     const bmi = (user as any)?.bmi;
     const preferredGender = (user as any)?.patientPreferredGender;
+    const birthday = moment((user as any)?.birthday, timeFormatInput);
 
     const formatHeight = (): string => `${heightFt} ft  ${heightInches} in`;
     const formatWeight = (): string => (weightLb ? `${roundDigits(weightLb, 1)} lb` : '-');
     const formatGender = (): string => humanize(gender);
     const formatBmi = (): string => (bmi ? roundDigits(bmi, 0) : '-');
+    const formatDOB = (): string => `${birthday.format(timeFormatOutput)} (age ${moment().diff(birthday, 'years')})`;
 
     const formatPreferredGender = (): string => {
         if (!preferredGender?.preferredGender) { return '-'; }
@@ -105,6 +112,7 @@ const MainInfoScreen: React.FC = () => {
                 </Text>
 
                 <ProfileCard title="My Stats" onEdit={navigateToStats}>
+                    <ProfileRow label="Age" value={formatDOB()} />
                     <ProfileRow label="Height" value={formatHeight()} />
                     <ProfileRow label="Weight" value={formatWeight()} />
                     <ProfileRow label="Gender" value={formatGender()} />

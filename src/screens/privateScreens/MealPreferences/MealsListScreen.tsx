@@ -1,6 +1,6 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/fontawesome5';
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useLayoutEffect } from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 
 // local dependencies
@@ -23,6 +23,7 @@ import {
 import {
     useGetMealsQuery,
     useGetMealPreferencesQuery,
+    useGetNewMealTemplatesQuery,
     useUpdateMealPreferencesFrequencyMutation,
 } from 'store/api/mealPreferencesApi';
 
@@ -135,37 +136,78 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
         { skip: !mealsList?.some(m => m.name === 'Snack') }
     );
 
+    const { data: breakfastNewTemplates } = useGetNewMealTemplatesQuery(
+        { type: MealPreferenceType.PREFERENCE, meal: 'Breakfast' },
+        { skip: !mealsList?.some(m => m.name === 'Breakfast') }
+    );
+    const { data: lunchNewTemplates } = useGetNewMealTemplatesQuery(
+        { type: MealPreferenceType.PREFERENCE, meal: 'Lunch' },
+        { skip: !mealsList?.some(m => m.name === 'Lunch') }
+    );
+    const { data: dinnerNewTemplates } = useGetNewMealTemplatesQuery(
+        { type: MealPreferenceType.PREFERENCE, meal: 'Dinner' },
+        { skip: !mealsList?.some(m => m.name === 'Dinner') }
+    );
+    const { data: snackNewTemplates } = useGetNewMealTemplatesQuery(
+        { type: MealPreferenceType.PREFERENCE, meal: 'Snack' },
+        { skip: !mealsList?.some(m => m.name === 'Snack') }
+    );
+
     const [updateFrequency, { isLoading: isUpdating }] = useUpdateMealPreferencesFrequencyMutation();
+    // console.log('%c MealsListScreen ', 'color: #FF6766; font-weight: bolder; font-size: 12px;'
+    //     , '\n mealsList:', mealsList
+    //     , '\n breakfastPrefs:', breakfastPrefs
+    //     , '\n lunchPrefs:', lunchPrefs
+    //     , '\n dinnerPrefs:', dinnerPrefs
+    //     , '\n snackPrefs:', snackPrefs
+    // );
 
-    useEffect(() => {
-        if (mealsList) {
-            const prefsMap: Record<string, MealTemplatePreference[] | undefined> = {
-                Breakfast: breakfastPrefs,
-                Dinner: dinnerPrefs,
-                Lunch: lunchPrefs,
-                Snack: snackPrefs,
-            };
+    const prefsMap: Record<string, MealTemplatePreference[] | undefined> = {
+        Breakfast: breakfastPrefs,
+        Dinner: dinnerPrefs,
+        Lunch: lunchPrefs,
+        Snack: snackPrefs,
+    };
+    const newTemplatesMap: Record<string, MealTemplatePreference[] | undefined> = {
+        Breakfast: breakfastNewTemplates,
+        Dinner: dinnerNewTemplates,
+        Lunch: lunchNewTemplates,
+        Snack: snackNewTemplates,
+    };
 
-            const combined = mealsList
-                .map(meal => ({
-                    ...meal,
-                    preferences: prefsMap[meal.name] || [],
-                }))
-                .sort((a, b) => a.order - b.order);
+    // True only once mealsList and every relevant prefs / new-templates query have resolved.
+    const areQueriesReady = !!mealsList && mealsList.every(meal =>
+        prefsMap[meal.name] !== undefined && newTemplatesMap[meal.name] !== undefined
+    );
 
-            setMealsWithPreferences(combined);
-            const initial = combined.reduce<Record<number, number>>((acc, meal) => {
-                (meal.preferences || []).forEach(pref => {
-                    if (typeof pref.id === 'number') {
-                        acc[pref.id] = pref.relativeFrequency || 1;
-                    }
-                });
-                return acc;
-            }, {});
-            setInitialFrequencies(initial);
-            setIsHydrated(true);
-        }
-    }, [mealsList, breakfastPrefs, lunchPrefs, dinnerPrefs, snackPrefs]);
+    useLayoutEffect(() => {
+        if (!mealsList || !areQueriesReady) { return; }
+
+        const combined = mealsList
+            .map(meal => ({
+                ...meal,
+                preferences: prefsMap[meal.name] || [],
+            }))
+            .filter(meal => meal.preferences.length > 0 || (newTemplatesMap[meal.name]?.length ?? 0) > 0)
+            .sort((a, b) => a.order - b.order);
+
+        setMealsWithPreferences(combined);
+        const initial = combined.reduce<Record<number, number>>((acc, meal) => {
+            (meal.preferences || []).forEach(pref => {
+                if (typeof pref.id === 'number') {
+                    acc[pref.id] = pref.relativeFrequency || 1;
+                }
+            });
+            return acc;
+        }, {});
+        setInitialFrequencies(initial);
+        setIsHydrated(true);
+    }, [
+        mealsList,
+        areQueriesReady,
+        breakfastPrefs, lunchPrefs, dinnerPrefs, snackPrefs,
+        breakfastNewTemplates, lunchNewTemplates, dinnerNewTemplates, snackNewTemplates,
+    ]);
 
     const currentFrequencies = React.useMemo(
         () => mealsWithPreferences.reduce<Record<number, number>>((acc, meal) => {
@@ -235,9 +277,9 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
     const renderItem = useCallback(({ item }: { item: MealWithPreferences }) => (
         <MealItem
             item={item}
-            isDirtyForm={hasUnsavedChanges}
             navigation={navigation}
             setIsDirtyForm={() => {}}
+            isDirtyForm={hasUnsavedChanges}
             onUpdateItem={handleUpdateItem}
         />
     ), [hasUnsavedChanges, navigation, handleUpdateItem]);
@@ -247,7 +289,7 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
     return (
         <Screen
             style={styles.container}
-            initialized={!isLoadingMeals}
+            initialized={!isLoadingMeals && areQueriesReady}
         >
             <View style={styles.content}>
                 <View style={styles.divider} />
