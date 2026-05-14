@@ -1,5 +1,6 @@
 // outsource dependencies
 import moment from 'moment';
+import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { Pressable, StyleSheet, View, Alert } from 'react-native';
 import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
@@ -232,6 +233,11 @@ const StatsScreen: React.FC = () => {
                     additionalInfo: formData.preferredGender === 'OTHER' ? formData.additionalInfo : undefined,
                 } : undefined,
             }).unwrap();
+            Toast.show({
+                type: 'success',
+                text1: 'My Stats',
+                text2: 'Your changes were saved successfully',
+            });
 
             const habitsData = Array.from(selectedHabits).map(id => ({ entity: { id } }));
             await updateHabits(habitsData).unwrap();

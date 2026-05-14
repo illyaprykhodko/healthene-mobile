@@ -100,15 +100,20 @@ export const Tree = ({ tree, setPage, setParentId, component, treeTypeViewLabel 
                 </Text>
             </Pressable>
         </View>}
-        renderItem={({ item }: {item: CategoryItem}) => <Pressable onPress={() => onClickItem(item)} style={styles.itemContainer}>
-            <View style={styles.imageContainer}>
-                <Image source={ item?.coverImage ? { uri: item.coverImage } : defaultImage } style={styles.image} />
-            </View>
-            <Text style={styles.flexShrink}>
-                {item.name}
-            </Text>
-            {component(item)}
-        </Pressable>}
+        renderItem={({ item }: {item: CategoryItem}) => {
+            const coverUri = typeof item?.coverImage === 'string'
+                ? item.coverImage
+                : item?.coverImage?.url;
+            return <Pressable onPress={() => onClickItem(item)} style={styles.itemContainer}>
+                <View style={styles.imageContainer}>
+                    <Image source={coverUri ? { uri: coverUri } : defaultImage} style={styles.image} />
+                </View>
+                <Text style={styles.flexShrink}>
+                    {item.name}
+                </Text>
+                {component(item)}
+            </Pressable>;
+        }}
     />;
 };
 
