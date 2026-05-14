@@ -109,7 +109,7 @@ const WeightMeasurementScreen: React.FC = () => {
                 style={[styles.scaleButton, { borderColor: theme.colors.success }]}
             >
                 <Text style={[styles.scaleButtonText, { color: theme.colors.darkGrey }]}>
-                        Step on Scale
+                    Step on Scale
                 </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -117,10 +117,17 @@ const WeightMeasurementScreen: React.FC = () => {
                 style={[styles.manualButton, { borderColor: theme.colors.primary }]}
             >
                 <Text style={[styles.manualButtonText, { color: theme.colors.primary }]}>
-                        Add your Weight Manually
+                    Add your Weight Manually
                 </Text>
             </TouchableOpacity>
-            <SwipeablePanel style={{ height: '75%', paddingTop: 25 }} showCloseButton={false} snapPoints={['75%']} isActive={isPanelOpen} onClose={() => setIsPanelOpen(false)}>
+            <SwipeablePanel
+                snapPoints={['75%']}
+                isActive={isPanelOpen}
+                showCloseButton={false}
+                keyboardBehavior="extend"
+                style={styles.swipeablePanel}
+                onClose={() => setIsPanelOpen(false)}
+            >
                 <Formik
                     onSubmit={handleSubmit}
                     initialValues={{ value: '' }}
@@ -130,15 +137,15 @@ const WeightMeasurementScreen: React.FC = () => {
                         <View style={styles.formContainer}>
                             <View style={styles.header}>
                                 <TouchableOpacity
-                                    onPress={() => setIsPanelOpen(false)}
                                     style={styles.headerButton}
+                                    onPress={() => setIsPanelOpen(false)}
                                 >
                                     <Text style={[styles.headerButtonText, { color: theme.colors.primary }]}>
-                                            Cancel
+                                        Cancel
                                     </Text>
                                 </TouchableOpacity>
                                 <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-                                        Weight
+                                    Weight
                                 </Text>
                                 <TouchableOpacity
                                     style={styles.headerButton}
@@ -146,13 +153,11 @@ const WeightMeasurementScreen: React.FC = () => {
                                     disabled={!values.value || !!errors.value || isSubmitting}
                                 >
                                     <Text
-                                        style={[
-                                            styles.headerButtonText,
+                                        style={[styles.headerButtonText,
                                             {
-                                                color:
-                                                        !values.value || errors.value
-                                                            ? theme.colors.textSecondary
-                                                            : theme.colors.primary,
+                                                color: !values.value || errors.value
+                                                    ? theme.colors.textSecondary
+                                                    : theme.colors.primary,
                                             },
                                         ]}
                                     >
@@ -168,7 +173,7 @@ const WeightMeasurementScreen: React.FC = () => {
                             <View style={styles.dateContainer}>
                                 <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
                                     <Text style={[styles.itemLabel, { color: theme.colors.text }]}>
-                                            Date
+                                        Date
                                     </Text>
                                     <Text style={[styles.itemValue, { color: theme.colors.text }]}>
                                         {moment().format('MMM Do YY')}
@@ -176,7 +181,7 @@ const WeightMeasurementScreen: React.FC = () => {
                                 </View>
                                 <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
                                     <Text style={[styles.itemLabel, { color: theme.colors.text }]}>
-                                            Time
+                                        Time
                                     </Text>
                                     <Text style={[styles.itemValue, { color: theme.colors.text }]}>
                                         {moment().format('LT')}
@@ -196,7 +201,7 @@ const WeightMeasurementScreen: React.FC = () => {
                                             errors.value && touched.value && styles.errorText,
                                         ]}
                                     >
-                                            lbs.
+                                        lbs.
                                     </Text>
                                     <BottomSheetTextInput
                                         maxLength={40}
@@ -239,6 +244,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF',
+    },
+    swipeablePanel: {
+        paddingTop: 25,
     },
     overlayBackground: {
         ...StyleSheet.absoluteFillObject,

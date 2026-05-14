@@ -100,6 +100,7 @@ export const SwipeList: React.FC<SwipeListProps> = ({
             directionalDistanceChangeThreshold={directionalDistanceChangeThreshold}
             renderHiddenItem={(rowData, rowMap) => {
                 const { item } = rowData;
+                const { status } = item;
                 const rowKey = keyExtractor(item);
                 return (
                     <View style={StyleSheet.flatten([styles.listItemHidden, styleHiddenItem])}>
@@ -125,7 +126,9 @@ export const SwipeList: React.FC<SwipeListProps> = ({
                                         onPress={() => {
                                             handleCheckboxStatus?.({
                                                 ...item,
-                                                status: PHASE_ITEM_STATUS.DID_NOT_EAT
+                                                status: status === PHASE_ITEM_STATUS.DID_NOT_EAT
+                                                    ? PHASE_ITEM_STATUS.PENDING
+                                                    : PHASE_ITEM_STATUS.DID_NOT_EAT
                                             });
                                             rowMap[rowKey]?.closeRow();
                                         }}
