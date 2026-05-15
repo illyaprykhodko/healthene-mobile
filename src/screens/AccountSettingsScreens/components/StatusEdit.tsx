@@ -113,7 +113,7 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
                     foodCategory: { id, name }
                 });
             request.unwrap().catch(() => {
-                setOptimisticStatus(null)
+                setOptimisticStatus(null);
                 Toast.show({
                     type: 'error',
                     text1: 'Update failed',
