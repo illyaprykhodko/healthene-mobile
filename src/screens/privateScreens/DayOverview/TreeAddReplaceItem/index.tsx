@@ -1,7 +1,6 @@
 // outsource dependencies
 import {
     View,
-    Image,
     FlatList,
     Keyboard,
     Platform,
@@ -30,6 +29,7 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
+import DefImage from 'components/DefImage';
 import { RootStackParamList } from 'services/navigation';
 import { ENTITY_TYPE, SEARCH_TYPE, SUBSTANCE_TYPE, TAG_TYPE } from 'constants/spec';
 
@@ -501,11 +501,10 @@ const TreeAddReplaceItem: React.FC = () => {
             return (
                 <TouchableOpacity style={styles.listItem} onPress={() => handleSelectItem(item)}>
                     <View style={styles.content}>
-                        {imageUrl ? (
-                            <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
-                        ) : (
-                            <View style={[styles.image, styles.imagePlaceholder]} />
-                        )}
+                        <DefImage
+                            src={imageUrl}
+                            style={styles.image}
+                        />
                         <View style={styles.listTitle}>
                             <Text style={styles.itemName} numberOfLines={2}>
                                 {item.name}

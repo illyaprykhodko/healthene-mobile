@@ -2,7 +2,7 @@
 import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, FlatList, TextInput, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, FlatList, TextInput } from 'react-native';
 
 // local dependencies
 import {
@@ -16,6 +16,7 @@ import Screen from 'components/Screen';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import DefImage from 'components/DefImage';
 import { CATALOG_TAG_TYPE, SEARCH_TYPE } from 'constants/spec';
 
 export const AddReplaceItem: React.FC = () => {
@@ -209,11 +210,10 @@ export const AddReplaceItem: React.FC = () => {
         return (
             <TouchableOpacity style={styles.listItem} onPress={() => handleItemPress(item)}>
                 <View style={styles.content}>
-                    {imageUrl ? (
-                        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
-                    ) : (
-                        <View style={[styles.image, styles.imagePlaceholder]} />
-                    )}
+                    <DefImage
+                        src={imageUrl}
+                        style={styles.image}
+                    />
                     <View style={styles.listTitle}>
                         <Text style={styles.itemName} numberOfLines={2}>
                             {item.name}

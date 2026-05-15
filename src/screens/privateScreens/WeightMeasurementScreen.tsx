@@ -5,6 +5,7 @@ import {
     Platform,
     StyleSheet,
     TouchableOpacity,
+    ActivityIndicator,
 } from 'react-native';
 import * as yup from 'yup';
 import moment from 'moment';
@@ -13,6 +14,7 @@ import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import React, { useState, useCallback, useRef } from 'react';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation, useRoute } from '@react-navigation/native';
+
 // local dependencies
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
@@ -95,146 +97,148 @@ const WeightMeasurementScreen: React.FC = () => {
         [submit]
     );
 
-    return (
-        <View style={styles.container}>
-            {isPanelOpen && (
-                <TouchableOpacity
-                    activeOpacity={1}
-                    style={styles.overlayBackground}
-                    onPress={() => setIsPanelOpen(false)}
-                />
-            )}
+    return (<View style={styles.container}>
+        {isPanelOpen && (
             <TouchableOpacity
-                onPress={handleSmartScalePress}
-                style={[styles.scaleButton, { borderColor: theme.colors.success }]}
-            >
-                <Text style={[styles.scaleButtonText, { color: theme.colors.darkGrey }]}>
+                activeOpacity={1}
+                style={styles.overlayBackground}
+                onPress={() => setIsPanelOpen(false)}
+            />
+        )}
+        <TouchableOpacity
+            onPress={handleSmartScalePress}
+            style={[styles.scaleButton, { borderColor: theme.colors.success }]}
+        >
+            <Text style={[styles.scaleButtonText, { color: theme.colors.darkGrey }]}>
                     Step on Scale
-                </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                onPress={handleManualPress}
-                style={[styles.manualButton, { borderColor: theme.colors.primary }]}
+            </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+            onPress={handleManualPress}
+            style={[styles.manualButton, { borderColor: theme.colors.primary }]}
+        >
+            <Text style={[styles.manualButtonText, { color: theme.colors.primary }]}>
+                {isSubmitting
+                    ? <ActivityIndicator size="small" color={theme.colors.primary} />
+                    : 'Add your Weight Manually'
+                }
+            </Text>
+        </TouchableOpacity>
+        <SwipeablePanel
+            snapPoints={['75%']}
+            isActive={isPanelOpen}
+            showCloseButton={false}
+            keyboardBehavior="extend"
+            style={styles.swipeablePanel}
+            onClose={() => setIsPanelOpen(false)}
+        >
+            <Formik
+                onSubmit={handleSubmit}
+                initialValues={{ value: '' }}
+                validationSchema={validationSchema}
             >
-                <Text style={[styles.manualButtonText, { color: theme.colors.primary }]}>
-                    Add your Weight Manually
-                </Text>
-            </TouchableOpacity>
-            <SwipeablePanel
-                snapPoints={['75%']}
-                isActive={isPanelOpen}
-                showCloseButton={false}
-                keyboardBehavior="extend"
-                style={styles.swipeablePanel}
-                onClose={() => setIsPanelOpen(false)}
-            >
-                <Formik
-                    onSubmit={handleSubmit}
-                    initialValues={{ value: '' }}
-                    validationSchema={validationSchema}
-                >
-                    {({ values, errors, touched, setFieldValue, setFieldTouched, handleSubmit }) => (
-                        <View style={styles.formContainer}>
-                            <View style={styles.header}>
-                                <TouchableOpacity
-                                    style={styles.headerButton}
-                                    onPress={() => setIsPanelOpen(false)}
-                                >
-                                    <Text style={[styles.headerButtonText, { color: theme.colors.primary }]}>
+                {({ values, errors, touched, setFieldValue, setFieldTouched, handleSubmit }) => (
+                    <View style={styles.formContainer}>
+                        <View style={styles.header}>
+                            <TouchableOpacity
+                                style={styles.headerButton}
+                                onPress={() => setIsPanelOpen(false)}
+                            >
+                                <Text style={[styles.headerButtonText, { color: theme.colors.primary }]}>
                                         Cancel
-                                    </Text>
-                                </TouchableOpacity>
-                                <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+                                </Text>
+                            </TouchableOpacity>
+                            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
                                     Weight
-                                </Text>
-                                <TouchableOpacity
-                                    style={styles.headerButton}
-                                    onPress={() => handleSubmit()}
-                                    disabled={!values.value || !!errors.value || isSubmitting}
-                                >
-                                    <Text
-                                        style={[styles.headerButtonText,
-                                            {
-                                                color: !values.value || errors.value
-                                                    ? theme.colors.textSecondary
-                                                    : theme.colors.primary,
-                                            },
-                                        ]}
-                                    >
-                                        {isSubmitting ? 'Adding...' : 'Add'}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                            {!hasRecentWeight && (
-                                <Text style={[styles.noRecentDataText, { color: theme.colors.primary }]}>
-                                    No Weight was recorded recently - please add it manually
-                                </Text>
-                            )}
-                            <View style={styles.dateContainer}>
-                                <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
-                                    <Text style={[styles.itemLabel, { color: theme.colors.text }]}>
-                                        Date
-                                    </Text>
-                                    <Text style={[styles.itemValue, { color: theme.colors.text }]}>
-                                        {moment().format('MMM Do YY')}
-                                    </Text>
-                                </View>
-                                <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
-                                    <Text style={[styles.itemLabel, { color: theme.colors.text }]}>
-                                        Time
-                                    </Text>
-                                    <Text style={[styles.itemValue, { color: theme.colors.text }]}>
-                                        {moment().format('LT')}
-                                    </Text>
-                                </View>
-                                <View
-                                    style={[
-                                        styles.item,
-                                        { borderBottomColor: theme.colors.border },
-                                        errors.value && touched.value && styles.errorInput,
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.headerButton}
+                                onPress={() => handleSubmit()}
+                                disabled={!values.value || !!errors.value || isSubmitting}
+                            >
+                                <Text
+                                    style={[styles.headerButtonText,
+                                        {
+                                            color: !values.value || errors.value
+                                                ? theme.colors.textSecondary
+                                                : theme.colors.primary,
+                                        },
                                     ]}
                                 >
-                                    <Text
-                                        style={[
-                                            styles.itemLabel,
-                                            { color: theme.colors.text },
-                                            errors.value && touched.value && styles.errorText,
-                                        ]}
-                                    >
-                                        lbs.
-                                    </Text>
-                                    <BottomSheetTextInput
-                                        maxLength={40}
-                                        placeholder="0.0"
-                                        value={values.value}
-                                        keyboardType="decimal-pad"
-                                        onBlur={() => setFieldTouched('value')}
-                                        placeholderTextColor={theme.colors.textSecondary}
-                                        onChangeText={text => {
-                                            const processedText = text.replace(/[^0-9.,]/g, '');
-                                            const parts = processedText.split('.');
-                                            if (parts.length <= 2) {
-                                                setFieldValue('value', processedText);
-                                            }
-                                        }}
-                                        style={[
-                                            styles.input,
-                                            { color: theme.colors.text },
-                                            Platform.OS === 'ios' && styles.inputIOS,
-                                        ]}
-                                    />
-                                </View>
-                                {errors.value && touched.value && (
-                                    <Text style={[styles.errorTextSmall, { color: theme.colors.error }]}>
-                                        {errors.value}
-                                    </Text>
-                                )}
-                            </View>
+                                    Add
+                                </Text>
+                            </TouchableOpacity>
                         </View>
-                    )}
-                </Formik>
-            </SwipeablePanel>
-        </View>
+                        {!hasRecentWeight && (
+                            <Text style={[styles.noRecentDataText, { color: theme.colors.primary }]}>
+                                    No Weight was recorded recently - please add it manually
+                            </Text>
+                        )}
+                        <View style={styles.dateContainer}>
+                            <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
+                                <Text style={[styles.itemLabel, { color: theme.colors.text }]}>
+                                        Date
+                                </Text>
+                                <Text style={[styles.itemValue, { color: theme.colors.text }]}>
+                                    {moment().format('MMM Do YY')}
+                                </Text>
+                            </View>
+                            <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
+                                <Text style={[styles.itemLabel, { color: theme.colors.text }]}>
+                                        Time
+                                </Text>
+                                <Text style={[styles.itemValue, { color: theme.colors.text }]}>
+                                    {moment().format('LT')}
+                                </Text>
+                            </View>
+                            <View
+                                style={[
+                                    styles.item,
+                                    { borderBottomColor: theme.colors.border },
+                                    errors.value && touched.value && styles.errorInput,
+                                ]}
+                            >
+                                <Text
+                                    style={[
+                                        styles.itemLabel,
+                                        { color: theme.colors.text },
+                                        errors.value && touched.value && styles.errorText,
+                                    ]}
+                                >
+                                        lbs.
+                                </Text>
+                                <BottomSheetTextInput
+                                    maxLength={40}
+                                    placeholder="0.0"
+                                    value={values.value}
+                                    keyboardType="decimal-pad"
+                                    onBlur={() => setFieldTouched('value')}
+                                    placeholderTextColor={theme.colors.textSecondary}
+                                    onChangeText={text => {
+                                        const processedText = text.replace(/[^0-9.,]/g, '');
+                                        const parts = processedText.split('.');
+                                        if (parts.length <= 2) {
+                                            setFieldValue('value', processedText);
+                                        }
+                                    }}
+                                    style={[
+                                        styles.input,
+                                        { color: theme.colors.text },
+                                        Platform.OS === 'ios' && styles.inputIOS,
+                                    ]}
+                                />
+                            </View>
+                            {errors.value && touched.value && (
+                                <Text style={[styles.errorTextSmall, { color: theme.colors.error }]}>
+                                    {errors.value}
+                                </Text>
+                            )}
+                        </View>
+                    </View>
+                )}
+            </Formik>
+        </SwipeablePanel>
+    </View>
     );
 };
 

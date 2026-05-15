@@ -7,6 +7,7 @@ import Animated, {
     useAnimatedStyle,
 } from 'react-native-reanimated';
 import { useSelector } from 'react-redux';
+import Toast from 'react-native-toast-message';
 import { Pressable, StyleSheet, } from 'react-native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -32,6 +33,7 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
 
     const [category, setCategory] = useState<PatientCategories | null>(null);
     const [statusTypes, setStatusTypesStatus] = useState<CategoryStatusType[]>([]);
+    const [optimisticStatus, setOptimisticStatus] = useState<CategoryStatusType | null>(null);
     useEffect(() => {
         const category = (categories || []).find(
             c => c.foodCategory?.id === id
@@ -45,6 +47,13 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
         );
         setStatusTypesStatus(statuses);
     }, [categories, id]);
+
+    // Clear optimistic override once the slice catches up with the server's confirmed status
+    useEffect(() => {
+        setOptimisticStatus(null);
+    }, [category?.categoryStatus]);
+
+    const displayStatus = optimisticStatus ?? category?.categoryStatus ?? CATEGORY_STATUS.INCLUDE;
 
     // Animation
     const expanded = useSharedValue(0);
@@ -90,20 +99,27 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
             : status === CATEGORY_STATUS.EXCLUDE ? CATEGORY_STATUS.INCLUDE : CATEGORY_STATUS.EXCLUDE;
 
         if (visitId && userId) {
-            if (category) {
-                updateCategory({
+            setOptimisticStatus(categoryStatus);
+            const request = category
+                ? updateCategory({
                     ...category,
                     categoryStatus,
                     visit: { id: visitId }
-                });
-            } else {
-                updateCategory({
+                })
+                : updateCategory({
                     categoryStatus,
                     visit: { id: visitId },
                     patient: { id: userId },
                     foodCategory: { id, name }
                 });
-            }
+            request.unwrap().catch(() => {
+                setOptimisticStatus(null)
+                Toast.show({
+                    type: 'error',
+                    text1: 'Update failed',
+                    text2: `Could not save "${name}". Please try again.`,
+                });
+            });
         }
     }, [category, id, name, user?.id, user?.activeVisit?.id, updateCategory, treeTypeViewLabel]);
 
@@ -123,8 +139,8 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
         {statusTypes.map(status => <Pressable onPress={() => handleEdit(status)} key={status} style={[styles.icon, { borderColor: theme.colors.lighterGrey }]}>
             {getStatusIcon(status)}
         </Pressable>)}
-    </Animated.View> : <Pressable onPress={() => handleEdit(category?.categoryStatus ?? CATEGORY_STATUS.INCLUDE)} style={styles.container}>
-        {getStatusIcon(category?.categoryStatus ?? CATEGORY_STATUS.INCLUDE)}
+    </Animated.View> : <Pressable onPress={() => handleEdit(displayStatus)} style={styles.container}>
+        {getStatusIcon(displayStatus)}
     </Pressable>;
 };
 
