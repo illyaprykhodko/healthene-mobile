@@ -38,6 +38,8 @@ import {
     useUpdateShoppingItemMutation,
     useConfirmShopOnMyOwnMutation,
     useGetShoppingPreferencesQuery,
+    // TEMP: needed while we route "shop on my own" through PUT /shopping-list; revert once backend re-adds /shop-on-my-own
+    useUpdateShoppingListStatusMutation,
 } from 'store/api/shoppingApi';
 import ShoppingItem from './ShoppingItem';
 import ListSwitcher from 'components/ListSwitcher';
@@ -72,6 +74,8 @@ const ShoppingList: React.FC = () => {
         isTryToOpenSideMenu,
         separateRescueItems,
         isMealQuestionAsked,
+        // TEMP: `id` (shopping list id) is needed for the PUT /shopping-list fallback while /shop-on-my-own is missing on backend
+        id: shoppingListId,
     } = useAppSelector(selectShopping);
 
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
@@ -124,7 +128,10 @@ const ShoppingList: React.FC = () => {
     });
 
     const [updateItem] = useUpdateShoppingItemMutation();
+    // TEMP: kept for the upcoming revert — backend currently 404s on /shop-on-my-own, so the call below is bypassed in favor of updateShoppingListStatus
+    // eslint-disable-next-line no-unused-vars
     const [confirmShopOnMyOwn] = useConfirmShopOnMyOwnMutation();
+    const [updateShoppingListStatus] = useUpdateShoppingListStatusMutation();
     const { data: preferencesData } = useGetShoppingPreferencesQuery();
 
     // Get questions and videos for shopping list
@@ -317,24 +324,63 @@ const ShoppingList: React.FC = () => {
         return unsubscribe;
     }, [navigation, status, currentStep, dispatch]);
 
+    // TEMP: backend /shopping-list/shop-on-my-own returns 404, so we replicate V1 behavior by flipping status via PUT /shopping-list.
+    // Revert both handlers to `confirmShopOnMyOwn({}).unwrap()` once backend re-adds the dedicated endpoint.
+    const buildShopOnMyOwnPayload = useCallback(() => {
+        const allItems = includeRescueFoodsInShoppingList;
+        const mainCondition = confirmedItemsType === SHOPPING_CONFIRMED_ITEM_TYPE.NONE;
+        const newConfirmedItemsType = allItems
+            ? SHOPPING_CONFIRMED_ITEM_TYPE.ALL
+            : mainCondition
+                ? SHOPPING_CONFIRMED_ITEM_TYPE.ORIGINAL
+                : SHOPPING_CONFIRMED_ITEM_TYPE.ALL;
+        return { newConfirmedItemsType };
+    }, [includeRescueFoodsInShoppingList, confirmedItemsType]);
+
     const handleDone = useCallback(async () => {
         try {
-            await confirmShopOnMyOwn({}).unwrap();
+            // TEMP: replaces confirmShopOnMyOwn({}).unwrap() until /shop-on-my-own is restored
+            if (shoppingListId) {
+                const { newConfirmedItemsType } = buildShopOnMyOwnPayload();
+                await updateShoppingListStatus({
+                    id: shoppingListId,
+                    status: SHOPPING_STATUS.SHOP_ON_MY_OWN,
+                    separateRescueItems,
+                    confirmedItemsType: newConfirmedItemsType,
+                }).unwrap();
+                dispatch(setShoppingStatus({
+                    status: SHOPPING_STATUS.SHOP_ON_MY_OWN,
+                    confirmedItemsType: newConfirmedItemsType,
+                }));
+            }
             dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
         } catch (error) {
             console.error('Error confirming:', error);
         }
-    }, [confirmShopOnMyOwn, dispatch]);
+    }, [shoppingListId, separateRescueItems, buildShopOnMyOwnPayload, updateShoppingListStatus, dispatch]);
     const handleFinalize = useCallback(async () => {
         try {
-            await confirmShopOnMyOwn({}).unwrap();
+            // TEMP: replaces confirmShopOnMyOwn({}).unwrap() until /shop-on-my-own is restored
+            if (shoppingListId) {
+                const { newConfirmedItemsType } = buildShopOnMyOwnPayload();
+                await updateShoppingListStatus({
+                    id: shoppingListId,
+                    status: SHOPPING_STATUS.SHOP_ON_MY_OWN,
+                    separateRescueItems,
+                    confirmedItemsType: newConfirmedItemsType,
+                }).unwrap();
+                dispatch(setShoppingStatus({
+                    status: SHOPPING_STATUS.SHOP_ON_MY_OWN,
+                    confirmedItemsType: newConfirmedItemsType,
+                }));
+            }
             dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
             setIsFinalizeOpen(false);
             navigation.dispatch(StackActions.replace(ROUTES.SHOPPING_LIST, { isShopOnMyOwn: true }));
         } catch (error) {
             console.error('Error finalizing shopping list:', error);
         }
-    }, [confirmShopOnMyOwn, dispatch, navigation]);
+    }, [shoppingListId, separateRescueItems, buildShopOnMyOwnPayload, updateShoppingListStatus, dispatch, navigation]);
 
     const handlePrint = useCallback(() => {
         const endDate = moment().endOf('week').format('YYYY-MM-DD');
