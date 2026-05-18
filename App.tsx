@@ -14,15 +14,17 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets, EdgeInsets } from 'react-native-safe-area-context';
 // local dependencies
-import { store } from 'store';
 import { config } from 'constants';
+import { store, useAppDispatch } from 'store';
+import { useAppUpdateGate } from 'hooks/useAppUpdateGate';
+import { setBirdSoundEnabled } from 'store/slices/appSlice';
 import { ThemeProvider } from 'providers/ThemeProvider.tsx';
 import { RootNavigator } from 'navigation/RootNavigator.tsx';
+import { SoftUpdateModal } from 'components/update/SoftUpdateModal';
 import { BoxHolder, MaintenanceHolder } from 'components/preloader';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppInitialization } from 'hooks/useAppInitialization.ts';
 // import { FeedbackProvider } from 'features/feedback';
-import { useAppUpdateGate } from 'hooks/useAppUpdateGate';
-import { SoftUpdateModal } from 'components/update/SoftUpdateModal';
 import { ForceUpdateScreen } from 'components/update/ForceUpdateScreen';
 import notificationService from 'services/notifications/notification.service';
 
@@ -54,8 +56,19 @@ if (config.DEBUG) {
     });
 }
 
+const BIRD_SOUND_KEY = '@birdSoundEnabled';
+
 function AppContent (): React.JSX.Element {
+    const dispatch = useAppDispatch();
     const { isHealthLoading } = useAppInitialization();
+
+    useEffect(() => {
+        AsyncStorage.getItem(BIRD_SOUND_KEY).then(value => {
+            if (value !== null) {
+                dispatch(setBirdSoundEnabled(value === 'true'));
+            }
+        });
+    }, [dispatch]);
     // const { isInitializing, isHealthy, isHealthLoading } = useAppInitialization();
     const {
         softPolicy,
