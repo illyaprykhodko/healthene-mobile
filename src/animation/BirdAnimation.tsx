@@ -97,6 +97,54 @@ function getCheckClipLayout (name: string | null): BirdCheckClipConfig | null {
     return BIRD_CHECK_VIDEO_CLIPS.find(c => c.name === name) ?? null;
 }
 
+// `check2..check5` ship as 1080x1920 frames with the bird painted in the top-right ~360x420 region.
+// `sitting`, `appearing`, and `check1` are 360x400 with the bird filling the canvas. Without compensation,
+// `object-fit: contain` shrinks the tall clips so the bird renders at ~14x17 inside the 80x80 WebView.
+// `TALL_CLIP_VIDEO_STYLE` enlarges the video element and slides its top-right bird region into the
+// same on-screen footprint as the sitting bird (~72x80 letterboxed in the 80x80 box).
+const TALL_CLIP_NAMES: ReadonlySet<string> = new Set(['check2', 'check3', 'check4', 'check5']);
+
+type ClipVideoStyle = {
+    width: string;
+    height: string;
+    top: string;
+    left: string;
+    right: string;
+};
+
+const TALL_CLIP_VIDEO_STYLE: ClipVideoStyle = {
+    // Uniform scale = 80/420 ≈ 0.19 maps the bird's ~420px source height onto the 80px box;
+    // at this scale the full 1080x1920 frame renders at 205x365.
+    width: '205px',
+    height: '365px',
+    // Bird's top edge in source is ~y=50, scaled to ~10 — shift up so the bird starts at y=0.
+    top: '-10px',
+    // Anchor the video's right edge 4px from the container's right edge to match sitting's letterbox.
+    right: '4px',
+    left: 'auto',
+};
+
+const NORMAL_CLIP_VIDEO_STYLE: ClipVideoStyle = {
+    width: `${VIDEO_SIZE}px`,
+    height: `${VIDEO_SIZE}px`,
+    top: '0',
+    right: 'auto',
+    left: '0',
+};
+
+function buildClipVideoStyleJs (clipName: string | null): string {
+    const style = clipName && TALL_CLIP_NAMES.has(clipName)
+        ? TALL_CLIP_VIDEO_STYLE
+        : NORMAL_CLIP_VIDEO_STYLE;
+    return [
+        `inactive.style.width = "${style.width}";`,
+        `inactive.style.height = "${style.height}";`,
+        `inactive.style.top = "${style.top}";`,
+        `inactive.style.left = "${style.left}";`,
+        `inactive.style.right = "${style.right}";`,
+    ].join('\n                    ');
+}
+
 // ============================================================================
 // ANIMATION PHASES: appearing → sitting (loop) → action (single clip) → finished
 // ============================================================================
@@ -153,19 +201,19 @@ export const WEBVIEW_MESSAGES = {
     DOM_READY_ACTION: 'BIRD_DOM_READY_ACTION',
 };
 
-function createBirdWebViewHtml (domReadyMessage: string): string {
+function createBirdWebViewHtml (domReadyMessage: string, vpWidth: number = VIDEO_SIZE, vpHeight: number = VIDEO_SIZE): string {
     return `
         <html>
             <head>
-                <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
+                <meta name="viewport" content="width=${vpWidth}, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
                 <style>
                     * { margin: 0; padding: 0; box-sizing: border-box; }
-                    html, body { width: 100%; height: 100%; background: transparent; overflow: visible; }
-                    #videoContainer { position: relative; width: 100%; height: 100%; overflow: visible; }
+                    html, body { width: ${vpWidth}px; height: ${vpHeight}px; background: transparent; overflow: hidden; }
+                    #videoContainer { position: relative; width: ${vpWidth}px; height: ${vpHeight}px; overflow: hidden; }
                     video {
                         position: absolute;
                         top: 0; left: 0;
-                        width: 100%; height: 100%;
+                        width: ${vpWidth}px; height: ${vpHeight}px;
                         object-fit: contain;
                     }
                 </style>
@@ -341,6 +389,9 @@ export const BirdAnimation = ({
 
             const resumeLoopInPage
                 = targetPhase === BirdAnimationPhase.SITTING && resumeSittingInsideWebview;
+            // Skip resetting per-clip CSS for the ACTION webview — it owns its own 200x400 layout.
+            const isMainWebView = targetPhase !== BirdAnimationPhase.ACTION;
+            const styleResetJs = isMainWebView ? buildClipVideoStyleJs(null) : '';
 
             ref.current.injectJavaScript(`
             (function() {
@@ -379,6 +430,7 @@ export const BirdAnimation = ({
                     inactive.style.transform = "none";
                     inactive.style.transformOrigin = "center";
                     inactive.style.objectFit = "contain";
+                    ${styleResetJs}
 
                     // WKWebView often ignores HTML5 loop; loop sitting via onended seek+play instead.
                     if (isSitting && resumeLoopInPage) {
@@ -431,6 +483,7 @@ export const BirdAnimation = ({
             }
 
             const phaseTag = BirdAnimationPhase.CHECK;
+            const clipStyleJs = buildClipVideoStyleJs(clipName);
             ref.current.injectJavaScript(`
             (function() {
                 try {
@@ -448,6 +501,7 @@ export const BirdAnimation = ({
                     inactive.style.transform = "none";
                     inactive.style.transformOrigin = "center";
                     inactive.style.objectFit = "contain";
+                    ${clipStyleJs}
 
                     var phaseTag = "${phaseTag}";
                     inactive.onended = function() {
@@ -743,49 +797,8 @@ export const BirdAnimation = ({
     const checkLayout = phase === BirdAnimationPhase.CHECK
         ? getCheckClipLayout(activeCheckClipName)
         : null;
-    /** Layout box on screen (can be larger than the WebView render size below). */
-    const mainLayoutWidth = checkLayout?.width ?? VIDEO_SIZE_CONFIG[phase].width;
-    const mainLayoutHeight = checkLayout?.height ?? VIDEO_SIZE_CONFIG[phase].height;
     const mainContainerTop = checkLayout?.containerTop ?? CONTAINER_TOP_CONFIG[phase];
     const mainViewRight = checkLayout?.right ?? ANIMATED_VIEW_RIGHT_CONFIG[phase];
-    /**
-     * WKWebView is unreliable at very large explicit sizes; CHECK clips always render at VIDEO_SIZE
-     * and scale up so width/height in BIRD_CHECK_VIDEO_CLIPS remain the on-screen footprint.
-     */
-    const checkPhaseUsesScaledWebView = phase === BirdAnimationPhase.CHECK && Boolean(checkLayout);
-    const webViewRenderW = checkPhaseUsesScaledWebView ? VIDEO_SIZE : mainLayoutWidth;
-    const webViewRenderH = checkPhaseUsesScaledWebView ? VIDEO_SIZE : mainLayoutHeight;
-    const checkScaleX = checkLayout ? checkLayout.width / VIDEO_SIZE : 1;
-    const checkScaleY = checkLayout ? checkLayout.height / VIDEO_SIZE : 1;
-
-    const mainBirdOuterWrapStyle = checkPhaseUsesScaledWebView && checkLayout
-        ? {
-            width: mainLayoutWidth,
-            height: mainLayoutHeight,
-            overflow: 'visible' as const,
-        }
-        : {};
-    /**
-     * Only CHECK uses bottom-right anchoring + scale (transform origin). APPEARING/SITTING must
-     * stay top-aligned inside the top+bottom-stretched parent — a blanket `bottom: 0` lifted them.
-     */
-    const mainBirdInnerWrapStyle = checkPhaseUsesScaledWebView && checkLayout
-        ? {
-            position: 'absolute' as const,
-            right: 0,
-            bottom: 0,
-            width: VIDEO_SIZE,
-            height: VIDEO_SIZE,
-            transformOrigin: '100% 100%' as const,
-            transform: [
-                { scaleX: checkScaleX },
-                { scaleY: checkScaleY },
-            ],
-        }
-        : {
-            width: webViewRenderW,
-            height: webViewRenderH,
-        };
 
     const mainWebView = (
         <WebView
@@ -794,8 +807,8 @@ export const BirdAnimation = ({
             source={{ html: createBirdWebViewHtml(WEBVIEW_MESSAGES.DOM_READY_MAIN) }}
             style={{
                 backgroundColor: 'transparent',
-                width: webViewRenderW,
-                height: webViewRenderH,
+                width: VIDEO_SIZE,
+                height: VIDEO_SIZE,
             }}
         />
     );
@@ -812,13 +825,8 @@ export const BirdAnimation = ({
                     ]}
                 >
                     <View style={{ position: 'absolute', right: mainViewRight }}>
-                        {/*
-                         * Stable parent chain so CHECK↔SITTING does not remount the native WebView.
-                         */}
-                        <View style={mainBirdOuterWrapStyle}>
-                            <View style={mainBirdInnerWrapStyle}>
-                                {mainWebView}
-                            </View>
+                        <View style={{ width: VIDEO_SIZE, height: VIDEO_SIZE }}>
+                            {mainWebView}
                         </View>
                     </View>
                 </View>
@@ -845,7 +853,11 @@ export const BirdAnimation = ({
                         <WebView
                             ref={actionWebViewRef}
                             {...webViewCommonProps}
-                            source={{ html: createBirdWebViewHtml(WEBVIEW_MESSAGES.DOM_READY_ACTION) }}
+                            source={{ html: createBirdWebViewHtml(
+                                WEBVIEW_MESSAGES.DOM_READY_ACTION,
+                                VIDEO_SIZE_CONFIG[BirdAnimationPhase.ACTION].width,
+                                VIDEO_SIZE_CONFIG[BirdAnimationPhase.ACTION].height,
+                            ) }}
                             style={{
                                 backgroundColor: 'transparent',
                                 width: VIDEO_SIZE_CONFIG[BirdAnimationPhase.ACTION].width,
