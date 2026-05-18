@@ -155,56 +155,48 @@ export const WEBVIEW_MESSAGES = {
 
 function createBirdWebViewHtml (domReadyMessage: string): string {
     return `
-                            <html>
-                                <head>
-                                    <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
-                                    <style>
-                                        * {
-                                            margin: 0;
-                                            padding: 0;
-                                            box-sizing: border-box;
-                                        }
-                                        html, body {
-                                            width: 100%;
-                                            height: 100%;
-                                            background: transparent;
-                                            overflow: visible;
-                                        }
-                                        #videoContainer {
-                                            width: 100%;
-                                            height: 100%;
-                                            display: flex;
-                                            align-items: center;
-                                            justify-content: center;
-                                            overflow: visible;
-                                        }
-                                        video {
-                                            width: 100%;
-                                            height: 100%;
-                                            object-fit: contain;
-                                        }
-                                    </style>
-                                    <script>
-                                        document.addEventListener("DOMContentLoaded", function() {
-                                            window.ReactNativeWebView.postMessage("${domReadyMessage}");
-                                        });
-                                    </script>
-                                </head>
-                                <body>
-                                    <div id="videoContainer">
-                                        <video
-                                            autoplay
-                                            id="video"
-                                            playsinline
-                                            onerror="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_FAILED}' }))"
-                                            onloadeddata="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_LOADED}' }))"
-                                        >
-                                            <source id="source" type="${VIDEO_MIME}" />
-                                        </video>
-                                    </div>
-                                </body>
-                            </html>
-                        `;
+        <html>
+            <head>
+                <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    html, body { width: 100%; height: 100%; background: transparent; overflow: visible; }
+                    #videoContainer { position: relative; width: 100%; height: 100%; overflow: visible; }
+                    video {
+                        position: absolute;
+                        top: 0; left: 0;
+                        width: 100%; height: 100%;
+                        object-fit: contain;
+                    }
+                </style>
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        var va = document.getElementById("video-a");
+                        var vb = document.getElementById("video-b");
+                        va.style.opacity = "1";
+                        va.style.zIndex = "2";
+                        vb.style.opacity = "0";
+                        vb.style.zIndex = "1";
+                        window.__ACTIVE = va;
+                        window.__INACTIVE = vb;
+                        window.__VIDEO__ = va;
+                        window.ReactNativeWebView.postMessage("${domReadyMessage}");
+                    });
+                </script>
+            </head>
+            <body>
+                <div id="videoContainer">
+                    <video
+                        id="video-a"
+                        playsinline
+                        onerror="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_FAILED}' }))"
+                        onloadeddata="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_LOADED}' }))"
+                    ></video>
+                    <video id="video-b" playsinline></video>
+                </div>
+            </body>
+        </html>
+    `;
 }
 
 interface BirdAnimationProps {
@@ -271,25 +263,22 @@ export const BirdAnimation = ({
     const mutedRef = useRef(muted);
     useEffect(() => { mutedRef.current = muted; }, [muted]);
 
+    const screenFocusedRef = useRef(true);
+    const videosLoadedRef = useRef(false);
+    const activeCheckClipNameRef = useRef<string | null>(null);
+    useEffect(() => { videosLoadedRef.current = videosLoaded; }, [videosLoaded]);
+    useEffect(() => { activeCheckClipNameRef.current = activeCheckClipName; }, [activeCheckClipName]);
+
     useEffect(() => {
-        const js = `(function(){ if(window.__VIDEO__) { window.__VIDEO__.muted = ${muted ? 'true' : 'false'}; } true; })();`;
+        if (!screenFocusedRef.current) { return; }
+        const js = `(function(){
+            if(window.__ACTIVE) { window.__ACTIVE.muted = ${muted ? 'true' : 'false'}; }
+            if(window.__INACTIVE) { window.__INACTIVE.muted = ${muted ? 'true' : 'false'}; }
+            true;
+        })();`;
         mainWebViewRef.current?.injectJavaScript(js);
         actionWebViewRef.current?.injectJavaScript(js);
     }, [muted]);
-
-    useFocusEffect(
-        useCallback(() => {
-            const js = `(function(){
-                if(window.__VIDEO__) {
-                    window.__VIDEO__.muted = ${mutedRef.current ? 'true' : 'false'};
-                    if(window.__VIDEO__.paused) { window.__VIDEO__.play(); }
-                }
-                true;
-            })();`;
-            mainWebViewRef.current?.injectJavaScript(js);
-            actionWebViewRef.current?.injectJavaScript(js);
-        }, [])
-    );
 
     useEffect(() => {
         const preloadAllVideos = async () => {
@@ -337,6 +326,7 @@ export const BirdAnimation = ({
     /**
      * Loads a phase clip into the WebView. For SITTING, `resumeSittingInsideWebview` false = single play + `postBirdEnded`
      * (deferred-check path); true = in-page loop (seek 0 on `ended`, no RN message per lap).
+     * Uses double-buffer: loads into __INACTIVE, swaps on `canplay` so no blank frame is visible.
      */
     const injectVideo = useCallback(
         (
@@ -355,48 +345,74 @@ export const BirdAnimation = ({
             ref.current.injectJavaScript(`
             (function() {
                 try {
-                    if (!window.__VIDEO__) window.__VIDEO__ = document.getElementById("video");
-                    if (!window.__SOURCE__) window.__SOURCE__ = document.getElementById("source");
-                    var v = window.__VIDEO__;
+                    if (!window.__ACTIVE || !window.__INACTIVE) { true; return; }
+                    var active = window.__ACTIVE;
+                    var inactive = window.__INACTIVE;
+
+                    window.__injectGen = (window.__injectGen || 0) + 1;
+                    var myGen = window.__injectGen;
+
                     if (window.__birdSitNearEnd) {
-                        v.removeEventListener("timeupdate", window.__birdSitNearEnd);
-                        v.removeEventListener("seeked", window.__birdSitSeeked);
+                        active.removeEventListener("timeupdate", window.__birdSitNearEnd);
+                        inactive.removeEventListener("timeupdate", window.__birdSitNearEnd);
+                        active.removeEventListener("seeked", window.__birdSitSeeked);
+                        inactive.removeEventListener("seeked", window.__birdSitSeeked);
                         window.__birdSitNearEnd = null;
                         window.__birdSitSeeked = null;
                     }
-                    v.pause();
-                    window.__SOURCE__.src = "data:${VIDEO_MIME};base64,${base64}";
+
                     var phaseTag = "${targetPhase}";
                     var resumeLoopInPage = ${resumeLoopInPage ? 'true' : 'false'};
                     var isSitting = phaseTag === "${BirdAnimationPhase.SITTING}";
+
                     function postBirdEnded() {
                         window.ReactNativeWebView.postMessage(JSON.stringify({
                             type: "${WEBVIEW_MESSAGES.VIDEO_ENDED}",
                             phase: phaseTag
                         }));
                     }
+
+                    inactive.loop = false;
+                    inactive.removeAttribute("loop");
+                    inactive.onended = null;
+                    inactive.muted = ${mutedRef.current ? 'true' : 'false'};
+                    inactive.style.transform = "none";
+                    inactive.style.transformOrigin = "center";
+                    inactive.style.objectFit = "contain";
+
                     // WKWebView often ignores HTML5 loop; loop sitting via onended seek+play instead.
-                    v.loop = false;
-                    v.removeAttribute("loop");
                     if (isSitting && resumeLoopInPage) {
-                        v.onended = function() {
-                            try {
-                                v.currentTime = 0;
-                                v.play();
-                            } catch (e) {}
+                        inactive.onended = function() {
+                            try { inactive.currentTime = 0; inactive.play(); } catch(e) {}
                         };
                     } else {
-                        v.onended = function() {
-                            postBirdEnded();
-                        };
+                        inactive.onended = function() { postBirdEnded(); };
                     }
-                    v.load();
-                    v.play();
-                    v.muted = ${mutedRef.current ? 'true' : 'false'};
 
-                    v.style.transform = "none";
-                    v.style.transformOrigin = "center";
-                    v.style.objectFit = "contain";
+                    inactive.src = "data:${VIDEO_MIME};base64,${base64}";
+                    inactive.load();
+
+                    function onCanPlay() {
+                        inactive.removeEventListener("canplay", onCanPlay);
+                        if (window.__injectGen !== myGen) { return; }
+                        var nextActive = inactive;
+                        var nextInactive = active;
+                        requestAnimationFrame(function() {
+                            nextInactive.style.opacity = "0";
+                            nextInactive.style.zIndex = "1";
+                            nextInactive.pause();
+                            nextInactive.onended = null;
+
+                            nextActive.style.opacity = "1";
+                            nextActive.style.zIndex = "2";
+
+                            window.__ACTIVE = nextActive;
+                            window.__INACTIVE = nextInactive;
+                            window.__VIDEO__ = nextActive;
+                        });
+                    }
+                    inactive.addEventListener("canplay", onCanPlay);
+                    inactive.play();
                 } catch (e) {
                     console.log("Inject error", e);
                 }
@@ -418,27 +434,53 @@ export const BirdAnimation = ({
             ref.current.injectJavaScript(`
             (function() {
                 try {
-                    if (!window.__VIDEO__) window.__VIDEO__ = document.getElementById("video");
-                    if (!window.__SOURCE__) window.__SOURCE__ = document.getElementById("source");
-                    
-                    window.__VIDEO__.pause();
-                    window.__VIDEO__.loop = false;
-                    window.__VIDEO__.removeAttribute("loop");
-                    window.__SOURCE__.src = "data:${VIDEO_MIME};base64,${base64}";
+                    if (!window.__ACTIVE || !window.__INACTIVE) { true; return; }
+                    var active = window.__ACTIVE;
+                    var inactive = window.__INACTIVE;
+
+                    window.__injectGen = (window.__injectGen || 0) + 1;
+                    var myGen = window.__injectGen;
+
+                    inactive.loop = false;
+                    inactive.removeAttribute("loop");
+                    inactive.onended = null;
+                    inactive.muted = ${mutedRef.current ? 'true' : 'false'};
+                    inactive.style.transform = "none";
+                    inactive.style.transformOrigin = "center";
+                    inactive.style.objectFit = "contain";
+
                     var phaseTag = "${phaseTag}";
-                    window.__VIDEO__.onended = function() {
+                    inactive.onended = function() {
                         window.ReactNativeWebView.postMessage(JSON.stringify({
                             type: "${WEBVIEW_MESSAGES.VIDEO_ENDED}",
                             phase: phaseTag
                         }));
                     };
-                    window.__VIDEO__.load();
-                    window.__VIDEO__.play();
-                    window.__VIDEO__.muted = ${mutedRef.current ? 'true' : 'false'};
 
-                    window.__VIDEO__.style.transform = "none";
-                    window.__VIDEO__.style.transformOrigin = "center";
-                    window.__VIDEO__.style.objectFit = "contain";
+                    inactive.src = "data:${VIDEO_MIME};base64,${base64}";
+                    inactive.load();
+
+                    function onCanPlay() {
+                        inactive.removeEventListener("canplay", onCanPlay);
+                        if (window.__injectGen !== myGen) { return; }
+                        var nextActive = inactive;
+                        var nextInactive = active;
+                        requestAnimationFrame(function() {
+                            nextInactive.style.opacity = "0";
+                            nextInactive.style.zIndex = "1";
+                            nextInactive.pause();
+                            nextInactive.onended = null;
+
+                            nextActive.style.opacity = "1";
+                            nextActive.style.zIndex = "2";
+
+                            window.__ACTIVE = nextActive;
+                            window.__INACTIVE = nextInactive;
+                            window.__VIDEO__ = nextActive;
+                        });
+                    }
+                    inactive.addEventListener("canplay", onCanPlay);
+                    inactive.play();
                 } catch (e) {
                     console.log("Inject check error", e);
                 }
@@ -447,6 +489,25 @@ export const BirdAnimation = ({
         `);
         },
         [checkVideoCache]
+    );
+
+    useFocusEffect(
+        useCallback(() => {
+            screenFocusedRef.current = true;
+            if (videosLoadedRef.current) {
+                const currentPhase = phaseRef.current;
+                if (currentPhase !== BirdAnimationPhase.FINISHED) {
+                    if (currentPhase === BirdAnimationPhase.CHECK && activeCheckClipNameRef.current) {
+                        injectCheckClip(activeCheckClipNameRef.current, mainWebViewRef);
+                    } else if (currentPhase === BirdAnimationPhase.ACTION) {
+                        injectVideo(BirdAnimationPhase.ACTION, actionWebViewRef);
+                    } else {
+                        injectVideo(currentPhase, mainWebViewRef, sittingLoopRestartInWebViewRef.current);
+                    }
+                }
+            }
+            return () => { screenFocusedRef.current = false; };
+        }, [injectVideo, injectCheckClip])
     );
 
     useEffect(() => {
