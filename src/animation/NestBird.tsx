@@ -34,7 +34,7 @@ const MESSAGES = {
 
 function createNestBirdHtml (): string {
     return `
-<html>
+<html lang="en">
   <head>
     <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
     <style>
