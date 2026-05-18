@@ -10,18 +10,19 @@ import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
 import { RootStackParamList } from 'services/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useGetPatientGamblingPointsQuery } from 'store/api/gamblingPointsApi';
 
 type Navigation = NativeStackNavigationProp<RootStackParamList>;
 
 const Lobby: React.FC = () => {
     const navigation = useNavigation<Navigation>();
-
+    const { data: points = 0 } = useGetPatientGamblingPointsQuery();
     return (
         <Screen initialized style={styles.container}>
             <View style={styles.content}>
                 <View style={styles.pointsContainer}>
                     <Icon iconStyle="solid" name="coins" size={18} color="#B57B2A" />
-                    <Text variant="h4" style={styles.backButtonText}>100 points</Text>
+                    <Text variant="h4" style={styles.backButtonText}>{points.toLocaleString()} points</Text>
                 </View>
                 <TouchableOpacity
                     activeOpacity={0.85}
