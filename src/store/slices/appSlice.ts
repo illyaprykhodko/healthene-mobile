@@ -14,6 +14,7 @@ const initialState: AppState = {
     accessToken: null,
     refreshToken: null,
     initialized: false,
+    birdSoundEnabled: true,
     includeRescueFoodsInShoppingList: false,
 };
 
@@ -51,18 +52,24 @@ export const appSlice = createSlice({
         setKeyboardState: (state, action: PayloadAction<boolean>) => {
             state.keyboard = action.payload;
         },
+        setBirdSoundEnabled: (state, action: PayloadAction<boolean>) => {
+            state.birdSoundEnabled = action.payload;
+        },
     },
 });
 
 export const {
-    setInitialized,
-    setHealth,
     setAuth,
     setUser,
+    setWakeup,
+    setHealth,
     setSession,
     clearSession,
-    setWakeup,
+    setInitialized,
     setKeyboardState,
+    setBirdSoundEnabled,
 } = appSlice.actions;
+
+export const selectBirdSoundEnabled = (state: { app: AppState }) => state.app.birdSoundEnabled;
 
 export default appSlice.reducer;
