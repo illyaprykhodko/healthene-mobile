@@ -142,6 +142,24 @@ export type RootStackParamList = {
   [ROUTES.GAMBLING_SLOT_MACHINE]: {
     gameType?: 'SLOTS' | 'BLACKJACK';
   } | undefined;
+  [ROUTES.GAMBLING_GIFT_CARD_LIST]: undefined;
+  [ROUTES.GAMBLING_GIFT_CARD_DENOMINATIONS]: {
+    brandCode: string;
+    brandName: string;
+    imageUrl?: string;
+  };
+  [ROUTES.GAMBLING_GIFT_CARD_CONFIRMATION]: {
+    brandCode: string;
+    brandName: string;
+    imageUrl?: string;
+    priceInCents: number;
+  };
+  [ROUTES.GAMBLING_GIFT_CARD_SUCCESS]: {
+    brandName: string;
+    imageUrl?: string;
+    giftLink: string;
+  };
+  [ROUTES.GAMBLING_GIFT_CARD_ORDERS]: undefined;
   [ROUTES.WRITE_MESSAGE]: {
     refetchMessages?: () => void;
   } | undefined;

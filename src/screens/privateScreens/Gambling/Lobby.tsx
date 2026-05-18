@@ -44,8 +44,8 @@ const Lobby: React.FC = () => {
             <View style={styles.footer}>
                 <TouchableOpacity
                     activeOpacity={0.85}
-                    style={[styles.backButton, styles.shadowBtn]}
                     onPress={() => navigation.goBack()}
+                    style={[styles.backButton, styles.shadowBtn]}
                 >
                     <Text variant="h4" style={styles.backButtonText}>Back</Text>
                 </TouchableOpacity>
@@ -117,6 +117,8 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 20,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#A9A9A9',
     },
     backButtonText: {
         // fontFamily: 'Outfit-Bold',

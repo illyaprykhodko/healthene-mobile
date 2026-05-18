@@ -41,7 +41,12 @@ import { ReplacementScreen, ReplaceItemsScreen } from './Replacement';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
 import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
 import {
+    GamblingGiftCardDenominationsScreen,
+    GamblingGiftCardConfirmationScreen,
+    GamblingGiftCardSuccessScreen,
+    GamblingGiftCardOrdersScreen,
     GamblingGameSelectionScreen,
+    GamblingGiftCardListScreen,
     GamblingSlotMachineScreen,
     GamblingCashOutScreen,
     GamblingLobbyScreen,
@@ -112,11 +117,13 @@ const DayOverviewStack: React.FC = () => {
     );
 
     return (
-        <Stack.Navigator initialRouteName="DayOverview" screenOptions={() => ({
-            headerRight: () => (
-                <Hamburger onPress={() => (navigation as any).openDrawer?.()} style={styles.menuButton} />
-            ),
-        })}>
+        <Stack.Navigator
+            initialRouteName="DayOverview"
+            screenOptions={() => ({
+                headerRight: () => (
+                    <Hamburger onPress={() => (navigation as any).openDrawer?.()} style={styles.menuButton} />
+                ),
+            })}>
             <Stack.Screen
                 name="DayOverview"
                 component={Overview}
@@ -285,6 +292,46 @@ const DayOverviewStack: React.FC = () => {
                 options={{
                     title: 'Bank',
                     header: renderCustomHeader({ title: '$ Bank' }),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.GAMBLING_GIFT_CARD_LIST}
+                component={GamblingGiftCardListScreen}
+                options={{
+                    title: 'Redeem Points',
+                    header: renderCustomHeader({ title: 'Redeem Points' }),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.GAMBLING_GIFT_CARD_DENOMINATIONS}
+                component={GamblingGiftCardDenominationsScreen}
+                options={{
+                    title: 'Redeem Points',
+                    header: renderCustomHeader({ title: 'Redeem Points' }),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.GAMBLING_GIFT_CARD_CONFIRMATION}
+                component={GamblingGiftCardConfirmationScreen}
+                options={{
+                    title: 'Redeem Points',
+                    header: renderCustomHeader({ title: 'Redeem Points' }),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.GAMBLING_GIFT_CARD_SUCCESS}
+                component={GamblingGiftCardSuccessScreen}
+                options={{
+                    title: 'Redeem Points',
+                    header: renderCustomHeader({ title: 'Redeem Points' }),
+                }}
+            />
+            <Stack.Screen
+                name={ROUTES.GAMBLING_GIFT_CARD_ORDERS}
+                component={GamblingGiftCardOrdersScreen}
+                options={{
+                    title: 'My Gift Cards',
+                    header: renderCustomHeader({ title: 'My Gift Cards' }),
                 }}
             />
 

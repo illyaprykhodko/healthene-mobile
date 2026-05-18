@@ -11,6 +11,7 @@ import { planApi } from 'store/api/planApi.ts';
 import reactotron from '../../ReactotronConfig';
 import { shoppingApi } from './api/shoppingApi';
 import { questionApi } from './api/questionApi';
+import { giftCardApi } from './api/giftCardApi';
 import signInReducer from './slices/signInSlice';
 import { publicApi } from 'store/api/publicApi.ts';
 import exerciseReducer from './slices/exerciseSlice';
@@ -91,6 +92,7 @@ export const store = configureStore({
         [questionApi.reducerPath]: questionApi.reducer,
         [settingsApi.reducerPath]: settingsApi.reducer,
         [shoppingApi.reducerPath]: shoppingApi.reducer,
+        [giftCardApi.reducerPath]: giftCardApi.reducer,
         [s3ServiceApi.reducerPath]: s3ServiceApi.reducer,
         [messengerApi.reducerPath]: messengerApi.reducer,
         [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
@@ -111,6 +113,7 @@ export const store = configureStore({
                 questionApi.middleware,
                 settingsApi.middleware,
                 shoppingApi.middleware,
+                giftCardApi.middleware,
                 messengerApi.middleware,
                 s3ServiceApi.middleware,
                 dayOverviewApi.middleware,
