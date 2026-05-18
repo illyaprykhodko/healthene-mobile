@@ -3,7 +3,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from './baseApi';
 
-const GAMBLING_POINTS_URL = '/patient-service/patients/me/gambling-points';
+const GAMBLING_POINTS_URL = '/gambling-listener/users/me/gambling-points';
 
 export type UpdateGamblingPointsBody = {
   amount: number;
