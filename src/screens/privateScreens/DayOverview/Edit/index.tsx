@@ -422,8 +422,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         setLocalItems(prevItems => {
             const nextItems = prevItems.map(prevItem =>
-                (prevItem.id === item.id ? { ...item } : prevItem)
-            );
+                (prevItem.id === item.id ? { ...item } : prevItem));
             const allDoneNow = nextItems.every(
                 listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
             );
@@ -729,8 +728,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             <View style={styles.list}>
                 <ScrollView
                     ref={scrollViewRef}
-                    style={isFutureDate && styles.opacity}
                     scrollEnabled={scrollEnabled}
+                    style={isFutureDate && styles.opacity}
                     onContentSizeChange={() => {
                         if (shouldScrollToAddedEnd && !isAddingAddedItem) {
                             setTimeout(() => {

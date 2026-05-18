@@ -173,6 +173,8 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 20,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#A9A9A9',
     },
     backButtonText: {
         fontWeight: 700,
@@ -188,6 +190,8 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 25,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#A9A9A9',
     },
     shadowBtn: {
         shadowColor: '#000000',
