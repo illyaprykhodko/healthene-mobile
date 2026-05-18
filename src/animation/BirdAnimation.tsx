@@ -2,6 +2,7 @@
 import { WebView } from 'react-native-webview';
 import RNBlobUtil from 'react-native-blob-util';
 import { Platform, StyleSheet, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 
@@ -207,6 +208,7 @@ function createBirdWebViewHtml (domReadyMessage: string): string {
 }
 
 interface BirdAnimationProps {
+    muted?: boolean;
     allChecked: boolean;
     /** Increment when the user marks an item done while some items remain incomplete (Edit meal list). */
     checkTrigger?: number;
@@ -225,6 +227,7 @@ function pickRandomCheckClipName (): string {
 // MAIN COMPONENT
 // ============================================================================
 export const BirdAnimation = ({
+    muted = false,
     allChecked = false,
     checkTrigger = 0,
     checkboxAreaX = 0,
@@ -264,6 +267,29 @@ export const BirdAnimation = ({
     useEffect(() => {
         checkTriggerPropRef.current = checkTrigger;
     }, [checkTrigger]);
+
+    const mutedRef = useRef(muted);
+    useEffect(() => { mutedRef.current = muted; }, [muted]);
+
+    useEffect(() => {
+        const js = `(function(){ if(window.__VIDEO__) { window.__VIDEO__.muted = ${muted ? 'true' : 'false'}; } true; })();`;
+        mainWebViewRef.current?.injectJavaScript(js);
+        actionWebViewRef.current?.injectJavaScript(js);
+    }, [muted]);
+
+    useFocusEffect(
+        useCallback(() => {
+            const js = `(function(){
+                if(window.__VIDEO__) {
+                    window.__VIDEO__.muted = ${mutedRef.current ? 'true' : 'false'};
+                    if(window.__VIDEO__.paused) { window.__VIDEO__.play(); }
+                }
+                true;
+            })();`;
+            mainWebViewRef.current?.injectJavaScript(js);
+            actionWebViewRef.current?.injectJavaScript(js);
+        }, [])
+    );
 
     useEffect(() => {
         const preloadAllVideos = async () => {
@@ -366,11 +392,12 @@ export const BirdAnimation = ({
                     }
                     v.load();
                     v.play();
-                    
+                    v.muted = ${mutedRef.current ? 'true' : 'false'};
+
                     v.style.transform = "none";
                     v.style.transformOrigin = "center";
                     v.style.objectFit = "contain";
-                } catch (e) { 
+                } catch (e) {
                     console.log("Inject error", e);
                 }
                 true;
@@ -407,11 +434,12 @@ export const BirdAnimation = ({
                     };
                     window.__VIDEO__.load();
                     window.__VIDEO__.play();
-                    
+                    window.__VIDEO__.muted = ${mutedRef.current ? 'true' : 'false'};
+
                     window.__VIDEO__.style.transform = "none";
                     window.__VIDEO__.style.transformOrigin = "center";
                     window.__VIDEO__.style.objectFit = "contain";
-                } catch (e) { 
+                } catch (e) {
                     console.log("Inject check error", e);
                 }
                 true;

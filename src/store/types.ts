@@ -11,6 +11,7 @@ export interface AppState {
   user: User | null;
   keyboard: boolean;
   initialized: boolean;
+  birdSoundEnabled: boolean;
   accessToken: string | null;
   refreshToken: string | null;
   includeRescueFoodsInShoppingList: boolean;
