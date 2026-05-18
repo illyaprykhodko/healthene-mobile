@@ -9,7 +9,6 @@ import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
 import { RootStackParamList } from 'services/navigation';
-import { NestBird } from 'animation/NestBird.tsx';
 
 type GameType = 'SLOTS' | 'BLACKJACK';
 type Navigation = NativeStackNavigationProp<RootStackParamList>;
@@ -61,7 +60,6 @@ const GameSelection: React.FC = () => {
 
             <View style={styles.footer}>
                 <View style={styles.footerLeft}>
-                    <NestBird />
                     <TouchableOpacity
                         activeOpacity={0.85}
                         onPress={() => navigation.goBack()}
