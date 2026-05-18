@@ -9,11 +9,11 @@ import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
 
 /** Size, spacing, and offsets for {@link NestBird} — edit here only. */
 export const NEST_BIRD_ANIMATION_CONFIG = {
-    width: 220,
-    height: 220,
+    width: 120,
+    height: 120,
     marginTop: 0,
-    marginBottom: 4,
-    marginLeft: -67,
+    marginBottom: 0,
+    marginLeft: -14,
     marginRight: 0,
 } as const;
 

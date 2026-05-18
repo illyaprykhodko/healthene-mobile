@@ -18,6 +18,7 @@ import WebView, { WebViewMessageEvent } from 'react-native-webview';
 import Text from 'components/Text';
 import { config } from 'constants';
 import Screen from 'components/Screen';
+import { NestBird } from 'animation/NestBird.tsx';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
 import { RootStackParamList } from 'services/navigation';
@@ -168,18 +169,22 @@ const SlotMachine: React.FC = () => {
                         <View style={styles.handle} />
                     </View>
                     <View style={styles.topRow}>
-                        <TouchableOpacity
-                            style={[styles.bankChip, styles.shadowBtn]}
-                            onPress={() => closePanel(() => navigation.navigate(ROUTES.GAMBLING_CASH_OUT))}
-                            // onPress={() => closePanel(() => navigation.navigate(ROUTES.GAMBLING_BANK))}
-                            activeOpacity={0.85}
-                        >
-                            <Text variant="h3" style={styles.bankText}>$ Bank</Text>
-                        </TouchableOpacity>
-                        {/* <Text variant="h6" style={styles.gameTypeText}>{title}</Text> */}
-                        <TouchableOpacity style={styles.closeButton} onPress={() => closePanel()} activeOpacity={0.85}>
-                            <PanelCloseIcon />
-                        </TouchableOpacity>
+                        <View style={styles.topRowEdges}>
+                            <NestBird />
+                            <TouchableOpacity style={styles.closeButton} onPress={() => closePanel()} activeOpacity={0.85}>
+                                <PanelCloseIcon />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.topRowBankOverlay} pointerEvents="box-none">
+                            <TouchableOpacity
+                                style={[styles.bankChip, styles.shadowBtn]}
+                                onPress={() => closePanel(() => navigation.navigate(ROUTES.GAMBLING_CASH_OUT))}
+                                // onPress={() => closePanel(() => navigation.navigate(ROUTES.GAMBLING_BANK))}
+                                activeOpacity={0.85}
+                            >
+                                <Text variant="h3" style={styles.bankText}>$ Bank</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     <View style={styles.webViewContainer}>
@@ -297,12 +302,20 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
     },
     topRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        position: 'relative',
+        justifyContent: 'center',
         paddingHorizontal: 6,
-        // marginBottom: 8,
         paddingVertical: OFFSET.VERTICAL,
+    },
+    topRowEdges: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    topRowBankOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     bankChip: {
         backgroundColor: '#9CFD83',
