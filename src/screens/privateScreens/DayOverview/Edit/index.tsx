@@ -75,7 +75,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         nextItem: null,
     });
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
-    const birdSoundEnabled = useAppSelector(selectBirdSoundEnabled);
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
 
