@@ -199,6 +199,9 @@ export const WEBVIEW_MESSAGES = {
     VIDEO_ENDED: 'VIDEO_ENDED',
     DOM_READY_MAIN: 'BIRD_DOM_READY_MAIN',
     DOM_READY_ACTION: 'BIRD_DOM_READY_ACTION',
+    // Posted by the action WebView once its first frame is composited on screen,
+    // so RN can keep the main bird mounted until that exact moment (no empty-layer flicker).
+    ACTION_FIRST_FRAME: 'BIRD_ACTION_FIRST_FRAME',
 };
 
 function createBirdWebViewHtml (domReadyMessage: string, vpWidth: number = VIDEO_SIZE, vpHeight: number = VIDEO_SIZE): string {
@@ -279,6 +282,9 @@ export const BirdAnimation = ({
     const [mainDOMReady, setMainDOMReady] = useState<boolean>(false);
     const [actionDOMReady, setActionDOMReady] = useState<boolean>(false);
     const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
+    // True after the ACTION webview has actually composited its first frame on screen.
+    // Until then we keep the main bird mounted so the user doesn't see an empty gap during the swap.
+    const [actionFirstFrameRendered, setActionFirstFrameRendered] = useState<boolean>(false);
     const [videoCache, setVideoCache] = useState<Map<BirdAnimationPhase, string>>(new Map());
     const [checkVideoCache, setCheckVideoCache] = useState<Map<string, string>>(new Map());
     const isAnimationComplete = useRef<boolean>(false);
@@ -392,6 +398,13 @@ export const BirdAnimation = ({
             // Skip resetting per-clip CSS for the ACTION webview — it owns its own 200x400 layout.
             const isMainWebView = targetPhase !== BirdAnimationPhase.ACTION;
             const styleResetJs = isMainWebView ? buildClipVideoStyleJs(null) : '';
+            // After the ACTION swap RAF commits, double-RAF then ping RN — by then the new frame is painted,
+            // so RN can hide the main bird without leaving an empty action layer mid-transition.
+            const postFirstFrameJs = targetPhase === BirdAnimationPhase.ACTION
+                ? `requestAnimationFrame(function() {
+                        try { window.ReactNativeWebView.postMessage("${WEBVIEW_MESSAGES.ACTION_FIRST_FRAME}"); } catch (e) {}
+                    });`
+                : '';
 
             ref.current.injectJavaScript(`
             (function() {
@@ -461,6 +474,7 @@ export const BirdAnimation = ({
                             window.__ACTIVE = nextActive;
                             window.__INACTIVE = nextInactive;
                             window.__VIDEO__ = nextActive;
+                            ${postFirstFrameJs}
                         });
                     }
                     inactive.addEventListener("canplay", onCanPlay);
@@ -767,6 +781,8 @@ export const BirdAnimation = ({
                 setMainDOMReady(true);
             } else if (message === WEBVIEW_MESSAGES.DOM_READY_ACTION) {
                 setActionDOMReady(true);
+            } else if (message === WEBVIEW_MESSAGES.ACTION_FIRST_FRAME) {
+                setActionFirstFrameRendered(true);
             }
         }
     }, []);
@@ -775,12 +791,15 @@ export const BirdAnimation = ({
         return null;
     }
 
+    // Keep the main bird mounted during ACTION until the action WebView signals its first frame is painted —
+    // otherwise there's a one-frame gap where main is hidden but the action layer hasn't shown anything yet.
     const showMain
         = phase === BirdAnimationPhase.APPEARING
         || phase === BirdAnimationPhase.SITTING
-        || phase === BirdAnimationPhase.CHECK;
+        || phase === BirdAnimationPhase.CHECK
+        || (phase === BirdAnimationPhase.ACTION && !actionFirstFrameRendered);
     const showActionLayer = videosLoaded;
-    const actionVisible = phase === BirdAnimationPhase.ACTION;
+    const actionVisible = phase === BirdAnimationPhase.ACTION && actionFirstFrameRendered;
 
     const webViewCommonProps = {
         incognito: true,
