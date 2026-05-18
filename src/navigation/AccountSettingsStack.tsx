@@ -13,6 +13,7 @@ import FoodPreferences from 'screens/AccountSettingsScreens/FoodPreferences';
 import AccountSettings from 'screens/AccountSettingsScreens/AccountSettings';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
 import NotificationsScreen from 'screens/AccountSettingsScreens/NotificationsScreen';
+import AnimationSettingsScreen from 'screens/AccountSettingsScreens/AnimationSettings';
 import ChangePasswordScreen from 'screens/AccountSettingsScreens/ChangePasswordScreen.tsx';
 import { BiometricSettingsScreen } from 'screens/AccountSettingsScreens/BiometricSettingsScreen';
 import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
@@ -86,6 +87,11 @@ export const AccountSettingsStack = () => {
                 component={FoodAllergies}
                 name={ROUTES.FOOD_ALLERGIES}
                 options={{ title: 'Food Allergies' }}
+            />
+            <Stack.Screen
+                name={ROUTES.ANIMATION_SETTINGS}
+                component={AnimationSettingsScreen}
+                options={{ title: 'Animation Settings' }}
             />
         </Stack.Navigator>
     );
