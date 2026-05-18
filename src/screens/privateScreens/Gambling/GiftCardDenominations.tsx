@@ -31,8 +31,8 @@ const VARIABLE_PRICE_STEPS_IN_CENTS = [
 ];
 
 const GiftCardDenominations: React.FC = () => {
-    const navigation = useNavigation<Navigation>();
     const route = useRoute<RouteProps>();
+    const navigation = useNavigation<Navigation>();
     const { brandCode, brandName, imageUrl } = route.params;
 
     const [selectedPriceInCents, setSelectedPriceInCents] = useState<number | null>(null);
@@ -161,16 +161,16 @@ const GiftCardDenominations: React.FC = () => {
             <View style={styles.footer}>
                 <TouchableOpacity
                     activeOpacity={0.85}
-                    style={[styles.backButton, styles.shadowBtn]}
                     onPress={() => navigation.goBack()}
+                    style={[styles.backButton, styles.shadowBtn]}
                 >
                     <Text variant="h4" style={styles.backButtonText}>Back</Text>
                 </TouchableOpacity>
                 {selectedPriceInCents !== null && (
                     <TouchableOpacity
                         activeOpacity={0.85}
-                        style={[styles.getGiftCardButton, styles.shadowBtn]}
                         onPress={handleGetGiftCard}
+                        style={[styles.getGiftCardButton, styles.shadowBtn]}
                     >
                         <Text variant="h4" style={styles.getGiftCardButtonText}>Get</Text>
                         <Text variant="h4" style={styles.getGiftCardButtonText}>Gift Card</Text>
