@@ -1,5 +1,4 @@
 // outsource dependencies
-import { Text } from '@react-native-material/core';
 import Icon from '@react-native-vector-icons/ionicons';
 import type { BiometryType } from 'react-native-biometrics';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
@@ -7,6 +6,7 @@ import { View, StyleSheet, Animated, Pressable, TouchableOpacity, Alert } from '
 
 // local dependencies
 import { LoginData } from 'types';
+import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { useAuth } from 'hooks/useAuth';
 import { ROUTES } from 'constants/routes';
@@ -273,7 +273,7 @@ export const SignIn: React.FC = (): React.ReactElement => {
                                 color={theme.colors.primary}
                                 name={biometricService.getBiometricIcon(biometryType)}
                             />
-                            <Text variant="body2" color={theme.colors.primary}>
+                            <Text variant="body" color={theme.colors.primary}>
                                 Log in with {biometricService.getBiometricTypeName(biometryType)}
                             </Text>
                         </TouchableOpacity>
