@@ -69,17 +69,24 @@ const ShoppingPDF: React.FC = () => {
             });
 
             const info = response.info();
-            const contentType = info.headers?.['Content-Type'] || info.headers?.['content-type'] || '';
 
-            if (info.status !== 200 || !contentType.includes('pdf')) {
-                try {
-                    const errorContent = await RNBlobUtil.fs.readFile(response.path(), 'utf8');
-                    console.error('API Error Content:', errorContent);
+            let fileContent: string | null = null;
+            try {
+                fileContent = await RNBlobUtil.fs.readFile(response.path(), 'utf8') as string;
+            } catch (readError) {
+                console.error('Failed to inspect downloaded file:', readError);
+            }
+
+            const isPdf = typeof fileContent === 'string' && fileContent.startsWith('%PDF');
+
+            if (!isPdf) {
+                if (fileContent) {
+                    console.error('API Error Content:', fileContent);
                     Alert.alert(
                         'Error',
-                        `Server returned: ${errorContent.substring(0, 200)}`
+                        `Server returned: ${fileContent.substring(0, 200)}`
                     );
-                } catch {
+                } else {
                     Alert.alert('Error', `Server returned status ${info.status}`);
                 }
                 await RNBlobUtil.fs.unlink(response.path());
