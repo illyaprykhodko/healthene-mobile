@@ -300,10 +300,9 @@ export const EditFood: React.FC = () => {
                 </Text>
             </View>
             <View style={styles.imageContainer}>
-                <Image
-                    source={{ uri: item?.coverImage?.url }}
+                <DefImage
                     style={styles.image}
-                    resizeMode="contain"
+                    src={item?.coverImage?.url}
                 />
             </View>
             <View style={styles.controlsWrapper}>
