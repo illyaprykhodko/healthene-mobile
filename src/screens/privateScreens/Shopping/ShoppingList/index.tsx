@@ -344,8 +344,8 @@ const ShoppingList: React.FC = () => {
                 const { newConfirmedItemsType } = buildShopOnMyOwnPayload();
                 await updateShoppingListStatus({
                     id: shoppingListId,
-                    status: SHOPPING_STATUS.SHOP_ON_MY_OWN,
                     separateRescueItems,
+                    status: SHOPPING_STATUS.SHOP_ON_MY_OWN,
                     confirmedItemsType: newConfirmedItemsType,
                 }).unwrap();
                 dispatch(setShoppingStatus({

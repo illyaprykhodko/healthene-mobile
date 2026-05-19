@@ -316,6 +316,11 @@ export const shoppingApi = createApi({
         }),
 
         // Update shopping list status
+        // TEMP: backend PUT /shopping-list ignores the `status` field, and the dedicated /shop-on-my-own
+        // endpoint is currently 404. We optimistically patch the ShoppingStatus cache so the local
+        // status reflects the requested change, and intentionally do NOT invalidate ShoppingStatus —
+        // refetching would overwrite the patch with the stale server value. Revert once backend
+        // restores /shop-on-my-own and honors `status` on PUT.
         updateShoppingListStatus: builder.mutation<void, {
             id: number;
             status: string;
@@ -327,7 +332,21 @@ export const shoppingApi = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            invalidatesTags: ['ShoppingStatus'],
+            async onQueryStarted ({ status, separateRescueItems, confirmedItemsType }, { dispatch, queryFulfilled }) {
+                const patch = dispatch(
+                    shoppingApi.util.updateQueryData('getShoppingListStatus', undefined, draft => {
+                        if (!draft) { return; }
+                        if (status) { draft.status = status; }
+                        if (confirmedItemsType !== undefined) { draft.confirmedItemsType = confirmedItemsType; }
+                        if (separateRescueItems !== undefined) { draft.separateRescueItems = separateRescueItems; }
+                    })
+                );
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patch.undo();
+                }
+            },
         }),
 
         // Submit shopping order
