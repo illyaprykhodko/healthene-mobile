@@ -2,8 +2,9 @@
 import { WebView } from 'react-native-webview';
 import RNBlobUtil from 'react-native-blob-util';
 import { Platform, StyleSheet, View } from 'react-native';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 // ============================================================================
 // PLATFORM ASSET RESOLUTION
@@ -104,13 +105,48 @@ function createBranchBirdHtml (): string {
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-export const BranchBird = () => {
+interface BranchBirdProps {
+    muted?: boolean;
+}
+
+export const BranchBird = ({ muted = false }: BranchBirdProps) => {
     const webViewRef = useRef<WebView>(null);
     const [phase, setPhase] = useState<BranchBirdPhase>(BranchBirdPhase.APPEARING);
     const phaseRef = useRef<BranchBirdPhase>(BranchBirdPhase.APPEARING);
     const [domReady, setDomReady] = useState(false);
     const [videosLoaded, setVideosLoaded] = useState(false);
     const [videoCache, setVideoCache] = useState<Map<BranchBirdPhase, string>>(new Map());
+
+    const mutedRef = useRef(muted);
+    useEffect(() => { mutedRef.current = muted; }, [muted]);
+
+    const applyMuted = useCallback((isMuted: boolean) => {
+        const js = `(function(){
+            var v = window.__VIDEO__ || document.getElementById("video");
+            if (v) {
+                window.__VIDEO__ = v;
+                v.muted = ${isMuted ? 'true' : 'false'};
+            }
+            true;
+        })();`;
+        webViewRef.current?.injectJavaScript(js);
+    }, []);
+
+    useEffect(() => {
+        applyMuted(muted);
+    }, [muted, applyMuted]);
+
+    useFocusEffect(
+        useCallback(() => {
+            applyMuted(mutedRef.current);
+            const js = `(function(){
+                var v = window.__VIDEO__ || document.getElementById("video");
+                if (v && v.paused) { v.play(); }
+                true;
+            })();`;
+            webViewRef.current?.injectJavaScript(js);
+        }, [applyMuted])
+    );
 
     useLayoutEffect(() => {
         phaseRef.current = phase;
@@ -171,6 +207,7 @@ export const BranchBird = () => {
     }
     v.load();
     v.play();
+    v.muted = ${mutedRef.current ? 'true' : 'false'};
     v.style.transform = "none";
     v.style.transformOrigin = "center";
     v.style.objectFit = "contain";
@@ -218,16 +255,16 @@ export const BranchBird = () => {
         <View style={styles.root} pointerEvents="none">
             <View style={[styles.container, { top: config.top, right: config.right }]}>
                 <WebView
-                    ref={webViewRef}
                     incognito
-                    cacheEnabled={false}
-                    cacheMode="LOAD_NO_CACHE"
-                    onMessage={onMessage}
+                    ref={webViewRef}
+                    javaScriptEnabled
                     onError={() => {}}
+                    cacheEnabled={false}
+                    onMessage={onMessage}
+                    originWhitelist={['*']}
+                    cacheMode="LOAD_NO_CACHE"
                     allowsInlineMediaPlayback
                     mediaPlaybackRequiresUserAction={false}
-                    javaScriptEnabled
-                    originWhitelist={['*']}
                     source={{ html: createBranchBirdHtml() }}
                     style={[styles.webView, { width: config.width, height: config.height }]}
                 />
