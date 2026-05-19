@@ -3,11 +3,16 @@ import { RootStackParamList, NavigationService } from './types';
 
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
-export const navigate: NavigationService['navigate'] = (name, params) => {
+type RootNavigateFn = (
+    name: keyof RootStackParamList,
+    params?: RootStackParamList[keyof RootStackParamList],
+) => void;
+
+export const navigate: NavigationService['navigate'] = ((name, params) => {
     if (navigationRef.isReady()) {
-        navigationRef.navigate(name as keyof RootStackParamList, params as RootStackParamList);
+        (navigationRef.navigate as RootNavigateFn)(name, params);
     }
-};
+}) as NavigationService['navigate'];
 
 export const goBack: NavigationService['goBack'] = () => {
     if (navigationRef.isReady() && navigationRef.canGoBack()) {

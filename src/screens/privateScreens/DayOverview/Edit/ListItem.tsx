@@ -10,6 +10,7 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import Checkbox from 'components/Checkbox';
+import DefImage from 'components/DefImage';
 import { triggerReward } from 'store/slices/rewardStarSlice';
 import DefImage from 'components/DefImage';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
