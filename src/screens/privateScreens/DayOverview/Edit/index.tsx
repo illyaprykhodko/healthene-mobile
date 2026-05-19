@@ -32,7 +32,6 @@ import { useAppSelector, useAppDispatch } from 'store';
 import { RootStackParamList } from 'services/navigation';
 import { RewardStarOverlay } from 'components/RewardStar';
 import { BirdAnimation } from 'animation/BirdAnimation.tsx';
-import { selectBirdSoundEnabled } from 'store/slices/appSlice';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
@@ -74,7 +73,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         nextItem: null,
     });
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
-    const birdSoundEnabled = useAppSelector(selectBirdSoundEnabled);
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
 
@@ -424,7 +422,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         setLocalItems(prevItems => {
             const nextItems = prevItems.map(prevItem =>
-                (prevItem.id === item.id ? { ...item } : prevItem));
+                (prevItem.id === item.id ? { ...item } : prevItem)
+            );
             const allDoneNow = nextItems.every(
                 listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
             );
@@ -683,10 +682,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
                 ? (
                     <BirdAnimation
-                        muted={!birdSoundEnabled}
-                        checkboxAreaX={checkboxAreaX}
                         allChecked={birdAnimationStep}
                         checkTrigger={birdCheckTrigger}
+                        checkboxAreaX={checkboxAreaX}
                     />
                 )
                 : null
@@ -731,8 +729,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             <View style={styles.list}>
                 <ScrollView
                     ref={scrollViewRef}
-                    scrollEnabled={scrollEnabled}
                     style={isFutureDate && styles.opacity}
+                    scrollEnabled={scrollEnabled}
                     onContentSizeChange={() => {
                         if (shouldScrollToAddedEnd && !isAddingAddedItem) {
                             setTimeout(() => {
