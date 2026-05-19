@@ -14,17 +14,18 @@ import { useAppSelector, useAppDispatch } from 'store';
 import { updateSteps } from 'store/slices/exerciseSlice';
 import MultiWheelPicker from './components/MultiWheelPicker';
 
+// Exercise values must be greater than zero, so each wheel starts at 1 (not 0).
 const DATA_MAP: Record<string, number[]> = {
-    hours: Array.from({ length: 25 }, (_, i) => i),
-    reps: Array.from({ length: 1001 }, (_, i) => i),
-    miles: Array.from({ length: 1001 }, (_, i) => i),
-    weight: Array.from({ length: 501 }, (_, i) => i),
-    steps: Array.from({ length: 20001 }, (_, i) => i),
-    velocity: Array.from({ length: 501 }, (_, i) => i),
-    seconds: Array.from({ length: 1001 }, (_, i) => i),
-    minutes: Array.from({ length: 1001 }, (_, i) => i),
-    elevation: Array.from({ length: 1001 }, (_, i) => i),
-    resistance: Array.from({ length: 501 }, (_, i) => i),
+    hours: Array.from({ length: 24 }, (_, i) => i + 1),
+    reps: Array.from({ length: 1000 }, (_, i) => i + 1),
+    miles: Array.from({ length: 1000 }, (_, i) => i + 1),
+    weight: Array.from({ length: 500 }, (_, i) => i + 1),
+    steps: Array.from({ length: 20000 }, (_, i) => i + 1),
+    velocity: Array.from({ length: 500 }, (_, i) => i + 1),
+    seconds: Array.from({ length: 1000 }, (_, i) => i + 1),
+    minutes: Array.from({ length: 1000 }, (_, i) => i + 1),
+    elevation: Array.from({ length: 1000 }, (_, i) => i + 1),
+    resistance: Array.from({ length: 500 }, (_, i) => i + 1),
 };
 
 const FIELD_LABELS: Record<string, string> = {
@@ -36,97 +37,101 @@ export default function ExerciseEdit ({ route, navigation }: any) {
     const theme = useTheme();
     const { steps, originalSteps, disabled } = useAppSelector((state: any) => state.exercise || {});
     const { itemId, onApply, exerciseType, subtype, goalType, viewOnlyExtra = false } = route.params || {};
-    
+
     const step = useMemo(() => (steps || []).find((s: any) => s.id === itemId) || {}, [steps, itemId]);
     const origStep = useMemo(() => (originalSteps || []).find((s: any) => s.id === itemId) || {}, [originalSteps, itemId]);
     const title = route?.params?.title || 'Exercise';
 
-    if (exerciseType) {
-        const config = EXERCISE_CONFIGS[exerciseType]?.[subtype || 'DEFAULT']?.[goalType || 'DEFAULT'];
-        if (!config) {
-            return (
-                <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
-                    <Text>Unsupported exercise config</Text>
-                </Screen>
-            );
-        }
+    const config = exerciseType
+        ? EXERCISE_CONFIGS[exerciseType]?.[subtype || 'DEFAULT']?.[goalType || 'DEFAULT']
+        : null;
 
-        const goalFields = config.goalFields.map((key: string) => ({
-            key,
-            value: step[key] ?? 0,
-            isDecimal: isDecimalField(key),
-            label: FIELD_LABELS[key] || key,
-            data: isDecimalField(key) ? null : (DATA_MAP[key] || DATA_MAP.reps),
-        }));
+    const goalFields = useMemo(() => (config?.goalFields || []).map((key: string) => ({
+        key,
+        value: step[key] ?? 0,
+        isDecimal: isDecimalField(key),
+        label: FIELD_LABELS[key] || key,
+        data: isDecimalField(key) ? null : (DATA_MAP[key] || DATA_MAP.reps),
+    })), [config, step]);
 
-        const extraFields = (config.extraFields || []).map((key: string) => ({
-            key,
-            value: step[key] ?? 0,
-            isDecimal: isDecimalField(key),
-            label: FIELD_LABELS[key] || key,
-            data: isDecimalField(key) ? null : (DATA_MAP[key] || DATA_MAP.reps),
-        }));
+    const extraFields = useMemo(() => (config?.extraFields || []).map((key: string) => ({
+        key,
+        value: step[key] ?? 0,
+        isDecimal: isDecimalField(key),
+        label: FIELD_LABELS[key] || key,
+        data: isDecimalField(key) ? null : (DATA_MAP[key] || DATA_MAP.reps),
+    })), [config, step]);
 
-        const isDisabled = [...goalFields, ...extraFields].every(f => (step[f.key] ?? 0) === (origStep[f.key] ?? 0));
+    const isDisabled = useMemo(
+        () => [...goalFields, ...extraFields].every(f => (step[f.key] ?? 0) === (origStep[f.key] ?? 0)),
+        [goalFields, extraFields, step, origStep]
+    );
 
-        const handleApply = useCallback((vals: Record<string, unknown>) => {
-            const updatedSteps = steps.map((s: any) =>
-                (s.id === itemId ? { ...s, ...vals, modified: true } : s)
-            );
-            dispatch(updateSteps({ steps: updatedSteps, selectedSteps: updatedSteps }));
-            
-            // call onApply if provided - this actually saves the changes
-            onApply?.({ ...step, ...vals, modified: true });
-        }, [dispatch, itemId, onApply, step, steps]);
+    const handleApply = useCallback((vals: Record<string, unknown>) => {
+        const updatedSteps = (steps || []).map((s: any) =>
+            (s.id === itemId ? { ...s, ...vals, modified: true } : s)
+        );
+        dispatch(updateSteps({ steps: updatedSteps, selectedSteps: updatedSteps }));
 
-        const handleSave = useCallback(() => {
-            handleApply(step);
-            navigation.goBack();
-        }, [navigation, handleApply, step]);
+        onApply?.({ ...step, ...vals, modified: true });
+    }, [dispatch, itemId, onApply, step, steps]);
 
+    const handleSave = useCallback(() => {
+        handleApply(step);
+        navigation.goBack();
+    }, [navigation, handleApply, step]);
+
+    if (!exerciseType) {
         return (
             <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
-                <View style={[styles.headerBanner, { backgroundColor: theme.colors.surfaceAlt || theme.colors.surface }]}>
-                    <View style={styles.row} />
-                    <Text
-                        variant="h3"
-                        textAlign="center"
-                        style={[styles.name, { color: theme.colors.text }]}
-                    >
-                        {title}
-                    </Text>
-                    <IconButton
-                        size={24}
-                        icon="times"
-                        disabled={false}
-                        iconStyle="solid"
-                        style={{ width: 20 }}
-                        color={theme.colors.text}
-                        onPress={navigation.goBack}
-                    />
-                </View>
-                <MultiWheelPicker
-                    step={step}
-                    onApply={handleApply}
-                    fields={viewOnlyExtra ? extraFields : goalFields}
-                />
-                <View style={styles.space} />
-                <Button
-                    title="SAVE"
-                    variant="primary"
-                    onPress={handleSave}
-                    style={styles.submitBtn}
-                    disabled={disabled || isDisabled}
-                    textStyle={{ fontSize: 20, fontWeight: '500', paddingVertical: 3 }}
-                />
+                <Text>Unsupported exercise type</Text>
             </Screen>
         );
     }
 
-    // fallback
+    if (!config) {
+        return (
+            <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
+                <Text>Unsupported exercise config</Text>
+            </Screen>
+        );
+    }
+
     return (
         <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <Text>Unsupported exercise type</Text>
+            <View style={[styles.headerBanner, { backgroundColor: theme.colors.surfaceAlt || theme.colors.surface }]}>
+                <View style={styles.row} />
+                <Text
+                    variant="h3"
+                    textAlign="center"
+                    style={[styles.name, { color: theme.colors.text }]}
+                >
+                    {title}
+                </Text>
+                <IconButton
+                    size={24}
+                    icon="times"
+                    disabled={false}
+                    iconStyle="solid"
+                    style={{ width: 20 }}
+                    color={theme.colors.text}
+                    onPress={navigation.goBack}
+                />
+            </View>
+            <MultiWheelPicker
+                step={step}
+                onApply={handleApply}
+                fields={viewOnlyExtra ? extraFields : goalFields}
+            />
+            <View style={styles.space} />
+            <Button
+                title="SAVE"
+                variant="primary"
+                onPress={handleSave}
+                style={styles.submitBtn}
+                disabled={disabled || isDisabled}
+                textStyle={{ fontSize: 20, fontWeight: '500', paddingVertical: 3 }}
+            />
         </Screen>
     );
 }
