@@ -177,18 +177,18 @@ export const NestBird = () => {
     return (
         <View style={styles.wrap} pointerEvents="none">
             <WebView
-                ref={webViewRef}
                 incognito
-                cacheEnabled={false}
-                cacheMode="LOAD_NO_CACHE"
-                onMessage={onMessage}
+                ref={webViewRef}
+                javaScriptEnabled
                 onError={() => {}}
+                cacheEnabled={false}
+                onMessage={onMessage}
+                style={styles.webView}
+                originWhitelist={['*']}
+                cacheMode="LOAD_NO_CACHE"
                 allowsInlineMediaPlayback
                 mediaPlaybackRequiresUserAction={false}
-                javaScriptEnabled
-                originWhitelist={['*']}
                 source={{ html: createNestBirdHtml() }}
-                style={styles.webView}
             />
         </View>
     );
