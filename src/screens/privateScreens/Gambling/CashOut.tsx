@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ActivityIndicator, Alert, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 // local dependencies
+import { BranchBird } from 'animation/BranchBird';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
@@ -51,6 +52,7 @@ const CashOut: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
+            <BranchBird />
             {/* <View style={styles.content}> */}
             <View style={styles.sectionContainer}>
                 <Text variant="h3" style={styles.sectionLabel}>Available Funds</Text>
