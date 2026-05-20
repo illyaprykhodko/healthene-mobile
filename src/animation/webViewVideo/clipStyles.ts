@@ -45,10 +45,12 @@ export const BIRD_TALL_CLIP_STYLE: ClipVideoStyle = {
 };
 
 export function getBirdCheckClipStyle (clipName: string | null): ClipVideoStyle {
-    if (clipName && BIRD_TALL_CLIP_NAMES.has(clipName)) {
-        return BIRD_TALL_CLIP_STYLE;
+    const isTall = !!(clipName && BIRD_TALL_CLIP_NAMES.has(clipName));
+    // Android .webm clips are ~360×400 — iOS tall crop (205×365) overflows the 80×80 viewport.
+    if (Platform.OS === 'android' || !isTall) {
+        return BIRD_NORMAL_CLIP_STYLE;
     }
-    return BIRD_NORMAL_CLIP_STYLE;
+    return BIRD_TALL_CLIP_STYLE;
 }
 
 export function buildBirdCheckClipStyleJs (clipName: string | null): string {
