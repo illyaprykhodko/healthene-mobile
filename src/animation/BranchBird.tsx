@@ -1,7 +1,7 @@
 // outsource dependencies
 import { WebView } from 'react-native-webview';
-import { StyleSheet, View } from 'react-native';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 // local dependencies
 import {
@@ -32,23 +32,53 @@ export type BranchBirdVideoConfig = {
     right: number;
 };
 
-/** Fixed WebView 370×370 — RN container stays on APPEARING layout until SITTING first frame; clip CSS handles framing. */
-const BRANCH_VIEWPORT = 370;
+/** iOS: tall .mov clips need 370×370 framing; Android: pre-cropped .webm clips use 80×80. */
+const BRANCH_VIEWPORT = Platform.OS === 'ios' ? 370 : 80;
 
-export const BRANCH_BIRD_CONFIG: Record<BranchBirdPhase, BranchBirdVideoConfig> = {
-    [BranchBirdPhase.APPEARING]: {
-        width: BRANCH_VIEWPORT,
-        height: BRANCH_VIEWPORT,
-        top: 11,
-        right: -75,
+export const BRANCH_BIRD_CONFIG: Record<BranchBirdPhase, BranchBirdVideoConfig> = Platform.select({
+    ios: {
+        [BranchBirdPhase.APPEARING]: {
+            width: BRANCH_VIEWPORT,
+            height: BRANCH_VIEWPORT,
+            top: 11,
+            right: -75,
+        },
+        [BranchBirdPhase.SITTING]: {
+            width: BRANCH_VIEWPORT,
+            height: BRANCH_VIEWPORT,
+            top: 24,
+            right: 0,
+        },
     },
-    [BranchBirdPhase.SITTING]: {
-        width: BRANCH_VIEWPORT,
-        height: BRANCH_VIEWPORT,
-        top: 24,
-        right: 0,
+    android: {
+        [BranchBirdPhase.APPEARING]: {
+            width: BRANCH_VIEWPORT,
+            height: BRANCH_VIEWPORT,
+            top: 11,
+            right: -3,
+        },
+        [BranchBirdPhase.SITTING]: {
+            width: BRANCH_VIEWPORT,
+            height: BRANCH_VIEWPORT,
+            top: 24,
+            right: 0,
+        },
     },
-};
+    default: {
+        [BranchBirdPhase.APPEARING]: {
+            width: BRANCH_VIEWPORT,
+            height: BRANCH_VIEWPORT,
+            top: 11,
+            right: -3,
+        },
+        [BranchBirdPhase.SITTING]: {
+            width: BRANCH_VIEWPORT,
+            height: BRANCH_VIEWPORT,
+            top: 24,
+            right: 0,
+        },
+    },
+})!;
 
 const PHASE_VIDEO_MAP: Record<BranchBirdPhase, string> = {
     [BranchBirdPhase.APPEARING]: 'check5',
@@ -58,12 +88,6 @@ const PHASE_VIDEO_MAP: Record<BranchBirdPhase, string> = {
 const DOM_READY = 'BRANCH_BIRD_DOM_READY';
 const ENDED_MESSAGE = 'BRANCH_BIRD_VIDEO_ENDED';
 const SITTING_FIRST_FRAME = 'BRANCH_BIRD_SITTING_FIRST_FRAME';
-
-const html = createDualVideoWebViewHtml({
-    domReadyMessage: DOM_READY,
-    width: BRANCH_VIEWPORT,
-    height: BRANCH_VIEWPORT,
-});
 
 const styles = StyleSheet.create({
     root: {
@@ -90,6 +114,14 @@ interface BranchBirdProps {
 
 export const BranchBird = ({ muted = false }: BranchBirdProps) => {
     const webViewRef = useRef<WebView>(null);
+    const html = useMemo(
+        () => createDualVideoWebViewHtml({
+            domReadyMessage: DOM_READY,
+            width: BRANCH_VIEWPORT,
+            height: BRANCH_VIEWPORT,
+        }),
+        [],
+    );
     const [phase, setPhase] = useState<BranchBirdPhase>(BranchBirdPhase.APPEARING);
     const phaseRef = useRef<BranchBirdPhase>(BranchBirdPhase.APPEARING);
     const [domReady, setDomReady] = useState(false);

@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export type ClipVideoStyle = {
     width: string;
     height: string;
@@ -57,7 +59,7 @@ export function buildBirdNormalClipStyleJs (): string {
     return buildClipStyleJsForInactive(BIRD_NORMAL_CLIP_STYLE);
 }
 
-/** BranchBird: sitting ~80×80 in 370×370 WebView — top-aligned like legacy 80×80 WebView at SITTING container. */
+/** BranchBird iOS: sitting ~80×80 in 370×370 WebView — top-aligned like legacy 80×80 WebView at SITTING container. */
 export const BRANCH_SITTING_CLIP_STYLE: ClipVideoStyle = {
     width: '80px',
     height: '80px',
@@ -66,11 +68,7 @@ export const BRANCH_SITTING_CLIP_STYLE: ClipVideoStyle = {
     left: 'auto',
 };
 
-export function buildBranchSittingClipStyleJs (): string {
-    return buildClipStyleJsForInactive(BRANCH_SITTING_CLIP_STYLE);
-}
-
-/** Full-viewport contain for tall clips at 370×370 (e.g. BranchBird APPEARING / check5). */
+/** BranchBird iOS: full-viewport contain for tall .mov clips (1080×1920) at 370×370. */
 export const BRANCH_APPEARING_CLIP_STYLE: ClipVideoStyle = {
     width: '100%',
     height: '100%',
@@ -79,6 +77,27 @@ export const BRANCH_APPEARING_CLIP_STYLE: ClipVideoStyle = {
     left: '0',
 };
 
+/** BranchBird Android: .webm assets are already ~360×400 — scale to the 80×80 viewport. */
+export const BRANCH_ANDROID_CLIP_STYLE: ClipVideoStyle = {
+    width: '100%',
+    height: '100%',
+    top: '0',
+    right: 'auto',
+    left: '0',
+};
+
+export function getBranchAppearingClipStyle (): ClipVideoStyle {
+    return Platform.OS === 'ios' ? BRANCH_APPEARING_CLIP_STYLE : BRANCH_ANDROID_CLIP_STYLE;
+}
+
+export function getBranchSittingClipStyle (): ClipVideoStyle {
+    return Platform.OS === 'ios' ? BRANCH_SITTING_CLIP_STYLE : BRANCH_ANDROID_CLIP_STYLE;
+}
+
+export function buildBranchSittingClipStyleJs (): string {
+    return buildClipStyleJsForInactive(getBranchSittingClipStyle());
+}
+
 export function buildBranchAppearingClipStyleJs (): string {
-    return buildClipStyleJsForInactive(BRANCH_APPEARING_CLIP_STYLE);
+    return buildClipStyleJsForInactive(getBranchAppearingClipStyle());
 }
