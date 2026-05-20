@@ -57,11 +57,11 @@ export function buildBirdNormalClipStyleJs (): string {
     return buildClipStyleJsForInactive(BIRD_NORMAL_CLIP_STYLE);
 }
 
-/** BranchBird: sitting clip shown at ~80×80 inside a 370×370 WebView (avoids WebView resize flicker). */
+/** BranchBird: sitting ~80×80 in 370×370 WebView — top-aligned like legacy 80×80 WebView at SITTING container. */
 export const BRANCH_SITTING_CLIP_STYLE: ClipVideoStyle = {
     width: '80px',
     height: '80px',
-    top: '290px',
+    top: '0',
     right: '4px',
     left: 'auto',
 };
