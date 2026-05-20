@@ -32,7 +32,7 @@ export type BranchBirdVideoConfig = {
     right: number;
 };
 
-/** Fixed WebView size — layout position varies per phase; clip CSS handles APPEARING vs SITTING framing. */
+/** Fixed WebView 370×370 — RN container stays on APPEARING layout until SITTING first frame; clip CSS handles framing. */
 const BRANCH_VIEWPORT = 370;
 
 export const BRANCH_BIRD_CONFIG: Record<BranchBirdPhase, BranchBirdVideoConfig> = {
@@ -46,7 +46,7 @@ export const BRANCH_BIRD_CONFIG: Record<BranchBirdPhase, BranchBirdVideoConfig> 
         width: BRANCH_VIEWPORT,
         height: BRANCH_VIEWPORT,
         top: 24,
-        right: 4,
+        right: 0,
     },
 };
 
@@ -57,6 +57,7 @@ const PHASE_VIDEO_MAP: Record<BranchBirdPhase, string> = {
 
 const DOM_READY = 'BRANCH_BIRD_DOM_READY';
 const ENDED_MESSAGE = 'BRANCH_BIRD_VIDEO_ENDED';
+const SITTING_FIRST_FRAME = 'BRANCH_BIRD_SITTING_FIRST_FRAME';
 
 const html = createDualVideoWebViewHtml({
     domReadyMessage: DOM_READY,
@@ -94,12 +95,15 @@ export const BranchBird = ({ muted = false }: BranchBirdProps) => {
     const [domReady, setDomReady] = useState(false);
     const [webViewGeneration, setWebViewGeneration] = useState(0);
     const [videosLoaded, setVideosLoaded] = useState(false);
+    const [sittingFirstFrameRendered, setSittingFirstFrameRendered] = useState(false);
     const [videoCache, setVideoCache] = useState<Map<string, string>>(new Map());
 
     const mutedRef = useRef(muted);
     useEffect(() => { mutedRef.current = muted; }, [muted]);
 
-    const config = BRANCH_BIRD_CONFIG[phase];
+    const holdAppearingLayout = phase === BranchBirdPhase.SITTING && !sittingFirstFrameRendered;
+    const layoutPhase = holdAppearingLayout ? BranchBirdPhase.APPEARING : phase;
+    const config = BRANCH_BIRD_CONFIG[layoutPhase];
 
     useLayoutEffect(() => {
         phaseRef.current = phase;
@@ -141,12 +145,16 @@ export const BranchBird = ({ muted = false }: BranchBirdProps) => {
             postEnded: !isSitting,
             endedMessageType: ENDED_MESSAGE,
             clipStyleJs,
+            afterSwapPlainMessage: isSitting ? SITTING_FIRST_FRAME : undefined,
         }));
     }, [videoCache]);
 
     useEffect(() => {
         if (!videosLoaded || !domReady) {
             return;
+        }
+        if (phase === BranchBirdPhase.SITTING) {
+            setSittingFirstFrameRendered(false);
         }
         injectPhase(phase);
     }, [phase, domReady, webViewGeneration, videosLoaded, injectPhase]);
@@ -156,6 +164,10 @@ export const BranchBird = ({ muted = false }: BranchBirdProps) => {
         if (isDomReadyMessage(message, DOM_READY)) {
             setWebViewGeneration(g => g + 1);
             setDomReady(true);
+            return;
+        }
+        if (message === SITTING_FIRST_FRAME) {
+            setSittingFirstFrameRendered(true);
             return;
         }
         try {
