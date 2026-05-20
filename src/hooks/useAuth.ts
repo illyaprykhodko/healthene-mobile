@@ -2,11 +2,11 @@
 import { useCallback } from 'react';
 // local dependencies
 import { LoginData } from 'types';
-import { useAppDispatch } from '../store';
+import { resetStore, useAppDispatch } from '../store';
 import { MessageService } from '../services/messages';
-import { clearSession, setUser, setAuth } from '../store/slices/appSlice';
+import { sessionManager } from '../store/api/baseApi';
 import notificationService from 'services/notifications/notification.service';
-import { authApi, useGetSelfQuery, useLoginMutation, useLogoutMutation } from '../store/api/authApi';
+import { useGetSelfQuery, useLoginMutation, useLogoutMutation } from '../store/api/authApi';
 
 export const useAuth = () => {
     const dispatch = useAppDispatch();
@@ -34,12 +34,8 @@ export const useAuth = () => {
             console.error('Logout API error:', error);
         } finally {
             await notificationService.deleteDeviceToken();
-            dispatch(clearSession());
-            dispatch(setUser(null));
-            dispatch(setAuth(false));
-            
-            // Reset all cache
-            dispatch(authApi.util.resetApiState());
+            await sessionManager.update(null);
+            dispatch(resetStore());
         }
     }, [logout, dispatch]);
 

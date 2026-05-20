@@ -55,8 +55,13 @@ if (config.DEBUG) {
 }
 
 function AppContent (): React.JSX.Element {
-    const { isHealthLoading } = useAppInitialization();
+    // Gate on `isInitializing` (first-mount bootstrap), not `isHealthLoading`.
+    // The latter flips back to `true` whenever the underlying RTK Query cache
+    // is reset (e.g. logout via resetStore), which would re-show the splash
+    // and trap the user on a white screen with a spinner.
+    // const { isHealthLoading } = useAppInitialization();
     // const { isInitializing, isHealthy, isHealthLoading } = useAppInitialization();
+    const { isInitializing } = useAppInitialization();
     const {
         softPolicy,
         openStore,
@@ -77,8 +82,8 @@ function AppContent (): React.JSX.Element {
             notificationService.cleanup();
         };
     }, []);
-    // if (isInitializing) { return <BoxHolder active />; }
-    if (isHealthLoading) { return <BoxHolder active />; }
+    // if (isHealthLoading) { return <BoxHolder active />; }
+    if (isInitializing) { return <BoxHolder active />; }
     // if (!isHealthy) { return <MaintenanceHolder active />; }
     if (forcePolicy) { return <ForceUpdateScreen policy={forcePolicy} onUpdate={openStore} />; }
     return (

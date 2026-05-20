@@ -1,6 +1,6 @@
 // outsource dependencies
 import * as Sentry from '@sentry/react-native';
-import { configureStore, Middleware } from '@reduxjs/toolkit';
+import { combineReducers, configureStore, createAction, Middleware, Reducer } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 
 // local dependencies
@@ -73,33 +73,46 @@ export const sentryApiMiddleware: Middleware = () => next => (action: any) => {
     return next(action);
 };
 
+// Dispatch this to wipe every slice (feature slices + RTK Query caches) back to its initial state.
+// Used on logout so a fresh sign-in never inherits the previous user's data.
+export const resetStore = createAction('app/resetStore');
+
+const combinedReducer = combineReducers({
+    app: appReducer,
+    signIn: signInReducer,
+    shopping: shoppingReducer,
+    exercise: exerciseReducer,
+    messenger: messengerSlice,
+    dayOverview: dayOverviewReducer,
+    forgotPassword: forgotPasswordReducer,
+    rewardStar: rewardStarReducer,
+    foodPreferences: foodPreferencesSlice,
+    [authApi.reducerPath]: authApi.reducer,
+    [planApi.reducerPath]: planApi.reducer,
+    [videoApi.reducerPath]: videoApi.reducer,
+    [publicApi.reducerPath]: publicApi.reducer,
+    [questionApi.reducerPath]: questionApi.reducer,
+    [settingsApi.reducerPath]: settingsApi.reducer,
+    [shoppingApi.reducerPath]: shoppingApi.reducer,
+    [s3ServiceApi.reducerPath]: s3ServiceApi.reducer,
+    [messengerApi.reducerPath]: messengerApi.reducer,
+    [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
+    [categoryTreeApi.reducerPath]: categoryTreeApi.reducer,
+    [healthProfileApi.reducerPath]: healthProfileApi.reducer,
+    [gamblingPointsApi.reducerPath]: gamblingPointsApi.reducer,
+    [mealPreferencesApi.reducerPath]: mealPreferencesApi.reducer,
+    [cuisineDistributionApi.reducerPath]: cuisineDistributionApi.reducer,
+});
+
+const rootReducer: Reducer<ReturnType<typeof combinedReducer>> = (state, action) => {
+    if (resetStore.match(action)) {
+        return combinedReducer(undefined, action);
+    }
+    return combinedReducer(state, action);
+};
+
 export const store = configureStore({
-    reducer: {
-        app: appReducer,
-        signIn: signInReducer,
-        shopping: shoppingReducer,
-        exercise: exerciseReducer,
-        messenger: messengerSlice,
-        dayOverview: dayOverviewReducer,
-        forgotPassword: forgotPasswordReducer,
-        rewardStar: rewardStarReducer,
-        foodPreferences: foodPreferencesSlice,
-        [authApi.reducerPath]: authApi.reducer,
-        [planApi.reducerPath]: planApi.reducer,
-        [videoApi.reducerPath]: videoApi.reducer,
-        [publicApi.reducerPath]: publicApi.reducer,
-        [questionApi.reducerPath]: questionApi.reducer,
-        [settingsApi.reducerPath]: settingsApi.reducer,
-        [shoppingApi.reducerPath]: shoppingApi.reducer,
-        [s3ServiceApi.reducerPath]: s3ServiceApi.reducer,
-        [messengerApi.reducerPath]: messengerApi.reducer,
-        [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
-        [categoryTreeApi.reducerPath]: categoryTreeApi.reducer,
-        [healthProfileApi.reducerPath]: healthProfileApi.reducer,
-        [gamblingPointsApi.reducerPath]: gamblingPointsApi.reducer,
-        [mealPreferencesApi.reducerPath]: mealPreferencesApi.reducer,
-        [cuisineDistributionApi.reducerPath]: cuisineDistributionApi.reducer,
-    },
+    reducer: rootReducer,
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({ serializableCheck: false })
             .concat(
