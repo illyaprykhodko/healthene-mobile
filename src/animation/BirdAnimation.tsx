@@ -81,13 +81,6 @@ export const BIRD_CHECK_VIDEO_CLIPS: BirdCheckClipConfig[] = [
     },
 ];
 
-function getCheckClipLayout (name: string | null): BirdCheckClipConfig | null {
-    if (!name) {
-        return null;
-    }
-    return BIRD_CHECK_VIDEO_CLIPS.find(c => c.name === name) ?? null;
-}
-
 // ============================================================================
 // ANIMATION PHASES
 // ============================================================================
