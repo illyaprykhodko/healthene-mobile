@@ -1,6 +1,6 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/feather';
-import React, { memo, useCallback, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, TextInput } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
@@ -33,7 +33,11 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
 
     const currentStep = useAppSelector(selectCurrentStep);
     const isExcluded = item?.excluded;
-    const isPurchased = item?.bought;
+    const [isPurchased, setIsPurchased] = useState<boolean>(!!item?.bought);
+
+    useEffect(() => {
+        setIsPurchased(!!item?.bought);
+    }, [item?.bought]);
 
     const isItemDisabled = isExcluded || isConfirmed;
 
@@ -98,9 +102,11 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
 
     const handlePurchase = useCallback(() => {
         if (disabled) { return; }
+        const nextValue = !isPurchased;
+        setIsPurchased(nextValue);
         onUpdate({
             ...item,
-            bought: !isPurchased,
+            bought: nextValue,
         });
     }, [item, isPurchased, disabled, isConfirmed, onUpdate]);
 
@@ -201,9 +207,10 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
 
             {showShoppingCheckbox && (
                 <TouchableOpacity
+                    disabled={disabled}
                     style={styles.checkbox}
                     onPress={handlePurchase}
-                    disabled={disabled || isConfirmed}
+                    hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
                 >
                     <View style={[
                         styles.checkboxInner,

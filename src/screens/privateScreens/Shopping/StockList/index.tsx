@@ -71,6 +71,7 @@ const StockList: React.FC = () => {
     const { data: categoriesData } = useGetStockCategoriesQuery();
     const [moveStocksToShoppingList] = useMoveStocksToShoppingListMutation();
     const stockList = stockData?.content || [];
+    const isAllCategory = activeCategory?.name === 'All';
     // Get unique categories
     // const tabs = useMemo(() => {
     //     const categories = new Map<number, string>();
@@ -195,18 +196,25 @@ const StockList: React.FC = () => {
                         {convertedWeight} {unit}
                     </Text>
                 </View>
-                <View style={[styles.checkbox, isChecked && styles.checkboxUnchecked]}>
-                    {!isChecked && <Text style={styles.checkmark}>✓</Text>}
+                <View style={[styles.checkbox, !isChecked && styles.checkboxUnchecked]}>
+                    {isChecked && <Text style={styles.checkmark}>✓</Text>}
                 </View>
             </TouchableOpacity>
         );
     }, [checkedItems, disabled, handleToggleItem]);
 
     const renderSectionHeader = useCallback(({ section }: { section: GroupedSection }) => (
-        <View style={styles.section}>
-            <Text variant="h3" style={styles.sectionTitle}>{section.title}</Text>
+        <View style={isAllCategory ? styles.sectionMuted : styles.section}>
+            <Text variant="h3" style={styles.sectionTitle}>
+                {isAllCategory ? section.title : `Select all ${section.title} You Need`}
+            </Text>
         </View>
-    ), []);
+    ), [isAllCategory]);
+    const renderListHeader = useCallback(() => (
+        <View style={styles.section}>
+            <Text variant="h3" style={styles.sectionTitle}>Select all Produce You Need</Text>
+        </View>
+    ), [isAllCategory]);
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
@@ -223,6 +231,7 @@ const StockList: React.FC = () => {
                             activeItem={activeCategory}
                             handleItem={handleCategoryChange}
                         />
+                        {isAllCategory && renderListHeader()}
                         <SectionList
                             sections={groupedList}
                             renderItem={renderItem}
@@ -284,9 +293,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row',
         borderBottomWidth: 1,
+        backgroundColor: '#E8F4FC',
         justifyContent: 'space-between',
         borderBottomColor: COLORS.LIGHT_GREY,
-        backgroundColor: '#E8F4FC',
+    },
+    sectionMuted: {
+        paddingLeft: 20,
+        paddingVertical: 4,
+        alignItems: 'center',
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+        justifyContent: 'space-between',
+        backgroundColor: COLORS.LIGHT_GREY,
+        borderBottomColor: COLORS.LIGHT_GREY,
     },
     sectionTitle: {
         color: COLORS.THEME_COLOR,

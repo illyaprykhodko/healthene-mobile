@@ -13,11 +13,11 @@ import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useCallback, useEffect, useState } from 'react';
 
 // local dependencies
-import { RootState } from 'store';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
+import { RootState, useAppDispatch } from 'store';
 import { CATEGORY_STATUS, TREE_TYPE } from 'constants/spec.ts';
-import { useUpdatePatientCategoriesMutation } from 'store/api/categoryTreeApi.ts';
+import { categoryTreeApi, useUpdatePatientCategoriesMutation } from 'store/api/categoryTreeApi.ts';
 import { CategoryItem, CategoryStatusType, PatientCategories, TreeType } from 'types/categoryTree.ts';
 
 interface StatusEditProps extends CategoryItem{
@@ -27,6 +27,7 @@ const STATUS_SIZE = 36.5;
 
 export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => {
     const theme = useTheme();
+    const dispatch = useAppDispatch();
     const [updateCategory] = useUpdatePatientCategoriesMutation();
     const user = useSelector((state: RootState) => state.app.user);
     const categories = useSelector((state: RootState) => state.foodPreferences.categories);
@@ -100,6 +101,33 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
 
         if (visitId && userId) {
             setOptimisticStatus(categoryStatus);
+
+            // Patch the RTK Query cache directly so the new status survives
+            // navigating away and back before the server response lands. The
+            // FoodCategory screen's useEffect re-reads this cache on remount
+            // and syncs it into the foodPreferences slice — so patching here
+            // means the slice will be reseeded with the optimistic value
+            // instead of the stale pre-toggle one.
+            const patchResult = dispatch(
+                categoryTreeApi.util.updateQueryData(
+                    'getPatientCategories',
+                    { body: { treeTypeViewLabel, patientId: userId } },
+                    draft => {
+                        const index = draft.findIndex(c => c.foodCategory?.id === id);
+                        if (index >= 0) {
+                            draft[index] = { ...draft[index], categoryStatus };
+                        } else {
+                            draft.push({
+                                categoryStatus,
+                                visit: { id: visitId },
+                                patient: { id: userId },
+                                foodCategory: { id, name },
+                            } as PatientCategories);
+                        }
+                    }
+                )
+            );
+
             const request = category
                 ? updateCategory({
                     ...category,
@@ -114,6 +142,7 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
                 });
             request.unwrap().catch(() => {
                 setOptimisticStatus(null);
+                patchResult.undo();
                 Toast.show({
                     type: 'error',
                     text1: 'Update failed',
@@ -121,7 +150,7 @@ export const StatusEdit = ({ id, name, treeTypeViewLabel }: StatusEditProps) => 
                 });
             });
         }
-    }, [category, id, name, user?.id, user?.activeVisit?.id, updateCategory, treeTypeViewLabel]);
+    }, [category, id, name, user?.id, user?.activeVisit?.id, updateCategory, treeTypeViewLabel, dispatch]);
 
     return treeTypeViewLabel === TREE_TYPE.DISLIKE ? <Animated.View
         onTouchEnd={onTouch}

@@ -145,7 +145,7 @@ const ShoppingList: React.FC = () => {
     const isLoading = isCategoriesLoading || isListLoading;
 
     useEffect(() => {
-        if (statusData) {
+        if (statusData && isFocused) {
             dispatch(setShoppingStatus({
                 id: statusData.id,
                 status: statusData.status,
@@ -153,16 +153,16 @@ const ShoppingList: React.FC = () => {
                 separateRescueItems: statusData.separateRescueItems,
             }));
         }
-    }, [statusData, dispatch]);
+    }, [statusData, isFocused, dispatch]);
 
     useEffect(() => {
-        if (datesData) {
+        if (datesData && isFocused) {
             dispatch(setShoppingListDates({
                 from: moment(datesData.startDate).format('MMM DD'),
                 to: moment(datesData.endDate).format('DD'),
             }));
         }
-    }, [datesData, dispatch]);
+    }, [datesData, isFocused, dispatch]);
 
     const tabs = useMemo(() => {
         const categories = categoriesData || [];
@@ -630,7 +630,7 @@ const ShoppingList: React.FC = () => {
                 )}
             </View>
 
-            {isCustomAlertOpen && (
+            {(status !== SHOPPING_STATUS.SHOP_ON_MY_OWN && isCustomAlertOpen) && (
                 <Modal
                     transparent
                     animationType="fade"
@@ -839,7 +839,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     alertMessage: {
-        fontSize: 16,
+        fontSize: 14,
         marginBottom: 20,
         textAlign: 'center',
     },
