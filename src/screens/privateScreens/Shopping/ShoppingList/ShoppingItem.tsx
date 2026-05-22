@@ -1,7 +1,9 @@
+
 // outsource dependencies
 import Icon from '@react-native-vector-icons/feather';
-import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, TextInput } from 'react-native';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+
 // local dependencies
 import Text from 'components/Text';
 import { useAppSelector } from 'store';
@@ -109,14 +111,6 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
             bought: nextValue,
         });
     }, [item, isPurchased, disabled, isConfirmed, onUpdate]);
-
-    // console.log('LIST_ITEM'
-    //     // , '\n isOriginalConfirmed:', isOriginalConfirmed
-    //     , '\n isConfirmed:', isConfirmed
-    //     , '\n status:', status
-    //     , '\n item:', item
-    //     , '\n currentStep:', currentStep
-    // );
 
     const showExcludeButton = (currentStep === SHOPPING_STEP.MAIN
         || currentStep === SHOPPING_STEP.CHECK)

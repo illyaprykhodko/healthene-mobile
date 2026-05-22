@@ -94,7 +94,7 @@ const VideoCategoryScreen: React.FC = () => {
                     color={COLORS.GREY}
                     style={styles.noDataText}
                 >
-                    No video available TEST
+                    No video available
                 </Text>
             );
         }

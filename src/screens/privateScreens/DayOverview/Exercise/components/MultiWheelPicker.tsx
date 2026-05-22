@@ -260,13 +260,13 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
                     isEven ? styles.backgroundFirst : styles.backgroundSecond,
                 ]}>
                     <TextInput
+                        selectTextOnFocus
+                        style={styles.inputText}
+                        maxLength={isDecimal ? 7 : 6}
                         value={inputs[field.key] ?? ''}
-                        onChangeText={text => handleInputChange(field, text)}
                         onBlur={() => handleInputBlur(field)}
                         keyboardType={isDecimal ? 'decimal-pad' : 'number-pad'}
-                        style={styles.inputText}
-                        selectTextOnFocus
-                        maxLength={isDecimal ? 7 : 6}
+                        onChangeText={text => handleInputChange(field, text)}
                     />
                 </View>
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}

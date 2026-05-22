@@ -1,7 +1,8 @@
+
 // outsource dependencies
 import * as Sentry from '@sentry/react-native';
-import { combineReducers, configureStore, createAction, Middleware, Reducer } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import { combineReducers, configureStore, createAction, Middleware, Reducer } from '@reduxjs/toolkit';
 
 // local dependencies
 import { authApi } from './api/authApi';
@@ -83,9 +84,9 @@ const combinedReducer = combineReducers({
     shopping: shoppingReducer,
     exercise: exerciseReducer,
     messenger: messengerSlice,
+    rewardStar: rewardStarReducer,
     dayOverview: dayOverviewReducer,
     forgotPassword: forgotPasswordReducer,
-    rewardStar: rewardStarReducer,
     foodPreferences: foodPreferencesSlice,
     [authApi.reducerPath]: authApi.reducer,
     [planApi.reducerPath]: planApi.reducer,
