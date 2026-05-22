@@ -18,6 +18,7 @@ const ITEM = {
     FOOD_ALLERGIES: 'Food Allergies',
     FOOD_PREFERENCES: 'Food Preferences',
     ACCOUNT_SETTINGS: 'Account Settings',
+    ANIMATION_SETTINGS: 'Animation Settings',
     PERSONAL_INFORMATION: 'Personal Information',
     BIOMETRIC_AUTHENTICATION: 'Biometric Authentication',
 };
@@ -33,6 +34,7 @@ const SettingsScreen = () => {
         { title: ITEM.FOOD_PREFERENCES, navigate: () => navigation.navigate(ROUTES.FOOD_PREFERENCES) },
         { title: ITEM.FOOD_ALLERGIES, navigate: () => navigation.navigate(ROUTES.FOOD_ALLERGIES) },
         { title: ITEM.NOTIFICATIONS, navigate: () => navigation.navigate(ROUTES.NOTIFICATIONS) },
+        { title: ITEM.ANIMATION_SETTINGS, navigate: () => navigation.navigate(ROUTES.ANIMATION_SETTINGS) },
     ];
     return <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <FlatList

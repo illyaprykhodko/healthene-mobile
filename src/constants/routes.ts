@@ -40,9 +40,14 @@ export const ROUTES = {
     CUISINE_DISTRIBUTION: 'CuisineDistribution',
     GAMBLING_SLOT_MACHINE: 'GamblingSlotMachine',
     MEAL_PREFERENCES_LIST: 'MealPreferencesList',
+    GAMBLING_GIFT_CARD_LIST: 'GamblingGiftCardList',
+    GAMBLING_GIFT_CARD_ORDERS: 'GamblingGiftCardOrders',
     CUISINE_DISTRIBUTION_LIST: 'CuisineDistributionList',
+    GAMBLING_GIFT_CARD_SUCCESS: 'GamblingGiftCardSuccess',
     MEAL_PREFERENCES_MEALS_LIST: 'MealPreferencesMealsList',
     CUISINE_DISTRIBUTION_FAVORITES: 'CuisineDistributionFavorites',
+    GAMBLING_GIFT_CARD_CONFIRMATION: 'GamblingGiftCardConfirmation',
+    GAMBLING_GIFT_CARD_DENOMINATIONS: 'GamblingGiftCardDenominations',
     // Questions
     QUESTION: 'Question',
     QUESTION_LIST: 'QuestionList',
@@ -71,6 +76,7 @@ export const ROUTES = {
     ACCOUNT_SETTINGS: 'AccountSettings',
     FOOD_PREFERENCES: 'FoodPreferences',
     BIOMETRIC_SETTINGS: 'BiometricSettings',
+    ANIMATION_SETTINGS: 'AnimationSettings',
     PERSONAL_INFORMATION: 'PersonalInformation',
 
     // Messenger

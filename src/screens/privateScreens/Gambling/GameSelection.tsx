@@ -94,8 +94,7 @@ const styles = StyleSheet.create({
     },
     title: {
         // marginTop: OFFSET.VERTICAL,
-        fontFamily: 'Outfit',
-        fontWeight: 400,
+        fontFamily: 'Outfit-Regular',
         fontSize: 40,
         color: '#000',
         // marginBottom: 8,
@@ -150,7 +149,6 @@ const styles = StyleSheet.create({
         marginTop: 8,
         color: '#000',
         fontFamily: 'Outfit-Regular',
-        fontWeight: 400,
         fontSize: 24,
     },
     footer: {
@@ -166,6 +164,8 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 20,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#A9A9A9',
     },
     backButtonText: {
         fontWeight: 700,
@@ -181,6 +181,8 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 25,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#A9A9A9',
     },
     shadowBtn: {
         shadowColor: '#000000',

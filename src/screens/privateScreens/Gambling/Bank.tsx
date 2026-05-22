@@ -47,11 +47,13 @@ const styles = StyleSheet.create({
         color: '#5F5F5F',
     },
     backButton: {
-        alignSelf: 'flex-start',
-        backgroundColor: '#F8A0A0',
+        borderWidth: 1,
         borderRadius: 8,
         paddingVertical: 8,
         paddingHorizontal: 16,
+        borderColor: '#A9A9A9',
+        alignSelf: 'flex-start',
+        backgroundColor: '#F8A0A0',
     },
     backText: {
         fontFamily: 'Outfit-Bold',

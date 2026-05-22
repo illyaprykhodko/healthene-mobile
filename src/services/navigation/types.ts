@@ -53,6 +53,7 @@ export type RootStackParamList = {
   [ROUTES.MEAL_PREFERENCES]: undefined;
   [ROUTES.FOOD_PREFERENCES]: undefined;
   [ROUTES.GAMBLING_CASH_OUT]: undefined;
+  [ROUTES.ANIMATION_SETTINGS]: undefined;
   [ROUTES.BIOMETRIC_SETTINGS]: undefined;
   [ROUTES.HEALTH_PROFILE_STACK]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
@@ -142,6 +143,24 @@ export type RootStackParamList = {
   [ROUTES.GAMBLING_SLOT_MACHINE]: {
     gameType?: 'SLOTS' | 'BLACKJACK';
   } | undefined;
+  [ROUTES.GAMBLING_GIFT_CARD_LIST]: undefined;
+  [ROUTES.GAMBLING_GIFT_CARD_DENOMINATIONS]: {
+    brandCode: string;
+    brandName: string;
+    imageUrl?: string;
+  };
+  [ROUTES.GAMBLING_GIFT_CARD_CONFIRMATION]: {
+    brandCode: string;
+    brandName: string;
+    imageUrl?: string;
+    priceInCents: number;
+  };
+  [ROUTES.GAMBLING_GIFT_CARD_SUCCESS]: {
+    brandName: string;
+    imageUrl?: string;
+    giftLink: string;
+  };
+  [ROUTES.GAMBLING_GIFT_CARD_ORDERS]: undefined;
   [ROUTES.WRITE_MESSAGE]: {
     refetchMessages?: () => void;
   } | undefined;

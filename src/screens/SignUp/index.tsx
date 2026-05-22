@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Text } from '@react-native-material/core';
+// local dependencies
+import Text from '../../components/Text';
 import Screen from '../../components/Screen';
 
 export const SignUp: React.FC = () => {
