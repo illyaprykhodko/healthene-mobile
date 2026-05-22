@@ -320,6 +320,27 @@ export const MEASUREMENT_CONFIG: Record<MeasurementType, MeasurementConfig> = {
         maxDecimalPlaces: 1,
         supportsHealthApp: false,
     },
+
+    HEIGHT: {
+        type: 'HEIGHT',
+        fields: [
+            {
+                min: 60,
+                max: 240,
+                name: 'value',
+                label: 'Height',
+                type: 'decimal',
+                placeholder: '170',
+            },
+        ],
+        units: [
+            // TODO: confirm CENTIMETERS unit ID with backend (no entry in measurementUnit table yet)
+            { id: 2, name: 'centimeters', symbol: 'cm' },
+        ],
+        maxDecimalPlaces: 1,
+        supportsHealthApp: false,
+        defaultUnit: 'centimeters',
+    },
 };
 
 /**

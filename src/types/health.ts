@@ -9,6 +9,7 @@ export type MeasurementType =
   | 'BMI'
   | 'STEPS'
   | 'WEIGHT'
+  | 'HEIGHT'
   | 'OXYGEN'
   | 'CREATINE'
   | 'POTASSIUM'
