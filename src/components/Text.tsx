@@ -47,8 +47,17 @@ const Text: React.FC<TextProps> = ({
     if (style) {
         if (Array.isArray(style)) { allStyles.push(...style); } else { allStyles.push(style); }
     }
+    const flat = StyleSheet.flatten(allStyles);
+    // RN 0.84 / iOS 26 SDK changed CoreText to apply `fontWeight` ON TOP of an explicit
+    // `fontFamily` (synth-bold / weight-axis interpolation). On RN 0.81 it was ignored.
+    // Our design system already encodes weight via the variant's fontFamily (Outfit-Regular /
+    // Outfit-Medium / Outfit-Bold). Stripping fontWeight here keeps rendering deterministic
+    // and matches the pre-upgrade visual.
+    if (flat.fontFamily && flat.fontWeight != null) {
+        delete flat.fontWeight;
+    }
     return (
-        <UIText style={StyleSheet.flatten(allStyles)} numberOfLines={numberOfLines} {...attr}>
+        <UIText style={flat} numberOfLines={numberOfLines} {...attr}>
             {children}
         </UIText>
     );
