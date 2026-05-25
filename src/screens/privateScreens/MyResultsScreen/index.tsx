@@ -78,7 +78,9 @@ const MyResultsScreen: React.FC = () => {
     // Transform data to get measurement objects
     const measurementsList = useMemo(() => {
         if (!measurementTypesData) { return []; }
-        return measurementTypesData.map((item: any) => item.measurement).filter(Boolean);
+        return measurementTypesData.map((item: any) => item.measurement)
+            .filter(Boolean)
+            .filter((m: any) => m.type !== 'HEIGHT');
     }, [measurementTypesData]);
 
     const renderItem = useCallback(({ item }: { item: MeasurementType }) => (

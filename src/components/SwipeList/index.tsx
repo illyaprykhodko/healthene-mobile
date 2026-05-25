@@ -98,17 +98,19 @@ export const SwipeList: React.FC<SwipeListProps> = ({
             ListFooterComponent={ListFooterComponent}
             disableLeftSwipe={isFutureDate || (noDelete && noReplace)}
             directionalDistanceChangeThreshold={directionalDistanceChangeThreshold}
-            renderHiddenItem={({ item }) => {
-                // const isDidNotEatStatus = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
+            renderHiddenItem={(rowData, rowMap) => {
+                const { item } = rowData;
+                const { status } = item;
+                const rowKey = keyExtractor(item);
                 return (
                     <View style={StyleSheet.flatten([styles.listItemHidden, styleHiddenItem])}>
                         <View style={[styles.listItemContent, { width }]}>
                             {(
                                 noReplace
-                || isAddedByPatient
-                || noReplaceItem(item)
-                || !recipeReplacementEnable
-                || (isInclude && handleReplaceButton(item))
+                                || isAddedByPatient
+                                || noReplaceItem(item)
+                                || !recipeReplacementEnable
+                                || (isInclude && handleReplaceButton(item))
                             ) ? null : (
                                     <TouchableOpacity
                                         onPress={() => onReplace(item)}
@@ -124,13 +126,11 @@ export const SwipeList: React.FC<SwipeListProps> = ({
                                         onPress={() => {
                                             handleCheckboxStatus?.({
                                                 ...item,
-                                                status: PHASE_ITEM_STATUS.DID_NOT_EAT
+                                                status: status === PHASE_ITEM_STATUS.DID_NOT_EAT
+                                                    ? PHASE_ITEM_STATUS.PENDING
+                                                    : PHASE_ITEM_STATUS.DID_NOT_EAT
                                             });
-                                            // handleCheckboxStatus?.(
-                                            //     isDidNotEatStatus
-                                            //         ? { ...item, status: PHASE_ITEM_STATUS.DID_NOT_EAT }
-                                            //         : { ...item }
-                                            // );
+                                            rowMap[rowKey]?.closeRow();
                                         }}
                                         style={[styles.button, styles.listItemBtnNotEat]}
                                     >

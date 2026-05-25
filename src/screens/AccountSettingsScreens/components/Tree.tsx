@@ -1,24 +1,17 @@
 // outsource dependencies
-import { skipToken } from '@reduxjs/toolkit/query';
-import { useDispatch, useSelector } from 'react-redux';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
 
 // local dependencies
-import { RootState } from 'store';
 import Text from 'components/Text.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
-import { TREE_TYPE } from 'constants/spec.ts';
-import { setCategories } from 'store/slices/foodPreferrencesSlice.ts';
 import { BreadcrumbItem, Breadcrumbs } from 'components/Breadcrumbs.tsx';
-import { useGetPatientCategoriesQuery } from 'store/api/categoryTreeApi.ts';
-import { CategoryItem, CategoryTransformData, TreeType } from 'types/categoryTree.ts';
+import { CategoryItem, CategoryTransformData } from 'types/categoryTree.ts';
 
 interface TreeProps {
-    treeTypeViewLabel: TreeType;
-    tree: CategoryTransformData | undefined;
     setPage: (page: number) => void;
+    tree: CategoryTransformData | undefined;
     setParentId: (id: number | undefined) => void;
     component: (
         item: CategoryItem,
@@ -27,27 +20,8 @@ interface TreeProps {
 
 const defaultImage = require('../../../../assets/def-image.png');
 
-export const Tree = ({ tree, setPage, setParentId, component, treeTypeViewLabel }: TreeProps) => {
+export const Tree = ({ tree, setPage, setParentId, component }: TreeProps) => {
     const theme = useTheme();
-    const dispatch = useDispatch();
-
-    // Get patient categories
-    const user = useSelector((state: RootState) => state.app.user);
-    const { data: categoryData } = useGetPatientCategoriesQuery(
-        user?.id
-            ? {
-                body: {
-                    treeTypeViewLabel,
-                    patientId: user.id
-                }
-            }
-            : skipToken
-    );
-    useEffect(() => {
-        if (categoryData) {
-            dispatch(setCategories(categoryData));
-        }
-    }, [categoryData]);
 
     // Manage tree
     const loadMore = useCallback(() => {
@@ -71,7 +45,7 @@ export const Tree = ({ tree, setPage, setParentId, component, treeTypeViewLabel 
     const onClickItem = useCallback((item: CategoryItem) => {
         setBreadcrumbs(prev => [...prev, { name: item.name, id: item.id }]);
         handleTreeResponse(item.id);
-    }, [categoryData, breadcrumbs]);
+    }, [handleTreeResponse]);
     const returnBack = useCallback(() => {
         const prevIndex = breadcrumbs.length - 2;
         const prevItem = breadcrumbs[prevIndex];
@@ -100,15 +74,20 @@ export const Tree = ({ tree, setPage, setParentId, component, treeTypeViewLabel 
                 </Text>
             </Pressable>
         </View>}
-        renderItem={({ item }: {item: CategoryItem}) => <Pressable onPress={() => onClickItem(item)} style={styles.itemContainer}>
-            <View style={styles.imageContainer}>
-                <Image source={ item?.coverImage ? { uri: item.coverImage } : defaultImage } style={styles.image} />
-            </View>
-            <Text style={styles.flexShrink}>
-                {item.name}
-            </Text>
-            {component(item)}
-        </Pressable>}
+        renderItem={({ item }: {item: CategoryItem}) => {
+            const coverUri = typeof item?.coverImage === 'string'
+                ? item.coverImage
+                : item?.coverImage?.url;
+            return <Pressable onPress={() => onClickItem(item)} style={styles.itemContainer}>
+                <View style={styles.imageContainer}>
+                    <Image source={coverUri ? { uri: coverUri } : defaultImage} style={styles.image} />
+                </View>
+                <Text style={styles.flexShrink}>
+                    {item.name}
+                </Text>
+                {component(item)}
+            </Pressable>;
+        }}
     />;
 };
 

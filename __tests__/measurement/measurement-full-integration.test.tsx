@@ -5,11 +5,12 @@
 
 describe('Measurement Full Integration', () => {
     test('all measurement types should be supported (fixes POTASSIUM error)', () => {
+        // @ts-ignore
         const { getMeasurementConfig } = require('../../src/utils/measurement/measurement-config');
         
         const measurementTypes = [
-            'WEIGHT', 'BLOOD_PRESSURE', 'BLOOD_GLUCOSE', 'TEMPERATURE', 
-            'BMI', 'OXYGEN', 'CREATINE', 'POTASSIUM', 'HEART_RATE', 'STEPS'
+            'WEIGHT', 'BLOOD_PRESSURE', 'BLOOD_GLUCOSE', 'TEMPERATURE', 'BMI',
+            'OXYGEN', 'CREATINE', 'POTASSIUM', 'HEART_RATE', 'STEPS', 'HEIGHT'
         ];
         
         measurementTypes.forEach(type => {
@@ -20,6 +21,7 @@ describe('Measurement Full Integration', () => {
     });
 
     test('should support health app integration where available (like original)', () => {
+        // @ts-ignore
         const { supportsHealthApp } = require('../../src/utils/measurement/measurement-config');
         
         // Types that should support health app (like original)
@@ -31,6 +33,7 @@ describe('Measurement Full Integration', () => {
         
         // Types that don't support health app
         expect(supportsHealthApp('BMI')).toBe(false);
+        expect(supportsHealthApp('HEIGHT')).toBe(false);
         expect(supportsHealthApp('OXYGEN')).toBe(false);
         expect(supportsHealthApp('CREATINE')).toBe(false);
         expect(supportsHealthApp('POTASSIUM')).toBe(false);
@@ -38,6 +41,7 @@ describe('Measurement Full Integration', () => {
     });
 
     test('POTASSIUM measurement config should be correct', () => {
+        // @ts-ignore
         const { getMeasurementConfig } = require('../../src/utils/measurement/measurement-config');
         
         const config = getMeasurementConfig('POTASSIUM');
@@ -49,6 +53,7 @@ describe('Measurement Full Integration', () => {
     });
 
     test('chart helpers should work with all date periods', () => {
+        // @ts-ignore
         const { getDateRangeText } = require('../../src/components/MeasurementChart/chart-helpers');
         
         const dateRanges = ['DAY', 'WEEK', 'MONTH', 'SIX_MONTH', 'YEAR'];
@@ -61,6 +66,7 @@ describe('Measurement Full Integration', () => {
     });
 
     test('should handle date range text generation correctly', () => {
+        // @ts-ignore
         const { getDateRangeText } = require('../../src/components/MeasurementChart/chart-helpers');
         
         const result = getDateRangeText('WEEK', '2023-10-14T00:00:00.000Z', '2023-10-20T23:59:59.999Z');

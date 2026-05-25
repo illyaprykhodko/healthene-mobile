@@ -1,6 +1,8 @@
 // outsource dependencies
-import { StyleSheet, View, Alert } from 'react-native';
+import moment from 'moment';
+import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
+import { Pressable, StyleSheet, View, Alert } from 'react-native';
 import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
@@ -12,11 +14,11 @@ import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
 import TextInput from 'components/TextInput';
 import { Skeleton } from 'components/Skeleton';
+import DatePickerSelector from 'components/DatePicker';
 import OptionSelector from 'components/Selector/OptionSelector';
 
 import { Habit } from 'types';
 import { useAppDispatch } from 'store';
-type DataType = { label: string; value: string };
 import { useGetSelfQuery, authApi } from 'store/api/authApi';
 import {
     useGetHabitsQuery,
@@ -24,7 +26,9 @@ import {
     useUpdatePatientStatsMutation,
     useUpdatePatientHabitsMutation,
 } from 'store/api/healthProfileApi';
+
 // import type { Habit } from 'types/healthProfile';
+type DataType = { label: string; value: string };
 
 const GENDER_OPTIONS: DataType[] = [
     { label: 'Male', value: 'MALE' },
@@ -62,6 +66,7 @@ const StatsSkeleton: React.FC<{ borderColor: string }> = ({ borderColor }) => (
 
 interface FormData {
     gender: string;
+    birthday: string;
     heightFt: string;
     weightLb: string;
     heightInches: string;
@@ -71,10 +76,14 @@ interface FormData {
 
 interface FormErrors {
     gender?: string;
+    birthday?: string;
     heightFt?: string;
     weightLb?: string;
     heightInches?: string;
 }
+
+const DATE_FORMAT = 'YYYY-MM-DD';
+const DATE_DISPLAY_FORMAT = 'MMMM DD, YYYY';
 
 const validateForm = (values: FormData): FormErrors => {
     const errors: FormErrors = {};
@@ -108,6 +117,17 @@ const validateForm = (values: FormData): FormErrors => {
         errors.gender = 'Gender is required';
     }
 
+    if (!values.birthday) {
+        errors.birthday = 'Date of birth is required';
+    } else {
+        const parsed = moment(values.birthday, DATE_FORMAT, true);
+        if (!parsed.isValid()) {
+            errors.birthday = 'Date of birth is invalid';
+        } else if (parsed.isAfter(moment(), 'day')) {
+            errors.birthday = 'Date of birth can\'t be in the future';
+        }
+    }
+
     return errors;
 };
 
@@ -128,6 +148,7 @@ const StatsScreen: React.FC = () => {
 
     const [formData, setFormData] = useState<FormData>({
         gender: '',
+        birthday: '',
         weightLb: '',
         heightFt: '',
         heightInches: '',
@@ -136,11 +157,13 @@ const StatsScreen: React.FC = () => {
     });
 
     const [touched, setTouched] = useState<Record<string, boolean>>({});
+    const [dateModalOpen, setDateModalOpen] = useState(false);
     const [selectedHabits, setSelectedHabits] = useState<Set<number>>(new Set());
 
     useEffect(() => {
         if (user) {
             const userData = user as any;
+            const birthdayMoment = userData.birthday ? moment(userData.birthday) : null;
             setFormData({
                 gender: userData.gender ?? '',
                 heightFt: userData.heightFt?.toString() ?? '',
@@ -148,6 +171,7 @@ const StatsScreen: React.FC = () => {
                 heightInches: userData.heightInches?.toString() ?? '',
                 additionalInfo: userData.patientPreferredGender?.additionalInfo ?? '',
                 preferredGender: userData.patientPreferredGender?.preferredGender ?? '',
+                birthday: birthdayMoment?.isValid() ? birthdayMoment.format(DATE_FORMAT) : '',
             });
         }
     }, [user]);
@@ -177,6 +201,11 @@ const StatsScreen: React.FC = () => {
         setTouched(prev => ({ ...prev, preferredGender: true }));
     }, []);
 
+    const handleBirthdaySelect = useCallback((value: string) => {
+        setFormData(prev => ({ ...prev, birthday: value }));
+        setTouched(prev => ({ ...prev, birthday: true }));
+    }, []);
+
     const handleHabitToggle = useCallback((habitId: number) => {
         setSelectedHabits(prev => {
             const next = new Set(prev);
@@ -194,6 +223,7 @@ const StatsScreen: React.FC = () => {
 
         try {
             await updateStats({
+                birthday: formData.birthday,
                 weightLb: Number(formData.weightLb),
                 heightFt: Number(formData.heightFt),
                 gender: formData.gender as 'MALE' | 'FEMALE',
@@ -203,6 +233,11 @@ const StatsScreen: React.FC = () => {
                     additionalInfo: formData.preferredGender === 'OTHER' ? formData.additionalInfo : undefined,
                 } : undefined,
             }).unwrap();
+            Toast.show({
+                type: 'success',
+                text1: 'My Stats',
+                text2: 'Your changes were saved successfully',
+            });
 
             const habitsData = Array.from(selectedHabits).map(id => ({ entity: { id } }));
             await updateHabits(habitsData).unwrap();
@@ -240,6 +275,34 @@ const StatsScreen: React.FC = () => {
             <View style={styles.scrollContent}>
                 <KeyboardAwareScrollView contentContainerStyle={styles.wrapper}>
                     <View style={styles.offset}>
+                        <View style={styles.row}>
+                            <Text
+                                variant="caption"
+                                color={touched.birthday && errors.birthday ? theme.colors.error : theme.colors.text}
+                            >
+                                Age
+                            </Text>
+                            <Pressable
+                                disabled={isSubmitting}
+                                onPress={() => setDateModalOpen(true)}
+                                style={[
+                                    styles.dateField,
+                                    { borderBottomColor: touched.birthday && errors.birthday ? theme.colors.error : theme.colors.border },
+                                ]}
+                            >
+                                <Text color={formData.birthday ? theme.colors.text : theme.colors.grey}>
+                                    {formData.birthday
+                                        ? moment(formData.birthday, DATE_FORMAT).format(DATE_DISPLAY_FORMAT)
+                                        : 'Select date of birth'}
+                                </Text>
+                            </Pressable>
+                            {(touched.birthday && errors.birthday)
+                                && <Text variant="caption" color={theme.colors.error} style={styles.dateError}>
+                                    {errors.birthday}
+                                </Text>
+                            }
+                        </View>
+
                         <View style={styles.row}>
                             <TextInput
                                 name="heightFt"
@@ -345,6 +408,12 @@ const StatsScreen: React.FC = () => {
                     disabled={isSubmitting || !isValid}
                 />
             </View>
+            <DatePickerSelector
+                modalOpened={dateModalOpen}
+                onSelect={handleBirthdaySelect}
+                currentDate={formData.birthday || null}
+                onCancel={() => setDateModalOpen(false)}
+            />
         </Screen>
     );
 };
@@ -371,6 +440,14 @@ const styles = StyleSheet.create({
     },
     row: {
         marginBottom: 12,
+    },
+    dateField: {
+        borderBottomWidth: 1,
+        paddingTop: 8,
+        paddingBottom: 12,
+    },
+    dateError: {
+        marginTop: 4,
     },
     habitsSection: {
         marginTop: 20,

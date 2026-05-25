@@ -3,6 +3,7 @@ import {
     BottomSheetModal,
     BottomSheetView,
     BottomSheetBackdrop,
+    BottomSheetModalProps,
     BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import Icon from '@react-native-vector-icons/ionicons';
@@ -30,6 +31,7 @@ export interface SwipeablePanelProps {
     onPressCloseButton?: () => void;
     snapPoints?: (string | number)[];
     enableContentPanningGesture?: boolean;
+    keyboardBehavior?: BottomSheetModalProps['keyboardBehavior'];
 }
 
 export interface SwipeablePanelRef {
@@ -53,6 +55,7 @@ export const SwipeablePanel = forwardRef<SwipeablePanelRef, SwipeablePanelProps>
             enableDynamicSizing = true,
             snapPoints = ['50%', '80%'],
             enablePanDownToClose = true,
+            keyboardBehavior = 'interactive',
             enableContentPanningGesture = true,
         },
         ref
@@ -113,9 +116,9 @@ export const SwipeablePanel = forwardRef<SwipeablePanelRef, SwipeablePanelProps>
                 ref={bottomSheetRef}
                 snapPoints={snapPoints}
                 onChange={handleSheetChanges}
-                keyboardBehavior="interactive"
                 keyboardBlurBehavior="restore"
                 backdropComponent={renderBackdrop}
+                keyboardBehavior={keyboardBehavior}
                 android_keyboardInputMode="adjustResize"
                 enableDynamicSizing={enableDynamicSizing}
                 enablePanDownToClose={enablePanDownToClose}

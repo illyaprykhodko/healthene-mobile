@@ -73,18 +73,19 @@ export interface PatientPreferredGender {
 }
 
 export interface UserStats {
-    heightFt?: number;
-    heightInches?: number;
-    weightLb?: number;
-    gender?: 'MALE' | 'FEMALE';
     bmi?: number;
+    birthday?: string;
+    heightFt?: number;
+    weightLb?: number;
+    heightInches?: number;
+    gender?: 'MALE' | 'FEMALE';
     patientPreferredGender?: PatientPreferredGender;
 }
 
 export interface StatsFormData {
     heightFt: string;
-    heightInches: string;
     weightLb: string;
+    heightInches: string;
     gender: 'MALE' | 'FEMALE';
     patientPreferredGender: PatientPreferredGender;
 }

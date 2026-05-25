@@ -35,6 +35,10 @@ local.properties
 !debug.keystore
 .kotlin/
 
+# Bundled JDKs — JDK should be installed system-wide (Homebrew/SDKMAN) and
+# picked up via JAVA_HOME, never vendored into the repo.
+android/**/*.jdk/
+
 # node.js
 #
 node_modules/
@@ -76,3 +80,7 @@ yarn-error.log
 
 # Cursor IDE (local debug instrumentation)
 .cursor/*.log
+
+# Claude Code (local agent instructions / notes)
+CLAUDE.md
+.claude/

@@ -12,7 +12,7 @@ export interface CategoryListBody {
 export interface CategoryItem {
     id: number;
     name: string;
-    coverImage: string | null;
+    coverImage: string | { url: string } | null;
 }
 
 export interface RequestData {

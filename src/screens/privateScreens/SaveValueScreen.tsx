@@ -20,6 +20,7 @@ import {
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
+import { PHASE_ITEM_STATUS } from 'constants/spec.ts';
 import { MessageService } from 'services/messages/service';
 import { RootStackParamList } from 'services/navigation/types';
 
@@ -111,13 +112,23 @@ const SaveValueScreen: React.FC = () => {
                         try {
                             await deleteMeasurements(measurementIds).unwrap();
                             MessageService.toastSuccess('Measurement deleted');
+                            if (measurementPhaseItem) {
+                                await updatePhaseItem({
+                                    id: measurementPhaseItem.id,
+                                    phaseId: measurementPhaseItem.phaseId!,
+                                    data: {
+                                        ...measurementPhaseItem,
+                                        status: PHASE_ITEM_STATUS.PENDING,
+                                    },
+                                }).unwrap();
+                            }
                             navigation.goBack();
                         } catch (error) {
                             // console.error('[SaveValue] Delete error:', error);
                             MessageService.error({
                                 title: 'Delete Error',
-                                message: 'Failed to delete measurement',
                                 uid: 'delete-measurement-error',
+                                message: 'Failed to delete measurement',
                             });
                         }
                     },
@@ -134,7 +145,7 @@ const SaveValueScreen: React.FC = () => {
                     phaseId: measurementPhaseItem.phaseId!,
                     data: {
                         ...measurementPhaseItem,
-                        status: 'DONE',
+                        status: PHASE_ITEM_STATUS.DONE,
                     },
                 }).unwrap();
             }
@@ -149,7 +160,7 @@ const SaveValueScreen: React.FC = () => {
         }
     }, [measurementPhaseItem, updatePhaseItem, navigation]);
 
-    const isDisabled = isDeleting || isFutureDate || measurementPhaseItem?.status === 'DONE';
+    const isDisabled = isDeleting || isFutureDate || measurementPhaseItem?.status === PHASE_ITEM_STATUS.DONE;
 
     if (isLoading) {
         return (

@@ -98,7 +98,7 @@ const VideoLibraryScreen: React.FC = () => {
                         textAlign="center"
                         color={COLORS.DARK_GREY}
                     >
-                        No videos
+                        No videos has been seen yet
                     </Text>
                 </View>
             ) : (

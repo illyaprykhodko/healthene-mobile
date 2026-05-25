@@ -1,7 +1,9 @@
+
 // outsource dependencies
 import Icon from '@react-native-vector-icons/feather';
-import React, { memo, useCallback, useRef, useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, TextInput } from 'react-native';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+
 // local dependencies
 import Text from 'components/Text';
 import { useAppSelector } from 'store';
@@ -33,6 +35,11 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
 
     const currentStep = useAppSelector(selectCurrentStep);
     const isExcluded = item?.excluded;
+    const [isPurchased, setIsPurchased] = useState<boolean>(!!item?.bought);
+
+    useEffect(() => {
+        setIsPurchased(!!item?.bought);
+    }, [item?.bought]);
 
     const isItemDisabled = isExcluded || isConfirmed;
 
@@ -95,17 +102,22 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
         });
     }, [item, isExcluded, disabled, isConfirmed, onUpdate]);
 
-    // const handlePurchase = useCallback(() => {
-    //     if (disabled || isConfirmed) { return; }
-    //     onUpdate({
-    //         ...item,
-    //         isPurchased: !isPurchased,
-    //     });
-    // }, [item, isPurchased, disabled, isConfirmed, onUpdate]);
+    const handlePurchase = useCallback(() => {
+        if (disabled) { return; }
+        const nextValue = !isPurchased;
+        setIsPurchased(nextValue);
+        onUpdate({
+            ...item,
+            bought: nextValue,
+        });
+    }, [item, isPurchased, disabled, isConfirmed, onUpdate]);
 
     const showExcludeButton = (currentStep === SHOPPING_STEP.MAIN
-        || currentStep === SHOPPING_STEP.CHECK) && status !== SHOPPING_STATUS.CONFIRMED;
-    // const showCheckbox = currentStep === SHOPPING_STEP.CHECK || status === SHOPPING_STATUS.SHOP_ON_MY_OWN;
+        || currentStep === SHOPPING_STEP.CHECK)
+        && status !== SHOPPING_STATUS.CONFIRMED
+        && status !== SHOPPING_STATUS.SHOP_ON_MY_OWN
+    ;
+    const showShoppingCheckbox = status === SHOPPING_STATUS.SHOP_ON_MY_OWN;
     const showSelectButton = (currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.MEAL) && !isConfirmed;
 
     return (
@@ -177,21 +189,22 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                     />
                 </TouchableOpacity>
             )}
-            {isConfirmed && (
-                <TouchableOpacity
-                    // onPress={handleConfirm}
-                    disabled
-                    style={styles.actionBtn}
-                >
-                    <Icon name="check" size={24} color={COLORS.GREEN} />
-                </TouchableOpacity>
-            )}
+            {/*{isConfirmed && (*/}
+            {/*    <TouchableOpacity*/}
+            {/*        // onPress={handleConfirm}*/}
+            {/*        disabled*/}
+            {/*        style={styles.actionBtn}*/}
+            {/*    >*/}
+            {/*        <Icon name="check" size={24} color={COLORS.GREEN} />*/}
+            {/*    </TouchableOpacity>*/}
+            {/*)}*/}
 
-            {/* {showCheckbox && (
+            {showShoppingCheckbox && (
                 <TouchableOpacity
-                    onPress={handlePurchase}
-                    disabled={disabled || isConfirmed}
+                    disabled={disabled}
                     style={styles.checkbox}
+                    onPress={handlePurchase}
+                    hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
                 >
                     <View style={[
                         styles.checkboxInner,
@@ -202,7 +215,7 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                         )}
                     </View>
                 </TouchableOpacity>
-            )} */}
+            )}
         </View>
     );
 });

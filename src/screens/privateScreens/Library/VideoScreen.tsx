@@ -88,8 +88,8 @@ const VideoScreen: React.FC = () => {
                 <View style={styles.noVideoContainer}>
                     <Text
                         variant="h4"
-                        color={theme.colors.text}
                         textAlign="center"
+                        color={theme.colors.text}
                     >
                         No video available
                     </Text>

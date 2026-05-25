@@ -337,7 +337,8 @@ export default function ExerciseDetails () {
                         {image ? (
                             <Image
                                 resizeMode="contain"
-                                source={{ uri: image?.url }}
+                                // source={{ uri: image?.url }}
+                                source={{ uri: image?.url?.replace(/^http:\/\//i, 'https://') }}
                                 style={[styles.image, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.5 }]}
                             />
                         ) : null}

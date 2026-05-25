@@ -153,7 +153,7 @@ const VideoCategoryScreen: React.FC = () => {
             return (
                 <View style={styles.emptyContainer}>
                     <Text variant="h3" textAlign="center" color={COLORS.DARK_GREY}>
-                        No videos have been viewed yet
+                        No videos has been seen yet
                     </Text>
                 </View>
             );
@@ -168,7 +168,7 @@ const VideoCategoryScreen: React.FC = () => {
                     return (
                         <View style={styles.emptyContainer}>
                             <Text color={COLORS.GREY} textAlign="center">
-                                No video available
+                                No videos has been seen yet
                             </Text>
                         </View>
                     );

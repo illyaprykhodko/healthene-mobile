@@ -1,6 +1,6 @@
 // outsource dependencies
 import { View, Text, StyleSheet } from 'react-native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 // local dependencies
 import { ITEM_HEIGHT, WheelPicker } from './WheelPicker';
 // ---- Types
@@ -18,6 +18,8 @@ type DecimalWheelPickerProps = {
 
 // ---- Constants
 const WHOLE_MAX = 500;
+// Decimal values must be greater than zero — smallest valid step is 0.1.
+const MIN_TENTHS = 1;
 
 
 const DecimalWheelPicker: React.FC<DecimalWheelPickerProps> = ({ field, onApply }) => {
@@ -33,18 +35,31 @@ const DecimalWheelPicker: React.FC<DecimalWheelPickerProps> = ({ field, onApply 
 
     // -- Robust initial split (avoids 0.999 rounding to 10 in decimals)
     const initialValue = Math.max(0, Number(field.value ?? 0));
-    const totalTenths = Math.round(initialValue * 10);
-    const initialWhole = Math.min(WHOLE_MAX, Math.floor(totalTenths / 10));
-    const initialDecimal = totalTenths - initialWhole * 10;
+    const initialTenths = Math.max(MIN_TENTHS, Math.round(initialValue * 10));
+    const initialWhole = Math.min(WHOLE_MAX, Math.floor(initialTenths / 10));
+    const initialDecimal = initialTenths - initialWhole * 10;
 
     const [wholePart, setWholePart] = useState<number>(initialWhole);
     const [decimalPart, setDecimalPart] = useState<number>(initialDecimal);
 
-    // -- Propagate changes upward
+    // If redux held a value below 0.1, the wheel above silently bumps to 0.1 — push that
+    // up to the parent on mount so SAVE persists what the user actually sees.
+    const wasBumped = useRef(Math.round(initialValue * 10) < MIN_TENTHS).current;
+    useEffect(() => {
+        if (wasBumped) {
+            onApply({ [field.key]: MIN_TENTHS / 10 });
+        }
+    }, []);
+
+    // -- Propagate changes upward — snap (0, 0) to (0, 1) so the wheel can't emit 0.0.
     const emit = useCallback(
         (whole: number, decimal: number) => {
-            const result = whole + decimal / 10;
-            onApply({ [field.key]: result });
+            if (whole === 0 && decimal === 0) {
+                setDecimalPart(MIN_TENTHS);
+                onApply({ [field.key]: MIN_TENTHS / 10 });
+                return;
+            }
+            onApply({ [field.key]: whole + decimal / 10 });
         },
         [field.key, onApply]
     );
