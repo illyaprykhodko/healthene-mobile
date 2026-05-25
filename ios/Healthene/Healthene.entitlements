@@ -8,5 +8,19 @@
    Copyright (c) 2026 ___ORGANIZATIONNAME___. All rights reserved.
 -->
 <plist version="1.0">
-<dict/>
+<dict>
+	<key>aps-environment</key>
+	<string>development</string>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:app.healthene.com</string>
+		<string>applinks:healthene.com</string>
+		<string>applinks:development.healthene.app</string>
+		<string>applinks:clinic-healthene.intelliceed.com</string>
+		<string>applinks:clinic-dev-healthene.intelliceed.com</string>
+		<string>applinks:clinic-staging-healthene.intelliceed.com</string>
+		<string>applinks:clinic-dev-healthene.intelliceed.com?mode=developer</string>
+		<string>applinks:clinic-staging-healthene.intelliceed.com?mode=developer</string>
+	</array>
+</dict>
 </plist>

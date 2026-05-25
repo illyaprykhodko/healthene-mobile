@@ -18,6 +18,7 @@ import {
     useUpdateIncludeRescueFoodsMutation
 } from 'store/api/dayOverviewApi';
 import ListItem from './ListItem';
+import { config } from 'constants';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
@@ -680,17 +681,14 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
-            {(currentPhase?.type === OVERVIEW_TYPE.MEAL)
-                ? (
-                    <BirdAnimation
-                        muted={!birdSoundEnabled}
-                        checkboxAreaX={checkboxAreaX}
-                        allChecked={birdAnimationStep}
-                        checkTrigger={birdCheckTrigger}
-                    />
-                )
-                : null
-            }
+            {config.features.birdAnimationEnabled && currentPhase?.type === OVERVIEW_TYPE.MEAL && (
+                <BirdAnimation
+                    muted={!birdSoundEnabled}
+                    checkboxAreaX={checkboxAreaX}
+                    allChecked={birdAnimationStep}
+                    checkTrigger={birdCheckTrigger}
+                />
+            )}
             <View style={[styles.title, isFutureDate && styles.opacity]}>
                 <View>
                     <Text style={styles.titleText}>
@@ -915,14 +913,16 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 onApply={handleConfirmationModalApply}
             />
 
-            <RewardStarOverlay
-                gamblingPointsQueryEnabled={
-                    (currentPhase?.type === OVERVIEW_TYPE.MEAL
-                        || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT)
-                    && !isPastDate
-                    && !isFutureDate
-                }
-            />
+            {config.features.gamblingEnabled && (
+                <RewardStarOverlay
+                    gamblingPointsQueryEnabled={
+                        (currentPhase?.type === OVERVIEW_TYPE.MEAL
+                            || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT)
+                        && !isPastDate
+                        && !isFutureDate
+                    }
+                />
+            )}
 
             <AnytimeMenu date={targetDate} />
         </Screen>

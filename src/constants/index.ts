@@ -25,6 +25,14 @@ export const config = {
     // googleFitDataUrl: env.GOOGLE_FIT_DATA_URL,
     DEBUG: env.APP_DEBUG === String(true),
     // platform: Platform.OS === 'ios' ? 'IOS' : 'ANDROID'
+    // Compile-time feature flags driven by `.env*` files (see `react-native-config`).
+    // Toggle per scheme: local build keeps experiments on, customer-facing schemes ship them off.
+    // Remote (runtime) toggling is intentionally NOT wired up yet — defer to a Firebase Remote
+    // Config layer when we actually need kill-switches without rebuild.
+    features: {
+        gamblingEnabled: env.FEATURE_GAMBLING_ENABLED === String(true),
+        birdAnimationEnabled: env.FEATURE_BIRD_ANIMATION_ENABLED === String(true),
+    },
 };
 
 // Navigation Routes
