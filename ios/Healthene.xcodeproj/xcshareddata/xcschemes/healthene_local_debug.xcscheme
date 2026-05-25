@@ -11,7 +11,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "if [ -f &quot;${PROJECT_DIR}/../.env.development&quot; ]; then&#10;  cp -f &quot;${PROJECT_DIR}/../.env.development&quot; &quot;${PROJECT_DIR}/../.env&quot;&#10;fi&#10;">
+               scriptText = "if [ -f &quot;${PROJECT_DIR}/../.env.local&quot; ]; then&#10;  cp -f &quot;${PROJECT_DIR}/../.env.local&quot; &quot;${PROJECT_DIR}/../.env&quot;&#10;fi&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"

@@ -19,6 +19,8 @@ import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/botto
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, Platform, ScrollView } from 'react-native';
 
 // local dependencies
+import Text from 'components/Text';
+import { config } from 'constants';
 import {
     Phase,
     useGetDayOverviewQuery,
@@ -27,7 +29,6 @@ import {
     useAddPhaseCustomRecipeMutation,
     useCreatePatientPhaseWithCustomRecipeMutation,
 } from 'store/api/dayOverviewApi';
-import Text from 'components/Text';
 import {
     meta,
     setDateEntry,
@@ -374,7 +375,8 @@ const AnimatedCheckmark: React.FC<AnimatedCheckmarkProps> = ({
                 withTiming(1.3, { duration: 500, easing: Easing.out(Easing.back(2)) }),
                 withTiming(1, { duration: 350, easing: Easing.out(Easing.ease) })
             );
-            rotation.value = withDelay(100,
+            rotation.value = withDelay(
+                100,
                 withSequence(
                     withTiming(-8, { duration: 180 }),
                     withTiming(6, { duration: 180 }),
@@ -1164,7 +1166,7 @@ export const Overview: React.FC = () => {
                 </TouchableOpacity>
             )}
 
-            {!showCalendar && (
+            {config.features.gamblingEnabled && !showCalendar && (
                 <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={handleGamblingPress}
