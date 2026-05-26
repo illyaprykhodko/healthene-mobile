@@ -16,6 +16,7 @@ import { GlassSurface } from 'components/GlassSurface';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import FeatherIcon from '@react-native-vector-icons/feather';
+import { DayAdherenceCard } from 'components/DayAdherenceCard';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
@@ -1001,6 +1002,8 @@ export const Overview: React.FC = () => {
                 <View style={styles.content}>
                     {/* Health Question Section */}
                     <HealthQuestion date={currentDate} isFutureDate={isFutureDateCheck} />
+
+                    <DayAdherenceCard date={currentDate} />
 
                     <Text style={styles.title}>My Daily Plan</Text>
 

@@ -1,4 +1,5 @@
 // outsource dependencies
+import moment from 'moment';
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
@@ -16,7 +17,10 @@ import { TextLogo } from 'components/TextLogo';
 import { Hamburger } from 'components/Hamburger';
 import { RootState, useAppSelector } from 'store';
 import { SplashScreen } from 'components/SplashScreen';
+// import { ActivityRings } from 'components/ActivityRings';
+import { useDayAdherence } from 'hooks/useDayAdherence';
 import { useGetWelcomeQuery } from 'store/api/publicApi';
+// import { DayAdherenceCard } from 'components/DayAdherenceCard';
 
 type DrawerParamList = {
     [ROUTES.MAIN]: undefined;
@@ -39,6 +43,7 @@ export const MainScreen: React.FC = () => {
 
     const { data: welcomeData, isLoading } = useGetWelcomeQuery();
     const welcomeImageUrl = welcomeData?.image?.url;
+    const adherence = useDayAdherence(moment().format('YYYY-MM-DD'));
 
     const timeGreeting = () => {
         const hour = new Date().getHours();
@@ -70,11 +75,24 @@ export const MainScreen: React.FC = () => {
             </View>
 
             <View style={styles.content}>
+                {/* {adherence.hasData && (
+                    <View style={styles.ringsWrapper}>
+                        <DayAdherenceCard date={moment().format('YYYY-MM-DD')} />
+                        <ActivityRings
+                            gap={4}
+                            size={104}
+                            strokeWidth={9}
+                            rings={adherence.rings}
+                            centerText={`${Math.round(adherence.overall * 100)}%`}
+                        />
+                    </View>
+                )} */}
                 <View style={styles.descriptionWrapper}>
                     <Text variant="h1" style={[styles.title, { color: theme.colors.text }]}>
                         {timeGreeting()}
                     </Text>
                 </View>
+
 
                 <View style={styles.imageWrapper}>
                     {welcomeImageUrl && (
@@ -129,6 +147,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         marginBottom: OFFSET.VERTICAL,
         marginTop: OFFSET.VERTICAL * 5,
+    },
+    ringsWrapper: {
+        alignItems: 'center',
+        marginVertical: OFFSET.POINT,
     },
     title: {
         flex: 1,
