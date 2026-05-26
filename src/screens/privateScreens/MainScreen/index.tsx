@@ -18,7 +18,7 @@ import { Hamburger } from 'components/Hamburger';
 import { RootState, useAppSelector } from 'store';
 import { SplashScreen } from 'components/SplashScreen';
 // import { ActivityRings } from 'components/ActivityRings';
-import { useDayAdherence } from 'hooks/useDayAdherence';
+// import { useDayAdherence } from 'hooks/useDayAdherence';
 import { useGetWelcomeQuery } from 'store/api/publicApi';
 // import { DayAdherenceCard } from 'components/DayAdherenceCard';
 
@@ -43,7 +43,7 @@ export const MainScreen: React.FC = () => {
 
     const { data: welcomeData, isLoading } = useGetWelcomeQuery();
     const welcomeImageUrl = welcomeData?.image?.url;
-    const adherence = useDayAdherence(moment().format('YYYY-MM-DD'));
+    // const adherence = useDayAdherence(moment().format('YYYY-MM-DD'));
 
     const timeGreeting = () => {
         const hour = new Date().getHours();

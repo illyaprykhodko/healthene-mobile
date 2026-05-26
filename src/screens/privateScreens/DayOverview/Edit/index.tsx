@@ -79,7 +79,15 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
     const birdSoundEnabled = useAppSelector(selectBirdSoundEnabled);
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
-    const targetPhaseId = phaseId || route.params?.phaseId;
+    const initialPhaseId = phaseId || route.params?.phaseId;
+
+    // Phase ids are date-specific (Breakfast on May 27 != Breakfast on May 28). The header
+    // date arrows only change the date, so we re-resolve the phase id for the viewed day by
+    // matching the opened phase's identity (meal name, or type for non-meal phases).
+    const phaseIdentityRef = useRef<{ type?: string; mealName?: string } | null>(null);
+    // `any` mirrors the previous `route.params?.phaseId` typing; call sites are runtime-guarded
+    // by `if (!targetPhaseId || !currentPhase) return`, so the undefined (no-match) case is safe.
+    const [targetPhaseId, setTargetPhaseId] = useState<any>(initialPhaseId);
 
     const haptics = useHaptic();
     const [birdAnimationStep, setBirdAnimationStep] = useState(false);
@@ -109,6 +117,28 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const { data: dayOverviewData, isLoading: isDayOverviewLoading } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
     });
+
+    // Capture the opened phase's identity once, then re-point targetPhaseId at the matching
+    // phase whenever the viewed day changes. Resolves to undefined if the new day has no such
+    // phase (e.g. no Breakfast planned) — the screen then shows its empty state.
+    useEffect(() => {
+        const phases = dayOverviewData?.phases;
+        if (!phases?.length) { return; }
+
+        if (!phaseIdentityRef.current) {
+            const opened = phases.find(phase => phase.id === initialPhaseId);
+            if (opened) {
+                phaseIdentityRef.current = { type: opened.type, mealName: opened.meal?.name };
+            }
+        }
+
+        const identity = phaseIdentityRef.current;
+        if (!identity) { return; }
+
+        const match = phases.find(phase =>
+            (identity.mealName ? phase.meal?.name === identity.mealName : phase.type === identity.type));
+        setTargetPhaseId(match?.id);
+    }, [dayOverviewData, initialPhaseId]);
 
     const { data: phaseItems, isLoading: isPhaseItemsLoading, refetch: refetchPhaseItems } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
@@ -147,6 +177,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             }))
             .sort((a, b) => (a.order || 0) - (b.order || 0));
     }, [phaseItems]);
+    // Drop the previous day's items the moment the phase context changes, so they don't
+    // linger while the new day's items load (or stay empty if nothing is planned).
+    useEffect(() => {
+        setLocalItems([]);
+    }, [targetPhaseId]);
     useEffect(() => {
         if (items.length > 0) {
             setLocalItems(items);
@@ -683,9 +718,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         return 0;
     });
     const title = currentPhase?.meal?.name
+                  || phaseIdentityRef.current?.mealName
                   || (currentPhase?.type === 'QUESTION' ? 'Health Question'
                       : currentPhase?.type === 'ANYTIME' ? 'Anytime'
-                          : convertTypeToTitle(currentPhase?.type || '', true));
+                          : convertTypeToTitle(currentPhase?.type || phaseIdentityRef.current?.type || '', true));
     const isPastDate = moment(targetDate).isBefore(moment(), 'day');
     const isFutureDate = moment(targetDate).isAfter(moment(), 'day');
 
@@ -839,7 +875,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         ))
                     ) : (
                         <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
-          No items found
+                            {currentPhase ? 'No items found' : `No "${title}" planned for this day`}
                         </Text>
                     )}
                 </ScrollView>
