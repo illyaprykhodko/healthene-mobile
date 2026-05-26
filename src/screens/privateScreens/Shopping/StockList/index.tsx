@@ -2,6 +2,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View, SectionList } from 'react-native';
 import React, { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -161,7 +162,7 @@ const StockList: React.FC = () => {
 
     const disabled = isLoading || isUpdating;
 
-    const renderItem = useCallback(({ item }: { item: StockItem }) => {
+    const renderItem = useCallback(({ item, index }: { item: StockItem; index: number }) => {
         const isChecked = checkedItems.includes(item.id);
 
         // Convert weight
@@ -174,41 +175,47 @@ const StockList: React.FC = () => {
         }
 
         return (
-            <PressableScale
-                scale={1}
-                haptic="success"
-                disabled={disabled}
-                style={styles.itemContainer}
-                onPress={() => handleToggleItem(item)}
+            <Animated.View
+                exiting={FadeOut.duration(220)}
+                layout={LinearTransition.springify().damping(20)}
+                entering={FadeInDown.delay(Math.min(index, 10) * 80).springify().mass(1.2).damping(30)}
             >
-                <DefImage
-                    src={item.food?.coverImage?.url}
-                    style={isChecked ? { ...styles.image, ...styles.imageChecked } : styles.image}
-                />
-                <View style={styles.textContainer}>
-                    <Text
-                        variant="h5"
-                        style={isChecked ? styles.textDecoration : undefined}
-                    >
-                        {item.food?.name}
-                    </Text>
-                    <Text
-                        variant="h6"
-                        color={COLORS.GREY}
-                        style={isChecked ? styles.textDecoration : undefined}
-                    >
-                        {convertedWeight} {unit}
-                    </Text>
-                </View>
-                {/* Visual-only checkbox — pointerEvents=none so the row PressableScale owns the tap. */}
-                <View pointerEvents="none" style={styles.checkboxWrap}>
-                    <Checkbox
-                        editable={false}
-                        value={isChecked}
-                        onChange={() => {}}
+                <PressableScale
+                    scale={1}
+                    haptic="success"
+                    disabled={disabled}
+                    style={styles.itemContainer}
+                    onPress={() => handleToggleItem(item)}
+                >
+                    <DefImage
+                        src={item.food?.coverImage?.url}
+                        style={isChecked ? { ...styles.image, ...styles.imageChecked } : styles.image}
                     />
-                </View>
-            </PressableScale>
+                    <View style={styles.textContainer}>
+                        <Text
+                            variant="h5"
+                            style={isChecked ? styles.textDecoration : undefined}
+                        >
+                            {item.food?.name}
+                        </Text>
+                        <Text
+                            variant="h6"
+                            color={COLORS.GREY}
+                            style={isChecked ? styles.textDecoration : undefined}
+                        >
+                            {convertedWeight} {unit}
+                        </Text>
+                    </View>
+                    {/* Visual-only checkbox — pointerEvents=none so the row PressableScale owns the tap. */}
+                    <View pointerEvents="none" style={styles.checkboxWrap}>
+                        <Checkbox
+                            editable={false}
+                            value={isChecked}
+                            onChange={() => {}}
+                        />
+                    </View>
+                </PressableScale>
+            </Animated.View>
         );
     }, [checkedItems, disabled, handleToggleItem]);
 

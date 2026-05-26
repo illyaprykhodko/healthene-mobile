@@ -7,6 +7,7 @@ import { SwipeListView } from 'react-native-swipe-list-view';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View, RefreshControl } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Animated, { SlideInRight, FadeOut, LinearTransition, SlideInLeft } from 'react-native-reanimated';
 
 // local dependencies
 import Text from 'components/Text.tsx';
@@ -147,10 +148,21 @@ const MessengerList = () => {
                 rightOpenValue={-ITEM_HIDDEN_SIZE}
                 renderHiddenItem={renderHiddenItem}
                 contentContainerStyle={styles.flexGrow}
-                keyExtractor={({ id }, index) => `${id}-${index}`}
+                keyExtractor={({ id }) => String(id)}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
                 ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.grey }]} />}
-                renderItem={({ item }) => <Message key={item.id} {...item } goToReadMessage={() => goToReadMessage(item)} />}
+                renderItem={({ item, index }) => (
+                    <Animated.View
+                        // SlideInLeft keeps opacity at 1 throughout. FadeIn would let the SwipeListView's
+                        // hidden red delete button bleed through during 0→1 opacity ramp on insert.
+                        // First-batch stagger (cap at 10) gives a visible wave on initial render.
+                        entering={SlideInLeft.delay(Math.min(index, 10) * 100).springify().mass(1.5).damping(55)}
+                        layout={LinearTransition.springify().damping(20)}
+                        exiting={FadeOut.duration(220)}
+                    >
+                        <Message key={item.id} {...item} goToReadMessage={() => goToReadMessage(item)} />
+                    </Animated.View>
+                )}
             />
             <Button
                 variant="outline"

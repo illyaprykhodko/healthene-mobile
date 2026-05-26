@@ -2,6 +2,7 @@
 import React, { memo, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StyleSheet, TouchableOpacity, View, FlatList } from 'react-native';
+import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 // local dependencies
 import Text from 'components/Text';
@@ -32,36 +33,42 @@ const VideoListScreen: React.FC = () => {
         });
     }, [navigation]);
 
-    const renderVideoItem = useCallback(({ item }: { item: VideoItem }) => {
+    const renderVideoItem = useCallback(({ item, index }: { item: VideoItem; index: number }) => {
         // Get the video attachment - could be nested or direct
         const video: Attachment | undefined = (item as any)?.attachment || item;
 
         if (!video) { return null; }
 
         return (
-            <TouchableOpacity
-                style={styles.listItem}
-                onPress={() => handleNavigateToVideo(video)}
+            <Animated.View
+                exiting={FadeOut.duration(220)}
+                layout={LinearTransition.springify().damping(20)}
+                entering={FadeInDown.delay(Math.min(index, 10) * 60).springify().mass(7).damping(55)}
             >
-                <View style={styles.videoContainer}>
-                    {video.embedUrl ? (
-                        <View pointerEvents="none">
-                            <YoutubeVideo url={video.embedUrl} controls={false} />
-                        </View>
-                    ) : (
-                        <View pointerEvents="none">
-                            <PrivateVideo video={video} paused />
-                        </View>
-                    )}
-                </View>
-                <Text
-                    variant="h4"
-                    numberOfLines={2}
-                    style={[styles.title, { color: theme.colors.text }]}
+                <TouchableOpacity
+                    style={styles.listItem}
+                    onPress={() => handleNavigateToVideo(video)}
                 >
-                    {video.title || 'Untitled Video'}
-                </Text>
-            </TouchableOpacity>
+                    <View style={styles.videoContainer}>
+                        {video.embedUrl ? (
+                            <View pointerEvents="none">
+                                <YoutubeVideo url={video.embedUrl} controls={false} />
+                            </View>
+                        ) : (
+                            <View pointerEvents="none">
+                                <PrivateVideo video={video} paused />
+                            </View>
+                        )}
+                    </View>
+                    <Text
+                        variant="h4"
+                        numberOfLines={2}
+                        style={[styles.title, { color: theme.colors.text }]}
+                    >
+                        {video.title || 'Untitled Video'}
+                    </Text>
+                </TouchableOpacity>
+            </Animated.View>
         );
     }, [theme.colors.text, handleNavigateToVideo]);
 

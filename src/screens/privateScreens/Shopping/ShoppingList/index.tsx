@@ -1,8 +1,9 @@
 // outsource dependencies
 import moment from 'moment';
 import Icon from '@react-native-vector-icons/feather';
-import { StyleSheet, View, TouchableOpacity, Modal } from 'react-native';
 import { KeyboardAwareSectionList } from 'react-native-keyboard-aware-scroll-view';
+import { StyleSheet, View, TouchableOpacity, Modal, RefreshControl } from 'react-native';
+import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { useNavigation, useRoute, useIsFocused, StackActions } from '@react-navigation/native';
 import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 // local dependencies
@@ -582,15 +583,21 @@ const ShoppingList: React.FC = () => {
                     keyboardShouldPersistTaps="handled"
                     renderSectionHeader={renderSectionHeader}
                     keyExtractor={(item, index) => `${item.id}_${index}`}
-                    renderItem={({ item }) => (
-                        <ShoppingItem
-                            item={item}
-                            status={status}
-                            disabled={isLoading}
-                            isConfirmed={isConfirmed}
-                            onUpdate={handleUpdateItem}
-                            onAmountFocus={handleAmountFocus}
-                        />
+                    renderItem={({ item, index }) => (
+                        <Animated.View
+                            exiting={FadeOut.duration(220)}
+                            layout={LinearTransition.springify().damping(20)}
+                            entering={FadeInDown.delay(Math.min(index, 10) * 80).springify().mass(1.2).damping(30)}
+                        >
+                            <ShoppingItem
+                                item={item}
+                                status={status}
+                                disabled={isLoading}
+                                isConfirmed={isConfirmed}
+                                onUpdate={handleUpdateItem}
+                                onAmountFocus={handleAmountFocus}
+                            />
+                        </Animated.View>
                     )}
                     onEndReached={() => {
                         if (listData && !isFetching && page + 1 < listData.totalPages) {
@@ -598,6 +605,14 @@ const ShoppingList: React.FC = () => {
                         }
                     }}
                     onEndReachedThreshold={0.25}
+                    refreshControl={
+                        <RefreshControl
+                            // isFetching is true on initial load AND on refetch — gating on !isLoading
+                            // hides the spinner during first mount (we already show the skeleton screen there).
+                            refreshing={isFetching && !isLoading}
+                            onRefresh={refetch}
+                        />
+                    }
                 />
             )}
             <View style={styles.buttonControl}>
