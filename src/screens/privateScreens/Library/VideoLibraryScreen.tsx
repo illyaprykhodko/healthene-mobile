@@ -13,6 +13,7 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { VIDEO_LIBRARY } from 'types/video';
 import { Skeleton } from 'components/Skeleton';
+import { EmptyState } from 'components/EmptyState';
 import {
     useGetFoodTreeQuery,
     useGetMedicalProblemsQuery,
@@ -92,15 +93,11 @@ const VideoLibraryScreen: React.FC = () => {
     return (
         <Screen initialized style={styles.container}>
             {isEmpty ? (
-                <View style={styles.emptyContainer}>
-                    <Text
-                        variant="h3"
-                        textAlign="center"
-                        color={COLORS.DARK_GREY}
-                    >
-                        No videos has been seen yet
-                    </Text>
-                </View>
+                <EmptyState
+                    icon="video"
+                    title="No videos yet"
+                    subtitle="Videos shared with you will appear here."
+                />
             ) : (
                 <ScrollView>
                     {diseaseVideo.length > 0 && (

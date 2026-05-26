@@ -7,10 +7,10 @@ import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-re
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
-import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import { EmptyState } from 'components/EmptyState';
 import YoutubeVideo from 'components/YoutubeVideo';
 import PrivateVideo from 'components/PrivateVideo';
 import type { VideoItem, Attachment } from 'types/video';
@@ -75,11 +75,11 @@ const VideoListScreen: React.FC = () => {
     if (!videoList.length) {
         return (
             <Screen initialized style={styles.container}>
-                <View style={styles.emptyContainer}>
-                    <Text color={COLORS.GREY} textAlign="center">
-                        No video available
-                    </Text>
-                </View>
+                <EmptyState
+                    icon="film"
+                    title="No videos yet"
+                    subtitle="Videos for this section will appear here once available."
+                />
             </Screen>
         );
     }

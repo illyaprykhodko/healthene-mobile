@@ -27,6 +27,7 @@ import { ROUTES } from 'constants/routes';
 import { COLORS } from 'constants/colors';
 import { Button } from 'components/Button';
 import { PhaseItem } from 'types/overview';
+import { useHaptic } from 'hooks/useHaptic';
 import { groupBy, isEmpty } from 'utils/general';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppSelector, useAppDispatch } from 'store';
@@ -37,6 +38,7 @@ import { selectBirdSoundEnabled } from 'store/slices/appSlice';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
+import { CelebrationConfetti } from 'components/CelebrationConfetti';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { useUpdatePatientGamblingPointsMutation } from 'store/api/gamblingPointsApi.ts';
 import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
@@ -79,8 +81,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
 
+    const haptics = useHaptic();
     const [birdAnimationStep, setBirdAnimationStep] = useState(false);
     const [birdCheckTrigger, setBirdCheckTrigger] = useState(0);
+    const [celebrateSignal, setCelebrateSignal] = useState(0);
     const [checkboxAreaX] = useState(0);
     useEffect(() => {
         if ((localItems || []).length > 0) {
@@ -431,6 +435,12 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             );
             if (item.status === PHASE_ITEM_STATUS.DONE && !allDoneNow) {
                 Promise.resolve().then(() => setBirdCheckTrigger(t => t + 1));
+            } else if (item.status === PHASE_ITEM_STATUS.DONE && allDoneNow && !mealDateFuture) {
+                // Completing the final item of the phase — celebrate.
+                Promise.resolve().then(() => {
+                    setCelebrateSignal(s => s + 1);
+                    haptics.success();
+                });
             }
             return nextItems;
         });
@@ -681,6 +691,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
+            <CelebrationConfetti signal={celebrateSignal} />
             {config.features.birdAnimationEnabled && currentPhase?.type === OVERVIEW_TYPE.MEAL && (
                 <BirdAnimation
                     muted={!birdSoundEnabled}

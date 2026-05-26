@@ -14,6 +14,7 @@ import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
+import { EmptyState } from 'components/EmptyState';
 import { useAppDispatch, useAppSelector } from 'store';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { useGetCurrentLibraryElementsQuery } from 'store/api/questionApi';
@@ -569,9 +570,11 @@ const ShoppingList: React.FC = () => {
                 handleItem={handleCategoryChange}
             />
             {groupedList.length === 0 ? (
-                <Text textAlign="center" color={COLORS.GREY} style={styles.emptyText}>
-                    No shopping list was found
-                </Text>
+                <EmptyState
+                    icon="shopping-cart"
+                    title="Your shopping list is empty"
+                    subtitle="Items you add will show up here, grouped by aisle."
+                />
             ) : (
                 <KeyboardAwareSectionList
                     enableOnAndroid

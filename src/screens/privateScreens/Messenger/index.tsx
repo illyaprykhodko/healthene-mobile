@@ -18,6 +18,7 @@ import { ROUTES } from 'constants/routes.ts';
 import { Button } from 'components/Button.tsx';
 import { MessageItem } from 'types/messenger.ts';
 import { MessageService } from 'services/messages';
+import { EmptyState } from 'components/EmptyState.tsx';
 import { RootStackParamList } from 'services/navigation';
 import { clearReplyMessage, setReplyMessage } from 'store/slices/messengerSlice.ts';
 import { Message } from 'screens/privateScreens/Messenger/components/MessageItem.tsx';
@@ -148,6 +149,13 @@ const MessengerList = () => {
                 rightOpenValue={-ITEM_HIDDEN_SIZE}
                 renderHiddenItem={renderHiddenItem}
                 contentContainerStyle={styles.flexGrow}
+                ListEmptyComponent={
+                    <EmptyState
+                        icon="message-circle"
+                        title="No messages yet"
+                        subtitle="Start a conversation with your care team — tap New Message below."
+                    />
+                }
                 keyExtractor={({ id }) => String(id)}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
                 ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.grey }]} />}
