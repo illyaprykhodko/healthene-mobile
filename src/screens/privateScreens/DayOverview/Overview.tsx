@@ -4,18 +4,21 @@ import Animated, {
     Easing,
     withDelay,
     withTiming,
+    interpolate,
     withSequence,
+    Extrapolation,
     useSharedValue,
     useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
+import { GlassSurface } from 'components/GlassSurface';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import FeatherIcon from '@react-native-vector-icons/feather';
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, Platform, ScrollView } from 'react-native';
 
 // local dependencies
@@ -62,6 +65,32 @@ const ICON_MARGIN = 10;
 const TIMELINE_WIDTH = 50;
 const CONNECTOR_WIDTH = 1;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Custom backdrop for the calendar BottomSheet. Replaces gorhom's hardcoded black
+// fade with a frosted-glass overlay that animates in lockstep with the sheet's index.
+const GlassBackdrop: React.FC<{ animatedIndex: { value: number }; onClose: () => void }> = ({
+    animatedIndex,
+    onClose,
+}) => {
+    const animatedStyle = useAnimatedStyle(() => ({
+        opacity: interpolate(animatedIndex.value, [-1, 0], [0, 1], Extrapolation.CLAMP),
+    }));
+    return (
+        <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
+            <GlassSurface
+                tint="dark"
+                intensity={5}
+                pointerEvents="none"
+                style={StyleSheet.absoluteFill}
+            />
+            <TouchableOpacity
+                onPress={onClose}
+                activeOpacity={1}
+                style={StyleSheet.absoluteFill}
+            />
+        </Animated.View>
+    );
+};
 
 const TimelineSVG: React.FC<{ phases: PhaseItem[]; incompleteDay?: boolean }> = ({ phases, incompleteDay = false }) => {
     const theme = useTheme();
@@ -665,11 +694,9 @@ export const Overview: React.FC = () => {
 
     const renderBackdrop = useCallback(
         (props: any) => (
-            <BottomSheetBackdrop
-                {...props}
-                disappearsOnIndex={-1}
-                appearsOnIndex={0}
-                opacity={0.5}
+            <GlassBackdrop
+                animatedIndex={props.animatedIndex}
+                onClose={() => bottomSheetRef.current?.close()}
             />
         ),
         []

@@ -1,10 +1,11 @@
 // outsource dependencies
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, TouchableOpacity, Platform } from 'react-native';
 // local dependencies
 import { Badge } from './Badge';
 import { useTheme } from 'hooks/useTheme';
 import { useAnytimeData } from 'hooks/useAnytimeData';
+import { GlassSurface } from 'components/GlassSurface';
 import {
     FoodIcon,
     DrinkIcon,
@@ -100,8 +101,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
         const anytimePhase = dayOverviewData?.phases?.find(phase => phase.type === 'ANYTIME');
         const anytimeItems = anytimePhase?.items || [];
         const exerciseItems = anytimeItems.filter(item =>
-            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
-        );
+            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY');
         return exerciseItems.filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
     }, [dayOverviewData]);
 
@@ -112,7 +112,11 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
     return (
         <>
-            <View style={[styles.container, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.blue }]}>
+            <GlassSurface
+                tint="light"
+                intensity={28}
+                style={[styles.container, { borderTopColor: theme.colors.blue }]}
+            >
                 <TouchableOpacity
                     style={styles.iconButton}
                     disabled={disabled || isLoading}
@@ -162,7 +166,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
                         <SupplementIcon disabled={!counts.supplements || disabled || isLoading} />
                     </Badge>
                 </TouchableOpacity>
-            </View>
+            </GlassSurface>
 
             {/* Modals */}
             {activeModal && (

@@ -2,12 +2,14 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useMemo, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 // local dependencies
 import { Badge } from './Badge';
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
 import Checkbox from 'components/Checkbox';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
+import { GlassSurface } from 'components/GlassSurface';
 import { ActivityIcon, CloseIcon } from './AnytimeIcons';
 import { useGetDayOverviewQuery, useUpdatePhaseMutation } from 'store/api/dayOverviewApi';
 
@@ -108,8 +110,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
         
         // Filter only exercise items (EXERCISE_AEROBIC, EXERCISE_RESISTANCE, etc.)
         const exerciseItems = anytimeItems.filter(item =>
-            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
-        );
+            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY');
 
         // Group exercises by type
         const groups = exerciseItems.reduce((acc: any, item: any) => {
@@ -150,8 +151,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
         const anytimePhase = dayOverviewData?.phases?.find(phase => phase.type === 'ANYTIME');
         const anytimeItems = anytimePhase?.items || [];
         const exerciseItems = anytimeItems.filter(item =>
-            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
-        );
+            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY');
         return exerciseItems.filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
     }, [dayOverviewData]);
     const listIsDone = useMemo(() => areAllItemsFullyDone(exerciseCategories), [exerciseCategories]);
@@ -178,8 +178,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
     const allAnytimeExercises = useMemo(() => {
         if (!anytimePhase?.items) { return []; }
         return anytimePhase.items.filter(item =>
-            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
-        );
+            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY');
     }, [anytimePhase]);
 
     const newAnytimePhaseStatus = useMemo(() => {
@@ -229,14 +228,27 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
     if (!visible) { return null; }
 
     return (
-        <View style={styles.overlay}>
+        <Animated.View
+            style={styles.overlay}
+            entering={FadeIn.duration(900)}
+            exiting={FadeOut.duration(180)}
+        >
+            <GlassSurface
+                tint="dark"
+                intensity={18}
+                style={StyleSheet.absoluteFill}
+            />
             <TouchableOpacity
                 onPress={onClose}
                 activeOpacity={1}
                 style={StyleSheet.absoluteFill}
             />
-      
-            <View style={[styles.modal, { backgroundColor: theme.colors.surface }]}>
+
+            <Animated.View
+                style={[styles.modal, { backgroundColor: theme.colors.surface }]}
+                entering={SlideInDown.springify().mass(1).damping(30)}
+                exiting={SlideOutDown.duration(220)}
+            >
                 <View style={[styles.header, { backgroundColor: '#E0EBF7', borderBottomColor: theme.colors.border }]}>
                     <View style={styles.headerLeft}>
                         <Badge count={activeExercisesCount} bgColor={theme.colors.aqua} showZero>
@@ -296,8 +308,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                                     {![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.INCOMPLETE].includes(item?.status) && (
                                         <Text style={[styles.chevron, { color: theme.colors.textSecondary }]}>›</Text>
                                     )}
-                                </TouchableOpacity>
-                            )}
+                                </TouchableOpacity>)}
                         </ScrollView>
                     )}
                 </View>
@@ -316,15 +327,14 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                         </TouchableOpacity>
                     </View>
                 )}
-            </View>
-        </View>
+            </Animated.View>
+        </Animated.View>
     );
 };
 
 const styles = StyleSheet.create({
     overlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         zIndex: 999,
     },
     modal: {

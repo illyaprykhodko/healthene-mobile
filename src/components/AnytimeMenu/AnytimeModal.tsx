@@ -10,6 +10,7 @@ import {
 import moment from 'moment';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 // local dependencies
 import { Badge } from './Badge';
 import Text from 'components/Text';
@@ -18,6 +19,7 @@ import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { AnytimeListItem } from './AnytimeListItem';
+import { GlassSurface } from 'components/GlassSurface';
 import { MeasurementInputModal } from './MeasurementInputModal';
 import {
     FoodIcon,
@@ -68,8 +70,7 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
     const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
 
     const pendingItems = items.filter(item =>
-        item.status === PHASE_ITEM_STATUS.PENDING || item.status === PHASE_ITEM_STATUS.INCOMPLETE
-    );
+        item.status === PHASE_ITEM_STATUS.PENDING || item.status === PHASE_ITEM_STATUS.INCOMPLETE);
     const completedItems = items.filter(item => item.status === PHASE_ITEM_STATUS.DONE);
 
     const toApiAnytimeItem = (item: AnytimeItem) => {
@@ -148,14 +149,27 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
     if (!visible) { return null; }
 
     return (
-        <View style={styles.overlay}>
+        <Animated.View
+            style={styles.overlay}
+            entering={FadeIn.duration(900)}
+            exiting={FadeOut.duration(180)}
+        >
+            <GlassSurface
+                tint="dark"
+                intensity={18}
+                style={StyleSheet.absoluteFill}
+            />
             <TouchableOpacity
                 onPress={onClose}
                 activeOpacity={1}
                 style={StyleSheet.absoluteFill}
             />
-      
-            <View style={[getModalStyle(), { backgroundColor: theme.colors.surface }]}>
+
+            <Animated.View
+                style={[getModalStyle(), { backgroundColor: theme.colors.surface }]}
+                entering={SlideInDown.springify().mass(1).damping(30)}
+                exiting={SlideOutDown.duration(220)}
+            >
                 <View style={[styles.header, { backgroundColor: '#E0EBF7', borderBottomColor: theme.colors.border }]}>
                     <View style={styles.headerLeft}>
                         {/* <View style={styles.badgeContainer}> */}
@@ -234,23 +248,22 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                         </ScrollView>
                     )}
                 </View>
-            </View>
+            </Animated.View>
             {selectedMeasurement && (
                 <MeasurementInputModal
+                    disabled={disabled}
                     item={selectedMeasurement}
                     visible={!!selectedMeasurement}
                     onClose={closeMeasurementModal}
-                    disabled={disabled}
                 />
             )}
-        </View>
+        </Animated.View>
     );
 };
 
 const styles = StyleSheet.create({
     overlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         zIndex: 999,
     },
     modal: {
