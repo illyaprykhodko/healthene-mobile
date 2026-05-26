@@ -37,7 +37,7 @@ const TextInput: React.FC<TextInputProps> = ({
     touched = {},
     onChangeText,
     multiline = false,
-    textAlign = 'right',
+    textAlign = 'left',
     secureTextEntry = false,
     ...input
 }) => {
