@@ -1,7 +1,7 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/feather';
 import { useNavigation } from '@react-navigation/native';
-import { StyleSheet, View, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, FlatList } from 'react-native';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 // local dependencies
 import {
@@ -17,6 +17,7 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import { useAppDispatch, useAppSelector } from 'store';
+import { PressableScale } from 'components/PressableScale';
 import ConfirmationAlert from 'components/ConfirmationAlert';
 import { SHOPPING_STEP, SHOPPING_STATUS } from 'constants/spec';
 import GenerateShoppingListSkeleton from 'components/Skeleton/GenerateShoppingListSkeleton';
@@ -90,9 +91,7 @@ const ShoppingPreferences: React.FC = () => {
             prev.map(item =>
                 (item.id === id
                     ? { ...item, amount: Math.max(0, item.amount + delta) }
-                    : item)
-            )
-        );
+                    : item)));
         setIsChanged(true);
     }, []);
 
@@ -153,24 +152,26 @@ const ShoppingPreferences: React.FC = () => {
         <View style={styles.listItem}>
             <Text variant="h4" style={styles.itemName}>{item.name}</Text>
             <View style={styles.controls}>
-                <TouchableOpacity
-                    onPress={() => handleAmountChange(item.id, -1)}
+                <PressableScale
+                    haptic="selection"
                     disabled={disabled || item.amount === 0}
+                    onPress={() => handleAmountChange(item.id, -1)}
                     style={[styles.controlBtn, item.amount === 0 && styles.controlBtnDisabled]}
                 >
                     <Icon name="minus" size={18} color={item.amount === 0 ? COLORS.LIGHT_GREY : COLORS.DARK_GREY} />
-                </TouchableOpacity>
+                </PressableScale>
                 <View style={styles.amountWrapper}>
                     <Text style={styles.amount}>{item.amount}</Text>
                     <Text style={styles.amountLabel}>Amount</Text>
                 </View>
-                <TouchableOpacity
-                    onPress={() => handleAmountChange(item.id, 1)}
+                <PressableScale
+                    haptic="selection"
                     disabled={disabled}
                     style={styles.controlBtn}
+                    onPress={() => handleAmountChange(item.id, 1)}
                 >
                     <Icon name="plus" size={18} color={COLORS.DARK_GREY} />
-                </TouchableOpacity>
+                </PressableScale>
             </View>
         </View>
     ), [handleAmountChange, disabled]);

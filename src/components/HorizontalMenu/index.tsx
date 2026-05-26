@@ -2,11 +2,12 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, FlatList, TouchableOpacity, View, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { StyleSheet, FlatList, View, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text';
 import { COLORS } from 'constants/colors';
+import { PressableScale } from 'components/PressableScale';
 
 interface MenuItem {
   id?: number | null;
@@ -163,7 +164,8 @@ const Item: React.FC<ItemProps> = memo(({ item, isActive, handleItem, handleInde
     }, [handleItem, item, handleIndex]);
 
     return (
-        <TouchableOpacity
+        <PressableScale
+            haptic="selection"
             disabled={disabled}
             onPress={handlePress}
             style={[styles.item, isActive && styles.activeItem]}
@@ -171,7 +173,7 @@ const Item: React.FC<ItemProps> = memo(({ item, isActive, handleItem, handleInde
             <Text style={[styles.text, isActive ? styles.textActive : styles.textInactive]}>
                 {item?.name}
             </Text>
-        </TouchableOpacity>
+        </PressableScale>
     );
 });
 

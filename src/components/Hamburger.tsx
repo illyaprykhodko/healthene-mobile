@@ -1,10 +1,11 @@
 // outsource dependencies
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import Icon from '@react-native-vector-icons/fontawesome5';
-import { TouchableOpacity, StyleSheet } from 'react-native';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { PressableScale } from './PressableScale';
 
 interface HamburgerProps {
     onPress: () => void;
@@ -15,7 +16,9 @@ export const Hamburger: React.FC<HamburgerProps> = ({ onPress, style }) => {
     const theme = useTheme();
 
     return (
-        <TouchableOpacity
+        <PressableScale
+            scale={1}
+            haptic="light"
             onPress={onPress}
             accessibilityLabel="Open menu"
             style={[styles.container, style]}
@@ -27,7 +30,7 @@ export const Hamburger: React.FC<HamburgerProps> = ({ onPress, style }) => {
                 iconStyle="solid"
                 color={theme.colors.background}
             />
-        </TouchableOpacity>
+        </PressableScale>
     );
 };
 

@@ -1,14 +1,16 @@
 
 // outsource dependencies
 import Icon from '@react-native-vector-icons/feather';
-import { StyleSheet, View, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, View, TextInput } from 'react-native';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 // local dependencies
 import Text from 'components/Text';
 import { useAppSelector } from 'store';
 import { COLORS } from 'constants/colors';
+import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
+import { PressableScale } from 'components/PressableScale';
 import { selectCurrentStep } from 'store/slices/shoppingSlice';
 import { SHOPPING_STATUS, SHOPPING_STEP } from 'constants/spec';
 
@@ -136,7 +138,9 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                 <View style={styles.itemInfo}>
                     {showSelectButton ? (
                         <View style={styles.controlsContainer}>
-                            <TouchableOpacity
+                            <PressableScale
+                                // haptic="light"
+                                haptic="medium"
                                 onPress={handleAmount}
                                 disabled={isItemDisabled}
                                 style={[styles.selectBtn, isItemDisabled && styles.selectBtnDisabled]}
@@ -161,7 +165,7 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                                 <Text style={[styles.selectBtnText, isItemDisabled && styles.selectBtnTextDisabled]}>
                                     select
                                 </Text>
-                            </TouchableOpacity>
+                            </PressableScale>
                         </View>
                     ) : (
                         <View style={[styles.amountContainer, isExcluded && styles.amountContainerExcluded]}>
@@ -177,7 +181,8 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
             </View>
 
             {showExcludeButton && (
-                <TouchableOpacity
+                <PressableScale
+                    haptic="light"
                     disabled={disabled}
                     onPress={handleExclude}
                     style={styles.actionBtn}
@@ -187,7 +192,7 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                         name={isExcluded ? 'plus-square' : 'trash-2'}
                         color={isExcluded ? COLORS.BLACK : COLORS.GREY}
                     />
-                </TouchableOpacity>
+                </PressableScale>
             )}
             {/*{isConfirmed && (*/}
             {/*    <TouchableOpacity*/}
@@ -200,21 +205,12 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
             {/*)}*/}
 
             {showShoppingCheckbox && (
-                <TouchableOpacity
-                    disabled={disabled}
+                <Checkbox
+                    value={isPurchased}
+                    editable={!disabled}
                     style={styles.checkbox}
-                    onPress={handlePurchase}
-                    hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-                >
-                    <View style={[
-                        styles.checkboxInner,
-                        isPurchased && styles.checkboxChecked
-                    ]}>
-                        {isPurchased && (
-                            <Icon name="check" size={16} color={COLORS.WHITE} />
-                        )}
-                    </View>
-                </TouchableOpacity>
+                    onChange={handlePurchase}
+                />
             )}
         </View>
     );

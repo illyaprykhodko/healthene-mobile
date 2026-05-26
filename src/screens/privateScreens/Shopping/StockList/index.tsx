@@ -1,6 +1,6 @@
 // outsource dependencies
 import { useNavigation } from '@react-navigation/native';
-import { StyleSheet, View, SectionList, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, SectionList } from 'react-native';
 import React, { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
 // local dependencies
 import Text from 'components/Text';
@@ -9,10 +9,12 @@ import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
 import { Button } from 'components/Button';
 import { SHOPPING_STEP } from 'constants/spec';
 import { useAppDispatch, useAppSelector } from 'store';
+import { PressableScale } from 'components/PressableScale';
 import {
     setCurrentStep,
     toggleStockItem,
@@ -172,7 +174,9 @@ const StockList: React.FC = () => {
         }
 
         return (
-            <TouchableOpacity
+            <PressableScale
+                scale={1}
+                haptic="success"
                 disabled={disabled}
                 style={styles.itemContainer}
                 onPress={() => handleToggleItem(item)}
@@ -196,10 +200,15 @@ const StockList: React.FC = () => {
                         {convertedWeight} {unit}
                     </Text>
                 </View>
-                <View style={[styles.checkbox, !isChecked && styles.checkboxUnchecked]}>
-                    {isChecked && <Text style={styles.checkmark}>✓</Text>}
+                {/* Visual-only checkbox — pointerEvents=none so the row PressableScale owns the tap. */}
+                <View pointerEvents="none" style={styles.checkboxWrap}>
+                    <Checkbox
+                        editable={false}
+                        value={isChecked}
+                        onChange={() => {}}
+                    />
                 </View>
-            </TouchableOpacity>
+            </PressableScale>
         );
     }, [checkedItems, disabled, handleToggleItem]);
 
@@ -335,25 +344,10 @@ const styles = StyleSheet.create({
         textDecorationStyle: 'solid',
         textDecorationLine: 'line-through',
     },
-    checkbox: {
-        width: 27,
-        height: 27,
-        borderRadius: 4,
-        backgroundColor: COLORS.GREEN,
+    // Visual checkbox is now `<Checkbox>` (FA5 icon). This wrapper just reserves space + right alignment.
+    checkboxWrap: {
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    checkboxUnchecked: {
-        backgroundColor: COLORS.WHITE,
-        // backgroundColor: COLORS.GREEN,
-        borderWidth: 2,
-        borderColor: COLORS.GREY,
-    },
-    checkmark: {
-        color: COLORS.WHITE,
-        fontWeight: 'bold',
-        fontSize: 20,
-        // alignSelf: 'center',
     },
     buttonControl: {
         borderTopWidth: 1,

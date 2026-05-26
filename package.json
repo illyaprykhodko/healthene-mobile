@@ -79,6 +79,7 @@
     "react-native-device-info": "^15.0.2",
     "react-native-gesture-handler": "^2.31.2",
     "react-native-google-fit": "^0.22.1",
+    "react-native-haptic-feedback": "^3.0.0",
     "react-native-health": "^1.19.0",
     "react-native-htmlview": "^0.17.0",
     "react-native-image-crop-picker": "^0.51.1",

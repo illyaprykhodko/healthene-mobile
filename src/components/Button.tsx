@@ -4,19 +4,21 @@ import {
     ViewStyle,
     TextStyle,
     StyleSheet,
-    TouchableOpacity,
+    PressableProps,
     ActivityIndicator,
-    TouchableOpacityProps,
 } from 'react-native';
 // local dependencies
 import Text from './Text';
+import { HapticType } from 'hooks/useHaptic';
 import { useTheme } from '../hooks/useTheme';
+import { PressableScale } from './PressableScale';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text' | 'success';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
-interface ButtonProps extends TouchableOpacityProps {
+interface ButtonProps extends Omit<PressableProps, 'style'> {
   style?: ViewStyle | ViewStyle[];
+  haptic?: HapticType | null;
   variant?: ButtonVariant;
   textStyle?: TextStyle;
   size?: ButtonSize;
@@ -33,6 +35,7 @@ export const Button: React.FC<ButtonProps> = ({
     textStyle,
     size = 'md',
     loading = false,
+    haptic = 'medium',
     variant = 'primary',
     ...props
 }) => {
@@ -108,7 +111,8 @@ export const Button: React.FC<ButtonProps> = ({
     };
 
     return (
-        <TouchableOpacity
+        <PressableScale
+            haptic={haptic}
             style={[
                 styles.button,
                 {
@@ -134,7 +138,7 @@ export const Button: React.FC<ButtonProps> = ({
                     {title}
                 </Text>
             )}
-        </TouchableOpacity>
+        </PressableScale>
     );
 };
 

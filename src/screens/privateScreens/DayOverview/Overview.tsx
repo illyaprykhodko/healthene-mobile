@@ -41,6 +41,7 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { COLORS } from 'constants/colors';
 import { filters } from 'services/filter';
+import { useHaptic } from 'hooks/useHaptic';
 import { Highlight } from 'components/Highlight';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppDispatch, useAppSelector } from 'store';
@@ -610,6 +611,7 @@ const getIconColorByType = (type: AddPhaseItemData['type']) => {
 
 export const Overview: React.FC = () => {
     const theme = useTheme();
+    const haptics = useHaptic();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const dispatch = useAppDispatch();
     const bottomSheetRef = useRef<BottomSheet>(null);
@@ -645,6 +647,7 @@ export const Overview: React.FC = () => {
     }, [dispatch]);
 
     const handleDayPress = useCallback((day: { dateString: string }) => {
+        haptics.selection();
         const nextDate = day.dateString;
         const isCurrent = moment(nextDate).isSame(moment(), 'day');
         const isFuture = moment(nextDate).isAfter(moment(), 'day');
@@ -658,7 +661,7 @@ export const Overview: React.FC = () => {
             calendarDays: { ...calendarDays, [nextDate]: { selected: true } },
         }));
         bottomSheetRef.current?.close();
-    }, [dispatch, calendarDays]);
+    }, [dispatch, calendarDays, haptics]);
 
     const renderBackdrop = useCallback(
         (props: any) => (
