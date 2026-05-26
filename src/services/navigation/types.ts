@@ -88,9 +88,10 @@ export type RootStackParamList = {
     isToast: boolean;
   };
   [ROUTES.REPLACEMENT]: {
-    list: any[];
+    list?: any[];
     date?: string;
     phaseId: number;
+    title?: string;
     isRestaurantMode: boolean;
   };
   [ROUTES.REPLACE_ITEMS]: {

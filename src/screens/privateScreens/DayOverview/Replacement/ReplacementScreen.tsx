@@ -1,9 +1,9 @@
 // outsource dependencies
 import React, { useCallback } from 'react';
 import Icon from '@react-native-vector-icons/fontawesome5';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -14,6 +14,8 @@ import {
     useGetRestaurantCatalogQuery,
 } from 'store/api/dayOverviewApi';
 import { ROUTES } from 'constants/routes';
+import DefImage from 'components/DefImage';
+import { BoxHolder } from 'components/preloader';
 import { RootStackParamList } from 'services/navigation';
 
 // temporary types
@@ -26,7 +28,7 @@ interface Category {
         id: number;
         recipeCount: number;
     }
-    list: [] | null;
+    list: Category[] | null;
     rescueNodes: any[];
     parentIds: number[];
     catalogType: 'RESCUE' | string;
@@ -40,32 +42,41 @@ const ReplacementScreen: React.FC = () => {
 
     const phaseId = route.params?.phaseId;
     const isRestaurantMode = route.params?.isRestaurantMode || false;
+    // When we're deep in the catalog tree (recursive push), the parent screen forwards the nested
+    // `list` via route params. Top-level entry has no `list` param (or passes an empty array — Edit
+    // screen does this) → we fetch from API. Empty array is treated identically to "no list passed".
+    const passedList: Category[] | undefined = route.params?.list;
+    const screenTitle: string = route.params?.title || 'Main Entrée';
+    const hasPassedList = Array.isArray(passedList) && passedList.length > 0;
 
-    // Fetch rescue catalog
+    // Fetch rescue catalog only at the top level (skip on nested pushes to avoid clobbering the
+    // passed `list` with the root catalog response).
     const { data: rescueCatalog, isLoading: isLoadingRescue } = useGetRescueCatalogQuery(phaseId, {
-        skip: !phaseId,
+        skip: !phaseId || hasPassedList,
     });
 
     // const [revertPhaseItem] = useRevertPhaseItemMutation();
     // Fetch restaurant catalog
     const { data: restaurantCatalog, isLoading: isLoadingRestaurant } = useGetRestaurantCatalogQuery(phaseId, {
-        skip: !phaseId,
+        skip: !phaseId || hasPassedList,
     });
 
-    const categories: Category[] = isRestaurantMode
-        ? (restaurantCatalog?.list || [])
-        : [...(rescueCatalog?.list || []), ...(restaurantCatalog ? [restaurantCatalog] : [])];
+    const categories: Category[] = hasPassedList
+        ? passedList as Category[]
+        : isRestaurantMode
+            ? (restaurantCatalog?.list || [])
+            : [...(rescueCatalog?.list || []), ...(restaurantCatalog ? [restaurantCatalog] : [])];
     const handleCategoryPress = useCallback(
         (category: Category) => {
-            if (category.list) {
-                // Nested categories - navigate to another Replacement screen
-                navigation.navigate(ROUTES.REPLACEMENT, {
+            if (Array.isArray(category.list) && category.list.length > 0) {
+                navigation.push(ROUTES.REPLACEMENT, {
                     phaseId,
                     list: category.list,
+                    title: category.name,
                     isRestaurantMode: category.restaurantCatalog,
                 });
             } else {
-                // Final category - navigate to ReplaceItems
+                // Leaf category (no `list` or empty `list`) — go to ReplaceItems screen.
                 navigation.navigate(ROUTES.REPLACE_ITEMS, {
                     phaseId,
                     isRestaurantMode,
@@ -80,11 +91,7 @@ const ReplacementScreen: React.FC = () => {
     const isLoading = isLoadingRescue || isLoadingRestaurant;
 
     if (isLoading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={theme.colors.primary} />
-            </View>
-        );
+        return <BoxHolder active />;
     }
 
     if (!categories || categories.length === 0) {
@@ -110,28 +117,30 @@ const ReplacementScreen: React.FC = () => {
         <Screen initialized style={styles.container}>
             <View style={[styles.header]}>
                 <Text variant="h3" style={[styles.headerText, { color: theme.colors.text }]}>
-                    Main Entrée
+                    {screenTitle}
                 </Text>
             </View>
             <View style={styles.list}>
                 {categories.map((category, index) => (
                     <TouchableOpacity
                         key={category.id || index}
-                        style={[styles.categoryItem, { borderBottomColor: theme.colors.border }]}
                         onPress={() => handleCategoryPress(category)}
+                        style={[styles.categoryItem, { borderBottomColor: theme.colors.border }]}
                     >
                         {category.coverImage?.url ? (
                             <View style={styles.imageContainer}>
-                                <Image source={{ uri: category.coverImage.url }} style={styles.image} />
+                                <DefImage src={category.coverImage.url} style={styles.image} />
                             </View>
                         ) : category.name === 'Restaurant Meals' ? (
                             <View style={styles.imageContainer}>
                                 <Icon iconStyle="solid" name="utensils" size={32} color={theme.colors.primary} />
                             </View>
                         ) : (
-                            <View style={styles.imageContainer} />
+                            <View style={styles.imageContainer}>
+                                <DefImage src={category?.coverImage?.url} style={styles.image} />
+                            </View>
                         )}
-                        <Text variant="h4" style={[styles.categoryName, { color: theme.colors.text }]}>
+                        <Text style={[styles.categoryName, { color: theme.colors.text }]}>
                             {category.name}
                         </Text>
                         <Icon
@@ -191,6 +200,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         lineHeight: 24,
         marginRight: 8,
+        fontFamily: 'Outfit-SemiBold'
     },
     image: {
         width: 48,
