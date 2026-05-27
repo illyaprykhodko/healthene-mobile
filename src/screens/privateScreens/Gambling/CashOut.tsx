@@ -5,10 +5,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ActivityIndicator, Alert, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
+import { useAppSelector } from 'store';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { BranchBird } from 'animation/BranchBird';
 import { RootStackParamList } from 'services/navigation';
+import { selectBirdSoundEnabled } from 'store/slices/appSlice';
 import { useLazyCheckGiftCardHealthQuery } from 'store/api/giftCardApi';
 import { useGetPatientGamblingPointsQuery } from 'store/api/gamblingPointsApi';
 
@@ -24,6 +27,7 @@ const FALLBACK_UNAVAILABILITY_MESSAGE = 'We\'re sorry, but the Gift Card service
 
 const CashOut: React.FC = () => {
     const navigation = useNavigation<Navigation>();
+    const birdSoundEnabled = useAppSelector(selectBirdSoundEnabled);
     const { data: points = 0 } = useGetPatientGamblingPointsQuery();
     const [checkHealth, { isLoading: isCheckingHealth }] = useLazyCheckGiftCardHealthQuery();
 
@@ -51,6 +55,7 @@ const CashOut: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
+            <BranchBird muted={!birdSoundEnabled} />
             {/* <View style={styles.content}> */}
             <View style={styles.sectionContainer}>
                 <Text variant="h3" style={styles.sectionLabel}>Available Funds</Text>

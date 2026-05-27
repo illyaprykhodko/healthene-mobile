@@ -75,7 +75,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         nextItem: null,
     });
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
-    const birdSoundEnabled = useAppSelector(selectBirdSoundEnabled);
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
     const targetPhaseId = phaseId || route.params?.phaseId;
 
@@ -425,7 +424,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         setLocalItems(prevItems => {
             const nextItems = prevItems.map(prevItem =>
-                (prevItem.id === item.id ? { ...item } : prevItem));
+                (prevItem.id === item.id ? { ...item } : prevItem)
+            );
             const allDoneNow = nextItems.every(
                 listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
             );
@@ -627,7 +627,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     }, [navigation]);
 
     const isLoading = isDayOverviewLoading || isPhaseItemsLoading;
-  
+
     // if (isLoading) {
     //     return (
     //         <View style={styles.section}>
@@ -729,8 +729,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             <View style={styles.list}>
                 <ScrollView
                     ref={scrollViewRef}
-                    scrollEnabled={scrollEnabled}
                     style={isFutureDate && styles.opacity}
+                    scrollEnabled={scrollEnabled}
                     onContentSizeChange={() => {
                         if (shouldScrollToAddedEnd && !isAddingAddedItem) {
                             setTimeout(() => {
