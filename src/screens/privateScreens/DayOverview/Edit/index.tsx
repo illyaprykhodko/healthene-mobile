@@ -42,7 +42,6 @@ import { useUpdatePatientGamblingPointsMutation } from 'store/api/gamblingPoints
 import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
 
-
 interface EditProps {
     date?: string;
     phaseId?: string | number;
@@ -77,7 +76,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
     const birdSoundEnabled = useAppSelector(selectBirdSoundEnabled);
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
-    const targetPhaseId = phaseId || route.params?.phaseId;
+    const [targetPhaseId, setTargetPhaseId] = useState(phaseId || route.params?.phaseId);
+    const phaseSignatureRef = useRef<{ type: string; mealName: string | null } | null>(null);
+    const [lastResolvedDate, setLastResolvedDate] = useState<string | null>(null);
 
     const [birdAnimationStep, setBirdAnimationStep] = useState(false);
     const [birdCheckTrigger, setBirdCheckTrigger] = useState(0);
@@ -102,11 +103,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         [localItems]
     );
 
-    const { data: dayOverviewData, isLoading: isDayOverviewLoading } = useGetDayOverviewQuery(targetDate, {
+    const { currentData: dayOverviewData } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
     });
 
-    const { data: phaseItems, isLoading: isPhaseItemsLoading, refetch: refetchPhaseItems } = useGetPhaseItemsQuery(targetPhaseId, {
+    const { currentData: phaseItems, isFetching: isPhaseItemsFetching, refetch: refetchPhaseItems } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
     });
     // mutations
@@ -122,6 +123,30 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const [updatePatientGamblingPoints] = useUpdatePatientGamblingPointsMutation();
     //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
+
+    useEffect(() => {
+        if (!dayOverviewData?.phases) { return; }
+
+        if (!phaseSignatureRef.current && currentPhase) {
+            phaseSignatureRef.current = {
+                type: currentPhase.type,
+                mealName: currentPhase.meal?.name ?? null,
+            };
+            return;
+        }
+
+        const signature = phaseSignatureRef.current;
+        if (!signature || currentPhase) { return; }
+
+        const matching = dayOverviewData.phases.find(phase => {
+            if (phase.type !== signature.type) { return false; }
+            if (signature.type === OVERVIEW_TYPE.MEAL) {
+                return (phase.meal?.name ?? null) === signature.mealName;
+            }
+            return true;
+        });
+        if (matching) { setTargetPhaseId(matching.id); }
+    }, [dayOverviewData?.phases, currentPhase]);
 
     const getItemTitle = (item: any) =>
         item.food?.name
@@ -143,11 +168,15 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             }))
             .sort((a, b) => (a.order || 0) - (b.order || 0));
     }, [phaseItems]);
+
     useEffect(() => {
-        if (items.length > 0) {
-            setLocalItems(items);
-        }
-    }, [items]);
+        setLocalItems(items);
+        if (lastResolvedDate === targetDate) { return; }
+        if (!currentPhase) { return; }
+        if (phaseItems === undefined) { return; }
+        setLastResolvedDate(targetDate);
+    }, [items, targetDate, lastResolvedDate, currentPhase, phaseItems]);
+
     const computeExcludeIds = (): string[] => {
         switch (currentPhase?.type) {
             default:
@@ -626,8 +655,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         };
     }, [navigation]);
 
-    const isLoading = isDayOverviewLoading || isPhaseItemsLoading;
-  
+    const isLoading
+        = lastResolvedDate !== targetDate
+        || isPhaseItemsFetching;
+
+
     // if (isLoading) {
     //     return (
     //         <View style={styles.section}>
@@ -710,7 +742,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             }
                         }}>
                             <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
-            Change Meal
+                                Change Meal
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -828,7 +860,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         ))
                     ) : (
                         <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
-          No items found
+                            No items found
                         </Text>
                     )}
                 </ScrollView>
