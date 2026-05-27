@@ -33,7 +33,6 @@ export type RootStackParamList = {
   [ROUTES.SETTINGS]: undefined;
   [ROUTES.SHOPPING]: undefined;
   [ROUTES.MESSENGER]: undefined;
-  [ROUTES.DAILY_PLAN]: undefined;
   [ROUTES.MY_RESULTS]: undefined;
   [ROUTES.ABOUT_PLAN]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
@@ -59,6 +58,7 @@ export type RootStackParamList = {
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
   [ROUTES.MEAL_PREFERENCES_MEALS_LIST]: undefined;
+  [ROUTES.DAILY_PLAN]: { screen?: string } | undefined;
   [ROUTES.MESSENGER_CAMERA]: {
     captureMode?: 'photo' | 'video';
   } | undefined;

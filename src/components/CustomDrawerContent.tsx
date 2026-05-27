@@ -266,8 +266,8 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                     icon="file"
                     title="My Daily Plan"
                     badge={badges.dailyPlan}
-                    onPress={() => navigate(ROUTES.DAILY_PLAN)}
                     focused={getFocusedRoute() === ROUTES.DAILY_PLAN}
+                    onPress={() => navigate(ROUTES.DAILY_PLAN, { screen: ROUTES.DAY_OVERVIEW })}
                 />
                 <DrawerItem
                     icon="shopping-cart"
