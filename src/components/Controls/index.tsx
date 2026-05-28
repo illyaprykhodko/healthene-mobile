@@ -1,7 +1,7 @@
 // outsource dependencies
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Icon from '@react-native-vector-icons/fontawesome5';
-import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import { View, StyleSheet, Pressable, ViewStyle } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text';
@@ -21,6 +21,17 @@ interface ControlsProps {
 
 const clickableZone = { bottom: 25, left: 25, right: 25, top: 25 };
 
+const normalizeAmount = (value: number): number => {
+    const fraction = value - Math.floor(value);
+    if (fraction < 0.5 && fraction !== 0) {
+        return Math.floor(value) + 0.5;
+    }
+    if (fraction > 0.5 && fraction < 1) {
+        return Math.ceil(value);
+    }
+    return value;
+};
+
 const Controls: React.FC<ControlsProps> = ({
     style,
     unit = '',
@@ -29,49 +40,68 @@ const Controls: React.FC<ControlsProps> = ({
     disabled = false,
     isSurrogateRecipe = false,
 }) => {
-    const handleUpdateData = (newAmount: number) => {
-        const prepareAmount = newAmount - Math.floor(newAmount);
-        if (prepareAmount < 0.5 && prepareAmount !== 0) {
-            updateData(Math.floor(newAmount) + 0.5);
-        } else if (prepareAmount > 0.5 && prepareAmount < 1) {
-            updateData(Math.ceil(newAmount));
-        } else {
-            updateData(newAmount);
-        }
-    };
+    const [localAmount, setLocalAmount] = useState(amount);
+    const pendingAmount = useRef<number | null>(null);
+    const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const updateDataRef = useRef(updateData);
 
-    // const formatAmount = (value: number): string => {
-    //     if (value % 1 === 0) {
-    //         return value.toString();
-    //     }
-    //     if (value % 1 === 0.5) {
-    //         const whole = Math.floor(value);
-    //         return whole > 0 ? `${whole} ½` : '½';
-    //     }
-    //     return value.toFixed(2);
-    // };
+    useEffect(() => {
+        updateDataRef.current = updateData;
+    }, [updateData]);
+
+    useEffect(() => {
+        setLocalAmount(amount);
+    }, [amount]);
+
+    // Flush any pending value on unmount so navigating away mid-debounce
+    // doesn't drop the user's last change.
+    useEffect(() => () => {
+        if (flushTimer.current) {
+            clearTimeout(flushTimer.current);
+        }
+        if (pendingAmount.current !== null) {
+            updateDataRef.current(pendingAmount.current);
+            pendingAmount.current = null;
+        }
+    }, []);
+
+    const handleUpdateData = (next: number) => {
+        const normalized = normalizeAmount(next);
+        setLocalAmount(normalized);
+        pendingAmount.current = normalized;
+        if (flushTimer.current) {
+            clearTimeout(flushTimer.current);
+        }
+        flushTimer.current = setTimeout(() => {
+            flushTimer.current = null;
+            if (pendingAmount.current !== null) {
+                const value = pendingAmount.current;
+                pendingAmount.current = null;
+                updateDataRef.current(value);
+            }
+        }, 1000);
+    };
 
     return (
         <View style={[styles.wrapper, style]}>
             <View style={styles.controls}>
-                <TouchableOpacity
-                    style={styles.icon}
+                <Pressable
                     hitSlop={clickableZone}
-                    disabled={disabled || amount <= 0.5}
-                    onPress={() => !(disabled || amount <= 0.5) && handleUpdateData(amount - 0.5)}
+                    unstable_pressDelay={0}
+                    style={({ pressed }) => [styles.icon, pressed && styles.iconPressed]}
+                    onPress={() => !(disabled || localAmount <= 0.5) && handleUpdateData(localAmount - 0.5)}
                 >
                     <Icon iconStyle="solid" name="minus" color="#76A7D8" size={24} />
-                </TouchableOpacity>
-                {/* <Text style={styles.count}>{formatAmount(amount)}</Text> */}
-                <Text style={styles.count}>{decimalsToFractions(amount)}</Text>
-                <TouchableOpacity
-                    disabled={disabled}
-                    style={styles.icon}
+                </Pressable>
+                <Text style={styles.count}>{decimalsToFractions(localAmount)}</Text>
+                <Pressable
                     hitSlop={clickableZone}
-                    onPress={() => !disabled && handleUpdateData(amount + 0.5)}
+                    unstable_pressDelay={0}
+                    onPress={() => !disabled && handleUpdateData(localAmount + 0.5)}
+                    style={({ pressed }) => [styles.icon, pressed && styles.iconPressed]}
                 >
                     <Icon iconStyle="solid" name="plus" color="#76A7D8" size={24} />
-                </TouchableOpacity>
+                </Pressable>
             </View>
             {!unit ? null : (
                 <Text
@@ -110,9 +140,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: '#E0EBF7',
     },
+    iconPressed: {
+        backgroundColor: '#C7DAEF',
+    },
     count: {
         color: COLORS.BLACK,
         fontSize: 57,
+        minWidth: 180,
         fontWeight: '500',
         textAlign: 'center',
         paddingHorizontal: OFFSET.HORIZONTAL * 3,

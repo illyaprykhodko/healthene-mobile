@@ -141,17 +141,24 @@ const Item: React.FC = () => {
             return;
         }
 
+        const phaseId = item?.phase?.id;
         const previousRating = item?.rating || 0;
         const nextRating = updatedItem?.rating || 0;
         const isRatingUpdate = Boolean(options?.isRatingUpdate);
 
         try {
-            const updatePromise = updatePhaseItem({
-                id: itemId,
-                phaseId: item.phase.id,
-                data: updatedItem,
-                date,
-            }).unwrap();
+            const updatePromise = new Promise<PhaseItem>((resolve, reject) => {
+                setTimeout(() => {
+                    updatePhaseItem({
+                        date,
+                        phaseId,
+                        id: itemId,
+                        data: updatedItem,
+                    })
+                        .unwrap()
+                        .then(resolve, reject);
+                }, 0);
+            });
 
             if (isRatingUpdate) {
                 pendingRatingSaveRef.current = updatePromise;
