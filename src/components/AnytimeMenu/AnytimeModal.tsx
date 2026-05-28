@@ -177,7 +177,7 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.content}>
+                <View style={[styles.content, isFutureDate && styles.opacityFuture]}>
                     {icon === 'ruler' ? (
                         <ScrollView style={styles.scrollView}>
                             {pendingItems.map(item => (
@@ -240,7 +240,7 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                     item={selectedMeasurement}
                     visible={!!selectedMeasurement}
                     onClose={closeMeasurementModal}
-                    disabled={disabled}
+                    disabled={disabled || isFutureDate}
                 />
             )}
         </View>
@@ -310,5 +310,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#808080',
         textAlign: 'center',
+    },
+    opacityFuture: {
+        opacity: 0.4,
     },
 });

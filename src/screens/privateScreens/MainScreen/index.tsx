@@ -24,12 +24,12 @@ type DrawerParamList = {
     [ROUTES.LIBRARY]: undefined;
     [ROUTES.SHOPPING]: undefined;
     [ROUTES.MESSENGER]: undefined;
-    [ROUTES.DAILY_PLAN]: undefined;
     [ROUTES.ABOUT_PLAN]: undefined;
     [ROUTES.MY_RESULTS]: undefined;
     [ROUTES.MEAL_PREFERENCES]: undefined;
     [ROUTES.HEALTH_PROFILE_STACK]: undefined;
     [ROUTES.CUISINE_DISTRIBUTION]: undefined;
+    [ROUTES.DAILY_PLAN]: { screen?: string } | undefined;
 };
 
 export const MainScreen: React.FC = () => {
@@ -50,7 +50,7 @@ export const MainScreen: React.FC = () => {
     };
 
     const handleGetStarted = () => {
-        navigation.navigate(ROUTES.DAILY_PLAN);
+        navigation.navigate(ROUTES.DAILY_PLAN, { screen: ROUTES.DAY_OVERVIEW });
     };
 
     const handleOpenDrawer = () => {

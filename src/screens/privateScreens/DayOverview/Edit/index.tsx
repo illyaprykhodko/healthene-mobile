@@ -873,6 +873,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         title="Add"
                         variant="primary"
                         onPress={handleAddItem}
+                        disabled={isFutureDate}
                         textStyle={styles.textAddButton}
                         style={{
                             ...styles.button,

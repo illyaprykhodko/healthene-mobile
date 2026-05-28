@@ -905,14 +905,14 @@ export const Overview: React.FC = () => {
                 return;
             }
             const measurementType = measurement?.type;
-            if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
-                (navigation as any).navigate('WeightMeasurement', {
+            if (measurementType === 'WEIGHT' && phase.status !== PHASE_ITEM_STATUS.DONE) {
+                (navigation as any).navigate(ROUTES.WEIGHT_MEASUREMENT, {
                     measurementPhaseItem: { ...phase, measurement },
                     date: currentDate,
                 });
                 return;
             }
-            if (phase.status === 'DONE') {
+            if (phase.status === PHASE_ITEM_STATUS.DONE) {
                 (navigation as any).navigate('SaveValue', {
                     measurementType: measurement?.type,
                     measurementName: measurement?.name,
@@ -967,9 +967,9 @@ export const Overview: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            <View style={[styles.container, isFutureDate && styles.opacityFuture]}>
+            <View style={styles.container}>
                 <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                    <View style={styles.content}>
+                    <View style={[styles.content, isFutureDate && styles.opacityFuture]}>
                         {/* Health Question Section */}
                         <HealthQuestion date={currentDate} isFutureDate={Boolean(isFutureDate)} />
 
@@ -1226,9 +1226,9 @@ export const Overview: React.FC = () => {
 
             {selectedMeasurement && (
                 <MeasurementInputModal
-                    disabled={isFetching}
                     item={selectedMeasurement}
                     visible={!!selectedMeasurement}
+                    disabled={isFetching || !!isFutureDate}
                     onClose={() => setSelectedMeasurement(null)}
                 />
             )}

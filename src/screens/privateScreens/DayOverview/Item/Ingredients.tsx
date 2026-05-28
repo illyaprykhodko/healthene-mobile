@@ -19,9 +19,10 @@ import { prepareIngredientNameWithUnit } from 'utils/ingredientUtils';
 
 interface IngredientsProps {
     item: PhaseItem;
+    disabled: boolean;
 }
 
-const Ingredients: React.FC<IngredientsProps> = ({ item }) => {
+const Ingredients: React.FC<IngredientsProps> = ({ item, disabled }) => {
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
 
@@ -215,7 +216,7 @@ const Ingredients: React.FC<IngredientsProps> = ({ item }) => {
     }
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, disabled && styles.disabledOpacity]}>
             <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: COLORS.BLACK }]}>
                 {recipe.name}
             </Text>
@@ -358,5 +359,8 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingRight: OFFSET.HORIZONTAL,
         color: COLORS.BLACK,
+    },
+    disabledOpacity: {
+        opacity: 0.4,
     },
 });

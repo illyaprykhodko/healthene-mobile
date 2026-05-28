@@ -11,10 +11,11 @@ import { size, sortBy } from 'utils/general';
 import { PatientRecipe } from 'types/overview';
 
 interface RecipeProps {
+    disabled: boolean;
     recipe: PatientRecipe;
 }
 
-const Recipe: React.FC<RecipeProps> = ({ recipe }) => {
+const Recipe: React.FC<RecipeProps> = ({ recipe, disabled }) => {
     const theme = useTheme();
     const recipeSize = size(recipe?.steps);
     if (!recipe || !recipeSize) {
@@ -51,7 +52,7 @@ const Recipe: React.FC<RecipeProps> = ({ recipe }) => {
         const stepIndex = stepsTitles.findIndex(step => step.name === item.name);
         const isLastItem = index === steps.length - 1;
         return (
-            <View style={[styles.offset]}>
+            <View style={styles.offset}>
                 {item?.name ? (
                     <Text style={styles.link}>
                         {stepIndex + 1}. {item?.name}
@@ -83,14 +84,16 @@ const Recipe: React.FC<RecipeProps> = ({ recipe }) => {
     );
 
     return (
-        <FlatList
-            data={steps}
-            renderItem={renderItem}
-            initialNumToRender={steps.length}
-            ListHeaderComponent={renderHeader}
-            ListFooterComponent={renderFooter}
-            keyExtractor={({ id }, index) => String(id || index)}
-        />
+        <View style={disabled && styles.disabledOpacity}>
+            <FlatList
+                data={steps}
+                renderItem={renderItem}
+                initialNumToRender={steps.length}
+                ListHeaderComponent={renderHeader}
+                ListFooterComponent={renderFooter}
+                keyExtractor={({ id }, index) => String(id || index)}
+            />
+        </View>
     );
 };
 
@@ -155,5 +158,8 @@ const styles = StyleSheet.create({
         marginTop: 15,
         color: '#007FFF',
         fontWeight: '600',
+    },
+    disabledOpacity: {
+        opacity: 0.4,
     },
 });

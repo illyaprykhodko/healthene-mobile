@@ -23,6 +23,7 @@ import YoutubeVideo from 'components/YoutubeVideo';
 import { IconButton } from 'components/IconButton';
 import PrivateVideo from 'components/PrivateVideo';
 import { SwipeablePanel } from 'components/SwipeablePanel';
+import moment from "moment";
 
 // Helper function to get exercise step parameters
 const getExerciseStepParams = (exercise: any, step: any, subtype: any) => ({
@@ -40,6 +41,7 @@ export default function ExerciseDetails () {
     const [showGoodWork, setShowGoodWork] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const title = exercise?.title || 'Exercise';
+    const isFutureDay = moment(date).isAfter(moment(), 'day');
 
     // Load exercise data based on type
     const { data: stretchingData, isLoading: stretchingLoading } = useGetStretchingExerciseQuery(exercise?.id?.toString() || '', {
@@ -322,6 +324,7 @@ export default function ExerciseDetails () {
                 >
                     {(video || instruction) ? (
                         <TouchableOpacity
+                            disabled={isFutureDay}
                             style={[{ alignSelf: 'flex-end' }, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.5 }]}
                             onPress={() => {
                                 setVideoData(video);
@@ -347,7 +350,8 @@ export default function ExerciseDetails () {
                     {/* Goal row */}
                     <View style={styles.repsContainer}>
                         <TouchableOpacity
-                            style={completed && { opacity: 0.5 }}
+                            disabled={isFutureDay}
+                            style={(completed || isFutureDay)&& { opacity: 0.5 }}
                             onPress={() => {
                                 navigation.navigate('EditExercise', {
                                     title,
@@ -362,6 +366,7 @@ export default function ExerciseDetails () {
                         <Checkbox
                             size={15}
                             value={completed}
+                            editable={!isFutureDay}
                             onChange={() => completeStep(itemId)}
                         />
                     </View>
@@ -372,6 +377,7 @@ export default function ExerciseDetails () {
                             {extraDisplay.map((line: string) => (
                                 <TouchableOpacity
                                     key={line}
+                                    disabled={isFutureDay}
                                     onPress={() => navigation.navigate('EditExercise', {
                                         itemId,
                                         viewOnlyExtra: true,
@@ -429,6 +435,8 @@ export default function ExerciseDetails () {
     // const clearHandler = useCallback(() => {
     //     dispatch(updateSteps({ steps: memoizedSteps, selectedSteps: [] }));
     // }, [dispatch, memoizedSteps]);
+
+    console.log('DATE', date, 'isFutureDay', isFutureDay);
     
     return (
         <Screen initialized={!isLoading} clear={() => {}} style={[styles.container, { backgroundColor: theme.colors.background }]}>

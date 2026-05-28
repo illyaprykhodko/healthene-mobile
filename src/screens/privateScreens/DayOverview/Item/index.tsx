@@ -1,4 +1,6 @@
+
 // outsource dependencies
+import moment from 'moment/moment';
 import Toast from 'react-native-toast-message';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -50,6 +52,7 @@ const Item: React.FC = () => {
     const params = route.params as RouteParams | undefined;
     const itemId = params?.id;
     const date = params?.date;
+    const isFutureDay = moment(date).isAfter(moment(), 'day');
     const initialTab = params?.activeTab || ITEM_TABS.OVERVIEW;
     
     const [activeTab, setActiveTab] = useState(initialTab);
@@ -202,15 +205,15 @@ const Item: React.FC = () => {
                 return (
                     <Overview
                         item={item}
-                        disabled={false}
+                        disabled={isFutureDay}
                         updateItem={handleUpdateItem}
                         isSurrogateRecipe={isSurrogateRecipe}
                     />
                 );
             case ITEM_TABS.RECIPE:
-                return item.recipe ? <Recipe recipe={item.recipe as any} /> : null;
+                return item.recipe ? <Recipe recipe={item.recipe as any} disabled={isFutureDay} /> : null;
             case ITEM_TABS.INGREDIENTS:
-                return <Ingredients item={item} />;
+                return <Ingredients item={item} disabled={isFutureDay} />;
             default:
                 return (
                     <View style={styles.emptyContainer}>
