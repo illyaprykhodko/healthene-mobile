@@ -20,7 +20,7 @@ import {
     useGetMealPreferencesQuery,
     useGetNewMealTemplatesQuery,
     useSaveMealPreferencesMutation,
-    useDeleteMealPreferencesMutation,
+    useResetMealPreferencesToDefaultMutation,
 } from 'store/api/mealPreferencesApi';
 import { ROUTES } from 'constants/routes';
 import { RootStackParamList } from 'services/navigation';
@@ -63,6 +63,7 @@ const ListItem: React.FC<ListItemProps> = ({ item, isSelected, onPress }) => {
 const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigation, route }) => {
     const theme = useTheme();
     const mealName = route.params?.item?.name;
+    const mealId = route.params?.item?.id;
 
     const [isReviewOpen, setIsReviewOpen] = useState(false);
     const [hasReviewBeenShown, setHasReviewBeenShown] = useState(false);
@@ -81,7 +82,7 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
     });
 
     const [savePreferences, { isLoading: isSaving }] = useSaveMealPreferencesMutation();
-    const [deletePreferences, { isLoading: isDeleting }] = useDeleteMealPreferencesMutation();
+    const [resetPreferences, { isLoading: isResetting }] = useResetMealPreferencesToDefaultMutation();
 
     useEffect(() => {
         if (favoriteList !== undefined) {
@@ -155,11 +156,8 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
                         : item)
                 );
                 await savePreferences(preparedList).unwrap();
-            } else {
-                await deletePreferences({
-                    type: MealPreferenceType.PREFERENCE,
-                    meal: mealName,
-                }).unwrap();
+            } else if (typeof mealId === 'number') {
+                await resetPreferences({ mealId }).unwrap();
             }
             const savedIds = localFavorites
                 .map(item => item.mealTemplate?.id)
@@ -169,7 +167,7 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
         } catch (error) {
             console.error('Failed to save preferences:', error);
         }
-    }, [localFavorites, savePreferences, deletePreferences, mealName, navigation]);
+    }, [localFavorites, savePreferences, resetPreferences, mealId, navigation]);
 
     const handleContinueReview = useCallback(() => {
         setIsReviewOpen(false);
@@ -225,7 +223,7 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
                 title="SAVE"
                 variant="success"
                 onPress={handleSave}
-                disabled={!hasUnsavedChanges || isSaving || isDeleting}
+                disabled={!hasUnsavedChanges || isSaving || isResetting}
                 style={[
                     styles.submitBtn,
                     hasUnsavedChanges ? styles.submitBtnActive : styles.submitBtnInactive,

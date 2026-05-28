@@ -1,5 +1,6 @@
 
 // outsource dependencies
+import moment from 'moment/moment';
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 
@@ -19,7 +20,6 @@ import type { AnytimeItemType } from 'types/anytime';
 import { useAnytimeData } from 'hooks/useAnytimeData';
 import { AnytimeExercisesModal } from './AnytimeExercisesModal';
 import { useGetDayOverviewQuery } from 'store/api/dayOverviewApi';
-import moment from "moment/moment";
 
 interface AnytimeMenuProps {
     date?: string;

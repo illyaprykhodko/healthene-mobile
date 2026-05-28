@@ -134,6 +134,7 @@ export type RootStackParamList = {
   };
   [ROUTES.MEAL_PREFERENCES_LIST]: {
     item: {
+      id: number;
       name: string;
     };
   };

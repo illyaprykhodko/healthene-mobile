@@ -1,7 +1,10 @@
+
 // outsource dependencies
+import moment from 'moment';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useRef, useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image } from 'react-native';
+
 // local dependencies
 import { ExerciseType } from 'types';
 import { useTheme } from 'hooks/useTheme';
@@ -13,6 +16,7 @@ import { EXERCISE_CONFIGS } from './exerciseFactory';
 import { useAppDispatch, useAppSelector } from 'store';
 import { initializeExercise, updateSteps, setLoading, clearExercise } from 'store/slices/exerciseSlice';
 import { useGetPhysicalActivityItemQuery, useGetStretchingExerciseQuery, useGetAerobicExerciseQuery, useGetResistanceExerciseQuery, useUpdateStretchingStepsMutation, useUpdateAerobicStepsMutation, useUpdateResistanceStepsMutation, useUpdatePhaseItemMutation } from 'store/api/dayOverviewApi';
+
 // components
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -23,7 +27,6 @@ import YoutubeVideo from 'components/YoutubeVideo';
 import { IconButton } from 'components/IconButton';
 import PrivateVideo from 'components/PrivateVideo';
 import { SwipeablePanel } from 'components/SwipeablePanel';
-import moment from "moment";
 
 // Helper function to get exercise step parameters
 const getExerciseStepParams = (exercise: any, step: any, subtype: any) => ({
