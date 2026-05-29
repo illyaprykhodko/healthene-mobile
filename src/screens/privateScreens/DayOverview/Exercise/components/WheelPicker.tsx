@@ -11,6 +11,9 @@ import {
     ListRenderItemInfo,
     NativeSyntheticEvent,
 } from 'react-native';
+// local dependencies
+import { useTheme } from 'hooks/useTheme';
+import { useHaptic } from 'hooks/useHaptic';
 
 export const ITEM_HEIGHT = 50;
 
@@ -26,13 +29,16 @@ type WheelPickerProps = {
   onSelect: (index: number) => void;
 };
 
-export const WheelPicker: React.FC<WheelPickerProps> = ({
+const WheelPickerImpl: React.FC<WheelPickerProps> = ({
     data,
     onSelect,
     selectedIndex,
     selectedItemStyle,
 }) => {
+    const theme = useTheme();
     const flatListRef = useRef<FlatList<number>>(null);
+    const haptics = useHaptic();
+    const lastTickIndexRef = useRef(selectedIndex);
 
     useEffect(() => {
         if (flatListRef.current != null && selectedIndex != null) {
@@ -51,10 +57,18 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     const renderItem = useCallback(
         ({ item, index }: ListRenderItemInfo<number>) => (
             <View style={[styles.item, index === selectedIndex && selectedItemStyle]}>
-                <Text style={[styles.text, index === selectedIndex && styles.selectedText]}>{item}</Text>
+                <Text
+                    style={[
+                        styles.text,
+                        { color: index === selectedIndex ? theme.colors.text : theme.colors.textSecondary },
+                        index === selectedIndex && styles.selectedText,
+                    ]}
+                >
+                    {item}
+                </Text>
             </View>
         ),
-        [selectedIndex, selectedItemStyle]
+        [selectedIndex, selectedItemStyle, theme.colors]
     );
 
     const getItemLayout = useCallback(
@@ -77,13 +91,27 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
         [onSelect]
     );
 
+    // Light "tick" each time the wheel crosses to a new value (iOS-picker feel).
+    const onScroll = useCallback(
+        (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+            const index = Math.round(e.nativeEvent.contentOffset.y / ITEM_HEIGHT);
+            if (index !== lastTickIndexRef.current) {
+                lastTickIndexRef.current = index;
+                haptics.medium();
+            }
+        },
+        [haptics]
+    );
+
     return (
         <FlatList
             data={data}
             bounces={false}
             ref={flatListRef}
+            onScroll={onScroll}
             decelerationRate="fast"
             renderItem={renderItem}
+            scrollEventThrottle={16}
             keyExtractor={keyExtractor}
             snapToInterval={ITEM_HEIGHT}
             getItemLayout={getItemLayout}
@@ -94,6 +122,11 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
         />
     );
 };
+
+// Wrap with React.memo so re-renders of MultiWheelPicker (which juggles inputs,
+// errors, mode toggle, etc.) don't re-render every wheel column unnecessarily.
+export const WheelPicker = React.memo(WheelPickerImpl);
+
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',

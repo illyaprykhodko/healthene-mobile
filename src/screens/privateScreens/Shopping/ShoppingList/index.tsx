@@ -12,6 +12,7 @@ import Screen from 'components/Screen';
 import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import { EmptyState } from 'components/EmptyState';
@@ -58,6 +59,7 @@ const ALL_CATEGORY: { name: string; id?: number | null } = { name: 'All' };
 const ADDITIONAL_CATEGORY_NAME = 'Additional';
 
 const ShoppingList: React.FC = () => {
+    const theme = useTheme();
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const dispatch = useAppDispatch();
@@ -497,10 +499,10 @@ const ShoppingList: React.FC = () => {
     }, [currentStep, shoppingListDates, status, route.params]);
 
     const renderSectionHeader = useCallback(({ section }: any) => (
-        <View style={styles.section}>
-            <Text variant="h3" style={styles.sectionTitle}>{section?.title}</Text>
+        <View style={[styles.section, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
+            <Text variant="h3" style={styles.sectionTitle} color={theme.colors.primary}>{section?.title}</Text>
         </View>
-    ), []);
+    ), [theme.colors]);
     // const renderSectionHeader = useCallback(({ section: { title } }: { section: GroupedItem }) => (
     //     <View style={styles.section}>
     //         <Text variant="h3" style={styles.sectionTitle}>{title}</Text>
@@ -660,21 +662,21 @@ const ShoppingList: React.FC = () => {
                         style={styles.overlay}
                         onPress={handleCloseCustomAlert}
                     >
-                        <View style={styles.alertBox}>
-                            <Text style={styles.alertTitle}>People Eating per Meal</Text>
+                        <View style={[styles.alertBox, { backgroundColor: theme.colors.surface }]}>
+                            <Text style={styles.alertTitle} color={theme.colors.text}>People Eating per Meal</Text>
                             {filteredPreferences.length === 0 ? (
-                                <Text style={styles.alertMessage}>
+                                <Text style={styles.alertMessage} color={theme.colors.textSecondary}>
                                     Do you want to change the number of people eating per meal?
                                 </Text>
                             ) : (
                                 <View>
-                                    <Text style={styles.alertMessagePreference}>You have:</Text>
+                                    <Text style={styles.alertMessagePreference} color={theme.colors.text}>You have:</Text>
                                     {filteredPreferences.map(preference => (
-                                        <Text key={preference.id} style={styles.alertMessagePreference}>
+                                        <Text key={preference.id} style={styles.alertMessagePreference} color={theme.colors.text}>
                                             {`• ${preference.amount} people eating for ${preference.name}`}
                                         </Text>
                                     ))}
-                                    <Text style={styles.alertMessage}>
+                                    <Text style={styles.alertMessage} color={theme.colors.textSecondary}>
                                         Do you want to change your selections?
                                     </Text>
                                 </View>

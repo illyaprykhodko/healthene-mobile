@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 // local dependencies
 import Text from 'components/Text';
-import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { useDayAdherence } from 'hooks/useDayAdherence';
 import { ActivityRings } from 'components/ActivityRings';
@@ -14,6 +14,7 @@ interface DayAdherenceCardProps {
 }
 
 export const DayAdherenceCard: React.FC<DayAdherenceCardProps> = ({ date }) => {
+    const theme = useTheme();
     const { rings, overall, hasData } = useDayAdherence(date);
 
     if (!hasData) { return null; }
@@ -21,7 +22,7 @@ export const DayAdherenceCard: React.FC<DayAdherenceCardProps> = ({ date }) => {
     const overallPct = Math.round(overall * 100);
 
     return (
-        <Animated.View style={styles.card} entering={FadeIn.duration(400)}>
+        <Animated.View style={[styles.card, { backgroundColor: theme.colors.surface }]} entering={FadeIn.duration(400)}>
             <ActivityRings
                 size={132}
                 rings={rings}
@@ -33,10 +34,10 @@ export const DayAdherenceCard: React.FC<DayAdherenceCardProps> = ({ date }) => {
                 {rings.map(ring => (
                     <View key={ring.key} style={styles.legendRow}>
                         <View style={[styles.dot, { backgroundColor: ring.color }]} />
-                        <Text variant="h5" style={styles.legendLabel}>
+                        <Text variant="h5" style={styles.legendLabel} color={theme.colors.text}>
                             {ring.label}
                         </Text>
-                        <Text style={styles.legendValue} color={COLORS.GREY}>
+                        <Text style={styles.legendValue} color={theme.colors.textSecondary}>
                             {ring.total > 0 ? `${ring.done}/${ring.total}` : '—'}
                         </Text>
                     </View>
@@ -53,7 +54,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         // paddingVertical: OFFSET.VERTICAL,
-        backgroundColor: COLORS.WHITE,
         paddingHorizontal: OFFSET.HORIZONTAL,
         // marginBottom: OFFSET.VERTICAL,
     },
@@ -74,7 +74,6 @@ const styles = StyleSheet.create({
     },
     legendLabel: {
         flex: 1,
-        color: COLORS.DARK_GREY,
     },
     legendValue: {
         fontSize: 14,

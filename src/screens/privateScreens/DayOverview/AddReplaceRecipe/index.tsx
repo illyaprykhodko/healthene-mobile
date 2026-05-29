@@ -193,7 +193,7 @@ const AddReplaceRecipe: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            <View style={[styles.header, { backgroundColor: '#E0EBF7' }]}>
+            <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt }]}>
                 <Text textAlign="center" style={[styles.headerText, { color: theme.colors.text }]}>
                     Replacement options
                 </Text>

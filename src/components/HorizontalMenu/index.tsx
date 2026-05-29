@@ -7,6 +7,7 @@ import { StyleSheet, FlatList, View, NativeScrollEvent, NativeSyntheticEvent } f
 // local dependencies
 import Text from 'components/Text';
 import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
 import { PressableScale } from 'components/PressableScale';
 
 interface MenuItem {
@@ -26,6 +27,7 @@ const SCROLL_NUMBER = 150;
 
 const HorizontalMenu: React.FC<HorizontalMenuProps> = memo(
     ({ data, handleItem, viewPosition = 0.5, activeItem = null, disabled = false }) => {
+        const theme = useTheme();
         const ref = useRef<FlatList<MenuItem> | null>(null);
         const safeData = useMemo(() => (Array.isArray(data) ? data : []), [data]);
 
@@ -88,14 +90,15 @@ const HorizontalMenu: React.FC<HorizontalMenuProps> = memo(
             scrollTo(currentOffset + SCROLL_NUMBER);
         }, [scrollTo, currentOffset]);
 
+        // "Hidden" arrows blend into the screen background; visible ones use secondary text.
         const leftArrowColor = useMemo(
-            () => (currentOffset > 10 ? COLORS.GREY : COLORS.WHITE),
-            [currentOffset],
+            () => (currentOffset > 10 ? theme.colors.textSecondary : theme.colors.background),
+            [currentOffset, theme.colors],
         );
 
         const rightArrowColor = useMemo(
-            () => (!scrolled ? COLORS.GREY : COLORS.WHITE),
-            [scrolled],
+            () => (!scrolled ? theme.colors.textSecondary : theme.colors.background),
+            [scrolled, theme.colors],
         );
 
         return (
@@ -158,6 +161,7 @@ interface ItemProps {
 }
 
 const Item: React.FC<ItemProps> = memo(({ item, isActive, handleItem, handleIndex, disabled }) => {
+    const theme = useTheme();
     const handlePress = useCallback(() => {
         handleItem({ activeItem: item });
         handleIndex(item);
@@ -170,7 +174,10 @@ const Item: React.FC<ItemProps> = memo(({ item, isActive, handleItem, handleInde
             onPress={handlePress}
             style={[styles.item, isActive && styles.activeItem]}
         >
-            <Text style={[styles.text, isActive ? styles.textActive : styles.textInactive]}>
+            <Text
+                style={styles.text}
+                color={isActive ? COLORS.GREEN : theme.colors.text}
+            >
                 {item?.name}
             </Text>
         </PressableScale>
@@ -206,8 +213,5 @@ const styles = StyleSheet.create({
     },
     textActive: {
         color: COLORS.GREEN,
-    },
-    textInactive: {
-        color: COLORS.BLACK,
     },
 });

@@ -6,7 +6,7 @@ import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { OFFSET } from 'constants/offset';
-import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
 import { decimalsToFractions } from 'services/filter';
 
 interface ControlsProps {
@@ -29,6 +29,7 @@ const Controls: React.FC<ControlsProps> = ({
     disabled = false,
     isSurrogateRecipe = false,
 }) => {
+    const theme = useTheme();
     const handleUpdateData = (newAmount: number) => {
         const prepareAmount = newAmount - Math.floor(newAmount);
         if (prepareAmount < 0.5 && prepareAmount !== 0) {
@@ -55,26 +56,27 @@ const Controls: React.FC<ControlsProps> = ({
         <View style={[styles.wrapper, style]}>
             <View style={styles.controls}>
                 <TouchableOpacity
-                    style={styles.icon}
                     hitSlop={clickableZone}
                     disabled={disabled || amount <= 0.5}
+                    style={[styles.icon, { borderColor: theme.colors.primary, backgroundColor: theme.colors.surfaceAlt }]}
                     onPress={() => !(disabled || amount <= 0.5) && handleUpdateData(amount - 0.5)}
                 >
-                    <Icon iconStyle="solid" name="minus" color="#76A7D8" size={24} />
+                    <Icon iconStyle="solid" name="minus" color={theme.colors.primary} size={24} />
                 </TouchableOpacity>
                 {/* <Text style={styles.count}>{formatAmount(amount)}</Text> */}
-                <Text style={styles.count}>{decimalsToFractions(amount)}</Text>
+                <Text style={styles.count} color={theme.colors.text}>{decimalsToFractions(amount)}</Text>
                 <TouchableOpacity
                     disabled={disabled}
-                    style={styles.icon}
                     hitSlop={clickableZone}
+                    style={[styles.icon, { borderColor: theme.colors.primary, backgroundColor: theme.colors.surfaceAlt }]}
                     onPress={() => !disabled && handleUpdateData(amount + 0.5)}
                 >
-                    <Icon iconStyle="solid" name="plus" color="#76A7D8" size={24} />
+                    <Icon iconStyle="solid" name="plus" color={theme.colors.primary} size={24} />
                 </TouchableOpacity>
             </View>
             {!unit ? null : (
                 <Text
+                    color={theme.colors.textSecondary}
                     style={[
                         styles.units,
                         !isSurrogateRecipe ? styles.unitsTextTransform : {},
@@ -111,14 +113,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#E0EBF7',
     },
     count: {
-        color: COLORS.BLACK,
         fontSize: 57,
+        // Fixed width so the +/- buttons stay put regardless of the number's width.
+        minWidth: 150,
         fontWeight: '500',
         textAlign: 'center',
-        paddingHorizontal: OFFSET.HORIZONTAL * 3,
+        paddingHorizontal: OFFSET.HORIZONTAL,
     },
     units: {
-        color: COLORS.DARK_GREY,
         textAlign: 'center',
         fontSize: 16,
         marginTop: OFFSET.VERTICAL,

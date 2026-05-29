@@ -15,6 +15,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets, EdgeInsets } from 'react-native-safe-area-context';
 // local dependencies
 import { config } from 'constants';
+import { useTheme } from 'hooks/useTheme';
 import { store, useAppDispatch } from 'store';
 import { useAppUpdateGate } from 'hooks/useAppUpdateGate';
 import { setBirdSoundEnabled } from 'store/slices/appSlice';
@@ -82,6 +83,7 @@ function AppContent (): React.JSX.Element {
         onSoftCancel,
         isSoftVisible,
     } = useAppUpdateGate();
+    const theme = useTheme();
     const insets = useSafeAreaInsets();
     const styles = createStyles(insets);
 
@@ -100,7 +102,7 @@ function AppContent (): React.JSX.Element {
     // if (!isHealthy) { return <MaintenanceHolder active />; }
     if (forcePolicy) { return <ForceUpdateScreen policy={forcePolicy} onUpdate={openStore} />; }
     return (
-        <SafeAreaView style={[styles.safeArea, styles.flex]}>
+        <SafeAreaView style={[styles.safeArea, styles.flex, { backgroundColor: theme.colors.background }]}>
             {/* <FeedbackProvider> */}
             <RootNavigator />
             <SoftUpdateModal

@@ -12,7 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 // local dependencies
 import Text from 'components/Text';
-import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
 import type { AdherenceRing } from 'hooks/useDayAdherence';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -86,6 +86,7 @@ export const ActivityRings: React.FC<ActivityRingsProps> = ({
     centerSubtext,
     strokeWidth = 12,
 }) => {
+    const theme = useTheme();
     const center = size / 2;
 
     return (
@@ -104,11 +105,11 @@ export const ActivityRings: React.FC<ActivityRingsProps> = ({
             </Svg>
             {centerText ? (
                 <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
-                    <Text variant="h3" style={styles.centerText}>
+                    <Text variant="h3" style={styles.centerText} color={theme.colors.text}>
                         {centerText}
                     </Text>
                     {centerSubtext ? (
-                        <Text style={styles.centerSubtext} color={COLORS.GREY}>
+                        <Text style={styles.centerSubtext} color={theme.colors.textSecondary}>
                             {centerSubtext}
                         </Text>
                     ) : null}
@@ -125,7 +126,6 @@ const styles = StyleSheet.create({
     },
     centerText: {
         fontWeight: '700',
-        color: COLORS.DARK_GREY,
     },
     centerSubtext: {
         fontSize: 11,

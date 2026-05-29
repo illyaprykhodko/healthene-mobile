@@ -615,6 +615,13 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#4A4A4A',
     },
+    glassBar: {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        position: 'absolute',
+        // paddingTop: 10,
+    },
 });
 
 const getIconColorByType = (type: AddPhaseItemData['type']) => {
@@ -1116,12 +1123,17 @@ export const Overview: React.FC = () => {
                     </View>
                 </View>
             </ScrollView>
-
-            <AnytimeMenu
-                date={currentDate}
-                disabled={isFetching || isLoading}
-            />
-
+            
+            <GlassSurface
+                intensity={5}
+                style={styles.glassBar}
+                tint={theme.dark ? 'dark' : 'light'}
+            >
+                <AnytimeMenu
+                    date={currentDate}
+                    disabled={isFetching || isLoading}
+                />
+            </GlassSurface>
             {!showCalendar && data?.id && !isFutureDateCheck && (
                 <TouchableOpacity
                     activeOpacity={0.8}
@@ -1190,7 +1202,7 @@ export const Overview: React.FC = () => {
                             <Text
                                 variant="h3"
                                 textAlign="center"
-                                style={styles.calendarDayText}
+                                style={[styles.calendarDayText, { color: theme.colors.secondary }]}
                             >
                                 {moment(currentDate).format('DD')}
                             </Text>

@@ -47,7 +47,11 @@ const DecimalWheelPicker: React.FC<DecimalWheelPickerProps> = ({ field, onApply 
     const wasBumped = useRef(Math.round(initialValue * 10) < MIN_TENTHS).current;
     useEffect(() => {
         if (wasBumped) {
-            onApply({ [field.key]: MIN_TENTHS / 10 });
+            // Defer: emitting synchronously inside the commit phase fans out a redux
+            // notify that reaches ExerciseDetails (parent in the nav stack), tripping
+            // React 19's "setState while rendering" warning. Promise microtask defers
+            // the dispatch until after the wheel-picker tree has fully committed.
+            Promise.resolve().then(() => onApply({ [field.key]: MIN_TENTHS / 10 }));
         }
     }, []);
 
@@ -113,7 +117,7 @@ const DecimalWheelPicker: React.FC<DecimalWheelPickerProps> = ({ field, onApply 
     );
 };
 
-export default DecimalWheelPicker;
+export default React.memo(DecimalWheelPicker);
 
 const styles = StyleSheet.create({
     container: {

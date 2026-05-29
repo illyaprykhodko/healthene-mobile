@@ -23,9 +23,9 @@ const MealPreferencesStack: React.FC = () => {
             screenOptions={({ navigation }) => ({
                 headerShown: true,
                 headerStyle: {
-                    backgroundColor: theme.colors.primary,
+                    backgroundColor: theme.colors.headerBg,
                 },
-                headerTintColor: theme.colors.white,
+                headerTintColor: theme.colors.headerText,
                 headerTitleStyle: {
                     fontWeight: '600',
                 },

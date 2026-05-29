@@ -8,7 +8,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { OFFSET } from 'constants/offset';
-import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
 import Controls from 'components/Controls';
 import ApproveButtons from 'components/ApproveButtons';
 import { MODIFY_TYPES } from '../ModifyTypeIngredient';
@@ -25,6 +25,7 @@ interface ModifyIngredientProps {
 }
 
 const ModifyIngredient: React.FC = () => {
+    const theme = useTheme();
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
 
@@ -191,7 +192,7 @@ const ModifyIngredient: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt }]}>
                 <Text style={styles.headerTitle}>Add item</Text>
             </View>
 
@@ -215,18 +216,18 @@ const ModifyIngredient: React.FC = () => {
 
                 <ScrollView scrollEnabled={false}>
                     <View style={styles.unitViewContainer}>
-                        <TouchableOpacity onPress={goToUnits} style={styles.unitTouchable}>
+                        <TouchableOpacity onPress={goToUnits} style={[styles.unitTouchable, { backgroundColor: theme.colors.surfaceAlt }]}>
                             <Text style={styles.unitText}>{getCurrentUnit()}</Text>
-                            <Icon iconStyle="solid" name="chevron-right" color={COLORS.BLACK} size={16} />
+                            <Icon iconStyle="solid" name="chevron-right" color={theme.colors.text} size={16} />
                         </TouchableOpacity>
                     </View>
                     {modifyIngredients?.length > 0 && (
                         <View style={styles.modifyIngredients}>
-                            <TouchableOpacity onPress={goToIngredients} style={styles.unitTouchable}>
+                            <TouchableOpacity onPress={goToIngredients} style={[styles.unitTouchable, { backgroundColor: theme.colors.surfaceAlt }]}>
                                 <Text style={styles.unitText}>
                                     {truncateText(ingredient?.entity?.name || '')}
                                 </Text>
-                                <Icon iconStyle="solid" name="chevron-right" color={COLORS.BLACK} size={16} />
+                                <Icon iconStyle="solid" name="chevron-right" color={theme.colors.text} size={16} />
                             </TouchableOpacity>
                         </View>
                     )}
@@ -248,7 +249,6 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingLeft: 0,
         paddingRight: 0,
-        backgroundColor: COLORS.WHITE,
     },
     header: {
         backgroundColor: '#E0EBF7',
@@ -262,7 +262,6 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: '400',
-        color: '#181818',
         textAlign: 'center',
     },
     main: {
@@ -277,7 +276,6 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: '700',
         textAlign: 'center',
-        color: '#181818',
     },
     controlsWrapper: {
         marginVertical: OFFSET.VERTICAL * 3,
@@ -298,7 +296,6 @@ const styles = StyleSheet.create({
         marginRight: 10,
         fontWeight: '500',
         textTransform: 'capitalize',
-        color: COLORS.BLACK,
     },
     modifyIngredients: {
         paddingBottom: 5,

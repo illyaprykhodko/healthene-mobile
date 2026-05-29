@@ -30,9 +30,9 @@ export const AccountSettingsStack = () => {
                 headerLeft: () => (
                     <BackButton navigation={navigation} theme={theme} />
                 ),
-                headerTintColor: theme.colors.white,
+                headerTintColor: theme.colors.headerText,
                 headerStyle: {
-                    backgroundColor: theme.colors.primary,
+                    backgroundColor: theme.colors.headerBg,
                 },
                 headerTitleStyle: {
                     fontWeight: '600'

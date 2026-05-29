@@ -30,6 +30,7 @@ import { PhaseItem } from 'types/overview';
 import { useHaptic } from 'hooks/useHaptic';
 import { groupBy, isEmpty } from 'utils/general';
 import { AnytimeMenu } from 'components/AnytimeMenu';
+import { GlassSurface } from 'components/GlassSurface';
 import { useAppSelector, useAppDispatch } from 'store';
 import { RootStackParamList } from 'services/navigation';
 import { RewardStarOverlay } from 'components/RewardStar';
@@ -736,9 +737,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     checkTrigger={birdCheckTrigger}
                 />
             )}
-            <View style={[styles.title, isFutureDate && styles.opacity]}>
+            <View style={[styles.title, { backgroundColor: theme.colors.surfaceAlt }, isFutureDate && styles.opacity]}>
                 <View>
-                    <Text style={styles.titleText}>
+                    <Text style={styles.titleText} color={theme.colors.text}>
                         {title}
                     </Text>
                 </View>
@@ -778,6 +779,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     ref={scrollViewRef}
                     scrollEnabled={scrollEnabled}
                     style={isFutureDate && styles.opacity}
+                    contentContainerStyle={styles.listContent}
                     onContentSizeChange={() => {
                         if (shouldScrollToAddedEnd && !isAddingAddedItem) {
                             setTimeout(() => {
@@ -849,13 +851,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                     (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
                                         <View style={[
                                             styles.separatorWrapper,
-                                            {
-                                            // borderTopColor: theme.colors.black,
-                                            // borderTopWidth: section === 'Added' ? 0 : 1,
-                                                backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}`
-                                            }
+                                            { backgroundColor: theme.colors.surfaceAlt }
                                         ]}>
-                                            <Text variant="h3" style={styles.offset}>
+                                            <Text variant="h3" style={styles.offset} color={theme.colors.text}>
                                                 {section || 'No section'}
                                             </Text>
                                         </View>
@@ -882,35 +880,41 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
                 {/* {(currentPhase?.type === OVERVIEW_TYPE.MEAL
               || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? ( */}
-                <View style={styles.buttonContainer}>
-                    <Button
-                        icon="plus"
-                        title="Add"
-                        variant="primary"
-                        onPress={handleAddItem}
-                        textStyle={styles.textAddButton}
-                        style={{
-                            ...styles.button,
-                            ...styles.addButtonActive,
-                            width: isFutureDate ? '100%' : '45%',
-                            backgroundColor: theme.colors.transparent,
-                        }}
-                    />
-                    {!isFutureDate && (
+                <GlassSurface
+                    intensity={10}
+                    style={styles.glassBar}
+                    tint={theme.dark ? 'dark' : 'light'}
+                >
+                    <View style={styles.buttonContainer}>
                         <Button
-                            title="Meal Done"
-                            variant="secondary"
-                            disabled={!allItemsDone || isLoading}
-                            onPress={handlePhaseDone}
-                            textStyle={styles.textMealDoneButton}
+                            icon="plus"
+                            title="Add"
+                            variant="primary"
+                            onPress={handleAddItem}
+                            textStyle={styles.textAddButton}
                             style={{
                                 ...styles.button,
-                                ...styles.mealDoneButton,
-                                ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
+                                ...styles.addButtonActive,
+                                width: isFutureDate ? '100%' : '45%',
+                                backgroundColor: theme.colors.transparent,
                             }}
                         />
-                    )}
-                </View>
+                        {!isFutureDate && (
+                            <Button
+                                title="Meal Done"
+                                variant="secondary"
+                                onPress={handlePhaseDone}
+                                disabled={!allItemsDone || isLoading}
+                                textStyle={styles.textMealDoneButton}
+                                style={{
+                                    ...styles.button,
+                                    ...styles.mealDoneButton,
+                                    ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
+                                }}
+                            />
+                        )}
+                    </View>
+                </GlassSurface>
                 {/* ) : (
                     <Button
                         icon="plus"
@@ -991,7 +995,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#E0EBF7',
     },
     titleText: {
-        color: '#181818',
         fontSize: 18,
         fontWeight: '600',
     },
@@ -1001,7 +1004,17 @@ const styles = StyleSheet.create({
     },
     list: {
         flex: 1,
-        justifyContent: 'space-between',
+    },
+    listContent: {
+        // Leave room so the last items can scroll up above the floating glass bar.
+        paddingBottom: 96,
+    },
+    glassBar: {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        paddingTop: 10,
+        position: 'absolute',
     },
     separatorWrapper: {
         backgroundColor: '#F3F3F380', // 50% opacity

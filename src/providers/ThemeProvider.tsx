@@ -1,71 +1,71 @@
 // outsource dependencies
 import { useColorScheme } from 'react-native';
-import React, { createContext, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 // local dependencies
 import { Theme } from '../styles/theme/types';
 import { THEME_PREFERENCE_KEY, THEME } from '../constants';
 import { lightTheme, darkTheme } from '../styles/theme/index';
 
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 type ThemeContextType = {
-  theme: Theme;
-  isDark: boolean;
-  toggleTheme: () => void;
+    theme: Theme;
+    isDark: boolean;
+    themeMode: ThemeMode;
+    toggleTheme: () => void;
+    setThemeMode: (mode: ThemeMode) => void;
+    /** Back-compat: cycles light <-> dark. */
 };
 
 const ThemeContext = createContext<ThemeContextType>({
     isDark: false,
     theme: lightTheme,
+    themeMode: 'system',
     toggleTheme: () => {},
+    setThemeMode: () => {},
 });
 
 export const useThemeContext = () => useContext(ThemeContext);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const colorScheme = useColorScheme(); // 'light' or 'dark' system theme
-    console.log('colorScheme', colorScheme);
-    // colorScheme === THEME.DARK
-    const [isDark, setIsDark] = React.useState(false);
+    const colorScheme = useColorScheme(); // system 'light' | 'dark'
+    const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
 
-    // Load saved theme preference
+    // Load saved preference once.
     useEffect(() => {
-        const loadThemePreference = async () => {
+        (async () => {
             try {
-                const savedPreference = await AsyncStorage.getItem(THEME_PREFERENCE_KEY);
-                if (savedPreference !== null) {
-                    setIsDark(savedPreference === THEME.DARK);
+                const saved = await AsyncStorage.getItem(THEME_PREFERENCE_KEY);
+                if (saved === THEME.DARK || saved === THEME.LIGHT || saved === THEME.SYSTEM) {
+                    setThemeModeState(saved);
                 }
             } catch (error) {
                 console.error('Error loading theme preference:', error);
             }
-        };
-        loadThemePreference();
+        })();
     }, []);
 
-    // Sync with system theme changes
-    useEffect(() => {
-        const savedPreference = AsyncStorage.getItem(THEME_PREFERENCE_KEY);
-        if (savedPreference === null) {
-            setIsDark(colorScheme === THEME.DARK);
-        }
-    }, [colorScheme]);
+    const setThemeMode = useCallback((mode: ThemeMode) => {
+        setThemeModeState(mode);
+        AsyncStorage.setItem(THEME_PREFERENCE_KEY, mode).catch(error =>
+            console.error('Error saving theme preference:', error));
+    }, []);
 
-    const toggleTheme = async () => {
-        const newTheme = !isDark;
-        setIsDark(newTheme);
-        try {
-            await AsyncStorage.setItem(THEME_PREFERENCE_KEY, newTheme ? THEME.DARK : THEME.LIGHT);
-        } catch (error) {
-            console.error('Error saving theme preference:', error);
-        }
-    };
+    // 'system' follows the OS; otherwise honor the explicit choice.
+    const isDark = themeMode === 'system' ? colorScheme === 'dark' : themeMode === 'dark';
 
-    const theme = isDark ? darkTheme : lightTheme;
-    console.log('isDark', isDark);
-    return (
-        <ThemeContext.Provider value={{ theme, isDark, toggleTheme }}>
-            {children}
-        </ThemeContext.Provider>
-    );
+    const toggleTheme = useCallback(() => {
+        setThemeMode(isDark ? 'light' : 'dark');
+    }, [isDark, setThemeMode]);
+
+    const value = useMemo<ThemeContextType>(() => ({
+        isDark,
+        themeMode,
+        toggleTheme,
+        setThemeMode,
+        theme: isDark ? darkTheme : lightTheme,
+    }), [isDark, themeMode, setThemeMode, toggleTheme]);
+
+    return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };

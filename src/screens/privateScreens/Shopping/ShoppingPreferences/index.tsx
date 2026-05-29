@@ -15,6 +15,7 @@ import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import { useTheme } from 'hooks/useTheme';
 import { Button } from 'components/Button';
 import { useAppDispatch, useAppSelector } from 'store';
 import { PressableScale } from 'components/PressableScale';
@@ -32,6 +33,7 @@ interface PreferenceItem {
 }
 
 const ShoppingPreferences: React.FC = () => {
+    const theme = useTheme();
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
     const pendingActionRef = useRef<any | null>(null);
@@ -149,32 +151,36 @@ const ShoppingPreferences: React.FC = () => {
     const hasValidAmount = localPreferences.some(p => p.amount > 0);
 
     const renderItem = useCallback(({ item }: { item: PreferenceItem }) => (
-        <View style={styles.listItem}>
-            <Text variant="h4" style={styles.itemName}>{item.name}</Text>
+        <View style={[styles.listItem, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+            <Text variant="h4" style={styles.itemName} color={theme.colors.text}>{item.name}</Text>
             <View style={styles.controls}>
                 <PressableScale
                     haptic="selection"
                     disabled={disabled || item.amount === 0}
                     onPress={() => handleAmountChange(item.id, -1)}
-                    style={[styles.controlBtn, item.amount === 0 && styles.controlBtnDisabled]}
+                    style={[
+                        styles.controlBtn,
+                        { backgroundColor: theme.colors.surfaceAlt, borderColor: theme.colors.border },
+                        item.amount === 0 && styles.controlBtnDisabled,
+                    ]}
                 >
-                    <Icon name="minus" size={18} color={item.amount === 0 ? COLORS.LIGHT_GREY : COLORS.DARK_GREY} />
+                    <Icon name="minus" size={18} color={item.amount === 0 ? theme.colors.border : theme.colors.textSecondary} />
                 </PressableScale>
                 <View style={styles.amountWrapper}>
                     <Text style={styles.amount}>{item.amount}</Text>
-                    <Text style={styles.amountLabel}>Amount</Text>
+                    <Text style={styles.amountLabel} color={theme.colors.textSecondary}>Amount</Text>
                 </View>
                 <PressableScale
                     haptic="selection"
                     disabled={disabled}
-                    style={styles.controlBtn}
                     onPress={() => handleAmountChange(item.id, 1)}
+                    style={[styles.controlBtn, { backgroundColor: theme.colors.surfaceAlt, borderColor: theme.colors.border }]}
                 >
-                    <Icon name="plus" size={18} color={COLORS.DARK_GREY} />
+                    <Icon name="plus" size={18} color={theme.colors.textSecondary} />
                 </PressableScale>
             </View>
         </View>
-    ), [handleAmountChange, disabled]);
+    ), [handleAmountChange, disabled, theme.colors]);
     if (isGenerating) {
         return <GenerateShoppingListSkeleton />;
     }
@@ -262,7 +268,6 @@ const styles = StyleSheet.create({
     },
     itemName: {
         marginBottom: 10,
-        color: COLORS.BLACK,
     },
     controls: {
         width: '100%',

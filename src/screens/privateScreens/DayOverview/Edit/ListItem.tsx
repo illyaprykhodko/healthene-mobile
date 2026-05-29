@@ -139,7 +139,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                 <View style={styles.recipeContainer}>
                     <DefImage src={imageUrl} style={StyleSheet.flatten([styles.image, isOpacity])} />
                     <View style={styles.main}>
-                        <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
+                        <Text style={[styles.title, { color: theme.colors.text }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Recipe'}`}
                         </Text>
                         <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
@@ -161,7 +161,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                 <View style={styles.recipeContainer}>
                     <DefImage src={imageUrl} style={StyleSheet.flatten([styles.image, isOpacity])} />
                     <View style={styles.main}>
-                        <Text style={[styles.title, { fontSize: 18, color: theme.colors.black }, isOpacity || {}]}>
+                        <Text style={[styles.title, { fontSize: 18, color: theme.colors.text }, isOpacity || {}]}>
                             {`${amount} ${item.weight?.unit?.name || ''} ${entity?.name || 'Ingredient'}`}
                         </Text>
                         {item.modified && (
@@ -183,7 +183,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                     <View style={styles.recipeContainer}>
                         <DefImage src={imageUrl} style={StyleSheet.flatten([styles.image, isOpacity])} />
                         <View style={styles.main}>
-                            <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
+                            <Text style={[styles.title, { color: theme.colors.text }, isOpacity || {}]}>
                                 {item.recipe?.name || item.title || 'Recipe'}
                             </Text>
                             {amount && (
@@ -242,7 +242,7 @@ export const ListItem: React.FC<ListItemProps> = ({
                             <Image source={{ uri: imageUrl }} style={[styles.image, isOpacity]} />
                         )}
                         <View style={styles.main}>
-                            <Text style={[styles.title, { color: theme.colors.black }, isOpacity || {}]}>
+                            <Text style={[styles.title, { color: theme.colors.text }, isOpacity || {}]}>
                                 {item.food?.name || 'Food'}
                             </Text>
                             {amount && (

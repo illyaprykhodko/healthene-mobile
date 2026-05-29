@@ -2,6 +2,7 @@
 import React from 'react';
 import FeatherIcon from '@react-native-vector-icons/feather';
 import { Image, StyleSheet, View, ViewStyle } from 'react-native';
+import { useTheme } from 'hooks/useTheme';
 
 interface ProfileImageProps {
     width?: number;
@@ -11,10 +12,11 @@ interface ProfileImageProps {
 }
 
 const ProfileImage = ({ width = 48, height = 48, uri, style }: ProfileImageProps) => {
+    const theme = useTheme();
     return <View style={[styles.container, style, { borderRadius: width / 2 }]}>
         {uri
             ? <Image source={{ uri }} width={width} height={height}/>
-            : <FeatherIcon size={48} name="user"/>
+            : <FeatherIcon color={theme.colors.text} size={48} name="user"/>
         }
     </View>;
 

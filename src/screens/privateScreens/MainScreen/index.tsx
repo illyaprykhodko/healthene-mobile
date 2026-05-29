@@ -13,14 +13,15 @@ import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
 import { Button } from 'components/Button';
+import DefImage from 'components/DefImage';
 import { TextLogo } from 'components/TextLogo';
 import { Hamburger } from 'components/Hamburger';
 import { RootState, useAppSelector } from 'store';
 import { SplashScreen } from 'components/SplashScreen';
-// import { ActivityRings } from 'components/ActivityRings';
-// import { useDayAdherence } from 'hooks/useDayAdherence';
+import { useDayAdherence } from 'hooks/useDayAdherence';
+import { ActivityRings } from 'components/ActivityRings';
 import { useGetWelcomeQuery } from 'store/api/publicApi';
-// import { DayAdherenceCard } from 'components/DayAdherenceCard';
+import { DayAdherenceCard } from 'components/DayAdherenceCard';
 
 type DrawerParamList = {
     [ROUTES.MAIN]: undefined;
@@ -43,7 +44,7 @@ export const MainScreen: React.FC = () => {
 
     const { data: welcomeData, isLoading } = useGetWelcomeQuery();
     const welcomeImageUrl = welcomeData?.image?.url;
-    // const adherence = useDayAdherence(moment().format('YYYY-MM-DD'));
+    const adherence = useDayAdherence(moment().format('YYYY-MM-DD'));
 
     const timeGreeting = () => {
         const hour = new Date().getHours();
@@ -67,9 +68,9 @@ export const MainScreen: React.FC = () => {
 
     return (
         <Screen style={styles.container} initialized={true}>
-            <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
+            <View style={[styles.header, { backgroundColor: theme.colors.headerBg }]}>
                 <View style={styles.textLogoWrapper}>
-                    <TextLogo color={theme.colors.background} />
+                    <TextLogo color={theme.colors.headerText} />
                 </View>
                 <Hamburger onPress={handleOpenDrawer} style={styles.hamburger} />
             </View>
@@ -92,23 +93,34 @@ export const MainScreen: React.FC = () => {
                         {timeGreeting()}
                     </Text>
                 </View>
-
-
-                <View style={styles.imageWrapper}>
-                    {welcomeImageUrl && (
-                        <Image
-                            resizeMode="contain"
-                            style={styles.image}
-                            source={{ uri: welcomeImageUrl }}
-                        />
-                    )}
-                </View>
-
+                { theme.dark
+                    ? <View style={styles.altWrapper}>
+                        {/* <DayAdherenceCard date={moment().format('YYYY-MM-DD')} /> */}
+                        {adherence.hasData && (
+                            <ActivityRings
+                                gap={4}
+                                size={250}
+                                strokeWidth={25}
+                                rings={adherence.rings}
+                                centerText={`${Math.round(adherence.overall * 100)}%`}
+                            />)}
+                    </View>
+                    : <View style={styles.imageWrapper}>
+                        {welcomeImageUrl && (
+                        // <DefImage src={welcomeImageUrl} style={styles.image} />
+                            <Image
+                                resizeMode="contain"
+                                style={styles.image}
+                                source={{ uri: welcomeImageUrl }}
+                            />
+                        )}
+                    </View>
+                }
                 <Button
                     title="Get Started"
-                    style={styles.button}
                     onPress={handleGetStarted}
-                    textStyle={styles.buttonText}
+                    style={[styles.button, { borderColor: theme.colors.text }]}
+                    textStyle={StyleSheet.flatten([styles.buttonText, { color: theme.colors.text }])}
                 />
             </View>
         </Screen>
@@ -151,6 +163,11 @@ const styles = StyleSheet.create({
     ringsWrapper: {
         alignItems: 'center',
         marginVertical: OFFSET.POINT,
+    },
+    altWrapper: {
+        flex: 1,
+        alignItems: 'center',
+        paddingTop: OFFSET.VERTICAL * 5,
     },
     title: {
         flex: 1,

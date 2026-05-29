@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import {
     View,
+    Modal,
     StyleSheet,
     Dimensions,
     ScrollView,
@@ -140,8 +141,9 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                 bottom: 0,
                 top: undefined,
                 borderTopWidth: 1,
-                maxHeight: calculatedMaxHeight,
+                height: calculatedMaxHeight,
                 borderTopColor: theme.colors.border,
+                
             }
         ];
     };
@@ -149,115 +151,117 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
     if (!visible) { return null; }
 
     return (
-        <Animated.View
-            style={styles.overlay}
-            entering={FadeIn.duration(900)}
-            exiting={FadeOut.duration(180)}
-        >
-            <GlassSurface
-                tint="dark"
-                intensity={18}
-                style={StyleSheet.absoluteFill}
-            />
-            <TouchableOpacity
-                onPress={onClose}
-                activeOpacity={1}
-                style={StyleSheet.absoluteFill}
-            />
-
+        <Modal transparent visible statusBarTranslucent animationType="none" onRequestClose={onClose}>
             <Animated.View
-                style={[getModalStyle(), { backgroundColor: theme.colors.surface }]}
-                entering={SlideInDown.springify().mass(1).damping(30)}
-                exiting={SlideOutDown.duration(220)}
+                entering={FadeIn.duration(900)}
+                exiting={FadeOut.duration(180)}
+                style={[styles.overlay, { top: insets.top + 50 }]}
             >
-                <View style={[styles.header, { backgroundColor: '#E0EBF7', borderBottomColor: theme.colors.border }]}>
-                    <View style={styles.headerLeft}>
-                        {/* <View style={styles.badgeContainer}> */}
-                        <Badge count={pendingItems.length} bgColor={theme.colors.aqua} showZero>
-                            {getIconComponent(icon, 24)}
-                        </Badge>
-                        {/* </View> */}
-                        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-                            {title}
-                        </Text>
-                    </View>
-          
-                    <TouchableOpacity
-                        onPress={onClose}
-                        disabled={disabled}
-                        style={styles.closeButton}
-                    >
-                        <CloseIcon size={24} color="#181818" />
-                    </TouchableOpacity>
-                </View>
+                <GlassSurface
+                    tint="dark"
+                    intensity={18}
+                    style={StyleSheet.absoluteFill}
+                />
+                <TouchableOpacity
+                    onPress={onClose}
+                    activeOpacity={1}
+                    style={StyleSheet.absoluteFill}
+                />
 
-                <View style={styles.content}>
-                    {icon === 'ruler' ? (
-                        <ScrollView style={styles.scrollView}>
-                            {pendingItems.map(item => (
-                                <AnytimeListItem
-                                    item={item}
-                                    disabled={disabled}
-                                    key={`pending-${item.id}`}
-                                    isFutureDate={isFutureDate}
-                                    onUpdateItem={handleUpdateItem}
-                                    onPress={() => handleMeasurementPress(item)}
-                                />
-                            ))}
-                            {completedItems.map(item => (
-                                <AnytimeListItem
-                                    item={item}
-                                    disabled={disabled}
-                                    isFutureDate={isFutureDate}
-                                    key={`completed-${item.id}`}
-                                    onUpdateItem={handleUpdateItem}
-                                    onPress={() => handleMeasurementPress(item)}
-                                />
-                            ))}
-                        </ScrollView>
-                    ) : icon === 'running' ? (
-                        <View style={styles.emptyState}>
-                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                                Exercise functionality will be implemented separately
+                <Animated.View
+                    style={[getModalStyle(), { backgroundColor: theme.colors.surface }]}
+                    entering={SlideInDown.springify().mass(1).damping(30)}
+                    exiting={SlideOutDown.duration(220)}
+                >
+                    <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
+                        <View style={styles.headerLeft}>
+                            {/* <View style={styles.badgeContainer}> */}
+                            <Badge count={pendingItems.length} bgColor={theme.colors.aqua} showZero>
+                                {getIconComponent(icon, 24)}
+                            </Badge>
+                            {/* </View> */}
+                            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+                                {title}
                             </Text>
                         </View>
-                    ) : items.length === 0 ? (
-                        <View style={styles.emptyState}>
-                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No items found</Text>
-                        </View>
-                    ) : (
-                        <ScrollView style={styles.scrollView}>
-                            {pendingItems.map(item => (
-                                <AnytimeListItem
-                                    item={item}
-                                    disabled={disabled}
-                                    key={`pending-${item.id}`}
-                                    isFutureDate={isFutureDate}
-                                    onUpdateItem={handleUpdateItem}
-                                />
-                            ))}
-                            {completedItems.map(item => (
-                                <AnytimeListItem
-                                    item={item}
-                                    disabled={disabled}
-                                    isFutureDate={isFutureDate}
-                                    key={`completed-${item.id}`}
-                                    onUpdateItem={handleUpdateItem}
-                                />
-                            ))}
-                        </ScrollView>
-                    )}
-                </View>
+
+                        <TouchableOpacity
+                            onPress={onClose}
+                            disabled={disabled}
+                            style={styles.closeButton}
+                        >
+                            <CloseIcon size={24} color={theme.colors.text} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.content}>
+                        {icon === 'ruler' ? (
+                            <ScrollView style={styles.scrollView}>
+                                {pendingItems.map(item => (
+                                    <AnytimeListItem
+                                        item={item}
+                                        disabled={disabled}
+                                        key={`pending-${item.id}`}
+                                        isFutureDate={isFutureDate}
+                                        onUpdateItem={handleUpdateItem}
+                                        onPress={() => handleMeasurementPress(item)}
+                                    />
+                                ))}
+                                {completedItems.map(item => (
+                                    <AnytimeListItem
+                                        item={item}
+                                        disabled={disabled}
+                                        isFutureDate={isFutureDate}
+                                        key={`completed-${item.id}`}
+                                        onUpdateItem={handleUpdateItem}
+                                        onPress={() => handleMeasurementPress(item)}
+                                    />
+                                ))}
+                            </ScrollView>
+                        ) : icon === 'running' ? (
+                            <View style={styles.emptyState}>
+                                <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                                Exercise functionality will be implemented separately
+                                </Text>
+                            </View>
+                        ) : items.length === 0 ? (
+                            <View style={styles.emptyState}>
+                                <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No items found</Text>
+                            </View>
+                        ) : (
+                            <ScrollView style={styles.scrollView}>
+                                {pendingItems.map(item => (
+                                    <AnytimeListItem
+                                        item={item}
+                                        disabled={disabled}
+                                        key={`pending-${item.id}`}
+                                        isFutureDate={isFutureDate}
+                                        onUpdateItem={handleUpdateItem}
+                                    />
+                                ))}
+                                {completedItems.map(item => (
+                                    <AnytimeListItem
+                                        item={item}
+                                        disabled={disabled}
+                                        isFutureDate={isFutureDate}
+                                        key={`completed-${item.id}`}
+                                        onUpdateItem={handleUpdateItem}
+                                    />
+                                ))}
+                            </ScrollView>
+                        )}
+                    </View>
+                </Animated.View>
+                {selectedMeasurement && (
+                    <MeasurementInputModal
+                        disabled={disabled}
+                        item={selectedMeasurement}
+                        visible={!!selectedMeasurement}
+                        onClose={closeMeasurementModal}
+                    />
+                )}
             </Animated.View>
-            {selectedMeasurement && (
-                <MeasurementInputModal
-                    disabled={disabled}
-                    item={selectedMeasurement}
-                    visible={!!selectedMeasurement}
-                    onClose={closeMeasurementModal}
-                />
-            )}
-        </Animated.View>
+        </Modal>
     );
 };
 

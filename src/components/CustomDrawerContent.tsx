@@ -4,6 +4,7 @@ import moment from 'moment';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Icon from '@react-native-vector-icons/fontawesome5';
+import FeatherIcon from '@react-native-vector-icons/feather';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import {
     View, StyleSheet, TouchableOpacity, Pressable, Alert
@@ -17,8 +18,10 @@ import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
+import { useHaptic } from 'hooks/useHaptic';
 import { navigate } from 'services/navigation';
 import ProfileImage from 'components/ProfileImage.tsx';
+import { ThemeMode, useThemeContext } from 'providers/ThemeProvider';
 import {
     useGetMedicalProblemsQuery,
     useGetMedicationAllergiesQuery,
@@ -62,7 +65,11 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
     return (
         <TouchableOpacity
             onPress={onPress}
-            style={[styles.menuItem, focused && styles.menuItemFocused]}
+            style={[
+                styles.menuItem,
+                { borderBottomColor: theme.colors.border },
+                focused && { backgroundColor: theme.colors.surfaceAlt },
+            ]}
         >
             <Icon
                 size={24}
@@ -70,7 +77,6 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                 iconStyle="solid"
                 style={styles.menuIcon}
                 color={theme.colors.primary}
-                // color={focused ? theme.colors.primary : theme.colors.textSecondary}
             />
             <Text
                 variant="h5"
@@ -80,11 +86,10 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                 {title}
             </Text>
             {!!badge && badge > 0 && (
-                <View style={styles.badgeContainer}>
+                <View style={[styles.badgeContainer, { backgroundColor: theme.colors.error }]}>
                     <Text
                         variant="bold"
                         style={styles.badgeText}
-                        // color="#FFFFFF"
                         color={theme.colors.white}
                     >
                         {badge > 99 ? '99+' : badge}
@@ -95,13 +100,63 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
     );
 };
 
-const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
-    <View style={styles.sectionHeader}>
-        <Text variant="h5" style={styles.sectionHeaderText}>
-            {title}
-        </Text>
-    </View>
-);
+const SectionHeader: React.FC<{ title: string }> = ({ title }) => {
+    const theme = useTheme();
+    return (
+        <View style={[styles.sectionHeader, { backgroundColor: theme.colors.surfaceAlt }]}>
+            <Text variant="h5" style={styles.sectionHeaderText} color={theme.colors.textSecondary}>
+                {title}
+            </Text>
+        </View>
+    );
+};
+
+type FeatherIconName = React.ComponentProps<typeof FeatherIcon>['name'];
+
+const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: FeatherIconName }[] = [
+    { mode: 'light', label: 'Light', icon: 'sun' },
+    { mode: 'dark', label: 'Dark', icon: 'moon' },
+    { mode: 'system', label: 'System', icon: 'smartphone' },
+];
+
+const ThemeModeToggle: React.FC = () => {
+    const theme = useTheme();
+    const haptics = useHaptic();
+    const { themeMode, setThemeMode } = useThemeContext();
+
+    return (
+        <View style={styles.themeToggleWrapper}>
+            <View style={[styles.themeToggleRow, { borderColor: theme.colors.border }]}>
+                {THEME_OPTIONS.map(option => {
+                    const active = themeMode === option.mode;
+                    return (
+                        <Pressable
+                            key={option.mode}
+                            onPress={() => {
+                                haptics.selection();
+                                setThemeMode(option.mode);
+                            }}
+                            style={[styles.themeSegment, active && { backgroundColor: theme.colors.primary }]}
+                        >
+                            <FeatherIcon
+                                size={16}
+                                name={option.icon}
+                                color={active ? theme.colors.white : theme.colors.textSecondary}
+                            />
+                            <Text
+                                variant="h5"
+                                style={styles.themeSegmentText}
+                                color={active ? theme.colors.white : theme.colors.textSecondary}
+                            >
+                                {option.label}
+                            </Text>
+                        </Pressable>
+                    );
+                })}
+            </View>
+        </View>
+    );
+};
 
 interface CustomDrawerContentProps {
     state: any;
@@ -244,6 +299,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                 </View>
             </Pressable>
             <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
+                <ThemeModeToggle />
                 {/* {menuItems.map(item => {
                     const focused = getFocusedRoute() === item.route;
                     return (
@@ -291,6 +347,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                 />
 
                 <SectionHeader title="PREFERENCES" />
+                {/* <ThemeModeToggle /> */}
                 <DrawerItem
                     icon="award"
                     title="International Cuisine"
@@ -338,8 +395,8 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                 title="LOGOUT"
                 variant="outline"
                 onPress={handleLogout}
-                style={styles.logoutButton}
                 textStyle={{ color: theme.colors.error }}
+                style={[styles.logoutButton, { borderColor: theme.colors.error }]}
             />
         </SafeAreaView>
     );
@@ -362,7 +419,7 @@ const styles = StyleSheet.create({
     },
     userIcon: {
         marginRight: OFFSET.POINT * 2,
-        borderWidth: 1
+        borderWidth: 1,
     },
     menuItem: {
         paddingVertical: 15,
@@ -370,10 +427,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderBottomWidth: 1,
         paddingHorizontal: 20,
-        borderBottomColor: '#E5E5E5',
-    },
-    menuItemFocused: {
-        backgroundColor: '#F0F8FF',
     },
     menuIcon: {
         width: 30,
@@ -393,24 +446,41 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 10,
-        backgroundColor: '#E74C3C',
     },
     badgeText: {
         fontSize: 10,
     },
     sectionHeader: {
         padding: 10,
-        backgroundColor: '#F0F1F5',
     },
     sectionHeaderText: {
         fontSize: 11,
         fontWeight: '600',
-        color: '#666666',
+    },
+    themeToggleWrapper: {
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+    },
+    themeToggleRow: {
+        borderWidth: 1,
+        borderRadius: 12,
+        overflow: 'hidden',
+        flexDirection: 'row',
+    },
+    themeSegment: {
+        flex: 1,
+        paddingVertical: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    themeSegmentText: {
+        fontSize: 13,
+        marginLeft: 6,
+        fontWeight: '600',
     },
     logoutButton: {
-        // color: '#E74C3C',
         borderRadius: 30,
-        borderColor: '#E74C3C',
         margin: OFFSET.VERTICAL,
     },
     userName: {

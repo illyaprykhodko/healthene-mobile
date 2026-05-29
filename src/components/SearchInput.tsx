@@ -43,12 +43,12 @@ const SearchInputComponent: React.FC<SearchInputProps> = ({
         onClear?.();
     }, [onChange, onClear]);
 
-    const borderColor = focused ? '#2978A0' : '#A3C3D3';
+    const borderColor = focused ? theme.colors.primary : theme.colors.border;
 
     return (
         <TouchableWithoutFeedback onPress={handlePress}>
-            <View style={[styles.container, { borderColor, backgroundColor: theme.colors.white }]}>
-                <Icon iconStyle="solid" name="search" size={14} color="#2978A0" style={styles.iconSearch} />
+            <View style={[styles.container, { borderColor, backgroundColor: theme.colors.surface }]}>
+                <Icon iconStyle="solid" name="search" size={14} color={theme.colors.primary} style={styles.iconSearch} />
                 <RNTextInput
                     value={value}
                     maxLength={40}
@@ -58,7 +58,7 @@ const SearchInputComponent: React.FC<SearchInputProps> = ({
                     onFocus={handleFocus}
                     onChangeText={onChange}
                     placeholder={placeholder}
-                    placeholderTextColor="#999"
+                    placeholderTextColor={theme.colors.textSecondary}
                     style={[styles.text, { color: theme.colors.text }]}
                 />
                 {value ? (

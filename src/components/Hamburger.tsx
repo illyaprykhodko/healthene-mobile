@@ -28,7 +28,7 @@ export const Hamburger: React.FC<HamburgerProps> = ({ onPress, style }) => {
                 size={24}
                 name="bars"
                 iconStyle="solid"
-                color={theme.colors.background}
+                color={theme.colors.headerText}
             />
         </PressableScale>
     );

@@ -8,6 +8,7 @@ import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import Text from 'components/Text';
 import { useAppSelector } from 'store';
 import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
 import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
 import { PressableScale } from 'components/PressableScale';
@@ -31,6 +32,7 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
     isConfirmed,
     onAmountFocus,
 }) => {
+    const theme = useTheme();
     const ref = useRef<TextInput>(null);
     const [editable, setEditable] = useState(false);
     const [amount, setAmount] = useState(String(item?.amount || 1));
@@ -123,7 +125,11 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
     const showSelectButton = (currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.MEAL) && !isConfirmed;
 
     return (
-        <View style={[styles.container, isExcluded && styles.excluded]}>
+        <View style={[
+            styles.container,
+            { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border },
+            isExcluded && styles.excluded,
+        ]}>
             <DefImage
                 src={item?.coverImage?.url}
                 style={isExcluded ? { ...styles.image, ...styles.excludedImage } : styles.image}
@@ -131,6 +137,7 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
             <View style={styles.textContainer}>
                 <Text
                     variant="h5"
+                    color={theme.colors.text}
                     style={[styles.name, isExcluded && styles.excludedText]}
                 >
                     {item.name || item.food?.name}
@@ -157,8 +164,9 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                                     style={[
                                         styles.selectInput,
                                         {
-                                            color: editable ? COLORS.BLACK : COLORS.DARK_GREY,
-                                            borderColor: isItemDisabled ? COLORS.GREY : COLORS.DARK_BLUE,
+                                            backgroundColor: theme.colors.surface,
+                                            color: editable ? theme.colors.text : theme.colors.textSecondary,
+                                            borderColor: isItemDisabled ? theme.colors.border : theme.colors.primary,
                                         }
                                     ]}
                                 />
@@ -168,13 +176,17 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                             </PressableScale>
                         </View>
                     ) : (
-                        <View style={[styles.amountContainer, isExcluded && styles.amountContainerExcluded]}>
-                            <Text style={[styles.amount, isExcluded && styles.excludedText]}>
+                        <View style={[
+                            styles.amountContainer,
+                            { borderColor: theme.colors.border },
+                            isExcluded && styles.amountContainerExcluded,
+                        ]}>
+                            <Text color={theme.colors.text} style={[styles.amount, isExcluded && styles.excludedText]}>
                                 {item.amount}
                             </Text>
                         </View>
                     )}
-                    <Text color={COLORS.GREY} style={styles.unit}>
+                    <Text color={theme.colors.textSecondary} style={styles.unit}>
                         {item?.unitOfMeasure}
                     </Text>
                 </View>
@@ -190,7 +202,7 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                     <Icon
                         size={24}
                         name={isExcluded ? 'plus-square' : 'trash-2'}
-                        color={isExcluded ? COLORS.BLACK : COLORS.GREY}
+                        color={isExcluded ? theme.colors.text : theme.colors.textSecondary}
                     />
                 </PressableScale>
             )}

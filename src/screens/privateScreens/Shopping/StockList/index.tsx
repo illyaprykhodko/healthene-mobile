@@ -10,6 +10,7 @@ import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import { useTheme } from 'hooks/useTheme';
 import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
 import { Button } from 'components/Button';
@@ -53,6 +54,7 @@ const ALL_CATEGORY: { name: string; id?: number | null } = { name: 'All' };
 const ADDITIONAL_CATEGORY_NAME = 'Additional';
 
 const StockList: React.FC = () => {
+    const theme = useTheme();
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
 
@@ -220,17 +222,20 @@ const StockList: React.FC = () => {
     }, [checkedItems, disabled, handleToggleItem]);
 
     const renderSectionHeader = useCallback(({ section }: { section: GroupedSection }) => (
-        <View style={isAllCategory ? styles.sectionMuted : styles.section}>
-            <Text variant="h3" style={styles.sectionTitle}>
+        <View style={[
+            isAllCategory ? styles.sectionMuted : styles.section,
+            { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border },
+        ]}>
+            <Text variant="h3" style={styles.sectionTitle} color={theme.colors.primary}>
                 {isAllCategory ? section.title : `Select all ${section.title} You Need`}
             </Text>
         </View>
-    ), [isAllCategory]);
+    ), [isAllCategory, theme.colors]);
     const renderListHeader = useCallback(() => (
-        <View style={styles.section}>
-            <Text variant="h3" style={styles.sectionTitle}>Select all Produce You Need</Text>
+        <View style={[styles.section, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
+            <Text variant="h3" style={styles.sectionTitle} color={theme.colors.primary}>Select all Produce You Need</Text>
         </View>
-    ), [isAllCategory]);
+    ), [theme.colors]);
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>

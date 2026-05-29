@@ -28,9 +28,9 @@ export const LibraryStack: React.FC = () => {
             screenOptions={({ navigation }) => ({
                 title: 'Videos',
                 headerStyle: {
-                    backgroundColor: theme.colors.primary,
+                    backgroundColor: theme.colors.headerBg,
                 },
-                headerTintColor: theme.colors.white,
+                headerTintColor: theme.colors.headerText,
                 headerTitleStyle: {
                     fontSize: 18,
                     fontWeight: '600',

@@ -100,7 +100,7 @@ const ReplaceItemsScreen: React.FC = () => {
     }
     return (
         <Screen initialized style={styles.container}>
-            <View style={[styles.title, { backgroundColor: '#E0EBF7' }]}>
+            <View style={[styles.title, { backgroundColor: theme.colors.surfaceAlt }]}>
                 <Text variant="h3" textAlign="center" style={[styles.titleText, { color: theme.colors.text }]}>
                     Replacement options
                 </Text>
@@ -167,6 +167,7 @@ const ReplaceItemsScreen: React.FC = () => {
                 disabled={selectedIndex === null || isUpdating}
                 style={[
                     styles.replaceBtn,
+                    selectedIndex === null && { backgroundColor: theme.colors.muted },
                     selectedIndex !== null ? styles.replaceBtnActive : styles.replaceBtnDisabled,
                 ]}
             >

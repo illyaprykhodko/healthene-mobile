@@ -32,9 +32,9 @@ const MessengerStack = () => {
                 headerLeft: () => <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />,
                 headerRight: () => <Hamburger style={{ marginRight: OFFSET.HORIZONTAL / 2 }} onPress={() => drawerNavigation.openDrawer?.()} />,
                 headerStyle: {
-                    backgroundColor: theme.colors.primary,
+                    backgroundColor: theme.colors.headerBg,
                 },
-                headerTintColor: theme.colors.white,
+                headerTintColor: theme.colors.headerText,
                 headerTitleStyle: {
                     fontWeight: '600'
                 },
