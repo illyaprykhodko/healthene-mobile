@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-end',
         justifyContent: 'flex-end',
-        paddingTop: OFFSET.VERTICAL * 2.5,
+        paddingTop: Platform.OS === 'ios' ? OFFSET.VERTICAL * 2.5 : OFFSET.POINT * 2.5,
         paddingBottom: OFFSET.POINT * 2.5,
         paddingHorizontal: OFFSET.HORIZONTAL,
     },

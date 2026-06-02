@@ -1,6 +1,6 @@
 // outsource dependencies
 import _ from 'lodash';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import Icon from '@react-native-vector-icons/ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -51,20 +51,20 @@ const AddReplaceRecipe: React.FC = () => {
 
     const { data: categoryItems, isLoading: isLoadingItems } = useGetRecipeCategoryItemsQuery(
         { recipeId: prevItem?.recipe?.id, categoryId },
-        { skip: !prevItem?.recipe?.id || !categoryId }
+        { skip: !prevItem?.recipe?.id || !categoryId || !!categoryList }
     );
 
     const [replaceRecipe, { isLoading: isReplacing }] = useReplaceRecipeItemMutation();
 
     const isLoading = isLoadingTree || isLoadingItems;
 
-    const list = React.useMemo(() => {
-        if (categoryItems) {
-            return Array.isArray(categoryItems) ? categoryItems : [];
-        }
-
+    const list = useMemo(() => {
         if (categoryList) {
             return categoryList;
+        }
+
+        if (Array.isArray(categoryItems)) {
+            return categoryItems;
         }
 
         if (!categoryTree) { return []; }
@@ -93,6 +93,9 @@ const AddReplaceRecipe: React.FC = () => {
 
         return [...anotherList, ...frozenList];
     }, [categoryTree, categoryList, categoryItems]);
+
+    console.log('categoryList', categoryList);
+    console.log('list', list);
 
     const handleSelectItem = useCallback((item: RecipeItem) => {
         setSelected(selected?.id === item.id ? null : item);
@@ -195,7 +198,7 @@ const AddReplaceRecipe: React.FC = () => {
         <Screen initialized style={styles.container}>
             <View style={[styles.header, { backgroundColor: '#E0EBF7' }]}>
                 <Text textAlign="center" style={[styles.headerText, { color: theme.colors.text }]}>
-                    Replacement options
+                    Replacement Options
                 </Text>
             </View>
 
@@ -260,7 +263,7 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: OFFSET.HORIZONTAL,
-        paddingVertical: OFFSET.VERTICAL * 1.5,
+        paddingVertical: OFFSET.VERTICAL,
         flexDirection: 'row',
         justifyContent: 'center',
     },
