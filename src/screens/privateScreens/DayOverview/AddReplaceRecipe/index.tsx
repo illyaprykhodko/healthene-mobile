@@ -94,9 +94,6 @@ const AddReplaceRecipe: React.FC = () => {
         return [...anotherList, ...frozenList];
     }, [categoryTree, categoryList, categoryItems]);
 
-    console.log('categoryList', categoryList);
-    console.log('list', list);
-
     const handleSelectItem = useCallback((item: RecipeItem) => {
         setSelected(selected?.id === item.id ? null : item);
     }, [selected]);
