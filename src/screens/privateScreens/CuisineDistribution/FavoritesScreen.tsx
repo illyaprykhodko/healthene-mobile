@@ -45,17 +45,27 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
     const [updateFrequency, { isLoading: isUpdating }] = useUpdateCuisineFrequencyMutation();
 
     useEffect(() => {
-        if (isHydrated || favoriteList === undefined) { return; }
-        setLocalFavoriteList(favoriteList);
-        const initial = (favoriteList || []).reduce<Record<number, number>>((acc, item) => {
-            const tagId = item?.tag?.id || item?.id;
-            if (typeof tagId === 'number') {
-                acc[tagId] = item?.relativeFrequency || 1;
-            }
-            return acc;
-        }, {});
-        setInitialFrequencies(initial);
-        setIsHydrated(true);
+        if (favoriteList === undefined) { return; }
+
+        setLocalFavoriteList(prev => favoriteList.map(freshItem => {
+            const freshTagId = freshItem?.tag?.id || freshItem?.id;
+            const prevItem = prev.find(p => (p?.tag?.id || p?.id) === freshTagId);
+            return prevItem
+                ? { ...freshItem, relativeFrequency: prevItem.relativeFrequency }
+                : freshItem;
+        }));
+
+        setInitialFrequencies(prev => {
+            const next: Record<number, number> = {};
+            favoriteList.forEach(item => {
+                const tagId = item?.tag?.id || item?.id;
+                if (typeof tagId !== 'number') { return; }
+                next[tagId] = prev[tagId] ?? (item?.relativeFrequency || 1);
+            });
+            return next;
+        });
+
+        if (!isHydrated) { setIsHydrated(true); }
     }, [isHydrated, favoriteList]);
 
     const currentFrequencies = React.useMemo(

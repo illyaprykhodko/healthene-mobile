@@ -161,9 +161,9 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
     });
 
     useLayoutEffect(() => {
-        if (isHydrated || !mealsList || !areQueriesReady) { return; }
+        if (!mealsList || !areQueriesReady) { return; }
 
-        const combined = mealsList
+        const fresh = mealsList
             .map(meal => ({
                 ...meal,
                 preferences: mealDataMap[meal.name as typeof MEAL_NAMES[number]]?.prefs ?? [],
@@ -174,18 +174,35 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
             )
             .sort((a, b) => a.order - b.order);
 
-        setMealsWithPreferences(combined);
-        const initial = combined.reduce<Record<number, number>>((acc, meal) => {
-            meal.preferences.forEach(pref => {
-                if (typeof pref.id === 'number') {
-                    acc[pref.id] = pref.relativeFrequency || 1;
-                }
+        // Merge fresh server shape with any in-progress slider edits so that
+        // templates added/removed from PreferencesListScreen show up while
+        // unsaved frequency changes on this screen are preserved.
+        setMealsWithPreferences(prev => fresh.map(freshMeal => {
+            const prevMeal = prev.find(m => m.id === freshMeal.id);
+            if (!prevMeal) { return freshMeal; }
+            const mergedPreferences = freshMeal.preferences.map(freshPref => {
+                // eslint-disable-next-line max-nested-callbacks
+                const prevPref = prevMeal.preferences.find(p => p.id === freshPref.id);
+                return prevPref
+                    ? { ...freshPref, relativeFrequency: prevPref.relativeFrequency }
+                    : freshPref;
             });
-            return acc;
-        }, {});
-        setInitialFrequencies(initial);
-        setIsHydrated(true);
-    }, [isHydrated, mealsList, areQueriesReady, mealDataMap]);
+            return { ...freshMeal, preferences: mergedPreferences };
+        }));
+
+        setInitialFrequencies(prev => {
+            const next: Record<number, number> = {};
+            fresh.forEach(meal => {
+                meal.preferences.forEach(pref => {
+                    if (typeof pref.id !== 'number') { return; }
+                    next[pref.id] = prev[pref.id] ?? (pref.relativeFrequency || 1);
+                });
+            });
+            return next;
+        });
+
+        if (!isHydrated) { setIsHydrated(true); }
+    }, [mealsList, areQueriesReady, mealDataMap, isHydrated]);
 
     const currentFrequencies = useMemo(
         () => mealsWithPreferences.reduce<Record<number, number>>((acc, meal) => {

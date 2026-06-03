@@ -12,6 +12,7 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import YoutubeVideo from 'components/YoutubeVideo';
 import PrivateVideo from 'components/PrivateVideo';
+import StackHeader from 'components/StackHeader';
 import type { VideoItem, Attachment } from 'types/video';
 
 interface VideoListRouteParams {
@@ -68,6 +69,11 @@ const VideoListScreen: React.FC = () => {
     if (!videoList.length) {
         return (
             <Screen initialized style={styles.container}>
+                <StackHeader
+                    title="Videos"
+                    onBack={() => navigation.goBack()}
+                    onOpenDrawer={() => navigation.openDrawer?.()}
+                />
                 <View style={styles.emptyContainer}>
                     <Text color={COLORS.GREY} textAlign="center">
                         No video available
@@ -79,6 +85,11 @@ const VideoListScreen: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
+            <StackHeader
+                title="Videos"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => navigation.openDrawer?.()}
+            />
             <FlatList
                 data={videoList}
                 renderItem={renderVideoItem}

@@ -30,7 +30,8 @@ export const PrivateDrawer: React.FC = () => {
 
     return (
         <Drawer.Navigator
-            backBehavior="initialRoute"
+            backBehavior="history"
+            // backBehavior="initialRoute"
             initialRouteName={ROUTES.MAIN}
             drawerContent={props => <CustomDrawerContent {...props} />}
             screenOptions={({ navigation }) => ({

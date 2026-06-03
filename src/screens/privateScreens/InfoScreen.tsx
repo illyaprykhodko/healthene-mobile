@@ -1,5 +1,6 @@
 // outsource dependencies
 import React, { useMemo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 
@@ -10,12 +11,14 @@ import { config } from 'constants/index';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
+import StackHeader from 'components/StackHeader';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { useGetCurrentLibraryElementsQuery } from 'store/api/questionApi';
 import { DESTINATIONS, VIDEO_LIBRARY_TYPE, QUESTION_TYPE } from 'constants/spec';
 
 export const InfoScreen: React.FC = () => {
     const theme = useTheme();
+    const navigation = useNavigation<any>();
     const { data: elements, isLoading } = useGetCurrentLibraryElementsQuery([DESTINATIONS.SOFTWARE_VERSION]);
 
     const patientVideos = useMemo(() => elements?.[0]?.patientVideos || [], [elements]);
@@ -26,51 +29,58 @@ export const InfoScreen: React.FC = () => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
-            <Text variant="h2" textAlign="center" color={theme.colors.primary} style={styles.heading}>
+            <StackHeader
+                title="Info"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => navigation.openDrawer?.()}
+            />
+            <View style={styles.content}>
+                <Text variant="h2" textAlign="center" color={theme.colors.primary} style={styles.heading}>
                 Information about {DeviceInfo.getApplicationName()} application
-            </Text>
-            {hasVideoOrQuestion && (
-                <View style={styles.btnContainer}>
-                    {video && (
-                        <PlayBtn
-                            style={styles.btnOffset}
-                            change={!patientVideos?.[0]?.alreadySeen}
-                            disabled={patientVideos?.[0]?.alreadySeen}
-                            navigationAttr={{
-                                video,
-                                backLink: ROUTES.INFO,
-                                id: patientVideos?.[0]?.id,
-                                library: VIDEO_LIBRARY_TYPE.GENERAL_VIDEO,
-                            }}
-                        />
-                    )}
-                    {question && (
-                        <QuestionBtn
-                            style={styles.btnOffset}
-                            change={!question?.alreadyAnswered}
-                            disabled={question?.alreadyAnswered}
-                            navigationAttr={{
-                                backLink: ROUTES.INFO,
-                                question: { ...question, questionType: QUESTION_TYPE.GENERAL_QUESTION },
-                            }}
-                        />
-                    )}
+                </Text>
+                {hasVideoOrQuestion && (
+                    <View style={styles.btnContainer}>
+                        {video && (
+                            <PlayBtn
+                                style={styles.btnOffset}
+                                change={!patientVideos?.[0]?.alreadySeen}
+                                disabled={patientVideos?.[0]?.alreadySeen}
+                                navigationAttr={{
+                                    video,
+                                    backLink: ROUTES.INFO,
+                                    id: patientVideos?.[0]?.id,
+                                    library: VIDEO_LIBRARY_TYPE.GENERAL_VIDEO,
+                                }}
+                            />
+                        )}
+                        {question && (
+                            <QuestionBtn
+                                style={styles.btnOffset}
+                                change={!question?.alreadyAnswered}
+                                disabled={question?.alreadyAnswered}
+                                navigationAttr={{
+                                    backLink: ROUTES.INFO,
+                                    question: { ...question, questionType: QUESTION_TYPE.GENERAL_QUESTION },
+                                }}
+                            />
+                        )}
+                    </View>
+                )}
+
+                <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: theme.colors.lightGrey }]}>
+                    <Text color={theme.colors.grey}>Version:</Text>
+                    <Text color={theme.colors.text}>{DeviceInfo.getVersion()}</Text>
                 </View>
-            )}
 
-            <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: theme.colors.lightGrey }]}>
-                <Text color={theme.colors.grey}>Version:</Text>
-                <Text color={theme.colors.text}>{DeviceInfo.getVersion()}</Text>
-            </View>
+                <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: theme.colors.lightGrey }]}>
+                    <Text color={theme.colors.grey}>Build Number:</Text>
+                    <Text color={theme.colors.text}>{DeviceInfo.getBuildNumber()}</Text>
+                </View>
 
-            <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: theme.colors.lightGrey }]}>
-                <Text color={theme.colors.grey}>Build Number:</Text>
-                <Text color={theme.colors.text}>{DeviceInfo.getBuildNumber()}</Text>
-            </View>
-
-            <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: theme.colors.lightGrey }]}>
-                <Text color={theme.colors.grey}>Environment:</Text>
-                <Text color={theme.colors.text}>{config.environment}</Text>
+                <View style={[styles.cardItem, { borderBottomColor: theme.colors.grey, backgroundColor: theme.colors.lightGrey }]}>
+                    <Text color={theme.colors.grey}>Environment:</Text>
+                    <Text color={theme.colors.text}>{config.environment}</Text>
+                </View>
             </View>
         </Screen>
     );
@@ -80,6 +90,10 @@ export default InfoScreen;
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
+    },
+    content: {
+        flex: 1,
         paddingHorizontal: OFFSET.HORIZONTAL,
         paddingVertical: OFFSET.VERTICAL,
     },

@@ -1,4 +1,5 @@
 // outsource dependencies
+import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View, FlatList, TouchableOpacity } from 'react-native';
 import React, { memo, useState, useCallback, useEffect, useRef } from 'react';
 
@@ -8,6 +9,7 @@ import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import Checkbox from 'components/Checkbox';
 import SearchInput from 'components/SearchInput';
+import StackHeader from 'components/StackHeader';
 import { ListItemSkeleton } from 'components/Skeleton';
 import {
     useFilterMedicalTermsQuery,
@@ -56,6 +58,7 @@ const SkeletonList: React.FC = () => (
 
 const MedicalProblemsScreen: React.FC = () => {
     const theme = useTheme();
+    const navigation = useNavigation<any>();
 
     const [search, setSearch] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
@@ -195,6 +198,11 @@ const MedicalProblemsScreen: React.FC = () => {
 
     return (
         <Screen initialized={initialized} style={styles.container}>
+            <StackHeader
+                title="Medical Problem"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => navigation.openDrawer?.()}
+            />
             <View style={styles.searchContainer}>
                 <SearchInput
                     value={search}
