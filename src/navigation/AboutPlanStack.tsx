@@ -27,9 +27,9 @@ const AboutPlanStack: React.FC = () => {
             initialRouteName={ROUTES.ABOUT_PLAN}
             screenOptions={({ navigation }) => ({
                 headerStyle: {
-                    backgroundColor: theme.colors.primary,
+                    backgroundColor: theme.colors.headerBg,
                 },
-                headerTintColor: theme.colors.white,
+                headerTintColor: theme.colors.headerText,
                 headerTitleStyle: {
                     fontSize: 18,
                     fontWeight: '600',

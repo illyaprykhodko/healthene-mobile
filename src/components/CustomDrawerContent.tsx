@@ -62,7 +62,11 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
     return (
         <TouchableOpacity
             onPress={onPress}
-            style={[styles.menuItem, focused && styles.menuItemFocused]}
+            style={[
+                styles.menuItem,
+                { borderBottomColor: theme.colors.border },
+                focused && { backgroundColor: theme.colors.surfaceAlt },
+            ]}
         >
             <Icon
                 size={24}
@@ -70,7 +74,6 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                 iconStyle="solid"
                 style={styles.menuIcon}
                 color={theme.colors.primary}
-                // color={focused ? theme.colors.primary : theme.colors.textSecondary}
             />
             <Text
                 variant="h5"
@@ -80,11 +83,10 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                 {title}
             </Text>
             {!!badge && badge > 0 && (
-                <View style={styles.badgeContainer}>
+                <View style={[styles.badgeContainer, { backgroundColor: theme.colors.error }]}>
                     <Text
                         variant="bold"
                         style={styles.badgeText}
-                        // color="#FFFFFF"
                         color={theme.colors.white}
                     >
                         {badge > 99 ? '99+' : badge}
@@ -95,13 +97,16 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
     );
 };
 
-const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
-    <View style={styles.sectionHeader}>
-        <Text variant="h5" style={styles.sectionHeaderText}>
-            {title}
-        </Text>
-    </View>
-);
+const SectionHeader: React.FC<{ title: string }> = ({ title }) => {
+    const theme = useTheme();
+    return (
+        <View style={[styles.sectionHeader, { backgroundColor: theme.colors.surfaceAlt }]}>
+            <Text variant="h5" style={styles.sectionHeaderText} color={theme.colors.textSecondary}>
+                {title}
+            </Text>
+        </View>
+    );
+};
 
 interface CustomDrawerContentProps {
     state: any;
@@ -338,8 +343,8 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                 title="LOGOUT"
                 variant="outline"
                 onPress={handleLogout}
-                style={styles.logoutButton}
                 textStyle={{ color: theme.colors.error }}
+                style={[styles.logoutButton, { borderColor: theme.colors.error }]}
             />
         </SafeAreaView>
     );
@@ -362,7 +367,7 @@ const styles = StyleSheet.create({
     },
     userIcon: {
         marginRight: OFFSET.POINT * 2,
-        borderWidth: 1
+        borderWidth: 1,
     },
     menuItem: {
         paddingVertical: 15,
@@ -370,10 +375,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderBottomWidth: 1,
         paddingHorizontal: 20,
-        borderBottomColor: '#E5E5E5',
-    },
-    menuItemFocused: {
-        backgroundColor: '#F0F8FF',
     },
     menuIcon: {
         width: 30,
@@ -393,24 +394,19 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 10,
-        backgroundColor: '#E74C3C',
     },
     badgeText: {
         fontSize: 10,
     },
     sectionHeader: {
         padding: 10,
-        backgroundColor: '#F0F1F5',
     },
     sectionHeaderText: {
         fontSize: 11,
         fontWeight: '600',
-        color: '#666666',
     },
     logoutButton: {
-        // color: '#E74C3C',
         borderRadius: 30,
-        borderColor: '#E74C3C',
         margin: OFFSET.VERTICAL,
     },
     userName: {

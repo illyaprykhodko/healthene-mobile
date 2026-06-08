@@ -207,7 +207,7 @@ export const SignIn: React.FC = (): React.ReactElement => {
         <AnimatedWelcome>
             <Screen initialized={true} style={styles.container}>
                 <BackgroundImage>
-                    <Text color={theme.colors.background}>Welcome to</Text>
+                    <Text color={theme.colors.text}>Welcome to</Text>
                     <TextLogo />
                 </BackgroundImage>
 

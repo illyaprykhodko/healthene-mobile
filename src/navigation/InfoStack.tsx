@@ -27,9 +27,9 @@ const InfoStack: React.FC = () => {
             initialRouteName={ROUTES.INFO}
             screenOptions={({ navigation }) => ({
                 headerStyle: {
-                    backgroundColor: theme.colors.primary,
+                    backgroundColor: theme.colors.headerBg,
                 },
-                headerTintColor: theme.colors.white,
+                headerTintColor: theme.colors.headerText,
                 headerTitleStyle: {
                     fontSize: 18,
                     fontWeight: '600',

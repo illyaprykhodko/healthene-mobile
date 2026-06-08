@@ -27,6 +27,7 @@ import { dayOverviewReducer } from './slices/dayOverviewSlice';
 import { categoryTreeApi } from 'store/api/categoryTreeApi.ts';
 import forgotPasswordReducer from './slices/forgotPasswordSlice';
 import { healthProfileApi } from 'store/api/healthProfileApi.ts';
+import walkingActivityReducer from './slices/walkingActivitySlice';
 import { mealPreferencesApi } from 'store/api/mealPreferencesApi.ts';
 import foodPreferencesSlice from 'store/slices/foodPreferrencesSlice.ts';
 import { cuisineDistributionApi } from 'store/api/cuisineDistributionApi.ts';
@@ -91,6 +92,7 @@ const combinedReducer = combineReducers({
     foodPreferences: foodPreferencesSlice,
     [authApi.reducerPath]: authApi.reducer,
     [planApi.reducerPath]: planApi.reducer,
+    walkingActivity: walkingActivityReducer,
     [videoApi.reducerPath]: videoApi.reducer,
     [publicApi.reducerPath]: publicApi.reducer,
     [questionApi.reducerPath]: questionApi.reducer,

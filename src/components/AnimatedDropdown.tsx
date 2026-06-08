@@ -78,7 +78,7 @@ export const AnimatedDropdown: React.FC<AnimatedDropdownProps> = ({
                     styles.trigger,
                     {
                         borderColor: theme.colors.border,
-                        backgroundColor: '#F7FAFD',
+                        backgroundColor: theme.colors.surfaceAlt,
                     },
                     triggerStyle
                 ]}
@@ -97,7 +97,7 @@ export const AnimatedDropdown: React.FC<AnimatedDropdownProps> = ({
             </TouchableOpacity>
 
             <Animated.View
-                style={[styles.dropdown, { borderColor: theme.colors.border }, animatedStyle]}
+                style={[styles.dropdown, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }, animatedStyle]}
                 pointerEvents={isOpen ? 'auto' : 'none'}
             >
                 <ScrollView nestedScrollEnabled style={styles.dropdownScroll}>
@@ -116,7 +116,7 @@ export const AnimatedDropdown: React.FC<AnimatedDropdownProps> = ({
                                     isLast && styles.optionLast,
                                     {
                                         borderBottomColor: theme.colors.border,
-                                        backgroundColor: isSelected ? '#E9EDF4' : '#F4F6FA',
+                                        backgroundColor: isSelected ? theme.colors.surfaceAlt : theme.colors.surface,
                                     }
                                 ]}
                             >

@@ -3,7 +3,6 @@ import {
     View,
     FlatList,
     Keyboard,
-    Platform,
     TextInput,
     StyleSheet,
     TouchableOpacity,
@@ -30,6 +29,7 @@ import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
 import DefImage from 'components/DefImage';
+import { GlassSurface } from 'components/GlassSurface';
 import { RootStackParamList } from 'services/navigation';
 import { ENTITY_TYPE, SEARCH_TYPE, SUBSTANCE_TYPE, TAG_TYPE } from 'constants/spec';
 
@@ -452,6 +452,7 @@ const TreeAddReplaceItem: React.FC = () => {
                                 styles.tabButton,
                                 isActive && styles.activeTabButton,
                                 { borderRightWidth: tabs.length === index + 1 ? 0 : 2 },
+                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceAlt },
                             ]}
                             onPress={() => handleTabPress(tab.value)}
                         >
@@ -516,7 +517,7 @@ const TreeAddReplaceItem: React.FC = () => {
                             </Text> */}
                         </View>
                     </View>
-                    <Icon iconStyle="solid" name="chevron-right" size={16} color={COLORS.BLACK} />
+                    <Icon iconStyle="solid" name="chevron-right" size={16} color={theme.colors.text} />
                 </TouchableOpacity>
             );
         },
@@ -525,21 +526,21 @@ const TreeAddReplaceItem: React.FC = () => {
 
     const renderSearchInput = () => (
         <View style={styles.searchContainer}>
-            <View style={styles.searchInputWrapper}>
-                <Icon iconStyle="solid" name="search" size={14} color={COLORS.GREY} style={styles.searchIcon} />
+            <View style={[styles.searchInputWrapper, { backgroundColor: theme.colors.surfaceAlt, borderColor: theme.colors.border }]}>
+                <Icon iconStyle="solid" name="search" size={14} color={theme.colors.textSecondary} style={styles.searchIcon} />
                 <TextInput
                     value={searchQuery}
                     autoCorrect={false}
                     autoCapitalize="none"
                     returnKeyType="search"
                     placeholder="Search..."
-                    style={styles.searchInput}
                     onChangeText={(value: string) => {
                         setSearchQuery(value);
                         setAiFoods([]);
                         setIsAiFoodsAdded(false);
                     }}
-                    placeholderTextColor={COLORS.GREY}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    style={[styles.searchInput, { color: theme.colors.text }]}
                 />
                 {searchQuery.length > 0 && (
                     <TouchableOpacity
@@ -562,7 +563,7 @@ const TreeAddReplaceItem: React.FC = () => {
         navigation.setOptions({
             headerLeft: () => (
                 <TouchableOpacity onPress={handleGoBack} style={{ paddingLeft: 16 }}>
-                    <Icon iconStyle="solid" name="arrow-left" size={20} color={COLORS.WHITE} />
+                    <Icon iconStyle="solid" name="arrow-left" size={20} color={theme.colors.headerText} />
                 </TouchableOpacity>
             ),
         });
@@ -608,7 +609,7 @@ const TreeAddReplaceItem: React.FC = () => {
     // }
     return (
         <Screen initialized style={styles.container}>
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt }]}>
                 <Text style={styles.headerTitle}>Add item</Text>
             </View>
             {renderTabs()}
@@ -631,6 +632,7 @@ const TreeAddReplaceItem: React.FC = () => {
                 renderItem={renderItem}
                 onEndReached={handleLoadMore}
                 keyboardDismissMode="on-drag"
+                contentContainerStyle={styles.listContent}
                 onScrollBeginDrag={() => {
                     if (isKeyboardVisible) { Keyboard.dismiss(); }
                 }}
@@ -652,7 +654,11 @@ const TreeAddReplaceItem: React.FC = () => {
                     ) : null
                 }
             />
-            {Platform.OS === 'ios' && (
+            <GlassSurface
+                intensity={5}
+                style={styles.glassBar}
+                tint={theme.dark ? 'dark' : 'light'}
+            >
                 <View style={styles.upcBtnContainer}>
                     <TouchableOpacity
                         style={styles.upcBtn}
@@ -666,7 +672,7 @@ const TreeAddReplaceItem: React.FC = () => {
                         <Text style={styles.upcBtnText}>SCAN UPC CODE</Text>
                     </TouchableOpacity>
                 </View>
-            )}
+            </GlassSurface>
             {isAiItemLoading && (
                 <View style={styles.overlay}>
                     <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -683,13 +689,11 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingLeft: 0,
         paddingRight: 0,
-        backgroundColor: COLORS.WHITE,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: COLORS.WHITE,
     },
     header: {
         backgroundColor: '#E0EBF7',
@@ -700,7 +704,6 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: '400',
-        color: '#181818',
     },
     tabsRow: {
         flexDirection: 'row',
@@ -727,7 +730,6 @@ const styles = StyleSheet.create({
     tabText: {
         fontWeight: '500',
         fontSize: 14,
-        color: COLORS.BLACK,
     },
     activeTabText: {
         color: COLORS.WHITE,
@@ -788,7 +790,6 @@ const styles = StyleSheet.create({
     itemName: {
         fontSize: 16,
         fontWeight: '500',
-        color: COLORS.BLACK,
         marginBottom: 4,
     },
     additionalTitle: {
@@ -836,6 +837,7 @@ const styles = StyleSheet.create({
     upcBtnContainer: {
         paddingHorizontal: OFFSET.HORIZONTAL,
         paddingVertical: OFFSET.VERTICAL,
+        // marginBottom: OFFSET.VERTICAL
     },
     upcBtn: {
         backgroundColor: '#CAE1F9',
@@ -848,5 +850,16 @@ const styles = StyleSheet.create({
         color: '#567697',
         fontSize: 14,
         fontWeight: '500',
+    },
+    glassBar: {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        paddingTop: 6,
+        position: 'absolute',
+    },
+    listContent: {
+        // Room so the last items scroll up above the floating glass SCAN bar.
+        paddingBottom: 88,
     },
 });

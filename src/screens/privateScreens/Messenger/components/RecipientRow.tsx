@@ -41,8 +41,8 @@ const RecipientRowComponent: React.FC<RecipientRowProps> = ({
             onPress={handlePress}
             style={[
                 styles.row,
-                { backgroundColor: theme.colors.white, borderBottomColor: COLORS.LIGHTER_GREY },
-                selected && { backgroundColor: COLORS.LIGHT_GREY },
+                { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border },
+                selected && { backgroundColor: theme.colors.surfaceAlt },
             ]}
         >
             <ProfileImage
@@ -53,7 +53,7 @@ const RecipientRowComponent: React.FC<RecipientRowProps> = ({
             />
             <View style={styles.body}>
                 <View style={styles.nameRow}>
-                    <Text variant="bold" numberOfLines={1} style={styles.name}>{name}</Text>
+                    <Text variant="bold" numberOfLines={1} style={styles.name} color={theme.colors.text}>{name}</Text>
                     {isPrimary && (
                         <Icon
                             size={12}
@@ -65,7 +65,7 @@ const RecipientRowComponent: React.FC<RecipientRowProps> = ({
                     )}
                 </View>
                 {!!clinicName && (
-                    <Text numberOfLines={1} style={styles.meta} color={COLORS.DARK_GREY}>
+                    <Text numberOfLines={1} style={styles.meta} color={theme.colors.textSecondary}>
                         {clinicName}
                     </Text>
                 )}
@@ -76,7 +76,7 @@ const RecipientRowComponent: React.FC<RecipientRowProps> = ({
                     name="check"
                     iconStyle="solid"
                     style={styles.checkmark}
-                    color={COLORS.THEME_COLOR}
+                    color={theme.colors.primary}
                 />
             )}
         </TouchableOpacity>

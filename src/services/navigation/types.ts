@@ -55,6 +55,7 @@ export type RootStackParamList = {
   [ROUTES.GAMBLING_CASH_OUT]: undefined;
   [ROUTES.ANIMATION_SETTINGS]: undefined;
   [ROUTES.BIOMETRIC_SETTINGS]: undefined;
+  [ROUTES.APPEARANCE_SETTINGS]: undefined;
   [ROUTES.HEALTH_PROFILE_STACK]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;

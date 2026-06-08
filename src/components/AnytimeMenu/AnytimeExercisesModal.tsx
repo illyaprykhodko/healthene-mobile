@@ -10,90 +10,30 @@ import Checkbox from 'components/Checkbox';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { ActivityIcon, CloseIcon } from './AnytimeIcons';
 import { useGetDayOverviewQuery, useUpdatePhaseMutation } from 'store/api/dayOverviewApi';
+import {
+    extractExercise,
+    getCategoryStatus,
+    getPhaseNewStatus,
+    areAllItemsFullyDone,
+    isAnytimeExerciseItem,
+} from 'utils/exercise';
 
-function isItemFullyDone (item: any): boolean {
-    if (![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.DID_NOT_EAT].includes(item.status)) { return false; }
-    if (Array.isArray(item.list) && item.list.length) { return item.list.every(isItemFullyDone); }
-    return true;
-}
-
-function areAllItemsFullyDone (items: any[] = []) { return items.every(isItemFullyDone); }
-
-function getPhaseNewStatus (exercises: any[] = [], isToday: boolean) {
-    if (areAllItemsFullyDone(exercises)) {
-        return PHASE_ITEM_STATUS.DONE;
-    }
-    return isToday ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.INCOMPLETE;
-}
-
-function getCategoryStatus (items: any[]) {
-    if (!items.length) {
-        return null;
-    }
-
-    const allDone = items.every(item => item.status === PHASE_ITEM_STATUS.DONE);
-    if (allDone) {
-        return PHASE_ITEM_STATUS.DONE;
-    }
-
-    const hasDone = items.some(item => item.status === PHASE_ITEM_STATUS.INCOMPLETE || item.status === PHASE_ITEM_STATUS.DONE);
-    if (hasDone) {
-        return PHASE_ITEM_STATUS.INCOMPLETE;
-    }
-
-    return null;
-}
-
-function extractExercise (item: any): any {
-
-    if (!item) {
-        return null;
-    }
-
-    // If item has a list, it's a category - return the item with processed list
-    if (Array.isArray(item.list) && item.list.length > 0) {
-        return {
-            ...item,
-            id: item.id,
-            type: item.type,
-            title: item.title || item.name,
-            status: item.status || PHASE_ITEM_STATUS.PENDING,
-            list: item.list.map(extractExercise).filter(Boolean) // Recursively process nested items
-        };
-    }
-
-    if (item.physicalActivity) {
-        const result = {
-            ...item.physicalActivity,
-            id: item.id,
-            type: item.type,
-            status: item.status,
-            title: item.title || item.physicalActivity?.title,
-        };
-        return result;
-    }
-
-    const result = {
-        ...item?.exercise,
-        id: item.id,
-        type: item?.type,
-        status: item?.status,
-        title: item.title || item?.exercise?.title,
-    };
-    return result;
-}
 
 interface AnytimeExercisesModalProps {
     date?: string;
-    onClose: () => void;
     visible: boolean;
     disabled?: boolean;
+    onClose: () => void;
+     maxHeight: number | undefined;
+                    fullScreen: boolean;
 }
 
 export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
     date,
     onClose,
     visible,
+    maxHeight,
+    fullScreen,
     disabled = false,
 }) => {
     const theme = useTheme();
@@ -106,10 +46,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
         
         if (!anytimeItems.length) { return []; }
         
-        // Filter only exercise items (EXERCISE_AEROBIC, EXERCISE_RESISTANCE, etc.)
-        const exerciseItems = anytimeItems.filter(item =>
-            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
-        );
+        const exerciseItems = anytimeItems.filter(isAnytimeExerciseItem);
 
         // Group exercises by type
         const groups = exerciseItems.reduce((acc: any, item: any) => {
@@ -149,10 +86,9 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
     const activeExercisesCount = useMemo(() => {
         const anytimePhase = dayOverviewData?.phases?.find(phase => phase.type === 'ANYTIME');
         const anytimeItems = anytimePhase?.items || [];
-        const exerciseItems = anytimeItems.filter(item =>
-            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
-        );
-        return exerciseItems.filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
+        return anytimeItems
+            .filter(isAnytimeExerciseItem)
+            .filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
     }, [dayOverviewData]);
     const listIsDone = useMemo(() => areAllItemsFullyDone(exerciseCategories), [exerciseCategories]);
     const isSingleExerciseCategoryDone = useMemo(
@@ -175,12 +111,10 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
     const anytimePhaseId = anytimePhase?.id;
 
     // Calculate new phase status based on all anytime exercises
-    const allAnytimeExercises = useMemo(() => {
-        if (!anytimePhase?.items) { return []; }
-        return anytimePhase.items.filter(item =>
-            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
-        );
-    }, [anytimePhase]);
+    const allAnytimeExercises = useMemo(
+        () => (anytimePhase?.items || []).filter(isAnytimeExerciseItem),
+        [anytimePhase]
+    );
 
     const newAnytimePhaseStatus = useMemo(() => {
         return getPhaseNewStatus(allAnytimeExercises, isToday);
@@ -230,6 +164,12 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
 
     return (
         <View style={styles.overlay}>
+            {/* <BottomGlassModal
+           visible={visible}
+            onClose={onClose}
+            maxHeight={maxHeight}
+             fullScreen={fullScreen}
+         > */}
             <TouchableOpacity
                 onPress={onClose}
                 activeOpacity={1}
@@ -296,8 +236,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                                     {![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.INCOMPLETE].includes(item?.status) && (
                                         <Text style={[styles.chevron, { color: theme.colors.textSecondary }]}>›</Text>
                                     )}
-                                </TouchableOpacity>
-                            )}
+                                </TouchableOpacity>)}
                         </ScrollView>
                     )}
                 </View>
@@ -317,13 +256,14 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                     </View>
                 )}
             </View>
+            {/* </BottomGlassModal> */}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         zIndex: 999,
     },
@@ -380,13 +320,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     exerciseItem: {
+        paddingVertical: 35,
+        borderBottomWidth: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 20,
         paddingHorizontal: 24,
-        borderBottomWidth: 1,
         borderBottomColor: '#E1E1E1',
+        justifyContent: 'space-between',
     },
     exerciseContent: {
         flex: 1,
@@ -427,14 +367,14 @@ const styles = StyleSheet.create({
         color: '#181818',
     },
     chevron: {
-        fontSize: 20,
+        fontSize: 28,
         color: '#666666',
     },
     emptyState: {
         flex: 1,
+        paddingVertical: 40,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 40,
     },
     emptyText: {
         fontSize: 16,

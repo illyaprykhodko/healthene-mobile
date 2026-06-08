@@ -26,7 +26,7 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
     const handlePress = () => goToReadMessage(id);
 
     return (
-        <Pressable onPress={handlePress} style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
+        <Pressable onPress={handlePress} style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.surface : theme.colors.surfaceAlt }]}>
             <View style={[styles.row, styles.alignItems]}>
                 <View style={[styles.unreadDot, { backgroundColor: lastMessage?.isRead ? 'transparent' : theme.colors.primary }]} />
                 <ProfileImage uri={owner?.coverImage?.url} />
@@ -38,13 +38,13 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
                             <View style={[
                                 styles.badge,
                                 {
-                                    borderColor: theme.colors.grey,
-                                    backgroundColor: theme.colors.lighterGrey,
+                                    borderColor: theme.colors.border,
+                                    backgroundColor: theme.colors.surfaceAlt,
                                 }
                             ]}>
                                 <Icon
                                     iconStyle="solid"
-                                    color={theme.colors.grey}
+                                    color={theme.colors.textSecondary}
                                     name={isIncoming ? 'angle-double-left' : 'angle-double-right'}
                                 />
                             </View>
@@ -52,6 +52,7 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
                                 variant="caption"
                                 numberOfLines={1}
                                 style={styles.shrink}
+                                color={theme.colors.textSecondary}
                             >
                                 { isIncoming ? 'From:' : 'To:' }
                                     &nbsp;
@@ -61,12 +62,13 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
                         <Text
                             numberOfLines={1}
                             style={styles.shrink}
+                            color={theme.colors.text}
                         >
                             { subject }
                                 &nbsp;
                             { messagesCount }
                         </Text>
-                        <Text numberOfLines={1} style={styles.shrink}>
+                        <Text numberOfLines={1} style={styles.shrink} color={theme.colors.textSecondary}>
                             {lastMessage?.text.replace(/<\/?[^>]+(>|$)/g, '')}
                         </Text>
                     </View>

@@ -7,7 +7,6 @@ import {
     ViewStyle,
     StyleProp,
     StyleSheet,
-    TouchableOpacity,
 } from 'react-native';
 
 // local dependencies
@@ -15,6 +14,7 @@ import Text from 'components/Text';
 import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
 import type { QuestionType } from 'types/question';
+import { PressableScale } from 'components/PressableScale';
 
 export interface PlayBtnProps {
     size?: number;
@@ -60,7 +60,8 @@ export const PlayBtn: React.FC<PlayBtnProps> = memo(({
     }, [navigation, navigationAttr]);
 
     return (
-        <TouchableOpacity
+        <PressableScale
+            haptic="light"
             disabled={disabled}
             onPress={handlePress}
             style={[styles.btn, style]}
@@ -80,7 +81,7 @@ export const PlayBtn: React.FC<PlayBtnProps> = memo(({
                 />
             </View>
             <Text style={styles.label}>Video</Text>
-        </TouchableOpacity>
+        </PressableScale>
     );
 });
 
@@ -98,7 +99,8 @@ export const QuestionBtn: React.FC<QuestionBtnProps> = memo(({
     }, [navigation, navigationAttr]);
 
     return (
-        <TouchableOpacity
+        <PressableScale
+            haptic="light"
             disabled={disabled}
             onPress={handlePress}
             style={[styles.btn, style]}
@@ -118,7 +120,7 @@ export const QuestionBtn: React.FC<QuestionBtnProps> = memo(({
                 />
             </View>
             <Text style={styles.label}>Question</Text>
-        </TouchableOpacity>
+        </PressableScale>
     );
 });
 

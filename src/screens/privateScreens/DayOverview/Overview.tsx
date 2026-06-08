@@ -4,18 +4,22 @@ import Animated, {
     Easing,
     withDelay,
     withTiming,
+    interpolate,
     withSequence,
+    Extrapolation,
     useSharedValue,
     useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
+import { GlassSurface } from 'components/GlassSurface';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import FeatherIcon from '@react-native-vector-icons/feather';
+import { DayAdherenceCard } from 'components/DayAdherenceCard';
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, Platform, ScrollView } from 'react-native';
 
 // local dependencies
@@ -41,6 +45,7 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { COLORS } from 'constants/colors';
 import { filters } from 'services/filter';
+import { useHaptic } from 'hooks/useHaptic';
 import { Highlight } from 'components/Highlight';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppDispatch, useAppSelector } from 'store';
@@ -61,6 +66,32 @@ const ICON_MARGIN = 10;
 const TIMELINE_WIDTH = 50;
 const CONNECTOR_WIDTH = 1;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Custom backdrop for the calendar BottomSheet. Replaces gorhom's hardcoded black
+// fade with a frosted-glass overlay that animates in lockstep with the sheet's index.
+const GlassBackdrop: React.FC<{ animatedIndex: { value: number }; onClose: () => void }> = ({
+    animatedIndex,
+    onClose,
+}) => {
+    const animatedStyle = useAnimatedStyle(() => ({
+        opacity: interpolate(animatedIndex.value, [-1, 0], [0, 1], Extrapolation.CLAMP),
+    }));
+    return (
+        <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
+            <GlassSurface
+                tint="dark"
+                intensity={5}
+                pointerEvents="none"
+                style={StyleSheet.absoluteFill}
+            />
+            <TouchableOpacity
+                onPress={onClose}
+                activeOpacity={1}
+                style={StyleSheet.absoluteFill}
+            />
+        </Animated.View>
+    );
+};
 
 const TimelineSVG: React.FC<{ phases: PhaseItem[]; incompleteDay?: boolean }> = ({ phases, incompleteDay = false }) => {
     const theme = useTheme();
@@ -584,6 +615,13 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#4A4A4A',
     },
+    glassBar: {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        position: 'absolute',
+        // paddingTop: 10,
+    },
 });
 
 const getIconColorByType = (type: AddPhaseItemData['type']) => {
@@ -610,6 +648,7 @@ const getIconColorByType = (type: AddPhaseItemData['type']) => {
 
 export const Overview: React.FC = () => {
     const theme = useTheme();
+    const haptics = useHaptic();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const dispatch = useAppDispatch();
     const bottomSheetRef = useRef<BottomSheet>(null);
@@ -645,6 +684,7 @@ export const Overview: React.FC = () => {
     }, [dispatch]);
 
     const handleDayPress = useCallback((day: { dateString: string }) => {
+        haptics.selection();
         const nextDate = day.dateString;
         const isCurrent = moment(nextDate).isSame(moment(), 'day');
         const isFuture = moment(nextDate).isAfter(moment(), 'day');
@@ -658,15 +698,13 @@ export const Overview: React.FC = () => {
             calendarDays: { ...calendarDays, [nextDate]: { selected: true } },
         }));
         bottomSheetRef.current?.close();
-    }, [dispatch, calendarDays]);
+    }, [dispatch, calendarDays, haptics]);
 
     const renderBackdrop = useCallback(
         (props: any) => (
-            <BottomSheetBackdrop
-                {...props}
-                disappearsOnIndex={-1}
-                appearsOnIndex={0}
-                opacity={0.5}
+            <GlassBackdrop
+                animatedIndex={props.animatedIndex}
+                onClose={() => bottomSheetRef.current?.close()}
             />
         ),
         []
@@ -972,6 +1010,8 @@ export const Overview: React.FC = () => {
                     {/* Health Question Section */}
                     <HealthQuestion date={currentDate} isFutureDate={isFutureDateCheck} />
 
+                    {/* <DayAdherenceCard date={currentDate} /> */}
+
                     <Text style={styles.title}>My Daily Plan</Text>
 
                     <View style={styles.timelineContainer}>
@@ -1083,12 +1123,10 @@ export const Overview: React.FC = () => {
                     </View>
                 </View>
             </ScrollView>
-
             <AnytimeMenu
                 date={currentDate}
                 disabled={isFetching || isLoading}
             />
-
             {!showCalendar && data?.id && !isFutureDateCheck && (
                 <TouchableOpacity
                     activeOpacity={0.8}
@@ -1157,7 +1195,7 @@ export const Overview: React.FC = () => {
                             <Text
                                 variant="h3"
                                 textAlign="center"
-                                style={styles.calendarDayText}
+                                style={[styles.calendarDayText, { color: theme.colors.secondary }]}
                             >
                                 {moment(currentDate).format('DD')}
                             </Text>

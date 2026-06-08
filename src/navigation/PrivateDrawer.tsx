@@ -41,9 +41,9 @@ export const PrivateDrawer: React.FC = () => {
                     <BackButton navigation={navigation} theme={theme} />
                 ),
                 headerStyle: {
-                    backgroundColor: theme.colors.primary,
+                    backgroundColor: theme.colors.headerBg,
                 },
-                headerTintColor: theme.colors.white,
+                headerTintColor: theme.colors.headerText,
                 headerTitleStyle: {
                     fontWeight: '600'
                 },

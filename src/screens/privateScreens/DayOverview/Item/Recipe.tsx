@@ -122,11 +122,9 @@ const styles = StyleSheet.create({
         paddingRight: OFFSET.HORIZONTAL,
     },
     link: {
-        fontWeight: '600',
         marginBottom: 8,
         marginTop: 25,
         fontSize: 18,
-        color: '#000',
     },
     headerPreparationName: {
         marginLeft: 10,

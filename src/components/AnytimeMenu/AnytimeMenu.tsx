@@ -1,10 +1,11 @@
 // outsource dependencies
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, Platform, View } from 'react-native';
 // local dependencies
 import { Badge } from './Badge';
 import { useTheme } from 'hooks/useTheme';
 import { useAnytimeData } from 'hooks/useAnytimeData';
+import { GlassSurface } from 'components/GlassSurface';
 import {
     FoodIcon,
     DrinkIcon,
@@ -14,6 +15,7 @@ import {
 } from './AnytimeIcons';
 import { AnytimeModal } from './AnytimeModal';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
+import PressableScale from 'components/PressableScale';
 import type { AnytimeItemType } from '../../types/anytime';
 import { AnytimeExercisesModal } from './AnytimeExercisesModal';
 import { useGetDayOverviewQuery } from 'store/api/dayOverviewApi';
@@ -21,8 +23,8 @@ import { useGetDayOverviewQuery } from 'store/api/dayOverviewApi';
 interface AnytimeMenuProps {
     date?: string;
     disabled?: boolean;
-    modalFullScreen?: boolean;
     modalMaxHeight?: number;
+    modalFullScreen?: boolean;
 }
 
 export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
@@ -39,7 +41,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
     const handleIconPress = (type: AnytimeItemType) => {
         if (disabled || isLoading) { return; }
-        
+
         if (type === 'PHYSICAL_ACTIVITY') {
             setShowExercisesModal(true);
         } else {
@@ -100,8 +102,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
         const anytimePhase = dayOverviewData?.phases?.find(phase => phase.type === 'ANYTIME');
         const anytimeItems = anytimePhase?.items || [];
         const exerciseItems = anytimeItems.filter(item =>
-            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
-        );
+            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY');
         return exerciseItems.filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
     }, [dayOverviewData]);
 
@@ -112,8 +113,13 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
     return (
         <>
-            <View style={[styles.container, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.blue }]}>
-                <TouchableOpacity
+            {/* <GlassSurface
+                intensity={5}
+                tint={theme.dark ? 'dark' : 'light'}
+                style={[styles.container, { borderTopColor: theme.colors.blue }]}
+            > */}
+            <View style={[styles.container, { borderTopColor: theme.colors.blue }]}>
+                <PressableScale
                     style={styles.iconButton}
                     disabled={disabled || isLoading}
                     onPress={() => handleIconPress('FOOD')}
@@ -121,9 +127,9 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
                     <Badge count={counts.foods}>
                         <FoodIcon disabled={!counts.foods || disabled || isLoading} />
                     </Badge>
-                </TouchableOpacity>
+                </PressableScale>
 
-                <TouchableOpacity
+                <PressableScale
                     style={styles.iconButton}
                     disabled={disabled || isLoading}
                     onPress={() => handleIconPress('DRINK')}
@@ -131,9 +137,9 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
                     <Badge count={counts.drinks}>
                         <DrinkIcon disabled={!counts.drinks || disabled || isLoading} />
                     </Badge>
-                </TouchableOpacity>
+                </PressableScale>
 
-                <TouchableOpacity
+                <PressableScale
                     style={styles.iconButton}
                     disabled={disabled || isLoading}
                     onPress={() => handleIconPress('MEASUREMENT')}
@@ -141,9 +147,9 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
                     <Badge count={counts.measurements}>
                         <MeasurementIcon disabled={!counts.measurements || disabled || isLoading} />
                     </Badge>
-                </TouchableOpacity>
+                </PressableScale>
 
-                <TouchableOpacity
+                <PressableScale
                     style={styles.iconButton}
                     disabled={disabled || isLoading}
                     onPress={() => handleIconPress('PHYSICAL_ACTIVITY')}
@@ -151,9 +157,9 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
                     <Badge count={exercisePendingCount}>
                         <ActivityIcon disabled={!exercisePendingCount || disabled || isLoading} />
                     </Badge>
-                </TouchableOpacity>
+                </PressableScale>
 
-                <TouchableOpacity
+                <PressableScale
                     style={styles.iconButton}
                     disabled={disabled || isLoading}
                     onPress={() => handleIconPress('SUPPLEMENT')}
@@ -161,7 +167,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
                     <Badge count={counts.supplements}>
                         <SupplementIcon disabled={!counts.supplements || disabled || isLoading} />
                     </Badge>
-                </TouchableOpacity>
+                </PressableScale>
             </View>
 
             {/* Modals */}
@@ -179,6 +185,8 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
             <AnytimeExercisesModal
                 date={date}
+                maxHeight={modalMaxHeight}
+                fullScreen={modalFullScreen}
                 visible={showExercisesModal}
                 disabled={disabled || isLoading}
                 onClose={handleCloseExercisesModal}
@@ -193,12 +201,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         alignItems: 'center',
-        paddingTop: 5,
+        // paddingTop: 5,
         marginBottom: Platform.OS === 'ios' ? 16 : 0,
     },
     iconButton: {
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 8,
+        paddingVertical: 12,
     },
 });

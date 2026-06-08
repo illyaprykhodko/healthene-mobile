@@ -1,8 +1,9 @@
 // outsource dependencies
 import moment from 'moment';
 import Icon from '@react-native-vector-icons/feather';
-import { StyleSheet, View, TouchableOpacity, Modal } from 'react-native';
 import { KeyboardAwareSectionList } from 'react-native-keyboard-aware-scroll-view';
+import { StyleSheet, View, TouchableOpacity, Modal, RefreshControl } from 'react-native';
+import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { useNavigation, useRoute, useIsFocused, StackActions } from '@react-navigation/native';
 import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 // local dependencies
@@ -11,8 +12,10 @@ import Screen from 'components/Screen';
 import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
+import { EmptyState } from 'components/EmptyState';
 import { useAppDispatch, useAppSelector } from 'store';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { useGetCurrentLibraryElementsQuery } from 'store/api/questionApi';
@@ -44,6 +47,7 @@ import {
 import ShoppingItem from './ShoppingItem';
 import ListSwitcher from 'components/ListSwitcher';
 import HorizontalMenu from 'components/HorizontalMenu';
+import { GlassSurface } from 'components/GlassSurface';
 import ConfirmationAlert from 'components/ConfirmationAlert';
 import { ShoppingListSkeleton } from 'components/Skeleton/ShoppingListSkeleton';
 
@@ -56,6 +60,7 @@ const ALL_CATEGORY: { name: string; id?: number | null } = { name: 'All' };
 const ADDITIONAL_CATEGORY_NAME = 'Additional';
 
 const ShoppingList: React.FC = () => {
+    const theme = useTheme();
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const dispatch = useAppDispatch();
@@ -84,6 +89,9 @@ const ShoppingList: React.FC = () => {
     const [open, setOpen] = useState(true);
     const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
     const [page, setPage] = useState(0);
+    // Height of the absolutely-positioned bottom button bar, measured so the list can reserve
+    // matching bottom padding — otherwise the last item is hidden under the bar and can't be reached.
+    const [bottomBarHeight, setBottomBarHeight] = useState(0);
     const pendingBackActionRef = useRef<any | null>(null);
     const allowBackRef = useRef(false);
     const sectionListRef = useRef<any>(null);
@@ -495,10 +503,10 @@ const ShoppingList: React.FC = () => {
     }, [currentStep, shoppingListDates, status, route.params]);
 
     const renderSectionHeader = useCallback(({ section }: any) => (
-        <View style={styles.section}>
-            <Text variant="h3" style={styles.sectionTitle}>{section?.title}</Text>
+        <View style={[styles.section, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
+            <Text variant="h3" style={styles.sectionTitle} color={theme.colors.primary}>{section?.title}</Text>
         </View>
-    ), []);
+    ), [theme.colors]);
     // const renderSectionHeader = useCallback(({ section: { title } }: { section: GroupedItem }) => (
     //     <View style={styles.section}>
     //         <Text variant="h3" style={styles.sectionTitle}>{title}</Text>
@@ -568,9 +576,11 @@ const ShoppingList: React.FC = () => {
                 handleItem={handleCategoryChange}
             />
             {groupedList.length === 0 ? (
-                <Text textAlign="center" color={COLORS.GREY} style={styles.emptyText}>
-                    No shopping list was found
-                </Text>
+                <EmptyState
+                    icon="shopping-cart"
+                    title="Your shopping list is empty"
+                    subtitle="Items you add will show up here, grouped by aisle."
+                />
             ) : (
                 <KeyboardAwareSectionList
                     enableOnAndroid
@@ -582,15 +592,22 @@ const ShoppingList: React.FC = () => {
                     keyboardShouldPersistTaps="handled"
                     renderSectionHeader={renderSectionHeader}
                     keyExtractor={(item, index) => `${item.id}_${index}`}
-                    renderItem={({ item }) => (
-                        <ShoppingItem
-                            item={item}
-                            status={status}
-                            disabled={isLoading}
-                            isConfirmed={isConfirmed}
-                            onUpdate={handleUpdateItem}
-                            onAmountFocus={handleAmountFocus}
-                        />
+                    contentContainerStyle={{ paddingBottom: bottomBarHeight }}
+                    renderItem={({ item, index }) => (
+                        <Animated.View
+                            exiting={FadeOut.duration(220)}
+                            layout={LinearTransition.springify().damping(20)}
+                            entering={FadeInDown.delay(Math.min(index, 10) * 80).springify().mass(1.2).damping(30)}
+                        >
+                            <ShoppingItem
+                                item={item}
+                                status={status}
+                                disabled={isLoading}
+                                isConfirmed={isConfirmed}
+                                onUpdate={handleUpdateItem}
+                                onAmountFocus={handleAmountFocus}
+                            />
+                        </Animated.View>
                     )}
                     onEndReached={() => {
                         if (listData && !isFetching && page + 1 < listData.totalPages) {
@@ -598,38 +615,52 @@ const ShoppingList: React.FC = () => {
                         }
                     }}
                     onEndReachedThreshold={0.25}
+                    refreshControl={
+                        <RefreshControl
+                            // isFetching is true on initial load AND on refetch — gating on !isLoading
+                            // hides the spinner during first mount (we already show the skeleton screen there).
+                            refreshing={isFetching && !isLoading}
+                            onRefresh={refetch}
+                        />
+                    }
                 />
             )}
-            <View style={styles.buttonControl}>
-                {isOriginalConfirmed && includeRescueFoodsInShoppingList ? (
-                    <View style={styles.buttonsWrapper}>
+            <GlassSurface
+                intensity={5}
+                style={styles.glassBar}
+                tint={theme.dark ? 'dark' : 'light'}
+                onLayout={e => setBottomBarHeight(e.nativeEvent.layout.height)}
+            >
+                <View style={styles.buttonControl}>
+                    {isOriginalConfirmed && includeRescueFoodsInShoppingList ? (
+                        <View style={styles.buttonsWrapper}>
+                            <Button
+                                title="Back"
+                                variant="secondary"
+                                onPress={handleBack}
+                                style={styles.backBtn}
+                                textStyle={styles.backBtnText}
+                            />
+                            <Button
+                                title="Done"
+                                variant="primary"
+                                onPress={handleDone}
+                                style={styles.doneBtn}
+                                textStyle={styles.doneBtnText}
+                            />
+                        </View>
+                    ) : !isConfirmed && (
                         <Button
-                            title="Back"
-                            variant="secondary"
-                            onPress={handleBack}
-                            style={styles.backBtn}
-                            textStyle={styles.backBtnText}
-                        />
-                        <Button
-                            title="Done"
+                            title="Next"
                             variant="primary"
-                            onPress={handleDone}
-                            style={styles.doneBtn}
-                            textStyle={styles.doneBtnText}
+                            disabled={isLoading}
+                            style={styles.nextBtn}
+                            onPress={handleNextBtn}
+                            textStyle={styles.nextBtnText}
                         />
-                    </View>
-                ) : !isConfirmed && (
-                    <Button
-                        title="Next"
-                        variant="primary"
-                        disabled={isLoading}
-                        style={styles.nextBtn}
-                        onPress={handleNextBtn}
-                        textStyle={styles.nextBtnText}
-                    />
-                )}
-            </View>
-
+                    )}
+                </View>
+            </GlassSurface>
             {(status !== SHOPPING_STATUS.SHOP_ON_MY_OWN && isCustomAlertOpen) && (
                 <Modal
                     transparent
@@ -642,21 +673,21 @@ const ShoppingList: React.FC = () => {
                         style={styles.overlay}
                         onPress={handleCloseCustomAlert}
                     >
-                        <View style={styles.alertBox}>
-                            <Text style={styles.alertTitle}>People Eating per Meal</Text>
+                        <View style={[styles.alertBox, { backgroundColor: theme.colors.surface }]}>
+                            <Text style={styles.alertTitle} color={theme.colors.text}>People Eating per Meal</Text>
                             {filteredPreferences.length === 0 ? (
-                                <Text style={styles.alertMessage}>
+                                <Text style={styles.alertMessage} color={theme.colors.textSecondary}>
                                     Do you want to change the number of people eating per meal?
                                 </Text>
                             ) : (
                                 <View>
-                                    <Text style={styles.alertMessagePreference}>You have:</Text>
+                                    <Text style={styles.alertMessagePreference} color={theme.colors.text}>You have:</Text>
                                     {filteredPreferences.map(preference => (
-                                        <Text key={preference.id} style={styles.alertMessagePreference}>
+                                        <Text key={preference.id} style={styles.alertMessagePreference} color={theme.colors.text}>
                                             {`• ${preference.amount} people eating for ${preference.name}`}
                                         </Text>
                                     ))}
-                                    <Text style={styles.alertMessage}>
+                                    <Text style={styles.alertMessage} color={theme.colors.textSecondary}>
                                         Do you want to change your selections?
                                     </Text>
                                 </View>
@@ -690,8 +721,8 @@ const ShoppingList: React.FC = () => {
                 title="Are you sure you want to finalize your shopping list?"
             />
             <ConfirmationAlert
-                variant="legacy"
                 title="Oops!"
+                variant="legacy"
                 cancelTxt="Not Now"
                 applyTxt="Finish Up"
                 onClose={handleNotNowAlert}
@@ -872,5 +903,12 @@ const styles = StyleSheet.create({
     },
     noBtnBgColor: {
         backgroundColor: '#EBB3D1',
+    },
+    glassBar: {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        // paddingTop: 10,
+        position: 'absolute',
     },
 });

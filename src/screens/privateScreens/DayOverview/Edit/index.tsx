@@ -27,8 +27,10 @@ import { ROUTES } from 'constants/routes';
 import { COLORS } from 'constants/colors';
 import { Button } from 'components/Button';
 import { PhaseItem } from 'types/overview';
+import { useHaptic } from 'hooks/useHaptic';
 import { groupBy, isEmpty } from 'utils/general';
 import { AnytimeMenu } from 'components/AnytimeMenu';
+import { GlassSurface } from 'components/GlassSurface';
 import { useAppSelector, useAppDispatch } from 'store';
 import { RootStackParamList } from 'services/navigation';
 import { RewardStarOverlay } from 'components/RewardStar';
@@ -37,6 +39,7 @@ import { selectBirdSoundEnabled } from 'store/slices/appSlice';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
+import { CelebrationConfetti } from 'components/CelebrationConfetti';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { useUpdatePatientGamblingPointsMutation } from 'store/api/gamblingPointsApi.ts';
 import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
@@ -75,11 +78,22 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         nextItem: null,
     });
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
+    const birdSoundEnabled = useAppSelector(selectBirdSoundEnabled);
     const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
-    const targetPhaseId = phaseId || route.params?.phaseId;
+    const initialPhaseId = phaseId || route.params?.phaseId;
 
+    // Phase ids are date-specific (Breakfast on May 27 != Breakfast on May 28). The header
+    // date arrows only change the date, so we re-resolve the phase id for the viewed day by
+    // matching the opened phase's identity (meal name, or type for non-meal phases).
+    const phaseIdentityRef = useRef<{ type?: string; mealName?: string } | null>(null);
+    // `any` mirrors the previous `route.params?.phaseId` typing; call sites are runtime-guarded
+    // by `if (!targetPhaseId || !currentPhase) return`, so the undefined (no-match) case is safe.
+    const [targetPhaseId, setTargetPhaseId] = useState<any>(initialPhaseId);
+
+    const haptics = useHaptic();
     const [birdAnimationStep, setBirdAnimationStep] = useState(false);
     const [birdCheckTrigger, setBirdCheckTrigger] = useState(0);
+    const [celebrateSignal, setCelebrateSignal] = useState(0);
     const [checkboxAreaX] = useState(0);
     useEffect(() => {
         if ((localItems || []).length > 0) {
@@ -104,6 +118,28 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const { data: dayOverviewData, isLoading: isDayOverviewLoading } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
     });
+
+    // Capture the opened phase's identity once, then re-point targetPhaseId at the matching
+    // phase whenever the viewed day changes. Resolves to undefined if the new day has no such
+    // phase (e.g. no Breakfast planned) — the screen then shows its empty state.
+    useEffect(() => {
+        const phases = dayOverviewData?.phases;
+        if (!phases?.length) { return; }
+
+        if (!phaseIdentityRef.current) {
+            const opened = phases.find(phase => phase.id === initialPhaseId);
+            if (opened) {
+                phaseIdentityRef.current = { type: opened.type, mealName: opened.meal?.name };
+            }
+        }
+
+        const identity = phaseIdentityRef.current;
+        if (!identity) { return; }
+
+        const match = phases.find(phase =>
+            (identity.mealName ? phase.meal?.name === identity.mealName : phase.type === identity.type));
+        setTargetPhaseId(match?.id);
+    }, [dayOverviewData, initialPhaseId]);
 
     const { data: phaseItems, isLoading: isPhaseItemsLoading, refetch: refetchPhaseItems } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
@@ -142,6 +178,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             }))
             .sort((a, b) => (a.order || 0) - (b.order || 0));
     }, [phaseItems]);
+    // Drop the previous day's items the moment the phase context changes, so they don't
+    // linger while the new day's items load (or stay empty if nothing is planned).
+    useEffect(() => {
+        setLocalItems([]);
+    }, [targetPhaseId]);
     useEffect(() => {
         if (items.length > 0) {
             setLocalItems(items);
@@ -431,6 +472,12 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             );
             if (item.status === PHASE_ITEM_STATUS.DONE && !allDoneNow) {
                 Promise.resolve().then(() => setBirdCheckTrigger(t => t + 1));
+            } else if (item.status === PHASE_ITEM_STATUS.DONE && allDoneNow && !mealDateFuture) {
+                // Completing the final item of the phase — celebrate.
+                Promise.resolve().then(() => {
+                    setCelebrateSignal(s => s + 1);
+                    haptics.success();
+                });
             }
             return nextItems;
         });
@@ -673,14 +720,16 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         return 0;
     });
     const title = currentPhase?.meal?.name
+                  || phaseIdentityRef.current?.mealName
                   || (currentPhase?.type === 'QUESTION' ? 'Health Question'
                       : currentPhase?.type === 'ANYTIME' ? 'Anytime'
-                          : convertTypeToTitle(currentPhase?.type || '', true));
+                          : convertTypeToTitle(currentPhase?.type || phaseIdentityRef.current?.type || '', true));
     const isPastDate = moment(targetDate).isBefore(moment(), 'day');
     const isFutureDate = moment(targetDate).isAfter(moment(), 'day');
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
+            <CelebrationConfetti signal={celebrateSignal} />
             {config.features.birdAnimationEnabled && currentPhase?.type === OVERVIEW_TYPE.MEAL && (
                 <BirdAnimation
                     muted={!birdSoundEnabled}
@@ -689,9 +738,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     checkTrigger={birdCheckTrigger}
                 />
             )}
-            <View style={[styles.title, isFutureDate && styles.opacity]}>
+            <View style={[styles.title, { backgroundColor: theme.colors.surfaceAlt }, isFutureDate && styles.opacity]}>
                 <View>
-                    <Text style={styles.titleText}>
+                    <Text style={styles.titleText} color={theme.colors.text}>
                         {title}
                     </Text>
                 </View>
@@ -730,6 +779,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 <ScrollView
                     ref={scrollViewRef}
                     style={isFutureDate && styles.opacity}
+                    contentContainerStyle={styles.listContent}
                     scrollEnabled={scrollEnabled}
                     onContentSizeChange={() => {
                         if (shouldScrollToAddedEnd && !isAddingAddedItem) {
@@ -802,13 +852,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                     (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
                                         <View style={[
                                             styles.separatorWrapper,
-                                            {
-                                            // borderTopColor: theme.colors.black,
-                                            // borderTopWidth: section === 'Added' ? 0 : 1,
-                                                backgroundColor: section === 'Added' ? '#E0EBF7' : `${theme.colors.lightGrey}`
-                                            }
+                                            { backgroundColor: theme.colors.surfaceAlt }
                                         ]}>
-                                            <Text variant="h3" style={styles.offset}>
+                                            <Text variant="h3" style={styles.offset} color={theme.colors.text}>
                                                 {section || 'No section'}
                                             </Text>
                                         </View>
@@ -828,42 +874,48 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         ))
                     ) : (
                         <Text style={[styles.emptyScreen, { textAlign: 'center', color: theme.colors.grey }]}>
-          No items found
+                            {currentPhase ? 'No items found' : `No "${title}" planned for this day`}
                         </Text>
                     )}
                 </ScrollView>
 
                 {/* {(currentPhase?.type === OVERVIEW_TYPE.MEAL
               || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? ( */}
-                <View style={styles.buttonContainer}>
-                    <Button
-                        icon="plus"
-                        title="Add"
-                        variant="primary"
-                        onPress={handleAddItem}
-                        textStyle={styles.textAddButton}
-                        style={{
-                            ...styles.button,
-                            ...styles.addButtonActive,
-                            width: isFutureDate ? '100%' : '45%',
-                            backgroundColor: theme.colors.transparent,
-                        }}
-                    />
-                    {!isFutureDate && (
+                <GlassSurface
+                    intensity={10}
+                    style={styles.glassBar}
+                    tint={theme.dark ? 'dark' : 'light'}
+                >
+                    <View style={styles.buttonContainer}>
                         <Button
-                            title="Meal Done"
-                            variant="secondary"
-                            disabled={!allItemsDone || isLoading}
-                            onPress={handlePhaseDone}
-                            textStyle={styles.textMealDoneButton}
+                            icon="plus"
+                            title="Add"
+                            variant="primary"
+                            onPress={handleAddItem}
+                            textStyle={styles.textAddButton}
                             style={{
                                 ...styles.button,
-                                ...styles.mealDoneButton,
-                                ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
+                                ...styles.addButtonActive,
+                                width: isFutureDate ? '100%' : '45%',
+                                backgroundColor: theme.colors.transparent,
                             }}
                         />
-                    )}
-                </View>
+                        {!isFutureDate && (
+                            <Button
+                                title="Meal Done"
+                                variant="secondary"
+                                onPress={handlePhaseDone}
+                                disabled={!allItemsDone || isLoading}
+                                textStyle={styles.textMealDoneButton}
+                                style={{
+                                    ...styles.button,
+                                    ...styles.mealDoneButton,
+                                    ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
+                                }}
+                            />
+                        )}
+                    </View>
+                </GlassSurface>
                 {/* ) : (
                     <Button
                         icon="plus"
@@ -944,7 +996,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#E0EBF7',
     },
     titleText: {
-        color: '#181818',
         fontSize: 18,
         fontWeight: '600',
     },
@@ -954,7 +1005,17 @@ const styles = StyleSheet.create({
     },
     list: {
         flex: 1,
-        justifyContent: 'space-between',
+    },
+    listContent: {
+        // Leave room so the last items can scroll up above the floating glass bar.
+        paddingBottom: 96,
+    },
+    glassBar: {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        paddingTop: 10,
+        position: 'absolute',
     },
     separatorWrapper: {
         backgroundColor: '#F3F3F380', // 50% opacity
