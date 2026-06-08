@@ -26,6 +26,7 @@ import { BoxHolder, MaintenanceHolder } from 'components/preloader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppInitialization } from 'hooks/useAppInitialization.ts';
 // import { FeedbackProvider } from 'features/feedback';
+import { WalkingSessionRunner } from 'components/WalkingSessionRunner';
 import { ForceUpdateScreen } from 'components/update/ForceUpdateScreen';
 import notificationService from 'services/notifications/notification.service';
 
@@ -104,6 +105,7 @@ function AppContent (): React.JSX.Element {
     return (
         <SafeAreaView style={[styles.safeArea, styles.flex, { backgroundColor: theme.colors.background }]}>
             {/* <FeedbackProvider> */}
+            <WalkingSessionRunner />
             <RootNavigator />
             <SoftUpdateModal
                 policy={softPolicy}

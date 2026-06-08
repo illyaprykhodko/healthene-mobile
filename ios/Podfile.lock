@@ -2811,6 +2811,28 @@ PODS:
   - Sentry (9.13.0):
     - Sentry/Core (= 9.13.0)
   - Sentry/Core (9.13.0)
+  - StepCounter (0.4.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - TOCropViewController (2.8.0)
   - VisionCamera (5.0.10):
     - hermes-engine
@@ -2979,6 +3001,7 @@ DEPENDENCIES:
   - "RNSentry (from `../node_modules/@sentry/react-native`)"
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
+  - "StepCounter (from `../node_modules/@dongminyu/react-native-step-counter`)"
   - VisionCamera (from `../node_modules/react-native-vision-camera`)
   - VisionCameraBarcodeScanner (from `../node_modules/react-native-vision-camera-barcode-scanner`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -3228,6 +3251,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-svg"
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
+  StepCounter:
+    :path: "../node_modules/@dongminyu/react-native-step-counter"
   VisionCamera:
     :path: "../node_modules/react-native-vision-camera"
   VisionCameraBarcodeScanner:
@@ -3365,6 +3390,7 @@ SPEC CHECKSUMS:
   RNSVG: 7f2453d6a1cb84b5fbc9144f6e6333c196ef784b
   RNWorklets: d940c79493badd3ab8fdeadba1d65b1cb20d4211
   Sentry: 5c3f67235d4c16fcfab43158a8c1502a18fece9a
+  StepCounter: 8e64c3f5be583bdceec3b72ea062b3b0604e3ce6
   TOCropViewController: 797deaf39c90e6e9ddd848d88817f6b9a8a09888
   VisionCamera: 5de678703d64a724d02e7fd1578c233eec137000
   VisionCameraBarcodeScanner: d79d90ba1468bc49c599df838b8d2e613eaf3cd4

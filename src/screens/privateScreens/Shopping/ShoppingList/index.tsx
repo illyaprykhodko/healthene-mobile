@@ -47,6 +47,7 @@ import {
 import ShoppingItem from './ShoppingItem';
 import ListSwitcher from 'components/ListSwitcher';
 import HorizontalMenu from 'components/HorizontalMenu';
+import { GlassSurface } from 'components/GlassSurface';
 import ConfirmationAlert from 'components/ConfirmationAlert';
 import { ShoppingListSkeleton } from 'components/Skeleton/ShoppingListSkeleton';
 
@@ -88,6 +89,9 @@ const ShoppingList: React.FC = () => {
     const [open, setOpen] = useState(true);
     const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
     const [page, setPage] = useState(0);
+    // Height of the absolutely-positioned bottom button bar, measured so the list can reserve
+    // matching bottom padding — otherwise the last item is hidden under the bar and can't be reached.
+    const [bottomBarHeight, setBottomBarHeight] = useState(0);
     const pendingBackActionRef = useRef<any | null>(null);
     const allowBackRef = useRef(false);
     const sectionListRef = useRef<any>(null);
@@ -588,6 +592,7 @@ const ShoppingList: React.FC = () => {
                     keyboardShouldPersistTaps="handled"
                     renderSectionHeader={renderSectionHeader}
                     keyExtractor={(item, index) => `${item.id}_${index}`}
+                    contentContainerStyle={{ paddingBottom: bottomBarHeight }}
                     renderItem={({ item, index }) => (
                         <Animated.View
                             exiting={FadeOut.duration(220)}
@@ -620,36 +625,42 @@ const ShoppingList: React.FC = () => {
                     }
                 />
             )}
-            <View style={styles.buttonControl}>
-                {isOriginalConfirmed && includeRescueFoodsInShoppingList ? (
-                    <View style={styles.buttonsWrapper}>
+            <GlassSurface
+                intensity={5}
+                style={styles.glassBar}
+                tint={theme.dark ? 'dark' : 'light'}
+                onLayout={e => setBottomBarHeight(e.nativeEvent.layout.height)}
+            >
+                <View style={styles.buttonControl}>
+                    {isOriginalConfirmed && includeRescueFoodsInShoppingList ? (
+                        <View style={styles.buttonsWrapper}>
+                            <Button
+                                title="Back"
+                                variant="secondary"
+                                onPress={handleBack}
+                                style={styles.backBtn}
+                                textStyle={styles.backBtnText}
+                            />
+                            <Button
+                                title="Done"
+                                variant="primary"
+                                onPress={handleDone}
+                                style={styles.doneBtn}
+                                textStyle={styles.doneBtnText}
+                            />
+                        </View>
+                    ) : !isConfirmed && (
                         <Button
-                            title="Back"
-                            variant="secondary"
-                            onPress={handleBack}
-                            style={styles.backBtn}
-                            textStyle={styles.backBtnText}
-                        />
-                        <Button
-                            title="Done"
+                            title="Next"
                             variant="primary"
-                            onPress={handleDone}
-                            style={styles.doneBtn}
-                            textStyle={styles.doneBtnText}
+                            disabled={isLoading}
+                            style={styles.nextBtn}
+                            onPress={handleNextBtn}
+                            textStyle={styles.nextBtnText}
                         />
-                    </View>
-                ) : !isConfirmed && (
-                    <Button
-                        title="Next"
-                        variant="primary"
-                        disabled={isLoading}
-                        style={styles.nextBtn}
-                        onPress={handleNextBtn}
-                        textStyle={styles.nextBtnText}
-                    />
-                )}
-            </View>
-
+                    )}
+                </View>
+            </GlassSurface>
             {(status !== SHOPPING_STATUS.SHOP_ON_MY_OWN && isCustomAlertOpen) && (
                 <Modal
                     transparent
@@ -710,8 +721,8 @@ const ShoppingList: React.FC = () => {
                 title="Are you sure you want to finalize your shopping list?"
             />
             <ConfirmationAlert
-                variant="legacy"
                 title="Oops!"
+                variant="legacy"
                 cancelTxt="Not Now"
                 applyTxt="Finish Up"
                 onClose={handleNotNowAlert}
@@ -892,5 +903,12 @@ const styles = StyleSheet.create({
     },
     noBtnBgColor: {
         backgroundColor: '#EBB3D1',
+    },
+    glassBar: {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        // paddingTop: 10,
+        position: 'absolute',
     },
 });

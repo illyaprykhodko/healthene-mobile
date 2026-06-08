@@ -174,6 +174,14 @@ export default function ExerciseCategories () {
                 refreshCurrentList,
                 deepCounter: (route.params?.deepCounter || 0) + 1
             });
+        } else if (item?.aerobicExerciseType === 'WALKING') {
+            navigation.navigate('WalkingActivity', {
+                date,
+                deepPhaseId,
+                exercise: item,
+                handleChangeStatus,
+                refreshCurrentList,
+            });
         } else {
             navigation.navigate('ExerciseDetails', {
                 ...route.params,
@@ -182,7 +190,7 @@ export default function ExerciseCategories () {
                 deepCounter: route.params?.deepCounter
             });
         }
-    }, [navigation, route.params, refreshCurrentList]);
+    }, [navigation, route.params, refreshCurrentList, date, deepPhaseId, handleChangeStatus]);
 
     const handleBack = useCallback(() => {
         const deepCounter = route.params?.deepCounter || 0;
@@ -256,14 +264,17 @@ export default function ExerciseCategories () {
                                 <Text style={[styles.categoryName, { color: theme.colors.text }]}>{item.title}</Text>
                             </View>
                             {item?.status === PHASE_ITEM_STATUS.DID_NOT_EAT && (
-                                <TouchableOpacity onPress={() => handleChangeStatus(item, PHASE_ITEM_STATUS.PENDING)}>
-                                    <View style={styles.skippedLabel}>
-                                        <View style={styles.notEatView}>
-                                            <Text style={[styles.notEatText, { color: theme.colors.primary }]}>Skipped</Text>
-                                        </View>
-                                        <Icon iconStyle="solid" name="minus-square" size={30} color={theme.colors.primary} />
+                                <View style={styles.skippedLabel}>
+                                    <View style={styles.notEatView}>
+                                        <Text style={[styles.notEatText, { color: theme.colors.primary }]}>Skipped</Text>
                                     </View>
-                                </TouchableOpacity>
+                                    {/* Category rows have derived DID_NOT_EAT status with a fake id (idx+1) — no API call */}
+                                    {!(item.list && item.list.length > 0) && (
+                                        <TouchableOpacity onPress={() => handleChangeStatus(item, PHASE_ITEM_STATUS.PENDING)}>
+                                            <Icon iconStyle="solid" name="minus-square" size={30} color={theme.colors.primary} />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                             )}
                             {item?.status === PHASE_ITEM_STATUS.DONE && (
                                 <Checkbox

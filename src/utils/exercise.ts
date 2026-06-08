@@ -5,6 +5,15 @@
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 
 /**
+ * True when a phase item is one of the exercise shapes (`EXERCISE_*` types or the
+ * legacy `PHYSICAL_ACTIVITY` wrapper). Used to slice ANYTIME phase items into the
+ * exercise subset for the Anytime Activity modal.
+ */
+export function isAnytimeExerciseItem (item: any): boolean {
+    return Boolean(item?.type?.startsWith?.('EXERCISE_')) || item?.type === 'PHYSICAL_ACTIVITY';
+}
+
+/**
  * Treats a phase item as "fully done" when its own status is DONE/DID_NOT_EAT
  * AND every nested item (if any) is also fully done. Used both for category
  * roll-ups and for deriving phase status after edits.
@@ -41,6 +50,11 @@ export function getPhaseNewStatus (exercises: any[] = [], isToday: boolean): str
 export function getCategoryStatus (items: any[]): string | null {
     if (!items?.length) {
         return null;
+    }
+
+    const allSkipped = items.every(item => item.status === PHASE_ITEM_STATUS.DID_NOT_EAT);
+    if (allSkipped) {
+        return PHASE_ITEM_STATUS.DID_NOT_EAT;
     }
 
     const allDone = items.every(item => item.status === PHASE_ITEM_STATUS.DONE);

@@ -12,6 +12,7 @@ import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
 import FoodPreferences from 'screens/AccountSettingsScreens/FoodPreferences';
 import AccountSettings from 'screens/AccountSettingsScreens/AccountSettings';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
+import AppearanceScreen from 'screens/AccountSettingsScreens/AppearanceScreen';
 import NotificationsScreen from 'screens/AccountSettingsScreens/NotificationsScreen';
 import AnimationSettingsScreen from 'screens/AccountSettingsScreens/AnimationSettings';
 import ChangePasswordScreen from 'screens/AccountSettingsScreens/ChangePasswordScreen.tsx';
@@ -92,6 +93,11 @@ export const AccountSettingsStack = () => {
                 name={ROUTES.ANIMATION_SETTINGS}
                 component={AnimationSettingsScreen}
                 options={{ title: 'Animation Settings' }}
+            />
+            <Stack.Screen
+                name={ROUTES.APPEARANCE_SETTINGS}
+                component={AppearanceScreen}
+                options={{ title: 'Appearance' }}
             />
         </Stack.Navigator>
     );

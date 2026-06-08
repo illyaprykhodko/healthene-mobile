@@ -40,7 +40,7 @@ import MeasurementChartScreen from '../MeasurementChartScreen';
 import WeightMeasurementScreen from '../WeightMeasurementScreen';
 import { ReplacementScreen, ReplaceItemsScreen } from './Replacement';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
-import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
+import { ExerciseCategories, ExerciseDetails, ExerciseEdit, WalkingActivity } from './Exercise';
 import {
     GamblingGiftCardDenominationsScreen,
     GamblingGiftCardConfirmationScreen,
@@ -198,6 +198,11 @@ const DayOverviewStack: React.FC = () => {
                 name="EditExercise"
                 component={ExerciseEdit}
                 options={{ title: 'Edit Exercise', header: renderCustomHeader() }}
+            />
+            <Stack.Screen
+                name="WalkingActivity"
+                component={WalkingActivity}
+                options={{ headerShown: false }}
             />
 
             <Stack.Screen

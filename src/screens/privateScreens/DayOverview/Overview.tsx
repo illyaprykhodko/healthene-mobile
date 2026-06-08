@@ -1010,7 +1010,7 @@ export const Overview: React.FC = () => {
                     {/* Health Question Section */}
                     <HealthQuestion date={currentDate} isFutureDate={isFutureDateCheck} />
 
-                    <DayAdherenceCard date={currentDate} />
+                    {/* <DayAdherenceCard date={currentDate} /> */}
 
                     <Text style={styles.title}>My Daily Plan</Text>
 
@@ -1123,17 +1123,10 @@ export const Overview: React.FC = () => {
                     </View>
                 </View>
             </ScrollView>
-            
-            <GlassSurface
-                intensity={5}
-                style={styles.glassBar}
-                tint={theme.dark ? 'dark' : 'light'}
-            >
-                <AnytimeMenu
-                    date={currentDate}
-                    disabled={isFetching || isLoading}
-                />
-            </GlassSurface>
+            <AnytimeMenu
+                date={currentDate}
+                disabled={isFetching || isLoading}
+            />
             {!showCalendar && data?.id && !isFutureDateCheck && (
                 <TouchableOpacity
                     activeOpacity={0.8}

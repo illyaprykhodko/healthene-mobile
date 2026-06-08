@@ -304,7 +304,7 @@ export const shoppingApi = createApi({
                 method: 'POST',
                 body: ids,
             }),
-            invalidatesTags: ['StockList'],
+            invalidatesTags: ['ShoppingList', 'StockList'],
         }),
 
         // Update stock items (remove from stock)

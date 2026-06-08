@@ -23,8 +23,8 @@ import { useGetDayOverviewQuery } from 'store/api/dayOverviewApi';
 interface AnytimeMenuProps {
     date?: string;
     disabled?: boolean;
-    modalFullScreen?: boolean;
     modalMaxHeight?: number;
+    modalFullScreen?: boolean;
 }
 
 export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
@@ -41,7 +41,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
     const handleIconPress = (type: AnytimeItemType) => {
         if (disabled || isLoading) { return; }
-        
+
         if (type === 'PHYSICAL_ACTIVITY') {
             setShowExercisesModal(true);
         } else {
@@ -185,6 +185,8 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
             <AnytimeExercisesModal
                 date={date}
+                maxHeight={modalMaxHeight}
+                fullScreen={modalFullScreen}
                 visible={showExercisesModal}
                 disabled={disabled || isLoading}
                 onClose={handleCloseExercisesModal}

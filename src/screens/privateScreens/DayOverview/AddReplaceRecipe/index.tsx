@@ -113,10 +113,13 @@ const AddReplaceRecipe: React.FC = () => {
                 },
             }).unwrap();
 
-            navigation.navigate(ROUTES.EDIT, {
+            // popTo (not navigate): return to the existing Edit screen and drop every
+            // replacement screen left above it in the stack, so Back from Edit goes to
+            // Day Overview instead of back into the replacement catalog.
+            navigation.popTo(ROUTES.EDIT, {
                 phaseId: route.params?.phaseId || prevItem.phaseId,
                 isToast: true,
-            });
+            }, { merge: true });
         } catch (error) {
             console.error('Error replacing recipe:', error);
         }

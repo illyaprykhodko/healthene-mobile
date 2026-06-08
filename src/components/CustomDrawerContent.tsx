@@ -4,7 +4,6 @@ import moment from 'moment';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Icon from '@react-native-vector-icons/fontawesome5';
-import FeatherIcon from '@react-native-vector-icons/feather';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import {
     View, StyleSheet, TouchableOpacity, Pressable, Alert
@@ -18,10 +17,8 @@ import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
-import { useHaptic } from 'hooks/useHaptic';
 import { navigate } from 'services/navigation';
 import ProfileImage from 'components/ProfileImage.tsx';
-import { ThemeMode, useThemeContext } from 'providers/ThemeProvider';
 import {
     useGetMedicalProblemsQuery,
     useGetMedicationAllergiesQuery,
@@ -107,53 +104,6 @@ const SectionHeader: React.FC<{ title: string }> = ({ title }) => {
             <Text variant="h5" style={styles.sectionHeaderText} color={theme.colors.textSecondary}>
                 {title}
             </Text>
-        </View>
-    );
-};
-
-type FeatherIconName = React.ComponentProps<typeof FeatherIcon>['name'];
-
-const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: FeatherIconName }[] = [
-    { mode: 'light', label: 'Light', icon: 'sun' },
-    { mode: 'dark', label: 'Dark', icon: 'moon' },
-    { mode: 'system', label: 'System', icon: 'smartphone' },
-];
-
-const ThemeModeToggle: React.FC = () => {
-    const theme = useTheme();
-    const haptics = useHaptic();
-    const { themeMode, setThemeMode } = useThemeContext();
-
-    return (
-        <View style={styles.themeToggleWrapper}>
-            <View style={[styles.themeToggleRow, { borderColor: theme.colors.border }]}>
-                {THEME_OPTIONS.map(option => {
-                    const active = themeMode === option.mode;
-                    return (
-                        <Pressable
-                            key={option.mode}
-                            onPress={() => {
-                                haptics.selection();
-                                setThemeMode(option.mode);
-                            }}
-                            style={[styles.themeSegment, active && { backgroundColor: theme.colors.primary }]}
-                        >
-                            <FeatherIcon
-                                size={16}
-                                name={option.icon}
-                                color={active ? theme.colors.white : theme.colors.textSecondary}
-                            />
-                            <Text
-                                variant="h5"
-                                style={styles.themeSegmentText}
-                                color={active ? theme.colors.white : theme.colors.textSecondary}
-                            >
-                                {option.label}
-                            </Text>
-                        </Pressable>
-                    );
-                })}
-            </View>
         </View>
     );
 };
@@ -299,7 +249,6 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                 </View>
             </Pressable>
             <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
-                <ThemeModeToggle />
                 {/* {menuItems.map(item => {
                     const focused = getFocusedRoute() === item.route;
                     return (
@@ -347,7 +296,6 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                 />
 
                 <SectionHeader title="PREFERENCES" />
-                {/* <ThemeModeToggle /> */}
                 <DrawerItem
                     icon="award"
                     title="International Cuisine"
@@ -455,28 +403,6 @@ const styles = StyleSheet.create({
     },
     sectionHeaderText: {
         fontSize: 11,
-        fontWeight: '600',
-    },
-    themeToggleWrapper: {
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-    },
-    themeToggleRow: {
-        borderWidth: 1,
-        borderRadius: 12,
-        overflow: 'hidden',
-        flexDirection: 'row',
-    },
-    themeSegment: {
-        flex: 1,
-        paddingVertical: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    themeSegmentText: {
-        fontSize: 13,
-        marginLeft: 6,
         fontWeight: '600',
     },
     logoutButton: {
