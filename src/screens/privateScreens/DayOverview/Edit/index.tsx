@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+
 // local dependencies
 import {
     useGetPhaseItemsQuery,
@@ -14,9 +15,9 @@ import {
     useDeletePhaseItemMutation,
     useAddPhaseMealItemMutation,
     useReplacePhaseItemMutation,
+    useInterchangeMealsMutation,
     useAddPhaseCustomRecipeMutation,
-    useUpdateIncludeRescueFoodsMutation,
-    useInterchangeMealsMutation
+    useUpdateIncludeRescueFoodsMutation
 } from 'store/api/dayOverviewApi';
 import ListItem from './ListItem';
 import { config } from 'constants';
@@ -36,11 +37,11 @@ import { useAppSelector, useAppDispatch } from 'store';
 import { RootStackParamList } from 'services/navigation';
 import { RewardStarOverlay } from 'components/RewardStar';
 import { BirdAnimation } from 'animation/BirdAnimation.tsx';
+import ConfirmationAlert from 'components/ConfirmationAlert';
 import { selectBirdSoundEnabled } from 'store/slices/appSlice';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
 import SwipeList, { SwipeValueChange } from 'components/SwipeList';
-import ConfirmationAlert from 'components/ConfirmationAlert';
 import { CelebrationConfetti } from 'components/CelebrationConfetti';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { useUpdatePatientGamblingPointsMutation } from 'store/api/gamblingPointsApi.ts';
@@ -149,15 +150,15 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     // mutations
     const [updatePhase] = useUpdatePhaseMutation();
     const [addPhaseItem] = useAddPhaseItemMutation();
-    const [addPhaseMealItem] = useAddPhaseMealItemMutation();
-    // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
+    // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
+    const [addPhaseMealItem] = useAddPhaseMealItemMutation();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
-    const [interchangeMeals, { isLoading: isSwapping }] = useInterchangeMealsMutation();
     const [updatePatientGamblingPoints] = useUpdatePatientGamblingPointsMutation();
+    const [interchangeMeals, { isLoading: isSwapping }] = useInterchangeMealsMutation();
     //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
 

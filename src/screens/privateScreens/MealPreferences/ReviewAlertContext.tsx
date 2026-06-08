@@ -21,9 +21,9 @@ export const ReviewAlertProvider: React.FC<React.PropsWithChildren> = ({ childre
 
     const value = useMemo<ReviewAlertContextValue>(() => ({
         sessionId,
+        resetSession,
         hasShown: () => shownRef.current,
         markShown: () => { shownRef.current = true; },
-        resetSession,
     }), [sessionId, resetSession]);
 
     return (

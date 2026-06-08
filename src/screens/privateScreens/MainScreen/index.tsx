@@ -71,7 +71,7 @@ export const MainScreen: React.FC = () => {
             <StackHeader
                 showBack={false}
                 onOpenDrawer={handleOpenDrawer}
-                centerContent={<TextLogo color={theme.colors.background} />}
+                centerContent={<TextLogo color={theme.colors.headerText} />}
             />
 
             <View style={styles.content}>

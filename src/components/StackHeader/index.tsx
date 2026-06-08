@@ -33,15 +33,15 @@ const StackHeader: React.FC<StackHeaderProps> = ({
         : insets.top;
 
     return (
-        <View style={[styles.header, { paddingTop, backgroundColor: theme.colors.primary }]}>
+        <View style={[styles.header, { paddingTop, backgroundColor: theme.colors.headerBg }]}>
             <View style={styles.side}>
                 {showBack && onBack ? (
-                    <BackBtn onPress={onBack} color={theme.colors.white} />
+                    <BackBtn onPress={onBack} color={ theme.colors.headerText } />
                 ) : null}
             </View>
             <View style={styles.center}>
                 {centerContent ?? (
-                    <Text variant="h4" style={{ color: theme.colors.white }}>
+                    <Text variant="h4" style={{ color: theme.colors.headerText }}>
                         {title}
                     </Text>
                 )}

@@ -438,9 +438,6 @@ export default function ExerciseDetails () {
     // const clearHandler = useCallback(() => {
     //     dispatch(updateSteps({ steps: memoizedSteps, selectedSteps: [] }));
     // }, [dispatch, memoizedSteps]);
-
-    console.log('DATE', date, 'isFutureDay', isFutureDay);
-    
     return (
         <Screen initialized={!isLoading} clear={() => {}} style={[styles.container, { backgroundColor: theme.colors.background }]}>
             {renderTabs()}

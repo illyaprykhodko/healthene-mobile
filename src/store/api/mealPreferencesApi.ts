@@ -102,6 +102,6 @@ export const {
     useGetNewMealTemplatesQuery,
     useSaveMealPreferencesMutation,
     useDeleteMealPreferencesMutation,
-    useUpdateMealPreferencesFrequencyMutation,
     useResetMealPreferencesToDefaultMutation,
+    useUpdateMealPreferencesFrequencyMutation,
 } = mealPreferencesApi;

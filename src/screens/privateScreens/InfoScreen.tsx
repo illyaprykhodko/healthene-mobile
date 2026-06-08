@@ -1,8 +1,8 @@
 // outsource dependencies
 import React, { useMemo } from 'react';
-import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
+import { useNavigation } from '@react-navigation/native';
 
 // local dependencies
 import Text from 'components/Text';

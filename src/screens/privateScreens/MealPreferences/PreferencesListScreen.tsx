@@ -207,8 +207,8 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
             initialized={!isLoading}
         >
             <StackHeader
-                title={mealName || 'Meal Preferences'}
                 onBack={() => navigation.goBack()}
+                title={mealName || 'Meal Preferences'}
                 onOpenDrawer={() => (navigation as any).openDrawer?.()}
             />
             <View style={styles.content}>

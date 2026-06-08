@@ -1197,11 +1197,11 @@ export const {
     useRevertPhaseItemMutation,
     useGetLastMeasurementQuery,
     useGetMeasurementTypesQuery,
+    useInterchangeMealsMutation,
     useGetRestaurantCatalogQuery,
     useDeleteMeasurementsMutation,
     useUpdatePhaseWithRescueMutation,
     useUpdateIncludeRescueFoodsMutation,
-    useInterchangeMealsMutation,
     useGetAggregateMeasurementDataQuery,
     useGetLoggedMeasurementDataMutation,
     // Recipe replacement
