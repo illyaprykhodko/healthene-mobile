@@ -1,6 +1,7 @@
 // outsource dependencies
 import moment from 'moment';
 import Animated, {
+    runOnJS,
     Easing,
     withDelay,
     withTiming,
@@ -9,6 +10,7 @@ import Animated, {
     Extrapolation,
     useSharedValue,
     useAnimatedStyle,
+    useAnimatedReaction,
 } from 'react-native-reanimated';
 import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
@@ -76,8 +78,21 @@ const GlassBackdrop: React.FC<{ animatedIndex: { value: number }; onClose: () =>
     const animatedStyle = useAnimatedStyle(() => ({
         opacity: interpolate(animatedIndex.value, [-1, 0], [0, 1], Extrapolation.CLAMP),
     }));
+    // Mirror the sheet's open/closed state into React so we can toggle pointerEvents.
+    // Without this the fullscreen backdrop keeps eating taps on Android while the sheet
+    // is at index -1 (iOS happened to pass them through, hence the platform asymmetry).
+    const [interactive, setInteractive] = useState(false);
+    useAnimatedReaction(
+        () => animatedIndex.value > -1,
+        (open, prev) => {
+            if (open !== prev) { runOnJS(setInteractive)(open); }
+        },
+    );
     return (
-        <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
+        <Animated.View
+            pointerEvents={interactive ? 'auto' : 'none'}
+            style={[StyleSheet.absoluteFill, animatedStyle]}
+        >
             <GlassSurface
                 tint="dark"
                 intensity={5}
