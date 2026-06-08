@@ -32,7 +32,8 @@
     "ios-development-release ": "react-native run-ios --scheme healthene_development --mode Release",
     "ios-staging": "react-native run-ios --scheme healthene_staging --mode Release",
     "ios-staging-debug": "react-native run-ios --scheme healthene_staging_debug",
-    "ios:pods": "cd ios && RCT_REMOVE_LEGACY_ARCH=0 bundle exec pod install",
+    "ios:autolinking": "mkdir -p ios/build/generated/autolinking && react-native config > ios/build/generated/autolinking/autolinking.json",
+    "ios:pods": "npm run ios:autolinking && cd ios && RCT_REMOVE_LEGACY_ARCH=0 bundle exec pod install",
     "postinstall": "patch-package"
   },
   "dependencies": {
