@@ -3,6 +3,7 @@ import React, { memo } from 'react';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 // local dependencies
 import Text from './Text';
+import { useTheme } from 'hooks/useTheme';
 
 interface ApproveButtonsProps {
     disabled?: boolean;
@@ -10,29 +11,32 @@ interface ApproveButtonsProps {
     handleSave: () => void;
 }
 
-const ApproveButtons: React.FC<ApproveButtonsProps> = ({ handleBack, handleSave, disabled }) => (
-    <View style={styles.buttons}>
-        <View style={styles.button}>
-            <TouchableOpacity
-                onPress={handleBack}
-                style={styles.cancelButton}
-                activeOpacity={0.7}
-            >
-                <Text style={styles.cancelText}>CANCEL</Text>
-            </TouchableOpacity>
+const ApproveButtons: React.FC<ApproveButtonsProps> = ({ handleBack, handleSave, disabled }) => {
+    const theme = useTheme();
+    return (
+        <View style={styles.buttons}>
+            <View style={styles.button}>
+                <TouchableOpacity
+                    onPress={handleBack}
+                    style={[styles.cancelButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+                    activeOpacity={0.7}
+                >
+                    <Text style={styles.cancelText} color={theme.colors.textSecondary}>CANCEL</Text>
+                </TouchableOpacity>
+            </View>
+            <View style={styles.button}>
+                <TouchableOpacity
+                    onPress={handleSave}
+                    disabled={disabled}
+                    style={[styles.saveButton, disabled && styles.saveButtonDisabled]}
+                    activeOpacity={0.7}
+                >
+                    <Text style={styles.saveText}>SAVE</Text>
+                </TouchableOpacity>
+            </View>
         </View>
-        <View style={styles.button}>
-            <TouchableOpacity
-                onPress={handleSave}
-                disabled={disabled}
-                style={[styles.saveButton, disabled && styles.saveButtonDisabled]}
-                activeOpacity={0.7}
-            >
-                <Text style={styles.saveText}>SAVE</Text>
-            </TouchableOpacity>
-        </View>
-    </View>
-);
+    );
+};
 
 export default memo(ApproveButtons);
 

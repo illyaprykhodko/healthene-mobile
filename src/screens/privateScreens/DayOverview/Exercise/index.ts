@@ -1,11 +1,12 @@
 // Exercise screens exports
-export { default as ExerciseCategories } from './ExerciseCategories';
-export { default as ExerciseDetails } from './ExerciseDetails';
 export { default as ExerciseEdit } from './ExerciseEdit';
+export { default as ExerciseDetails } from './ExerciseDetails';
+export { default as WalkingActivity } from './WalkingActivity';
+export { default as ExerciseCategories } from './ExerciseCategories';
 
 // Exercise utilities exports
-export * from './exerciseFactory';
 export * from './decimal-utils';
+export * from './exerciseFactory';
 
 // Exercise components exports
 export { WheelPicker, ITEM_HEIGHT } from './components/WheelPicker';

@@ -12,8 +12,10 @@ import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
 import DefImage from 'components/DefImage';
 import { Button } from 'components/Button';
+import StackHeader from 'components/StackHeader';
 import { RangeSlider } from 'components/RangeSlider';
 import ConfirmationAlert from 'components/ConfirmationAlert';
+import { useReviewAlert } from 'screens/privateScreens/MealPreferences/ReviewAlertContext';
 import {
     MealPreferenceType,
     MealWithPreferences,
@@ -121,11 +123,20 @@ const MealItem: React.FC<MealItemProps> = ({
 };
 
 const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
+    const { hasShown, markShown, sessionId } = useReviewAlert();
+    const [trackedSessionId, setTrackedSessionId] = useState(sessionId);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
-    const [hasReviewBeenShown, setHasReviewBeenShown] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
     const [initialFrequencies, setInitialFrequencies] = useState<Record<number, number>>({});
     const [mealsWithPreferences, setMealsWithPreferences] = useState<MealWithPreferences[]>([]);
+
+    if (trackedSessionId !== sessionId) {
+        setTrackedSessionId(sessionId);
+        setIsReviewOpen(false);
+        setIsHydrated(false);
+        setInitialFrequencies({});
+        setMealsWithPreferences([]);
+    }
 
     const { data: mealsList, isLoading: isLoadingMeals } = useGetMealsQuery(MealPreferenceType.PREFERENCE);
 
@@ -152,7 +163,7 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
     useLayoutEffect(() => {
         if (!mealsList || !areQueriesReady) { return; }
 
-        const combined = mealsList
+        const fresh = mealsList
             .map(meal => ({
                 ...meal,
                 preferences: mealDataMap[meal.name as typeof MEAL_NAMES[number]]?.prefs ?? [],
@@ -163,18 +174,35 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
             )
             .sort((a, b) => a.order - b.order);
 
-        setMealsWithPreferences(combined);
-        const initial = combined.reduce<Record<number, number>>((acc, meal) => {
-            meal.preferences.forEach(pref => {
-                if (typeof pref.id === 'number') {
-                    acc[pref.id] = pref.relativeFrequency || 1;
-                }
+        // Merge fresh server shape with any in-progress slider edits so that
+        // templates added/removed from PreferencesListScreen show up while
+        // unsaved frequency changes on this screen are preserved.
+        setMealsWithPreferences(prev => fresh.map(freshMeal => {
+            const prevMeal = prev.find(m => m.id === freshMeal.id);
+            if (!prevMeal) { return freshMeal; }
+            const mergedPreferences = freshMeal.preferences.map(freshPref => {
+                // eslint-disable-next-line max-nested-callbacks
+                const prevPref = prevMeal.preferences.find(p => p.id === freshPref.id);
+                return prevPref
+                    ? { ...freshPref, relativeFrequency: prevPref.relativeFrequency }
+                    : freshPref;
             });
-            return acc;
-        }, {});
-        setInitialFrequencies(initial);
-        setIsHydrated(true);
-    }, [mealsList, areQueriesReady, mealDataMap]);
+            return { ...freshMeal, preferences: mergedPreferences };
+        }));
+
+        setInitialFrequencies(prev => {
+            const next: Record<number, number> = {};
+            fresh.forEach(meal => {
+                meal.preferences.forEach(pref => {
+                    if (typeof pref.id !== 'number') { return; }
+                    next[pref.id] = prev[pref.id] ?? (pref.relativeFrequency || 1);
+                });
+            });
+            return next;
+        });
+
+        if (!isHydrated) { setIsHydrated(true); }
+    }, [mealsList, areQueriesReady, mealDataMap, isHydrated]);
 
     const currentFrequencies = useMemo(
         () => mealsWithPreferences.reduce<Record<number, number>>((acc, meal) => {
@@ -203,11 +231,11 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
     }, [isHydrated, initialFrequencies, currentFrequencies]);
 
     useEffect(() => {
-        if (hasUnsavedChanges && !hasReviewBeenShown) {
+        if (hasUnsavedChanges && !hasShown()) {
             setIsReviewOpen(true);
-            setHasReviewBeenShown(true);
+            markShown();
         }
-    }, [hasUnsavedChanges, hasReviewBeenShown]);
+    }, [hasUnsavedChanges, hasShown, markShown]);
 
     const handleUpdateItem = useCallback((updatedItem: MealWithPreferences) => {
         setMealsWithPreferences(prev =>
@@ -262,6 +290,11 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
             style={styles.container}
             initialized={!isLoadingMeals && areQueriesReady}
         >
+            <StackHeader
+                title="Meal Preferences"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => navigation.openDrawer?.()}
+            />
             <View style={styles.content}>
                 <View style={styles.divider} />
                 <FlatList
@@ -300,10 +333,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F2F2F7',
-        paddingHorizontal: OFFSET.VERTICAL,
     },
     content: {
         flex: 1,
+        paddingHorizontal: OFFSET.VERTICAL,
     },
     divider: {
         paddingTop: 20,

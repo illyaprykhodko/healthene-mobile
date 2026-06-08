@@ -1,12 +1,11 @@
 // outsource dependencies
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { memo, useCallback, useEffect, useLayoutEffect } from 'react';
+import React, { memo, useCallback, useEffect } from 'react';
 
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
-import BackBtn from 'components/BackBtn';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
@@ -20,8 +19,8 @@ import {
     useMarkOverviewVideoWatchedMutation,
     useMarkHealthProfileVideoWatchedMutation,
 } from 'store/api/videoApi';
-import type { Attachment } from 'types/video';
 
+import type { Attachment } from 'types/video';
 interface VideoScreenParams {
     id?: number;
     video: Attachment;
@@ -76,12 +75,6 @@ const VideoScreen: React.FC = () => {
         rootNavigate((backLink || ROUTES.ROOT_VIDEO_LIBRARY) as any);
     }, [backLink, navigation]);
 
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerLeft: () => <BackBtn onPress={handleClose} color={theme.colors.white} />,
-        });
-    }, [navigation, handleClose, theme.colors.white]);
-
     const renderVideoPlayer = () => {
         if (!video) {
             return (
@@ -108,6 +101,11 @@ const VideoScreen: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
+            {/*<StackHeader*/}
+            {/*    title="Video"*/}
+            {/*    onBack={handleClose}*/}
+            {/*    onOpenDrawer={() => navigation.openDrawer?.()}*/}
+            {/*/>*/}
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {video?.title && (
                     <Text

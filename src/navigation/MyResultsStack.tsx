@@ -25,12 +25,12 @@ const MyResultsStack: React.FC = () => {
     const renderCustomHeader = (options?: {
         showBackButton?: boolean;
     }) => (headerProps: any) => (
-        <View style={[styles.customHeader, { paddingTop: insets.top + OFFSET.POINT, backgroundColor: theme.colors.primary }]}>
+        <View style={[styles.customHeader, { paddingTop: insets.top + OFFSET.POINT, backgroundColor: theme.colors.headerBg }]}>
             <View style={[styles.headerSide, styles.headerSideLeft]}>
                 {/* {options?.showBackButton !== false && headerProps.back ? ( */}
                 <BackBtn
                     label="Back"
-                    color={theme.colors.white}
+                    color={theme.colors.headerText}
                     // label={headerProps.back?.title}
                     onPress={() => headerProps.navigation.goBack()}
                 />
@@ -40,7 +40,7 @@ const MyResultsStack: React.FC = () => {
             <View style={styles.headerCenter}>
                 {/* <TextLogo color={theme.colors.white} /> */}
                 {/* {headerProps.options.title} */}
-                <Text variant="h4" style={{ color: theme.colors.white }}>
+                <Text variant="h4" style={{ color: theme.colors.headerText }}>
                     {headerProps.options.title}
                 </Text>
             </View>

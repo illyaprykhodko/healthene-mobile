@@ -182,12 +182,36 @@ export const shoppingApi = createApi({
         // Update shopping list item
         updateShoppingItem: builder.mutation<void, ShoppingItem[]>({
             query: data => ({
-                url: '/patient-service/patients/shopping-list/items',
-                method: 'PUT',
                 body: data,
+                method: 'PUT',
                 params: { sort: 'name,ASC' },
+                url: '/patient-service/patients/shopping-list/items',
             }),
-            invalidatesTags: ['ShoppingList'],
+            // Optimistic: patch every cached shopping-list page in place so toggling
+            // excluded/bought/amount feels instant. Deliberately NOT invalidating
+            // ShoppingList — a refetch flips getShoppingList into isFetching, which
+            // surfaces the pull-to-refresh spinner on every tap.
+            async onQueryStarted (items, { dispatch, queryFulfilled, getState }) {
+                const state = getState() as { shoppingApi?: { queries?: Record<string, { endpointName?: string; originalArgs?: unknown }> } };
+                const queries = state.shoppingApi?.queries ?? {};
+                const patches = Object.values(queries)
+                    .filter(entry => entry?.endpointName === 'getShoppingList' && entry.originalArgs !== undefined)
+                    .map(entry =>
+                        dispatch(
+                            shoppingApi.util.updateQueryData('getShoppingList', entry.originalArgs as any, draft => {
+                                if (!Array.isArray(draft?.content)) { return; }
+                                for (const updated of items) {
+                                    const found = draft.content.find((x: any) => x.id === updated.id);
+                                    if (found) { Object.assign(found, updated); }
+                                }
+                            })
+                        ));
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patches.forEach(patch => patch.undo());
+                }
+            },
         }),
 
         // Delete excluded items and add foods to stocks
@@ -280,7 +304,7 @@ export const shoppingApi = createApi({
                 method: 'POST',
                 body: ids,
             }),
-            invalidatesTags: ['StockList'],
+            invalidatesTags: ['ShoppingList', 'StockList'],
         }),
 
         // Update stock items (remove from stock)

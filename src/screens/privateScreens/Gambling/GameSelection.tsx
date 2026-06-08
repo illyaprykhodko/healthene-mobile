@@ -59,13 +59,15 @@ const GameSelection: React.FC = () => {
             </View>
 
             <View style={styles.footer}>
-                <TouchableOpacity
-                    activeOpacity={0.85}
-                    onPress={() => navigation.goBack()}
-                    style={[styles.backButton, styles.shadowBtn]}
-                >
-                    <Text variant="h4" style={styles.backButtonText}>Back</Text>
-                </TouchableOpacity>
+                <View style={styles.footerLeft}>
+                    <TouchableOpacity
+                        activeOpacity={0.85}
+                        onPress={() => navigation.goBack()}
+                        style={[styles.backButton, styles.shadowBtn]}
+                    >
+                        <Text variant="h4" style={styles.backButtonText}>Back</Text>
+                    </TouchableOpacity>
+                </View>
 
                 <TouchableOpacity
                     activeOpacity={0.85}
@@ -155,7 +157,10 @@ const styles = StyleSheet.create({
         marginTop: 'auto',
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-end',
+    },
+    footerLeft: {
+        alignItems: 'flex-start',
     },
     backButton: {
         backgroundColor: '#FFA5A5',

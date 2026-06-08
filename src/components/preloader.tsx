@@ -75,7 +75,7 @@ const Maintenance: React.FC = () => {
     const theme = useTheme();
     // BallIndicator, BarIndicator, DotIndicator, MaterialIndicator, PacmanIndicator, PulseIndicator, UIActivityIndicator, WaveIndicator
     return (
-        <View style={MStyles.container}>
+        <View style={[MStyles.container, { backgroundColor: theme.colors.background }]}>
             <View style={MStyles.spinnerRow}>
                 <MaterialIndicator color={theme.colors.primary} size={70} style={MStyles.sp1} />
                 <MaterialIndicator color={theme.colors.secondary} size={150} style={MStyles.sp2} />
@@ -106,7 +106,7 @@ interface BoxPreloaderProps {
 
 const BoxPreloader: React.FC<BoxPreloaderProps> = ({ containerStyle }) => {
     const theme = useTheme();
-    const style = StyleSheet.flatten([BPStyles.container, containerStyle]);
+    const style = StyleSheet.flatten([BPStyles.container, { backgroundColor: theme.colors.background }, containerStyle]);
 
     return (
         <View style={style}>

@@ -1,5 +1,6 @@
 // outsource dependencies
 import React, { useMemo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { FlatList, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 // local dependencies
@@ -8,6 +9,7 @@ import Screen from 'components/Screen.tsx';
 import { OFFSET } from 'constants/offset.ts';
 import { ROUTES } from 'constants/routes.ts';
 import { useTheme } from 'hooks/useTheme.ts';
+import StackHeader from 'components/StackHeader';
 import { useGetPlanInfoQuery } from 'store/api/planApi.ts';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons.tsx';
 import { useGetCurrentLibraryElementsQuery } from 'store/api/questionApi.ts';
@@ -15,6 +17,7 @@ import { DESTINATIONS, VIDEO_LIBRARY_TYPE, QUESTION_TYPE } from 'constants/spec.
 
 export const AboutPlanScreen = () => {
     const theme = useTheme();
+    const navigation = useNavigation<any>();
     const styles = React.useMemo(() => createStyles(theme), [theme]);
     const { data, isLoading } = useGetPlanInfoQuery();
     const { data: elements } = useGetCurrentLibraryElementsQuery([DESTINATIONS.ABOUT_PLAN]);
@@ -26,8 +29,13 @@ export const AboutPlanScreen = () => {
 
     const hasVideoOrQuestion = video || question;
 
-    return <ScrollView style={styles.flex}>
-        <Screen initialized={!isLoading} style={styles.container}>
+    return <Screen initialized={!isLoading} style={styles.flex}>
+        <StackHeader
+            title="About Plan"
+            onBack={() => navigation.goBack()}
+            onOpenDrawer={() => navigation.openDrawer?.()}
+        />
+        <ScrollView contentContainerStyle={styles.container}>
             <Text color={theme.colors.primary} variant="h3">{data?.name ?? 'You don\'t have a plan'}</Text>
 
             {/* Video and Question buttons */}
@@ -78,8 +86,8 @@ export const AboutPlanScreen = () => {
                     <Text>{item.description}</Text>
                 </View>}
             />
-        </Screen>
-    </ScrollView>;
+        </ScrollView>
+    </Screen>;
 };
 
 export default AboutPlanScreen;

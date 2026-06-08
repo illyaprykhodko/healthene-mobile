@@ -1,10 +1,11 @@
 // outsource dependencies
 import React, { memo, useCallback } from 'react';
 import Icon from '@react-native-vector-icons/fontawesome5';
-import { StyleSheet, TouchableOpacity, ViewStyle, StyleProp } from 'react-native';
+import { StyleSheet, ViewStyle, StyleProp } from 'react-native';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { PressableScale } from './PressableScale';
 
 // Temporary status type until full migration
 export type PhaseItemStatus = 'DONE' | 'PENDING' | 'DID_NOT_EAT' | string;
@@ -62,7 +63,8 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
     };
 
     return (
-        <TouchableOpacity
+        <PressableScale
+            haptic="success"
             onPress={handlePress}
             hitSlop={clickableZone}
             style={StyleSheet.flatten([styles.container, style, {
@@ -72,7 +74,7 @@ const CheckboxComponent: React.FC<CheckboxProps> = ({
             }])}
         >
             {isDayOverview ? renderDayOverviewIcon() : renderGeneralIcon()}
-        </TouchableOpacity>
+        </PressableScale>
     );
 };
 

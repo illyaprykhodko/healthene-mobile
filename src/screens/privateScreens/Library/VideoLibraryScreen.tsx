@@ -13,6 +13,8 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { VIDEO_LIBRARY } from 'types/video';
 import { Skeleton } from 'components/Skeleton';
+import StackHeader from 'components/StackHeader';
+import { EmptyState } from 'components/EmptyState';
 import {
     useGetFoodTreeQuery,
     useGetMedicalProblemsQuery,
@@ -77,13 +79,20 @@ const VideoLibraryScreen: React.FC = () => {
     if (isLoading) {
         return (
             <Screen initialized style={styles.container}>
-                <View style={styles.skeletonContainer}>
-                    {[1, 2, 3].map((_, index) => (
-                        <View key={index} style={[styles.item, { borderBottomColor: theme.colors.border }]}>
-                            <Skeleton width="40%" height={20} borderRadius={4} />
-                            <Skeleton width={24} height={24} borderRadius={4} />
-                        </View>
-                    ))}
+                <StackHeader
+                    title="Videos"
+                    onBack={() => navigation.goBack()}
+                    onOpenDrawer={() => navigation.openDrawer?.()}
+                />
+                <View style={styles.content}>
+                    <View style={styles.skeletonContainer}>
+                        {[1, 2, 3].map((_, index) => (
+                            <View key={index} style={[styles.item, { borderBottomColor: theme.colors.border }]}>
+                                <Skeleton width="40%" height={20} borderRadius={4} />
+                                <Skeleton width={24} height={24} borderRadius={4} />
+                            </View>
+                        ))}
+                    </View>
                 </View>
             </Screen>
         );
@@ -91,68 +100,71 @@ const VideoLibraryScreen: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            {isEmpty ? (
-                <View style={styles.emptyContainer}>
-                    <Text
-                        variant="h3"
-                        textAlign="center"
-                        color={COLORS.DARK_GREY}
-                    >
-                        No videos has been seen yet
-                    </Text>
-                </View>
-            ) : (
-                <ScrollView>
-                    {diseaseVideo.length > 0 && (
-                        <TouchableOpacity
-                            style={[styles.item, { borderBottomColor: theme.colors.border }]}
-                            onPress={() => handleNavigateToCategory(VIDEO_LIBRARY.DISEASE, diseaseVideo)}
-                        >
-                            <Text variant="h4" style={{ color: theme.colors.text }}>
-                                {humanizeLibraryName(VIDEO_LIBRARY.DISEASE)}
-                            </Text>
-                            <Icon
-                                size={24}
-                                iconStyle="solid"
-                                color={COLORS.GREY}
-                                name="chevron-right"
-                            />
-                        </TouchableOpacity>
-                    )}
-                    {foodTree.length > 0 && (
-                        <TouchableOpacity
-                            style={[styles.item, { borderBottomColor: theme.colors.border }]}
-                            onPress={() => handleNavigateToCategory(VIDEO_LIBRARY.FOOD, foodTree)}
-                        >
-                            <Text variant="h4" style={{ color: theme.colors.text }}>
-                                {humanizeLibraryName(VIDEO_LIBRARY.FOOD)}
-                            </Text>
-                            <Icon
-                                size={24}
-                                iconStyle="solid"
-                                color={COLORS.GREY}
-                                name="chevron-right"
-                            />
-                        </TouchableOpacity>
-                    )}
-                    {otherVideo.length > 0 && (
-                        <TouchableOpacity
-                            style={[styles.item, { borderBottomColor: theme.colors.border }]}
-                            onPress={() => handleNavigateToCategory(VIDEO_LIBRARY.GENERAL, otherVideo)}
-                        >
-                            <Text variant="h4" style={{ color: theme.colors.text }}>
-                                {humanizeLibraryName(VIDEO_LIBRARY.OTHER)}
-                            </Text>
-                            <Icon
-                                size={24}
-                                iconStyle="solid"
-                                color={COLORS.GREY}
-                                name="chevron-right"
-                            />
-                        </TouchableOpacity>
-                    )}
-                </ScrollView>
-            )}
+            <StackHeader
+                title="Videos"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => navigation.openDrawer?.()}
+            />
+            <View style={styles.content}>
+                {isEmpty ? (
+                    <EmptyState
+                        icon="video"
+                        title="No videos yet"
+                        subtitle="Videos shared with you will appear here."
+                    />
+                ) : (
+                    <ScrollView>
+                        {diseaseVideo.length > 0 && (
+                            <TouchableOpacity
+                                style={[styles.item, { borderBottomColor: theme.colors.border }]}
+                                onPress={() => handleNavigateToCategory(VIDEO_LIBRARY.DISEASE, diseaseVideo)}
+                            >
+                                <Text variant="h4" style={{ color: theme.colors.text }}>
+                                    {humanizeLibraryName(VIDEO_LIBRARY.DISEASE)}
+                                </Text>
+                                <Icon
+                                    size={24}
+                                    iconStyle="solid"
+                                    color={COLORS.GREY}
+                                    name="chevron-right"
+                                />
+                            </TouchableOpacity>
+                        )}
+                        {foodTree.length > 0 && (
+                            <TouchableOpacity
+                                style={[styles.item, { borderBottomColor: theme.colors.border }]}
+                                onPress={() => handleNavigateToCategory(VIDEO_LIBRARY.FOOD, foodTree)}
+                            >
+                                <Text variant="h4" style={{ color: theme.colors.text }}>
+                                    {humanizeLibraryName(VIDEO_LIBRARY.FOOD)}
+                                </Text>
+                                <Icon
+                                    size={24}
+                                    iconStyle="solid"
+                                    color={COLORS.GREY}
+                                    name="chevron-right"
+                                />
+                            </TouchableOpacity>
+                        )}
+                        {otherVideo.length > 0 && (
+                            <TouchableOpacity
+                                style={[styles.item, { borderBottomColor: theme.colors.border }]}
+                                onPress={() => handleNavigateToCategory(VIDEO_LIBRARY.GENERAL, otherVideo)}
+                            >
+                                <Text variant="h4" style={{ color: theme.colors.text }}>
+                                    {humanizeLibraryName(VIDEO_LIBRARY.OTHER)}
+                                </Text>
+                                <Icon
+                                    size={24}
+                                    iconStyle="solid"
+                                    color={COLORS.GREY}
+                                    name="chevron-right"
+                                />
+                            </TouchableOpacity>
+                        )}
+                    </ScrollView>
+                )}
+            </View>
         </Screen>
     );
 };
@@ -161,6 +173,9 @@ export default memo(VideoLibraryScreen);
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
+    },
+    content: {
         flex: 1,
         paddingTop: 20,
         paddingHorizontal: OFFSET.HORIZONTAL,
@@ -171,11 +186,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: OFFSET.VERTICAL,
         borderBottomWidth: 1,
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     skeletonContainer: {
         paddingTop: OFFSET.VERTICAL,

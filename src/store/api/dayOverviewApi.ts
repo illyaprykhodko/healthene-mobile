@@ -718,6 +718,16 @@ export const dayOverviewApi = createApi({
             invalidatesTags: ['DayOverview', 'PhaseItems'],
         }),
 
+        // Swap today's meal with a future date's meal ("Eat Today")
+        interchangeMeals: builder.mutation<void, { phaseId: number | string; futurePhaseId: number | string }>({
+            query: body => ({
+                url: '/patient-service/day-overview-phases/day-overviews/replace',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
+
         // Get rescue shopping items videos
         getRescueVideos: builder.query<any[], void>({
             query: () => '/patient-service/patients/me/rescue-shopping-items-videos',
@@ -806,6 +816,44 @@ export const dayOverviewApi = createApi({
         // Menu badges - medication allergies for health profile
         getMedicationAllergies: builder.query<any[], void>({
             query: () => '/patient-service/patients/me/medication-allergies',
+        }),
+
+        // Walking / Step Counter activity tracking
+        startWalkingActivity: builder.mutation<any, {
+            // EXERCISE_AEROBIC items have no physical_activity entity, so activity.id is null;
+            // the record is linked to the plan via dayOverviewPhaseItem and identified by its own id.
+            start: string;
+            status: string;
+            distance?: number;
+            stepCount?: number;
+            activity?: { id: number | string | null };
+            dayOverviewPhaseItem: { id: number | string };
+        }>({
+            query: body => ({
+                url: '/patient-service/patients/day-overview/activity',
+                method: 'POST',
+                body,
+            }),
+            // No cache invalidation: the WalkingActivity screen propagates the phase-item status to the
+            // parent list via handleChangeStatus (date-scoped optimistic updatePhaseItem) and refreshCurrentList.
+            // Invalidating the broad 'DayOverview' tag would refetch getDayOverview + the menu-badge queries.
+        }),
+
+        updateWalkingActivity: builder.mutation<any, {
+            pause?: string;
+            status: string;
+            distance?: number;
+            stepCount?: number;
+            id: number | string;
+            activity?: { id: number | string };
+        }>({
+            query: body => ({
+                body,
+                method: 'PUT',
+                url: '/patient-service/patients/day-overview/activity',
+            }),
+            // See startWalkingActivity: status changes reach the parent list locally, so the broad
+            // 'DayOverview' invalidation (which also refetched the menu-badge queries) is intentionally omitted.
         }),
     }),
 });
@@ -1149,6 +1197,7 @@ export const {
     useRevertPhaseItemMutation,
     useGetLastMeasurementQuery,
     useGetMeasurementTypesQuery,
+    useInterchangeMealsMutation,
     useGetRestaurantCatalogQuery,
     useDeleteMeasurementsMutation,
     useUpdatePhaseWithRescueMutation,
@@ -1169,4 +1218,7 @@ export const {
     useGetLibraryItemsTotalTreeQuery,
     useGetUntrackedMeasurementsQuery,
     useGetIncompleteQuestionsVideosQuery,
+    // Walking
+    useStartWalkingActivityMutation,
+    useUpdateWalkingActivityMutation,
 } = dayOverviewApi;

@@ -1,7 +1,10 @@
+
 // outsource dependencies
+import moment from 'moment';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useRef, useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image } from 'react-native';
+
 // local dependencies
 import { ExerciseType } from 'types';
 import { useTheme } from 'hooks/useTheme';
@@ -13,6 +16,7 @@ import { EXERCISE_CONFIGS } from './exerciseFactory';
 import { useAppDispatch, useAppSelector } from 'store';
 import { initializeExercise, updateSteps, setLoading, clearExercise } from 'store/slices/exerciseSlice';
 import { useGetPhysicalActivityItemQuery, useGetStretchingExerciseQuery, useGetAerobicExerciseQuery, useGetResistanceExerciseQuery, useUpdateStretchingStepsMutation, useUpdateAerobicStepsMutation, useUpdateResistanceStepsMutation, useUpdatePhaseItemMutation } from 'store/api/dayOverviewApi';
+
 // components
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -40,6 +44,7 @@ export default function ExerciseDetails () {
     const [showGoodWork, setShowGoodWork] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const title = exercise?.title || 'Exercise';
+    const isFutureDay = moment(date).isAfter(moment(), 'day');
 
     // Load exercise data based on type
     const { data: stretchingData, isLoading: stretchingLoading } = useGetStretchingExerciseQuery(exercise?.id?.toString() || '', {
@@ -82,14 +87,16 @@ export default function ExerciseDetails () {
     //             ? resistanceData
     //             : fallbackData;
     
-    const isLoading = useMemo(() => (exercise?.type === ExerciseType.STRETCHING
-        ? stretchingLoading
-        : exercise?.type === ExerciseType.AEROBIC
-            ? aerobicLoading
-            : exercise?.type === ExerciseType.RESISTANCE
-                ? resistanceLoading
-                : fallbackLoading),
-    [exercise?.type, stretchingLoading, aerobicLoading, resistanceLoading, fallbackLoading]);
+    const isLoading = useMemo(
+        () => (exercise?.type === ExerciseType.STRETCHING
+            ? stretchingLoading
+            : exercise?.type === ExerciseType.AEROBIC
+                ? aerobicLoading
+                : exercise?.type === ExerciseType.RESISTANCE
+                    ? resistanceLoading
+                    : fallbackLoading),
+        [exercise?.type, stretchingLoading, aerobicLoading, resistanceLoading, fallbackLoading]
+    );
     // const isLoading = exercise?.type === ExerciseType.STRETCHING
     //     ? stretchingLoading
     //     : exercise?.type === ExerciseType.AEROBIC
@@ -248,8 +255,7 @@ export default function ExerciseDetails () {
     // Step management functions
     const updateStepCallback = useCallback((stepId: string | number, vals: any) => {
         const updatedSteps = (memoizedSteps || [])?.map((step: any) =>
-            (step.id === stepId ? { ...step, ...vals, modified: true } : step)
-        );
+            (step.id === stepId ? { ...step, ...vals, modified: true } : step));
         dispatch(updateSteps({
             isDirty: true,
             steps: updatedSteps,
@@ -259,8 +265,7 @@ export default function ExerciseDetails () {
 
     const completeStep = useCallback((stepId: string | number) => {
         const updatedSteps = (memoizedSteps || [])?.map((step: any) =>
-            (step.id === stepId ? { ...step, completed: !step.completed } : step)
-        );
+            (step.id === stepId ? { ...step, completed: !step.completed } : step));
         dispatch(updateSteps({
             isDirty: true,
             steps: updatedSteps,
@@ -278,7 +283,7 @@ export default function ExerciseDetails () {
                         key={tab.key}
                         style={[
                             styles.tabButton,
-                            { backgroundColor: theme.colors.lightGrey },
+                            { backgroundColor: theme.colors.surfaceAlt },
                             isActive && [styles.activeTabButton, { backgroundColor: theme.colors.info }],
                             { borderRightWidth: TABS.length === index + 1 ? 0 : 2, borderRightColor: theme.colors.primary },
                         ]}
@@ -322,6 +327,7 @@ export default function ExerciseDetails () {
                 >
                     {(video || instruction) ? (
                         <TouchableOpacity
+                            disabled={isFutureDay}
                             style={[{ alignSelf: 'flex-end' }, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.5 }]}
                             onPress={() => {
                                 setVideoData(video);
@@ -347,7 +353,8 @@ export default function ExerciseDetails () {
                     {/* Goal row */}
                     <View style={styles.repsContainer}>
                         <TouchableOpacity
-                            style={completed && { opacity: 0.5 }}
+                            disabled={isFutureDay}
+                            style={(completed || isFutureDay)&& { opacity: 0.5 }}
                             onPress={() => {
                                 navigation.navigate('EditExercise', {
                                     title,
@@ -362,6 +369,7 @@ export default function ExerciseDetails () {
                         <Checkbox
                             size={15}
                             value={completed}
+                            editable={!isFutureDay}
                             onChange={() => completeStep(itemId)}
                         />
                     </View>
@@ -372,6 +380,7 @@ export default function ExerciseDetails () {
                             {extraDisplay.map((line: string) => (
                                 <TouchableOpacity
                                     key={line}
+                                    disabled={isFutureDay}
                                     onPress={() => navigation.navigate('EditExercise', {
                                         itemId,
                                         viewOnlyExtra: true,
@@ -429,7 +438,6 @@ export default function ExerciseDetails () {
     // const clearHandler = useCallback(() => {
     //     dispatch(updateSteps({ steps: memoizedSteps, selectedSteps: [] }));
     // }, [dispatch, memoizedSteps]);
-    
     return (
         <Screen initialized={!isLoading} clear={() => {}} style={[styles.container, { backgroundColor: theme.colors.background }]}>
             {renderTabs()}
@@ -438,9 +446,13 @@ export default function ExerciseDetails () {
                 <Text textAlign="center" style={[styles.name, { color: theme.colors.text }]}>
                     {title}
                 </Text>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <IconButton iconStyle="solid" icon="times" size={24} color={theme.colors.text} />
-                </TouchableOpacity>
+                <IconButton
+                    size={24}
+                    icon="times"
+                    iconStyle="solid"
+                    color={theme.colors.text}
+                    onPress={() => navigation.goBack()}
+                />
             </View>
             <ScrollView>
                 <View style={styles.tabContent}>
@@ -699,7 +711,7 @@ const styles = StyleSheet.create({
 });
 
 const renderNode = ({ node, parent, defaultRenderer, index }: any) => {
-    if (node?.data === '\n') { return <View />; }
+    if (node?.data === '\n') { return <View key={`ws-${index}`} />; }
     if (node?.name === 'li') {
         const flattenText = (children: any[] = []): string => children.map(child => {
             if (!child) { return ''; }

@@ -40,14 +40,14 @@ const RoleChipsComponent: React.FC<RoleChipsProps> = ({ roles, selected, onSelec
                         onPress={() => onSelect(key)}
                         style={[
                             styles.chip,
-                            { borderColor: COLORS.CERULEAN_300, backgroundColor: theme.colors.white },
-                            active && { borderColor: COLORS.THEME_COLOR, backgroundColor: COLORS.THEME_COLOR },
+                            { borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+                            active && { borderColor: theme.colors.primary, backgroundColor: theme.colors.primary },
                         ]}
                     >
                         <Text
                             numberOfLines={1}
                             style={styles.chipText}
-                            color={active ? COLORS.WHITE : COLORS.THEME_COLOR}
+                            color={active ? COLORS.WHITE : theme.colors.primary}
                         >
                             {label}
                         </Text>

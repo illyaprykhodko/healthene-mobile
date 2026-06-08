@@ -30,7 +30,8 @@ export const PrivateDrawer: React.FC = () => {
 
     return (
         <Drawer.Navigator
-            backBehavior="initialRoute"
+            backBehavior="history"
+            // backBehavior="initialRoute"
             initialRouteName={ROUTES.MAIN}
             drawerContent={props => <CustomDrawerContent {...props} />}
             screenOptions={({ navigation }) => ({
@@ -41,9 +42,9 @@ export const PrivateDrawer: React.FC = () => {
                     <BackButton navigation={navigation} theme={theme} />
                 ),
                 headerStyle: {
-                    backgroundColor: theme.colors.primary,
+                    backgroundColor: theme.colors.headerBg,
                 },
-                headerTintColor: theme.colors.white,
+                headerTintColor: theme.colors.headerText,
                 headerTitleStyle: {
                     fontWeight: '600'
                 },

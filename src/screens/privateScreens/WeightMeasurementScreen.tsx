@@ -41,6 +41,8 @@ const WeightMeasurementScreen: React.FC = () => {
 
     const measurementPhaseItem = (route.params as any)?.measurementPhaseItem;
     const currentDate = (route.params as any)?.date || moment().format('YYYY-MM-DD');
+    const isFutureDay = moment(currentDate).isAfter(moment(), 'day');
+
     const item = measurementPhaseItem || {};
     const { data: aggregateData } = useGetAggregateMeasurementDataQuery({
         type: 'WEIGHT',
@@ -106,16 +108,26 @@ const WeightMeasurementScreen: React.FC = () => {
             />
         )}
         <TouchableOpacity
+            disabled={isFutureDay}
             onPress={handleSmartScalePress}
-            style={[styles.scaleButton, { borderColor: theme.colors.success }]}
+            style={[
+                styles.scaleButton,
+                isFutureDay && styles.opacityFuture,
+                { borderColor: theme.colors.success }
+            ]}
         >
             <Text style={[styles.scaleButtonText, { color: theme.colors.darkGrey }]}>
                     Step on Scale
             </Text>
         </TouchableOpacity>
         <TouchableOpacity
+            disabled={isFutureDay}
             onPress={handleManualPress}
-            style={[styles.manualButton, { borderColor: theme.colors.primary }]}
+            style={[
+                styles.manualButton,
+                isFutureDay && styles.opacityFuture,
+                { borderColor: theme.colors.primary }
+            ]}
         >
             <Text style={[styles.manualButtonText, { color: theme.colors.primary }]}>
                 {isSubmitting
@@ -353,5 +365,8 @@ const styles = StyleSheet.create({
         fontSize: 12,
         textAlign: 'right',
         paddingRight: 20,
+    },
+    opacityFuture: {
+        opacity: 0.4,
     },
 });

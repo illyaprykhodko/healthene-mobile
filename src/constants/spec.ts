@@ -21,6 +21,15 @@ export const PHASE_ITEM_STATUS = {
 
 export type PhaseItemStatus = typeof PHASE_ITEM_STATUS[keyof typeof PHASE_ITEM_STATUS];
 
+export const WALKING_TYPE = {
+    IN_PROGRESS: 'IN_PROGRESS',
+    PENDING: 'PENDING',
+    PAUSE: 'PAUSE',
+    DONE: 'DONE',
+} as const;
+
+export type WalkingTypeValue = typeof WALKING_TYPE[keyof typeof WALKING_TYPE];
+
 
 export const ENTITY_TYPE = {
     PHYSICAL_ACTIVITY: 'PHYSICAL_ACTIVITY',
