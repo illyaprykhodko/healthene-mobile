@@ -1,6 +1,7 @@
 // outsource dependencies
 import moment from 'moment';
 import Animated, {
+    runOnJS,
     Easing,
     withDelay,
     withTiming,
@@ -9,6 +10,7 @@ import Animated, {
     Extrapolation,
     useSharedValue,
     useAnimatedStyle,
+    useAnimatedReaction,
 } from 'react-native-reanimated';
 import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
@@ -76,8 +78,21 @@ const GlassBackdrop: React.FC<{ animatedIndex: { value: number }; onClose: () =>
     const animatedStyle = useAnimatedStyle(() => ({
         opacity: interpolate(animatedIndex.value, [-1, 0], [0, 1], Extrapolation.CLAMP),
     }));
+    // Mirror the sheet's open/closed state into React so we can toggle pointerEvents.
+    // Without this the fullscreen backdrop keeps eating taps on Android while the sheet
+    // is at index -1 (iOS happened to pass them through, hence the platform asymmetry).
+    const [interactive, setInteractive] = useState(false);
+    useAnimatedReaction(
+        () => animatedIndex.value > -1,
+        (open, prev) => {
+            if (open !== prev) { runOnJS(setInteractive)(open); }
+        },
+    );
     return (
-        <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
+        <Animated.View
+            pointerEvents={interactive ? 'auto' : 'none'}
+            style={[StyleSheet.absoluteFill, animatedStyle]}
+        >
             <GlassSurface
                 tint="dark"
                 intensity={5}
@@ -615,12 +630,14 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#4A4A4A',
     },
+    opacityFuture: {
+        opacity: 0.4,
+    },
     glassBar: {
         left: 0,
         right: 0,
         bottom: 0,
         position: 'absolute',
-        // paddingTop: 10,
     },
 });
 
@@ -652,7 +669,7 @@ export const Overview: React.FC = () => {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const dispatch = useAppDispatch();
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const { date, showCalendar, calendarDays, recentlyCompletedPhases, pendingOpenPhaseId } = useAppSelector(selectDayOverview);
+    const { date, isFutureDate, showCalendar, calendarDays, recentlyCompletedPhases, pendingOpenPhaseId } = useAppSelector(selectDayOverview);
     const currentDate = date || moment().format('YYYY-MM-DD');
     const isFocused = useIsFocused();
     const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
@@ -666,8 +683,6 @@ export const Overview: React.FC = () => {
     const [createPatientPhaseWithCustomRecipe] = useCreatePatientPhaseWithCustomRecipeMutation();
     const [updatePatientPhase] = useUpdatePatientPhaseMutation();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
-
-    const isFutureDateCheck = moment(currentDate).isAfter(moment(), 'day');
 
     const incompleteDay = useMemo(() => {
         const incompleteDays = data?.currentWeekIncompleteDays || [];
@@ -849,7 +864,6 @@ export const Overview: React.FC = () => {
         moment.updateLocale('en', { week: { dow: 1 } });
     }, []);
 
-
     useEffect(() => {
         if (!data) { return; }
         const calendarDays: Record<string, any> = { [currentDate]: { selected: true } };
@@ -943,14 +957,14 @@ export const Overview: React.FC = () => {
                 return;
             }
             const measurementType = measurement?.type;
-            if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
-                (navigation as any).navigate('WeightMeasurement', {
+            if (measurementType === 'WEIGHT' && phase.status !== PHASE_ITEM_STATUS.DONE) {
+                (navigation as any).navigate(ROUTES.WEIGHT_MEASUREMENT, {
                     measurementPhaseItem: { ...phase, measurement },
                     date: currentDate,
                 });
                 return;
             }
-            if (phase.status === 'DONE') {
+            if (phase.status === PHASE_ITEM_STATUS.DONE) {
                 (navigation as any).navigate('SaveValue', {
                     measurementType: measurement?.type,
                     measurementName: measurement?.name,
@@ -1005,168 +1019,186 @@ export const Overview: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <View style={styles.content}>
-                    {/* Health Question Section */}
-                    <HealthQuestion date={currentDate} isFutureDate={isFutureDateCheck} />
+            <View style={styles.container}>
+                <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                    <View style={[styles.content, isFutureDate && styles.opacityFuture]}>
+                        {/* Health Question Section */}
+                        <HealthQuestion date={currentDate} isFutureDate={Boolean(isFutureDate)} />
 
-                    {/* <DayAdherenceCard date={currentDate} /> */}
+                        <Text style={styles.title}>My Daily Plan</Text>
 
-                    <Text style={styles.title}>My Daily Plan</Text>
+                        <View style={styles.timelineContainer}>
+                            <TimelineSVG phases={phases} incompleteDay={incompleteDay} />
+                            <FlatList
+                                data={phases}
+                                scrollEnabled={false}
+                                style={{ marginBottom: 35 }}
+                                keyExtractor={item => String(item.id)}
+                                renderItem={({ item }) => {
+                                    const { bg, fg, name } = getIconColorByType(item.type);
+                                    const isMeal = isMealPhase(item.type);
+                                    const iconMarginLeft = isMeal
+                                        ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
+                                        : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
 
-                    <View style={styles.timelineContainer}>
-                        <TimelineSVG phases={phases} incompleteDay={incompleteDay} />
-                        <FlatList
-                            data={phases}
-                            scrollEnabled={false}
-                            style={{ marginBottom: 35 }}
-                            keyExtractor={item => String(item.id)}
-                            renderItem={({ item }) => {
-                                const { bg, fg, name } = getIconColorByType(item.type);
-                                const isMeal = isMealPhase(item.type);
-                                const iconMarginLeft = isMeal
-                                    ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
-                                    : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
+                                    const isIncomplete = item.status === PHASE_ITEM_STATUS.INCOMPLETE;
+                                    const isDone = item.status === PHASE_ITEM_STATUS.DONE;
+                                    const shouldHighlight = incompleteDay && isIncomplete;
+                                    const showArrowIcon = shouldHighlight && (item.type === 'MEAL' || item.type === 'ADDED_BY_PATIENT');
 
-                                const isIncomplete = item.status === PHASE_ITEM_STATUS.INCOMPLETE;
-                                const isDone = item.status === PHASE_ITEM_STATUS.DONE;
-                                const shouldHighlight = incompleteDay && isIncomplete;
-                                const showArrowIcon = shouldHighlight && (item.type === 'MEAL' || item.type === 'ADDED_BY_PATIENT');
+                                    const displayTitle = item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title);
 
-                                const displayTitle = item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title);
+                                    const renderStatusIndicator = () => {
+                                        if (isDone) {
+                                            return (
+                                                <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
+                                            );
+                                        }
+                                        if (incompleteDay && isIncomplete) {
+                                            return (
+                                                <FeatherIcon name="info" size={18} color={COLORS.BROWN} />
+                                            );
+                                        }
+                                        return null;
+                                    };
 
-                                const renderStatusIndicator = () => {
-                                    if (isDone) {
+                                    // Status indicator left position - exactly where the dot would be
+                                    // TIMELINE_WIDTH/2 = 25 for MEAL, offsetLineX = 105 for non-MEAL
+                                    // Subtract half of icon size (18/2 = 9) to center it
+                                    const statusLeftPosition = isMeal ? 16 : 96;
+
+                                    if (shouldHighlight) {
                                         return (
-                                            <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
+                                            <TouchableOpacity
+                                                key={String(item.id)}
+                                                style={styles.row}
+                                                onPress={() => handlePhasePress(item)}
+                                            >
+                                                <View style={[styles.statusIndicator, { left: statusLeftPosition }]}>
+                                                    {renderStatusIndicator()}
+                                                </View>
+                                                <View style={{ marginLeft: iconMarginLeft }}>
+                                                    <Highlight color={COLORS.LIGHT_PINK}>
+                                                        {showArrowIcon ? (
+                                                            <Ionicons
+                                                                name="chevron-forward-circle-outline"
+                                                                color={COLORS.DARK_GREY}
+                                                                size={38}
+                                                            />
+                                                        ) : (
+                                                            <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: 0 }]}>
+                                                                <Icon iconStyle="solid" name={name} color={fg} size={18} />
+                                                            </View>
+                                                        )}
+                                                        <Text variant="h4" style={styles.highlightText}>
+                                                            {displayTitle}
+                                                        </Text>
+                                                    </Highlight>
+                                                </View>
+                                            </TouchableOpacity>
                                         );
                                     }
-                                    if (incompleteDay && isIncomplete) {
-                                        return (
-                                            <FeatherIcon name="info" size={18} color={COLORS.BROWN} />
-                                        );
-                                    }
-                                    return null;
-                                };
 
-                                // Status indicator left position - exactly where the dot would be
-                                // TIMELINE_WIDTH/2 = 25 for MEAL, offsetLineX = 105 for non-MEAL
-                                // Subtract half of icon size (18/2 = 9) to center it
-                                const statusLeftPosition = isMeal ? 16 : 96;
-
-                                if (shouldHighlight) {
+                                    // Normal item (non-highlighted)
                                     return (
                                         <TouchableOpacity
                                             key={String(item.id)}
                                             style={styles.row}
                                             onPress={() => handlePhasePress(item)}
                                         >
-                                            <View style={[styles.statusIndicator, { left: statusLeftPosition }]}>
-                                                {renderStatusIndicator()}
+                                            {isDone && (
+                                                <View style={[styles.doneStatusIndicator, { left: isMeal ? 16 : 96 }]}>
+                                                    <AnimatedCheckmark
+                                                        isDone={isDone}
+                                                        phaseId={item.id}
+                                                        isFocused={isFocused}
+                                                        isRecentlyCompleted={recentlyCompletedPhases.includes(item.id)}
+                                                        onAnimationComplete={() => dispatch(removeRecentlyCompletedPhase(item.id))}
+                                                    />
+                                                </View>
+                                            )}
+                                            <View style={[
+                                                styles.iconWrapper,
+                                                { backgroundColor: bg, marginLeft: iconMarginLeft },
+                                                isDone && styles.donePhaseContent
+                                            ]}>
+                                                <Icon iconStyle="solid" name={name} color={fg} size={18} />
                                             </View>
-                                            <View style={{ marginLeft: iconMarginLeft }}>
-                                                <Highlight color={COLORS.LIGHT_PINK}>
-                                                    {showArrowIcon ? (
-                                                        <Ionicons
-                                                            name="chevron-forward-circle-outline"
-                                                            color={COLORS.DARK_GREY}
-                                                            size={38}
-                                                        />
-                                                    ) : (
-                                                        <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: 0 }]}>
-                                                            <Icon iconStyle="solid" name={name} color={fg} size={18} />
-                                                        </View>
-                                                    )}
-                                                    <Text variant="h4" style={styles.highlightText}>
-                                                        {displayTitle}
-                                                    </Text>
-                                                </Highlight>
+                                            <View style={[styles.rightContent, isDone && styles.donePhaseContent]}>
+                                                <Text variant="h4" style={{ color: isDone ? theme.colors.grey : theme.colors.text }}>
+                                                    {displayTitle}
+                                                </Text>
                                             </View>
                                         </TouchableOpacity>
                                     );
-                                }
-
-                                // Normal item (non-highlighted)
-                                return (
-                                    <TouchableOpacity
-                                        key={String(item.id)}
-                                        style={styles.row}
-                                        onPress={() => handlePhasePress(item)}
-                                    >
-                                        {isDone && (
-                                            <View style={[styles.doneStatusIndicator, { left: isMeal ? 16 : 96 }]}>
-                                                <AnimatedCheckmark
-                                                    isDone={isDone}
-                                                    phaseId={item.id}
-                                                    isFocused={isFocused}
-                                                    isRecentlyCompleted={recentlyCompletedPhases.includes(item.id)}
-                                                    onAnimationComplete={() => dispatch(removeRecentlyCompletedPhase(item.id))}
-                                                />
-                                            </View>
-                                        )}
-                                        <View style={[
-                                            styles.iconWrapper,
-                                            { backgroundColor: bg, marginLeft: iconMarginLeft },
-                                            isDone && styles.donePhaseContent
-                                        ]}>
-                                            <Icon iconStyle="solid" name={name} color={fg} size={18} />
-                                        </View>
-                                        <View style={[styles.rightContent, isDone && styles.donePhaseContent]}>
-                                            <Text variant="h4" style={{ color: isDone ? theme.colors.grey : theme.colors.text }}>
-                                                {displayTitle}
-                                            </Text>
-                                        </View>
-                                    </TouchableOpacity>
-                                );
-                            }}
-                        />
-                    </View>
-                </View>
-            </ScrollView>
-            <AnytimeMenu
-                date={currentDate}
-                disabled={isFetching || isLoading}
-            />
-            {!showCalendar && data?.id && !isFutureDateCheck && (
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={handleAddButtonPress}
-                    disabled={isFetching || isLoading}
-                    style={[
-                        styles.addBtn,
-                        styles.roundBtn,
-                        styles.shadowBtn,
-                        (isFetching || isLoading) && styles.disabledBtn,
-                    ]}
-                >
-                    <FeatherIcon name="plus" color="#FFFFFF" size={22} />
-                    <Text style={styles.addBtnText}>Add</Text>
-                </TouchableOpacity>
-            )}
-
-            {/* Incomplete Day Label */}
-            {Boolean(incompleteDay) && (
-                <View style={styles.incompleteLabelContainer}>
-                    <Highlight color={COLORS.DARKER_PINK}>
-                        <View style={styles.incompleteLabel}>
-                            <Text
-                                style={styles.incompleteText}
-                                color={COLORS.DARKENED_GRAY}
-                                textAlign="left"
-                            >
-                                Please
-                            </Text>
-                            <Text
-                                textAlign="left"
-                                color={COLORS.DARKENED_GRAY}
-                                style={[styles.incompleteText, { marginTop: Platform.OS === 'ios' ? -5 : 0 }]}
-                            >
-                                complete
-                            </Text>
+                                }}
+                            />
                         </View>
-                    </Highlight>
-                </View>
-            )}
+                    </View>
+                </ScrollView>
+
+                <AnytimeMenu
+                    date={currentDate}
+                    disabled={isFetching || isLoading}
+                />
+
+                {!showCalendar && data?.id && !isFutureDate && (
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={handleAddButtonPress}
+                        disabled={isFetching || isLoading}
+                        style={[
+                            styles.addBtn,
+                            styles.roundBtn,
+                            styles.shadowBtn,
+                            (isFetching || isLoading) && styles.disabledBtn,
+                        ]}
+                    >
+                        <FeatherIcon name="plus" color="#FFFFFF" size={22} />
+                        <Text style={styles.addBtnText}>Add</Text>
+                    </TouchableOpacity>
+                )}
+
+                {/* Incomplete Day Label */}
+                {Boolean(incompleteDay) && (
+                    <View style={styles.incompleteLabelContainer}>
+                        <Highlight color={COLORS.DARKER_PINK}>
+                            <View style={styles.incompleteLabel}>
+                                <Text
+                                    style={styles.incompleteText}
+                                    color={COLORS.DARKENED_GRAY}
+                                    textAlign="left"
+                                >
+                                Please
+                                </Text>
+                                <Text
+                                    textAlign="left"
+                                    color={COLORS.DARKENED_GRAY}
+                                    style={[styles.incompleteText, { marginTop: Platform.OS === 'ios' ? -5 : 0 }]}
+                                >
+                                complete
+                                </Text>
+                            </View>
+                        </Highlight>
+                    </View>
+                )}
+
+                {config.features.gamblingEnabled && !showCalendar && (
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={handleGamblingPress}
+                        style={[
+                            styles.gamblingBtn,
+                            styles.shadowBtn,
+                            styles.roundBtn,
+                        ]}
+                    >
+                        <Text variant="h2" style={{ color: '#FFFFFF', fontFamily: 'Outfit-Bold' }}>
+                        $
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            </View>
 
             {/* Floating Calendar Button */}
             {!showCalendar && (
@@ -1201,22 +1233,6 @@ export const Overview: React.FC = () => {
                             </Text>
                         </View>
                     </View>
-                </TouchableOpacity>
-            )}
-
-            {config.features.gamblingEnabled && !showCalendar && (
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={handleGamblingPress}
-                    style={[
-                        styles.gamblingBtn,
-                        styles.shadowBtn,
-                        styles.roundBtn,
-                    ]}
-                >
-                    <Text variant="h2" style={{ color: '#FFFFFF', fontFamily: 'Outfit-Bold' }}>
-                        $
-                    </Text>
                 </TouchableOpacity>
             )}
 
@@ -1262,9 +1278,9 @@ export const Overview: React.FC = () => {
 
             {selectedMeasurement && (
                 <MeasurementInputModal
-                    disabled={isFetching}
                     item={selectedMeasurement}
                     visible={!!selectedMeasurement}
+                    disabled={isFetching || !!isFutureDate}
                     onClose={() => setSelectedMeasurement(null)}
                 />
             )}

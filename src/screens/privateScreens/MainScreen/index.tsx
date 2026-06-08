@@ -15,7 +15,7 @@ import { COLORS } from 'constants/colors';
 import { Button } from 'components/Button';
 import DefImage from 'components/DefImage';
 import { TextLogo } from 'components/TextLogo';
-import { Hamburger } from 'components/Hamburger';
+import StackHeader from 'components/StackHeader';
 import { RootState, useAppSelector } from 'store';
 import { SplashScreen } from 'components/SplashScreen';
 import { useDayAdherence } from 'hooks/useDayAdherence';
@@ -29,12 +29,12 @@ type DrawerParamList = {
     [ROUTES.LIBRARY]: undefined;
     [ROUTES.SHOPPING]: undefined;
     [ROUTES.MESSENGER]: undefined;
-    [ROUTES.DAILY_PLAN]: undefined;
     [ROUTES.ABOUT_PLAN]: undefined;
     [ROUTES.MY_RESULTS]: undefined;
     [ROUTES.MEAL_PREFERENCES]: undefined;
     [ROUTES.HEALTH_PROFILE_STACK]: undefined;
     [ROUTES.CUISINE_DISTRIBUTION]: undefined;
+    [ROUTES.DAILY_PLAN]: { screen?: string } | undefined;
 };
 
 export const MainScreen: React.FC = () => {
@@ -56,7 +56,7 @@ export const MainScreen: React.FC = () => {
     };
 
     const handleGetStarted = () => {
-        navigation.navigate(ROUTES.DAILY_PLAN);
+        navigation.navigate(ROUTES.DAILY_PLAN, { screen: ROUTES.DAY_OVERVIEW });
     };
 
     const handleOpenDrawer = () => {
@@ -68,12 +68,11 @@ export const MainScreen: React.FC = () => {
 
     return (
         <Screen style={styles.container} initialized={true}>
-            <View style={[styles.header, { backgroundColor: theme.colors.headerBg }]}>
-                <View style={styles.textLogoWrapper}>
-                    <TextLogo color={theme.colors.headerText} />
-                </View>
-                <Hamburger onPress={handleOpenDrawer} style={styles.hamburger} />
-            </View>
+            <StackHeader
+                showBack={false}
+                onOpenDrawer={handleOpenDrawer}
+                centerContent={<TextLogo color={theme.colors.headerText} />}
+            />
 
             <View style={styles.content}>
                 {/* {adherence.hasData && (
@@ -131,25 +130,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    textLogo: {
-        alignSelf: 'center',
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        justifyContent: 'flex-end',
-        paddingTop: OFFSET.VERTICAL * 2.5,
-        paddingBottom: OFFSET.POINT * 2.5,
-        paddingHorizontal: OFFSET.HORIZONTAL,
-    },
-    textLogoWrapper: {
-        width: '90%',
-
-    },
-    hamburger: {
-        marginRight: 8,
-        alignItems: 'flex-end',
-    },
     content: {
         flex: 1,
         paddingHorizontal: OFFSET.HORIZONTAL,
@@ -193,14 +173,10 @@ const styles = StyleSheet.create({
         borderColor: COLORS.BLACK,
         backgroundColor: 'transparent',
         marginBottom: 15
-        // borderColor: 'transparent',
-        // backgroundColor: '#96E072',
     },
     buttonText: {
         fontSize: 16,
         color: COLORS.BLACK,
-        // color: '#4E733C',
-        // paddingVertical: 3,
         fontWeight: Platform.OS === 'ios' ? '600' : '700',
     },
 });

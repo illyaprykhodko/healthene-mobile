@@ -13,6 +13,7 @@ import { ROUTES } from 'constants/routes';
 import { EmptyState } from 'components/EmptyState';
 import YoutubeVideo from 'components/YoutubeVideo';
 import PrivateVideo from 'components/PrivateVideo';
+import StackHeader from 'components/StackHeader';
 import type { VideoItem, Attachment } from 'types/video';
 
 interface VideoListRouteParams {
@@ -75,6 +76,11 @@ const VideoListScreen: React.FC = () => {
     if (!videoList.length) {
         return (
             <Screen initialized style={styles.container}>
+                <StackHeader
+                    title="Videos"
+                    onBack={() => navigation.goBack()}
+                    onOpenDrawer={() => navigation.openDrawer?.()}
+                />
                 <EmptyState
                     icon="film"
                     title="No videos yet"
@@ -86,6 +92,11 @@ const VideoListScreen: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
+            <StackHeader
+                title="Videos"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => navigation.openDrawer?.()}
+            />
             <FlatList
                 data={videoList}
                 renderItem={renderVideoItem}
@@ -118,11 +129,5 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
         paddingVertical: OFFSET.VERTICAL,
         marginBottom: OFFSET.VERTICAL,
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: OFFSET.VERTICAL,
     },
 });

@@ -1,13 +1,9 @@
 // outsource dependencies
 import React from 'react';
-import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // local dependencies
-import BackBtn from 'components/BackBtn';
 import { ROUTES } from 'constants/routes';
-import { useTheme } from 'hooks/useTheme';
-import { Hamburger } from 'components/Hamburger';
 import {
     StatsScreen,
     MainInfoScreen,
@@ -19,29 +15,10 @@ import {
 const Stack = createNativeStackNavigator();
 
 const HealthProfileStack: React.FC = () => {
-    const theme = useTheme();
-    const drawerNavigation = useNavigation<any>();
-
     return (
         <Stack.Navigator
             initialRouteName={ROUTES.HEALTH_PROFILE_MAIN}
-            screenOptions={({ navigation }) => ({
-                headerShown: true,
-                headerStyle: {
-                    backgroundColor: theme.colors.headerBg,
-                },
-                headerTintColor: theme.colors.headerText,
-                headerTitleStyle: {
-                    fontWeight: '600',
-                },
-                headerTitleAlign: 'center',
-                headerLeft: () => (
-                    <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />
-                ),
-                headerRight: () => (
-                    <Hamburger onPress={() => drawerNavigation.openDrawer?.()} />
-                ),
-            })}
+            screenOptions={{ headerShown: false }}
         >
             <Stack.Screen
                 component={MainInfoScreen}

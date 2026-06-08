@@ -1,11 +1,10 @@
+
 // outsource dependencies
+import moment from 'moment/moment';
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, Platform, View } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
+
 // local dependencies
-import { Badge } from './Badge';
-import { useTheme } from 'hooks/useTheme';
-import { useAnytimeData } from 'hooks/useAnytimeData';
-import { GlassSurface } from 'components/GlassSurface';
 import {
     FoodIcon,
     DrinkIcon,
@@ -13,10 +12,13 @@ import {
     SupplementIcon,
     MeasurementIcon,
 } from './AnytimeIcons';
+import { Badge } from './Badge';
+import { useTheme } from 'hooks/useTheme';
 import { AnytimeModal } from './AnytimeModal';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
+import type { AnytimeItemType } from 'types/anytime';
+import { useAnytimeData } from 'hooks/useAnytimeData';
 import PressableScale from 'components/PressableScale';
-import type { AnytimeItemType } from '../../types/anytime';
 import { AnytimeExercisesModal } from './AnytimeExercisesModal';
 import { useGetDayOverviewQuery } from 'store/api/dayOverviewApi';
 
@@ -38,6 +40,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
     const { data: dayOverviewData } = useGetDayOverviewQuery(date || new Date().toISOString().split('T')[0]);
     const [activeModal, setActiveModal] = useState<AnytimeItemType | null>(null);
     const [showExercisesModal, setShowExercisesModal] = useState(false);
+    const isFutureDay = moment(date).isAfter(moment(), 'day');
 
     const handleIconPress = (type: AnytimeItemType) => {
         if (disabled || isLoading) { return; }
@@ -113,12 +116,11 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
 
     return (
         <>
-            {/* <GlassSurface
-                intensity={5}
-                tint={theme.dark ? 'dark' : 'light'}
-                style={[styles.container, { borderTopColor: theme.colors.blue }]}
-            > */}
-            <View style={[styles.container, { borderTopColor: theme.colors.blue }]}>
+            <View style={[
+                styles.container,
+                isFutureDay && styles.opacityFuture,
+                { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.blue }
+            ]}>
                 <PressableScale
                     style={styles.iconButton}
                     disabled={disabled || isLoading}
@@ -177,6 +179,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
                     visible={true}
                     onClose={handleCloseModal}
                     maxHeight={modalMaxHeight}
+                    isFutureDate={isFutureDay}
                     fullScreen={modalFullScreen}
                     {...getModalProps(activeModal)}
                     disabled={disabled || isLoading}
@@ -208,5 +211,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 12,
+    },
+    opacityFuture: {
+        opacity: 0.4,
     },
 });

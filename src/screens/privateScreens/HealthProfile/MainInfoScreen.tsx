@@ -13,6 +13,7 @@ import { useTheme } from 'hooks/useTheme';
 import DefImage from 'components/DefImage';
 import ProfileRow from 'components/ProfileRow';
 import ProfileCard from 'components/ProfileCard';
+import StackHeader from 'components/StackHeader';
 import { useGetSelfQuery } from 'store/api/authApi';
 import {
     useGetPatientMedicationsQuery,
@@ -90,6 +91,11 @@ const MainInfoScreen: React.FC = () => {
 
     return (
         <Screen initialized={initialized} style={styles.container}>
+            <StackHeader
+                title="My Health Profile"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => navigation.openDrawer?.()}
+            />
             <ScrollView contentContainerStyle={styles.wrapper}>
                 <DefImage
                     style={styles.image}

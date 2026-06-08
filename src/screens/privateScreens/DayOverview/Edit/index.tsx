@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+
 // local dependencies
 import {
     useGetPhaseItemsQuery,
@@ -14,6 +15,7 @@ import {
     useDeletePhaseItemMutation,
     useAddPhaseMealItemMutation,
     useReplacePhaseItemMutation,
+    useInterchangeMealsMutation,
     useAddPhaseCustomRecipeMutation,
     useUpdateIncludeRescueFoodsMutation
 } from 'store/api/dayOverviewApi';
@@ -35,6 +37,7 @@ import { useAppSelector, useAppDispatch } from 'store';
 import { RootStackParamList } from 'services/navigation';
 import { RewardStarOverlay } from 'components/RewardStar';
 import { BirdAnimation } from 'animation/BirdAnimation.tsx';
+import ConfirmationAlert from 'components/ConfirmationAlert';
 import { selectBirdSoundEnabled } from 'store/slices/appSlice';
 import { ListItemSkeleton, Skeleton } from 'components/Skeleton';
 import ReplaceItemModal from 'components/modals/ReplaceItemModal';
@@ -42,9 +45,8 @@ import SwipeList, { SwipeValueChange } from 'components/SwipeList';
 import { CelebrationConfetti } from 'components/CelebrationConfetti';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { useUpdatePatientGamblingPointsMutation } from 'store/api/gamblingPointsApi.ts';
-import { selectDayOverview, addRecentlyCompletedPhase } from 'store/slices/dayOverviewSlice';
+import { selectDayOverview, addRecentlyCompletedPhase, meta as dayOverviewMeta } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
-
 
 interface EditProps {
     date?: string;
@@ -73,6 +75,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const [showRescueFoodsModal, setShowRescueFoodsModal] = useState(false);
 
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+    const [showSwapConfirmation, setShowSwapConfirmation] = useState(false);
     const [replacementData, setReplacementData] = useState<{ prevItem: PhaseItem | null; nextItem: any }>({
         prevItem: null,
         nextItem: null,
@@ -115,7 +118,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         [localItems]
     );
 
-    const { data: dayOverviewData, isLoading: isDayOverviewLoading } = useGetDayOverviewQuery(targetDate, {
+    const { currentData: dayOverviewData } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
     });
 
@@ -141,20 +144,21 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         setTargetPhaseId(match?.id);
     }, [dayOverviewData, initialPhaseId]);
 
-    const { data: phaseItems, isLoading: isPhaseItemsLoading, refetch: refetchPhaseItems } = useGetPhaseItemsQuery(targetPhaseId, {
+    const { currentData: phaseItems, isFetching: isPhaseItemsFetching, refetch: refetchPhaseItems } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
     });
     // mutations
     const [updatePhase] = useUpdatePhaseMutation();
     const [addPhaseItem] = useAddPhaseItemMutation();
-    const [addPhaseMealItem] = useAddPhaseMealItemMutation();
-    // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
+    // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
+    const [addPhaseMealItem] = useAddPhaseMealItemMutation();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
     const [updatePatientGamblingPoints] = useUpdatePatientGamblingPointsMutation();
+    const [interchangeMeals, { isLoading: isSwapping }] = useInterchangeMealsMutation();
     //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
 
@@ -183,11 +187,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     useEffect(() => {
         setLocalItems([]);
     }, [targetPhaseId]);
+
     useEffect(() => {
-        if (items.length > 0) {
-            setLocalItems(items);
-        }
+        setLocalItems(items);
     }, [items]);
+
     const computeExcludeIds = (): string[] => {
         switch (currentPhase?.type) {
             default:
@@ -673,7 +677,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         };
     }, [navigation]);
 
-    const isLoading = isDayOverviewLoading || isPhaseItemsLoading;
+    const isLoading = isPhaseItemsFetching || isSwapping;
 
     // if (isLoading) {
     //     return (
@@ -727,6 +731,43 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const isPastDate = moment(targetDate).isBefore(moment(), 'day');
     const isFutureDate = moment(targetDate).isAfter(moment(), 'day');
 
+    const today = moment().format('YYYY-MM-DD');
+    const { currentData: todayDayOverviewData } = useGetDayOverviewQuery(today, {
+        skip: !isFutureDate,
+    });
+    const todayMealAnalog = (todayDayOverviewData?.phases || [])
+        .find((phase: any) => phase.type === OVERVIEW_TYPE.MEAL
+            && phase.meal?.id
+            && phase.meal.id === (currentPhase as any)?.meal?.id);
+    const isInterchangeEnable = currentPhase?.type === OVERVIEW_TYPE.MEAL
+        && isFutureDate
+        && !!todayMealAnalog
+        && (todayMealAnalog as any).status !== PHASE_ITEM_STATUS.DONE;
+
+    const handleSwapMeal = async () => {
+        if (!todayMealAnalog || !currentPhase) { return; }
+        const todayPhaseId = (todayMealAnalog as any).id;
+        setShowSwapConfirmation(false);
+        try {
+            await interchangeMeals({
+                futurePhaseId: currentPhase.id,
+                phaseId: todayPhaseId,
+            }).unwrap();
+            dispatch(dayOverviewMeta({
+                date: today,
+                isPastDate: false,
+                isFutureDate: false,
+                isCurrentDate: true,
+            }));
+            navigation.navigate(ROUTES.EDIT, {
+                phaseId: todayPhaseId,
+                isToast: false,
+            });
+        } catch (error) {
+            console.error('Error swapping meals:', error);
+        }
+    };
+
     return (
         <Screen initialized={!isLoading} style={styles.container}>
             <CelebrationConfetti signal={celebrateSignal} />
@@ -744,8 +785,16 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         {title}
                     </Text>
                 </View>
-                {currentPhase?.type === OVERVIEW_TYPE.MEAL && !isPastDate && (
+                {isInterchangeEnable ? (
                     <View style={styles.titleButtons}>
+                        <TouchableOpacity onPress={() => setShowSwapConfirmation(true)}>
+                            <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
+                                Eat Today
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : currentPhase?.type === OVERVIEW_TYPE.MEAL && !isPastDate && (
+                    <View style={[styles.titleButtons, isFutureDate && styles.opacity]}>
                         <TouchableOpacity onPress={() => {
                             if (includeRescueFoodsInShoppingList) {
                                 navigation.navigate(ROUTES.REPLACEMENT, {
@@ -759,7 +808,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             }
                         }}>
                             <Text style={{ textDecorationLine: 'underline' }} color={theme.colors.primary}>
-            Change Meal
+                                Change Meal
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -892,6 +941,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             title="Add"
                             variant="primary"
                             onPress={handleAddItem}
+                            disabled={isFutureDate}
                             textStyle={styles.textAddButton}
                             style={{
                                 ...styles.button,
@@ -963,6 +1013,17 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     setReplacementData({ prevItem: null, nextItem: null });
                 }}
                 onApply={handleConfirmationModalApply}
+            />
+
+            <ConfirmationAlert
+                applyTxt="Swap"
+                cancelTxt="Cancel"
+                title="Swap meals?"
+                disabled={isSwapping}
+                onSubmit={handleSwapMeal}
+                message="This will swap meal"
+                isOpen={showSwapConfirmation}
+                onClose={() => setShowSwapConfirmation(false)}
             />
 
             {config.features.gamblingEnabled && (

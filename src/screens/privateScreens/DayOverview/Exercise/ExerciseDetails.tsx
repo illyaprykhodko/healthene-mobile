@@ -1,7 +1,10 @@
+
 // outsource dependencies
+import moment from 'moment';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useRef, useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image } from 'react-native';
+
 // local dependencies
 import { ExerciseType } from 'types';
 import { useTheme } from 'hooks/useTheme';
@@ -13,6 +16,7 @@ import { EXERCISE_CONFIGS } from './exerciseFactory';
 import { useAppDispatch, useAppSelector } from 'store';
 import { initializeExercise, updateSteps, setLoading, clearExercise } from 'store/slices/exerciseSlice';
 import { useGetPhysicalActivityItemQuery, useGetStretchingExerciseQuery, useGetAerobicExerciseQuery, useGetResistanceExerciseQuery, useUpdateStretchingStepsMutation, useUpdateAerobicStepsMutation, useUpdateResistanceStepsMutation, useUpdatePhaseItemMutation } from 'store/api/dayOverviewApi';
+
 // components
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -40,6 +44,7 @@ export default function ExerciseDetails () {
     const [showGoodWork, setShowGoodWork] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const title = exercise?.title || 'Exercise';
+    const isFutureDay = moment(date).isAfter(moment(), 'day');
 
     // Load exercise data based on type
     const { data: stretchingData, isLoading: stretchingLoading } = useGetStretchingExerciseQuery(exercise?.id?.toString() || '', {
@@ -322,6 +327,7 @@ export default function ExerciseDetails () {
                 >
                     {(video || instruction) ? (
                         <TouchableOpacity
+                            disabled={isFutureDay}
                             style={[{ alignSelf: 'flex-end' }, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.5 }]}
                             onPress={() => {
                                 setVideoData(video);
@@ -347,7 +353,8 @@ export default function ExerciseDetails () {
                     {/* Goal row */}
                     <View style={styles.repsContainer}>
                         <TouchableOpacity
-                            style={completed && { opacity: 0.5 }}
+                            disabled={isFutureDay}
+                            style={(completed || isFutureDay)&& { opacity: 0.5 }}
                             onPress={() => {
                                 navigation.navigate('EditExercise', {
                                     title,
@@ -362,6 +369,7 @@ export default function ExerciseDetails () {
                         <Checkbox
                             size={15}
                             value={completed}
+                            editable={!isFutureDay}
                             onChange={() => completeStep(itemId)}
                         />
                     </View>
@@ -372,6 +380,7 @@ export default function ExerciseDetails () {
                             {extraDisplay.map((line: string) => (
                                 <TouchableOpacity
                                     key={line}
+                                    disabled={isFutureDay}
                                     onPress={() => navigation.navigate('EditExercise', {
                                         itemId,
                                         viewOnlyExtra: true,
@@ -429,7 +438,6 @@ export default function ExerciseDetails () {
     // const clearHandler = useCallback(() => {
     //     dispatch(updateSteps({ steps: memoizedSteps, selectedSteps: [] }));
     // }, [dispatch, memoizedSteps]);
-    
     return (
         <Screen initialized={!isLoading} clear={() => {}} style={[styles.container, { backgroundColor: theme.colors.background }]}>
             {renderTabs()}

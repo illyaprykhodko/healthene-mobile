@@ -718,6 +718,16 @@ export const dayOverviewApi = createApi({
             invalidatesTags: ['DayOverview', 'PhaseItems'],
         }),
 
+        // Swap today's meal with a future date's meal ("Eat Today")
+        interchangeMeals: builder.mutation<void, { phaseId: number | string; futurePhaseId: number | string }>({
+            query: body => ({
+                url: '/patient-service/day-overview-phases/day-overviews/replace',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['DayOverview', 'PhaseItems'],
+        }),
+
         // Get rescue shopping items videos
         getRescueVideos: builder.query<any[], void>({
             query: () => '/patient-service/patients/me/rescue-shopping-items-videos',
@@ -1187,6 +1197,7 @@ export const {
     useRevertPhaseItemMutation,
     useGetLastMeasurementQuery,
     useGetMeasurementTypesQuery,
+    useInterchangeMealsMutation,
     useGetRestaurantCatalogQuery,
     useDeleteMeasurementsMutation,
     useUpdatePhaseWithRescueMutation,

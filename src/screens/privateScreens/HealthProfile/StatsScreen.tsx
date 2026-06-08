@@ -14,6 +14,7 @@ import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
 import TextInput from 'components/TextInput';
 import { Skeleton } from 'components/Skeleton';
+import StackHeader from 'components/StackHeader';
 import DatePickerSelector from 'components/DatePicker';
 import OptionSelector from 'components/Selector/OptionSelector';
 
@@ -260,6 +261,11 @@ const StatsScreen: React.FC = () => {
     if (!initialized) {
         return (
             <Screen initialized style={styles.container}>
+                <StackHeader
+                    title="My Stats"
+                    onBack={() => navigation.goBack()}
+                    onOpenDrawer={() => (navigation as any).openDrawer?.()}
+                />
                 <View style={styles.scrollContent}>
                     <StatsSkeleton borderColor={theme.colors.border} />
                 </View>
@@ -272,6 +278,11 @@ const StatsScreen: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
+            <StackHeader
+                title="My Stats"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => (navigation as any).openDrawer?.()}
+            />
             <View style={styles.scrollContent}>
                 <KeyboardAwareScrollView contentContainerStyle={styles.wrapper}>
                     <View style={styles.offset}>
@@ -423,7 +434,6 @@ export default memo(StatsScreen);
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 30,
         paddingLeft: 0,
         paddingRight: 0,
     },

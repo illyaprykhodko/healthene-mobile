@@ -125,7 +125,7 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.content}>
+                <View style={[styles.content, isFutureDate && styles.opacityFuture]}>
                     {isExerciseStub ? (
                         <View style={styles.emptyState}>
                             <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
@@ -169,10 +169,10 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                 in its own native <Modal> layer. */}
             {selectedMeasurement && (
                 <MeasurementInputModal
-                    disabled={disabled}
                     item={selectedMeasurement}
                     visible={!!selectedMeasurement}
                     onClose={closeMeasurementModal}
+                    disabled={disabled || isFutureDate}
                 />
             )}
         </>
@@ -216,5 +216,8 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 16,
         textAlign: 'center',
+    },
+    opacityFuture: {
+        opacity: 0.4,
     },
 });
