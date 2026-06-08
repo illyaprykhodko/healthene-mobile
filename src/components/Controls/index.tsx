@@ -6,7 +6,7 @@ import { View, StyleSheet, Pressable, ViewStyle } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { OFFSET } from 'constants/offset';
-import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
 import { decimalsToFractions } from 'services/filter';
 
 interface ControlsProps {
@@ -40,6 +40,7 @@ const Controls: React.FC<ControlsProps> = ({
     disabled = false,
     isSurrogateRecipe = false,
 }) => {
+    const theme = useTheme();
     const [localAmount, setLocalAmount] = useState(amount);
     const pendingAmount = useRef<number | null>(null);
     const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,23 +89,32 @@ const Controls: React.FC<ControlsProps> = ({
                 <Pressable
                     hitSlop={clickableZone}
                     unstable_pressDelay={0}
-                    style={({ pressed }) => [styles.icon, pressed && styles.iconPressed]}
+                    style={({ pressed }) => [
+                        styles.icon,
+                        { borderColor: theme.colors.primary, backgroundColor: theme.colors.surfaceAlt },
+                        pressed && styles.iconPressed,
+                    ]}
                     onPress={() => !(disabled || localAmount <= 0.5) && handleUpdateData(localAmount - 0.5)}
                 >
-                    <Icon iconStyle="solid" name="minus" color="#76A7D8" size={24} />
+                    <Icon iconStyle="solid" name="minus" color={theme.colors.primary} size={24} />
                 </Pressable>
-                <Text style={styles.count}>{decimalsToFractions(localAmount)}</Text>
+                <Text style={styles.count} color={theme.colors.text}>{decimalsToFractions(localAmount)}</Text>
                 <Pressable
                     hitSlop={clickableZone}
                     unstable_pressDelay={0}
                     onPress={() => !disabled && handleUpdateData(localAmount + 0.5)}
-                    style={({ pressed }) => [styles.icon, pressed && styles.iconPressed]}
+                    style={({ pressed }) => [
+                        styles.icon,
+                        { borderColor: theme.colors.primary, backgroundColor: theme.colors.surfaceAlt },
+                        pressed && styles.iconPressed,
+                    ]}
                 >
-                    <Icon iconStyle="solid" name="plus" color="#76A7D8" size={24} />
+                    <Icon iconStyle="solid" name="plus" color={theme.colors.primary} size={24} />
                 </Pressable>
             </View>
             {!unit ? null : (
                 <Text
+                    color={theme.colors.textSecondary}
                     style={[
                         styles.units,
                         !isSurrogateRecipe ? styles.unitsTextTransform : {},
@@ -144,15 +154,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#C7DAEF',
     },
     count: {
-        color: COLORS.BLACK,
         fontSize: 57,
         minWidth: 180,
         fontWeight: '500',
         textAlign: 'center',
-        paddingHorizontal: OFFSET.HORIZONTAL * 3,
+        paddingHorizontal: OFFSET.HORIZONTAL,
     },
     units: {
-        color: COLORS.DARK_GREY,
         textAlign: 'center',
         fontSize: 16,
         marginTop: OFFSET.VERTICAL,

@@ -1,4 +1,5 @@
 // outsource dependencies
+import moment from 'moment';
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
@@ -12,11 +13,15 @@ import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
 import { Button } from 'components/Button';
+import DefImage from 'components/DefImage';
 import { TextLogo } from 'components/TextLogo';
 import StackHeader from 'components/StackHeader';
 import { RootState, useAppSelector } from 'store';
 import { SplashScreen } from 'components/SplashScreen';
+import { useDayAdherence } from 'hooks/useDayAdherence';
+import { ActivityRings } from 'components/ActivityRings';
 import { useGetWelcomeQuery } from 'store/api/publicApi';
+import { DayAdherenceCard } from 'components/DayAdherenceCard';
 
 type DrawerParamList = {
     [ROUTES.MAIN]: undefined;
@@ -39,6 +44,7 @@ export const MainScreen: React.FC = () => {
 
     const { data: welcomeData, isLoading } = useGetWelcomeQuery();
     const welcomeImageUrl = welcomeData?.image?.url;
+    const adherence = useDayAdherence(moment().format('YYYY-MM-DD'));
 
     const timeGreeting = () => {
         const hour = new Date().getHours();
@@ -69,27 +75,51 @@ export const MainScreen: React.FC = () => {
             />
 
             <View style={styles.content}>
+                {/* {adherence.hasData && (
+                    <View style={styles.ringsWrapper}>
+                        <DayAdherenceCard date={moment().format('YYYY-MM-DD')} />
+                        <ActivityRings
+                            gap={4}
+                            size={104}
+                            strokeWidth={9}
+                            rings={adherence.rings}
+                            centerText={`${Math.round(adherence.overall * 100)}%`}
+                        />
+                    </View>
+                )} */}
                 <View style={styles.descriptionWrapper}>
                     <Text variant="h1" style={[styles.title, { color: theme.colors.text }]}>
                         {timeGreeting()}
                     </Text>
                 </View>
-
-                <View style={styles.imageWrapper}>
-                    {welcomeImageUrl && (
-                        <Image
-                            resizeMode="contain"
-                            style={styles.image}
-                            source={{ uri: welcomeImageUrl }}
-                        />
-                    )}
-                </View>
-
+                { theme.dark
+                    ? <View style={styles.altWrapper}>
+                        {/* <DayAdherenceCard date={moment().format('YYYY-MM-DD')} /> */}
+                        {adherence.hasData && (
+                            <ActivityRings
+                                gap={4}
+                                size={250}
+                                strokeWidth={25}
+                                rings={adherence.rings}
+                                centerText={`${Math.round(adherence.overall * 100)}%`}
+                            />)}
+                    </View>
+                    : <View style={styles.imageWrapper}>
+                        {welcomeImageUrl && (
+                        // <DefImage src={welcomeImageUrl} style={styles.image} />
+                            <Image
+                                resizeMode="contain"
+                                style={styles.image}
+                                source={{ uri: welcomeImageUrl }}
+                            />
+                        )}
+                    </View>
+                }
                 <Button
                     title="Get Started"
-                    style={styles.button}
                     onPress={handleGetStarted}
-                    textStyle={styles.buttonText}
+                    style={[styles.button, { borderColor: theme.colors.text }]}
+                    textStyle={StyleSheet.flatten([styles.buttonText, { color: theme.colors.text }])}
                 />
             </View>
         </Screen>
@@ -109,6 +139,15 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         marginBottom: OFFSET.VERTICAL,
         marginTop: OFFSET.VERTICAL * 5,
+    },
+    ringsWrapper: {
+        alignItems: 'center',
+        marginVertical: OFFSET.POINT,
+    },
+    altWrapper: {
+        flex: 1,
+        alignItems: 'center',
+        paddingTop: OFFSET.VERTICAL * 5,
     },
     title: {
         flex: 1,

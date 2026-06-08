@@ -26,7 +26,6 @@ const styles = StyleSheet.create({
     screen: {
         flex: 1,
         display: 'flex',
-        backgroundColor: '#F7F8FA',
     },
 });
 
@@ -35,9 +34,9 @@ const Screen: React.FC<ScreenProps> = ({
     clear,
     style,
     children,
+    statusBarBg, //'#1A2236'
     initialized,
     statusBarHidden = false,
-    statusBarBg = '#1A2236',
     statusBarAnimated = false,
     statusBarVariant = 'default',
 }) => {
@@ -49,13 +48,17 @@ const Screen: React.FC<ScreenProps> = ({
     );
 
     const theme = useTheme();
+    // Honor an explicit variant; otherwise pick icon contrast from the active theme.
+    const barStyle: StatusBarStyle = statusBarVariant !== 'default'
+        ? statusBarVariant
+        : (theme.dark ? 'light-content' : 'dark-content');
     return (
         <View style={styles.container}>
             <StatusBar
+                barStyle={barStyle}
                 hidden={statusBarHidden}
-                barStyle={statusBarVariant}
                 animated={statusBarAnimated}
-                backgroundColor={statusBarBg}
+                backgroundColor={statusBarBg ?? theme.colors.background}
             />
             <BoxHolder active={!initialized}>
                 <View style={StyleSheet.flatten([styles.screen, { backgroundColor: theme.colors.background }, style])}>{children}</View>

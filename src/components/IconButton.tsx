@@ -1,12 +1,14 @@
 // outside dependencies
 import React from 'react';
 import Icon from '@react-native-vector-icons/fontawesome5';
-import { StyleSheet, TouchableOpacity, View, StyleProp, ViewStyle } from 'react-native';
+import { StyleSheet, View, StyleProp, ViewStyle } from 'react-native';
 
 // local dependencies
 import Text from './Text';
+import { HapticType } from 'hooks/useHaptic';
 import { useTheme } from '../hooks/useTheme';
 import { useKeyboard } from 'services/keyboard';
+import { PressableScale } from './PressableScale';
 
 interface BaseProps {
     size?: number;
@@ -15,6 +17,7 @@ interface BaseProps {
     textRight?: string;
     disabled?: boolean;
     closeKeyboard?: boolean;
+    haptic?: HapticType | null;
     style?: StyleProp<ViewStyle>;
     onPress?: (...args: any[]) => void;
 }
@@ -45,6 +48,7 @@ export const IconButton: React.FC<IconButtonProps> = props => {
         size = 22,
         textLeft = '',
         textRight = '',
+        haptic = 'light',
         disabled = false,
         // CustomIcon = null,
         closeKeyboard = false,
@@ -71,11 +75,11 @@ export const IconButton: React.FC<IconButtonProps> = props => {
     const iconColor = disabled ? `${buttonColor}99` : buttonColor; // 60% opacity when disabled
 
     return (
-        <TouchableOpacity
+        <PressableScale
+            haptic={haptic}
             disabled={disabled}
             style={containerStyle}
             onPress={handleOnPress}
-            activeOpacity={disabled ? 1 : 0.5}
         >
             <View style={styles.contentContainer}>
                 {textLeft && (
@@ -103,7 +107,7 @@ export const IconButton: React.FC<IconButtonProps> = props => {
                     </Text>
                 )}
             </View>
-        </TouchableOpacity>
+        </PressableScale>
     );
 };
 

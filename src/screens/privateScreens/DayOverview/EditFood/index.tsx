@@ -12,6 +12,7 @@ import { useAppSelector } from 'store';
 import Screen from 'components/Screen';
 import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
 import DefImage from 'components/DefImage';
 import { humanize } from 'services/filter';
 import Controls from 'components/Controls';
@@ -117,6 +118,7 @@ const UnitsView: React.FC<UnitsViewProps> = ({ unit, unitsList, handleUnit }) =>
 };
 
 export const EditFood: React.FC = () => {
+    const theme = useTheme();
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
 
@@ -332,7 +334,7 @@ export const EditFood: React.FC = () => {
                 <SwipeListView
                     // ListHeaderComponent={() => (
                     //     <View>
-                    //         <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: COLORS.BLACK }]}>
+                    //         <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: theme.colors.text }]}>
                     //             {item?.name}
                     //         </Text>
 
@@ -369,7 +371,7 @@ export const EditFood: React.FC = () => {
                         </TouchableOpacity>
                     )}
                     renderItem={({ item: ing }) => (
-                        <View style={styles.listItemWrapper}>
+                        <View style={[styles.listItemWrapper, { backgroundColor: theme.colors.background }]}>
                             <View style={styles.listItem}>
                                 <View style={styles.mainIngredient}>
                                     <TouchableOpacity
@@ -385,7 +387,7 @@ export const EditFood: React.FC = () => {
                                                 <Text
                                                     variant="h6"
                                                     numberOfLines={2}
-                                                    style={[styles.offset, { color: COLORS.BLACK, fontSize: 14 }]}
+                                                    style={[styles.offset, { color: theme.colors.text, fontSize: 14 }]}
                                                 >
                                                     {prepareIngredientNameWithUnit({
                                                         ingredient: ing,
@@ -394,13 +396,13 @@ export const EditFood: React.FC = () => {
                                                     })}
                                                 </Text>
                                                 {ing?.modified && (
-                                                    <Text style={[styles.offset, { fontSize: 12, color: COLORS.GREY }]}>
+                                                    <Text style={[styles.offset, { fontSize: 12, color: theme.colors.textSecondary }]}>
                                                         edited by me
                                                     </Text>
                                                 )}
                                             </View>
                                             <View style={styles.checkboxContainer}>
-                                                <Icon iconStyle="solid" name="chevron-right" color={COLORS.DARK_GREY} size={14} />
+                                                <Icon iconStyle="solid" name="chevron-right" color={theme.colors.textSecondary} size={14} />
                                             </View>
                                         </View>
                                     </TouchableOpacity>
@@ -421,7 +423,7 @@ export const EditFood: React.FC = () => {
 
     // const renderRecipeTab = () => (
     //     <ScrollView style={styles.recipeTab}>
-    //         <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: COLORS.BLACK }]}>
+    //         <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: theme.colors.text }]}>
     //             {item?.name}
     //         </Text>
     //         {item?.recipe?.steps && item.recipe.steps.length > 0 ? (
@@ -455,7 +457,7 @@ export const EditFood: React.FC = () => {
                         data={sortedSteps}
                         keyExtractor={(step: any, index) => String(step.id || index)}
                         ListHeaderComponent={() => (
-                            <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: COLORS.BLACK }]}>
+                            <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: theme.colors.text }]}>
                                 {item?.name}
                             </Text>
                         )}
@@ -468,10 +470,10 @@ export const EditFood: React.FC = () => {
                     />
                 ) : (
                     <View>
-                        <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: COLORS.BLACK }]}>
+                        <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: theme.colors.text }]}>
                             {item?.name}
                         </Text>
-                        <Text textAlign="center" style={{ color: COLORS.GREY, marginTop: 20 }}>
+                        <Text textAlign="center" style={{ color: theme.colors.textSecondary, marginTop: 20 }}>
                             No recipe steps available
                         </Text>
                     </View>
@@ -501,6 +503,7 @@ export const EditFood: React.FC = () => {
                                 styles.tabButton,
                                 isActive && styles.activeTabButton,
                                 { borderRightWidth: tabs.length === index + 1 ? 0 : 2 },
+                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceAlt },
                             ]}
                             onPress={() => setActiveTab(tab.value)}
                         >
@@ -541,7 +544,7 @@ export const EditFood: React.FC = () => {
             {renderTabs()}
             {activeTab === EDIT_FOOD_TABS.INGREDIENTS
                 ? <View>
-                    <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: COLORS.BLACK }]}>
+                    <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: theme.colors.text }]}>
                         {item?.name}
                     </Text>
 
@@ -551,7 +554,7 @@ export const EditFood: React.FC = () => {
                         </Text>
                     </View>
 
-                    <Text style={[styles.subtitle, { fontSize: 18, color: COLORS.BLACK }]}>Ingredients:</Text>
+                    <Text style={[styles.subtitle, { fontSize: 18 }]}>Ingredients:</Text>
                 </View>
                 : null}
             {renderBody()}
@@ -573,7 +576,6 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingLeft: 0,
         paddingRight: 0,
-        backgroundColor: COLORS.WHITE,
         paddingTop: OFFSET.VERTICAL,
     },
     header: {
@@ -613,7 +615,6 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.BLUE,
     },
     tabText: {
-        color: COLORS.BLACK,
         fontWeight: '500',
         fontSize: 15.5,
     },
@@ -638,7 +639,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         paddingHorizontal: OFFSET.HORIZONTAL,
         textAlign: 'center',
-        color: '#181818',
     },
     imageContainer: {
         alignItems: 'center',
@@ -664,7 +664,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '500',
         textTransform: 'capitalize',
-        color: COLORS.BLACK,
     },
     // Ingredients tab
     ingredientsTab: {
@@ -700,9 +699,7 @@ const styles = StyleSheet.create({
         marginTop: OFFSET.VERTICAL,
         color: COLORS.GREY,
     },
-    listItemWrapper: {
-        backgroundColor: COLORS.WHITE,
-    },
+    listItemWrapper: {},
     listItem: {
         alignItems: 'center',
         flexDirection: 'row',
@@ -759,12 +756,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '700',
         marginRight: 10,
-        color: COLORS.BLACK,
     },
     stepText: {
         flex: 1,
         fontSize: 16,
-        color: COLORS.BLACK,
     },
     approveButtons: {
         marginHorizontal: OFFSET.HORIZONTAL,

@@ -267,22 +267,22 @@ const WriteMessageScreen = () => {
             default: return <Pressable
                 key={item}
                 onPress={() => showCaptureModeSelector(onSave)}
-                style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
+                style={[styles.mediaButton, { backgroundColor: theme.colors.surfaceAlt }]}
             >
-                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
-                    <Icon iconStyle="solid" name="video" color={theme.colors.darkGrey} size={20} />
+                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.border }]}>
+                    <Icon iconStyle="solid" name="video" color={theme.colors.textSecondary} size={20} />
                 </View>
-                <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
+                <Text color={theme.colors.textSecondary}>{filters.humanize(item)}</Text>
             </Pressable>;
             case ATTACHMENTS.AUDIO: return <Pressable
                 key={item}
                 onPress={() => navigation.navigate(ROUTES.MESSENGER_AUDIO)}
-                style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
+                style={[styles.mediaButton, { backgroundColor: theme.colors.surfaceAlt }]}
             >
-                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
-                    <Icon iconStyle="solid" name="microphone" color={theme.colors.darkGrey} size={20} />
+                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.border }]}>
+                    <Icon iconStyle="solid" name="microphone" color={theme.colors.textSecondary} size={20} />
                 </View>
-                <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
+                <Text color={theme.colors.textSecondary}>{filters.humanize(item)}</Text>
             </Pressable>;
             case ATTACHMENTS.FILE: return <Pressable
                 key={item}
@@ -290,12 +290,12 @@ const WriteMessageScreen = () => {
                     onSave();
                     handleAttachFile().catch(error => console.error(error));
                 }}
-                style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
+                style={[styles.mediaButton, { backgroundColor: theme.colors.surfaceAlt }]}
             >
-                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
-                    <Icon iconStyle="solid" name="paperclip" color={theme.colors.darkGrey} size={20} />
+                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.border }]}>
+                    <Icon iconStyle="solid" name="paperclip" color={theme.colors.textSecondary} size={20} />
                 </View>
-                <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
+                <Text color={theme.colors.textSecondary}>{filters.humanize(item)}</Text>
             </Pressable>;
         }
     }, [handleAttachFile, showCaptureModeSelector]);
@@ -332,7 +332,7 @@ const WriteMessageScreen = () => {
                                 size={14}
                                 iconStyle="solid"
                                 name="chevron-right"
-                                color={theme.colors.darkGrey}
+                                color={theme.colors.textSecondary}
                             />
                         )}
                     </Pressable>

@@ -32,9 +32,9 @@ export const PublicStack = () => {
                     headerLeft: () => (
                         <BackButton navigation={navigation} theme={theme} />
                     ),
-                    headerTintColor: theme.colors.white,
+                    headerTintColor: theme.colors.headerText,
                     headerStyle: {
-                        backgroundColor: theme.colors.primary,
+                        backgroundColor: theme.colors.headerBg,
                     },
                     headerLeftContainerStyle: {
                         paddingLeft: OFFSET.HORIZONTAL,

@@ -195,15 +195,15 @@ const SelectRecipientScreen: React.FC = () => {
     ]);
 
     const renderSectionHeader = useCallback(({ section }: { section: Section }) => (
-        <View style={[styles.sectionHeader, { backgroundColor: theme.colors.lightGrey, borderBottomColor: COLORS.LIGHTER_GREY }]}>
-            <Text variant="bold" style={styles.sectionHeaderLabel} color={COLORS.DARK_GREY}>
+        <View style={[styles.sectionHeader, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
+            <Text variant="bold" style={styles.sectionHeaderLabel} color={theme.colors.textSecondary}>
                 {section.title}
             </Text>
-            <Text style={styles.sectionHeaderCount} color={COLORS.DARK_GREY}>
+            <Text style={styles.sectionHeaderCount} color={theme.colors.textSecondary}>
                 {String(section.data.length)}
             </Text>
         </View>
-    ), [theme.colors.lightGrey]);
+    ), [theme.colors]);
 
     // NOTE Initial load = no doctors data yet AND a request is in flight on page 0.
     // While in this state we keep the search input and role chips interactive and

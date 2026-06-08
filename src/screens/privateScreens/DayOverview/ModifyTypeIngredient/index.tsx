@@ -7,8 +7,8 @@ import { View, StyleSheet, ScrollView, FlatList, TouchableOpacity } from 'react-
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
+import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
-import { COLORS } from 'constants/colors';
 
 export const MODIFY_TYPES = {
     UNIT: 'UNIT',
@@ -63,6 +63,7 @@ interface ModifyTypeIngredientParams {
 }
 
 const ModifyTypeIngredient: React.FC = () => {
+    const theme = useTheme();
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     
@@ -143,7 +144,7 @@ const ModifyTypeIngredient: React.FC = () => {
         <View style={styles.wrapper}>
             <View style={[
                 styles.listItem,
-                { backgroundColor: isSelected(listItem) ? 'rgba(224, 235, 247, 0.5)' : COLORS.WHITE }
+                { backgroundColor: isSelected(listItem) ? theme.colors.surfaceAlt : theme.colors.surface, borderBottomColor: theme.colors.border }
             ]}>
                 <TouchableOpacity
                     onPress={() => handlePress(listItem)}
@@ -170,17 +171,17 @@ const ModifyTypeIngredient: React.FC = () => {
             clear={handleClear}
             style={styles.screenStyle}
         >
-            <View style={styles.mainTitle}>
-                <Text color="#181818" style={styles.itemName}>Add item</Text>
+            <View style={[styles.mainTitle, { backgroundColor: theme.colors.surfaceAlt }]}>
+                <Text color={theme.colors.text} style={styles.itemName}>Add item</Text>
             </View>
             <View style={styles.titleContainer}>
-                <Text color="#181818" style={styles.title}>
+                <Text color={theme.colors.text} style={styles.title}>
                     {modifyType === MODIFY_TYPES.INGREDIENT ? 'Replacement Ingredients' : 'Measurements'}
                 </Text>
             </View>
             <ScrollView contentContainerStyle={styles.main}>
                 {!list?.length ? (
-                    <Text textAlign="center" color={COLORS.BLACK}>
+                    <Text textAlign="center" color={theme.colors.text}>
                         No items found
                     </Text>
                 ) : (
@@ -203,9 +204,7 @@ const styles = StyleSheet.create({
         paddingLeft: 0,
         paddingRight: 0,
     },
-    wrapper: {
-        backgroundColor: COLORS.WHITE,
-    },
+    wrapper: {},
     listItem: {
         display: 'flex',
         flexDirection: 'row',

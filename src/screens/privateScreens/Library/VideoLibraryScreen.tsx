@@ -14,6 +14,7 @@ import { ROUTES } from 'constants/routes';
 import { VIDEO_LIBRARY } from 'types/video';
 import { Skeleton } from 'components/Skeleton';
 import StackHeader from 'components/StackHeader';
+import { EmptyState } from 'components/EmptyState';
 import {
     useGetFoodTreeQuery,
     useGetMedicalProblemsQuery,
@@ -106,15 +107,11 @@ const VideoLibraryScreen: React.FC = () => {
             />
             <View style={styles.content}>
                 {isEmpty ? (
-                    <View style={styles.emptyContainer}>
-                        <Text
-                            variant="h3"
-                            textAlign="center"
-                            color={COLORS.DARK_GREY}
-                        >
-                        No videos has been seen yet
-                        </Text>
-                    </View>
+                    <EmptyState
+                        icon="video"
+                        title="No videos yet"
+                        subtitle="Videos shared with you will appear here."
+                    />
                 ) : (
                     <ScrollView>
                         {diseaseVideo.length > 0 && (
@@ -189,11 +186,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: OFFSET.VERTICAL,
         borderBottomWidth: 1,
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     skeletonContainer: {
         paddingTop: OFFSET.VERTICAL,

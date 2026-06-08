@@ -15,6 +15,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets, EdgeInsets } from 'react-native-safe-area-context';
 // local dependencies
 import { config } from 'constants';
+import { useTheme } from 'hooks/useTheme';
 import { store, useAppDispatch } from 'store';
 import { useAppUpdateGate } from 'hooks/useAppUpdateGate';
 import { setBirdSoundEnabled } from 'store/slices/appSlice';
@@ -25,6 +26,7 @@ import { BoxHolder, MaintenanceHolder } from 'components/preloader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppInitialization } from 'hooks/useAppInitialization.ts';
 // import { FeedbackProvider } from 'features/feedback';
+import { WalkingSessionRunner } from 'components/WalkingSessionRunner';
 import { ForceUpdateScreen } from 'components/update/ForceUpdateScreen';
 import notificationService from 'services/notifications/notification.service';
 
@@ -82,6 +84,7 @@ function AppContent (): React.JSX.Element {
         onSoftCancel,
         isSoftVisible,
     } = useAppUpdateGate();
+    const theme = useTheme();
     const insets = useSafeAreaInsets();
     const styles = createStyles(insets);
 
@@ -100,8 +103,9 @@ function AppContent (): React.JSX.Element {
     // if (!isHealthy) { return <MaintenanceHolder active />; }
     if (forcePolicy) { return <ForceUpdateScreen policy={forcePolicy} onUpdate={openStore} />; }
     return (
-        <SafeAreaView style={[styles.safeArea, styles.flex]}>
+        <SafeAreaView style={[styles.safeArea, styles.flex, { backgroundColor: theme.colors.background }]}>
             {/* <FeedbackProvider> */}
+            <WalkingSessionRunner />
             <RootNavigator />
             <SoftUpdateModal
                 policy={softPolicy}

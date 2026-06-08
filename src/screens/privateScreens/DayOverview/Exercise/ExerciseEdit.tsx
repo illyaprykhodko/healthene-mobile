@@ -1,6 +1,7 @@
 // outsource dependencies
 import { View, StyleSheet } from 'react-native';
 import React, { useMemo, useCallback } from 'react';
+import { useRoute, useNavigation } from '@react-navigation/native';
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -32,7 +33,9 @@ const FIELD_LABELS: Record<string, string> = {
     reps: 'Reps', hours: 'Hours', miles: 'Miles', steps: 'Steps', weight: 'Weight', seconds: 'Seconds', minutes: 'Minutes', velocity: 'Velocity', elevation: 'Elevation', resistance: 'Resistance',
 };
 
-export default function ExerciseEdit ({ route, navigation }: any) {
+export default function ExerciseEdit () {
+    const route = useRoute<any>();
+    const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
     const theme = useTheme();
     const { steps, originalSteps, disabled } = useAppSelector((state: any) => state.exercise || {});
@@ -69,8 +72,7 @@ export default function ExerciseEdit ({ route, navigation }: any) {
 
     const handleApply = useCallback((vals: Record<string, unknown>) => {
         const updatedSteps = (steps || []).map((s: any) =>
-            (s.id === itemId ? { ...s, ...vals, modified: true } : s)
-        );
+            (s.id === itemId ? { ...s, ...vals, modified: true } : s));
         dispatch(updateSteps({ steps: updatedSteps, selectedSteps: updatedSteps }));
 
         onApply?.({ ...step, ...vals, modified: true });
