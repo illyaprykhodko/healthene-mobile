@@ -40,7 +40,7 @@ import MeasurementChartScreen from '../MeasurementChartScreen';
 import WeightMeasurementScreen from '../WeightMeasurementScreen';
 import { ReplacementScreen, ReplaceItemsScreen } from './Replacement';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
-import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
+import { ExerciseCategories, ExerciseDetails, ExerciseEdit, WalkingActivity } from './Exercise';
 import {
     GamblingGiftCardDenominationsScreen,
     GamblingGiftCardConfirmationScreen,
@@ -89,16 +89,16 @@ const DayOverviewStack: React.FC = () => {
         <View style={[
             styles.customHeader,
             {
-                backgroundColor: theme.colors.primary,
+                backgroundColor: theme.colors.headerBg,
                 paddingTop: Platform.OS === 'android' ? insets.top + OFFSET.VERTICAL : insets.top
             }
         ]}>
             <View style={[styles.headerSide, styles.headerSideLeft]}>
-                <BackBtn onPress={() => headerProps.navigation.goBack()} color={theme.colors.white}/>
+                <BackBtn onPress={() => headerProps.navigation.goBack()} color={theme.colors.headerText}/>
             </View>
             {options?.title
                 ? <View style={styles.headerCenter}>
-                    <Text variant="h3" style={{ color: theme.colors.white }}>
+                    <Text variant="h3" style={{ color: theme.colors.headerText }}>
                         {options.title}
                     </Text>
                 </View>
@@ -198,6 +198,11 @@ const DayOverviewStack: React.FC = () => {
                 name="EditExercise"
                 component={ExerciseEdit}
                 options={{ title: 'Edit Exercise', header: renderCustomHeader() }}
+            />
+            <Stack.Screen
+                name="WalkingActivity"
+                component={WalkingActivity}
+                options={{ headerShown: false }}
             />
 
             <Stack.Screen

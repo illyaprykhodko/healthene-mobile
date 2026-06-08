@@ -246,6 +246,7 @@ const Item: React.FC = () => {
                                 styles.tabButton,
                                 isActive && styles.activeTabButton,
                                 { borderRightWidth: tabs.length === index + 1 ? 0 : 2 },
+                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceAlt },
                             ]}
                             onPress={() => setActiveTab(tab.value)}
                         >
@@ -323,7 +324,6 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.BLUE,
     },
     tabText: {
-        color: COLORS.BLACK,
         fontWeight: '500',
         fontSize: 15.5,
     },

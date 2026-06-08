@@ -6,9 +6,12 @@ import { Alert, Image, Platform, StyleSheet, TouchableOpacity, View } from 'reac
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
+import { useAppSelector } from 'store';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { BranchBird } from 'animation/BranchBird.tsx';
 import { RootStackParamList } from 'services/navigation';
+import { selectBirdSoundEnabled } from 'store/slices/appSlice';
 import { useClaimGiftCardMutation } from 'store/api/giftCardApi';
 
 type Navigation = NativeStackNavigationProp<RootStackParamList>;
@@ -17,6 +20,7 @@ type RouteProps = RouteProp<RootStackParamList, typeof ROUTES.GAMBLING_GIFT_CARD
 const GiftCardConfirmation: React.FC = () => {
     const navigation = useNavigation<Navigation>();
     const route = useRoute<RouteProps>();
+    const birdSoundEnabled = useAppSelector(selectBirdSoundEnabled);
     const { brandCode, brandName, imageUrl, priceInCents } = route.params;
 
     const [claimGiftCard, { isLoading }] = useClaimGiftCardMutation();
@@ -38,6 +42,7 @@ const GiftCardConfirmation: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
+            <BranchBird muted={!birdSoundEnabled} />
             <View style={styles.header}>
                 <View style={styles.logoContainer}>
                     {imageUrl ? (

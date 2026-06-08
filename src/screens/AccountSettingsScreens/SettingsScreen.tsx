@@ -14,6 +14,7 @@ import { RootStackParamList } from 'services/navigation';
 
 const ITEM = {
     ADDRESS: 'Address',
+    APPEARANCE: 'Appearance',
     NOTIFICATIONS: 'Notifications',
     FOOD_ALLERGIES: 'Food Allergies',
     FOOD_PREFERENCES: 'Food Preferences',
@@ -34,6 +35,7 @@ const SettingsScreen = () => {
         { title: ITEM.FOOD_PREFERENCES, navigate: () => navigation.navigate(ROUTES.FOOD_PREFERENCES) },
         { title: ITEM.FOOD_ALLERGIES, navigate: () => navigation.navigate(ROUTES.FOOD_ALLERGIES) },
         { title: ITEM.NOTIFICATIONS, navigate: () => navigation.navigate(ROUTES.NOTIFICATIONS) },
+        { title: ITEM.APPEARANCE, navigate: () => navigation.navigate(ROUTES.APPEARANCE_SETTINGS) },
         { title: ITEM.ANIMATION_SETTINGS, navigate: () => navigation.navigate(ROUTES.ANIMATION_SETTINGS) },
     ];
     return <View style={[styles.container, { backgroundColor: theme.colors.background }]}>

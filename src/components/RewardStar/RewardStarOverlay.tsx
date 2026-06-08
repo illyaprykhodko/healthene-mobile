@@ -1,4 +1,12 @@
 // outsource dependencies
+import React, {
+    memo,
+    useRef,
+    useMemo,
+    useEffect,
+    useCallback,
+    type RefObject,
+} from 'react';
 import {
     Text,
     View,
@@ -17,14 +25,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Polygon } from 'react-native-svg';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
-import React, {
-    memo,
-    useRef,
-    useMemo,
-    useEffect,
-    useCallback,
-    type RefObject,
-} from 'react';
 // local dependencies
 import { useAppSelector } from 'store';
 import { selectRewardStar } from 'store/slices/rewardStarSlice';

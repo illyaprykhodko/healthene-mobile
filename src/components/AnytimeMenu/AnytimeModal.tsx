@@ -1,23 +1,17 @@
 // outsource dependencies
-import React, { useState } from 'react';
-import {
-    View,
-    StyleSheet,
-    Dimensions,
-    ScrollView,
-    TouchableOpacity,
-} from 'react-native';
 import moment from 'moment';
+import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+
 // local dependencies
 import { Badge } from './Badge';
 import Text from 'components/Text';
-import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { AnytimeListItem } from './AnytimeListItem';
+import { BottomGlassModal } from 'components/BottomGlassModal';
 import { MeasurementInputModal } from './MeasurementInputModal';
 import {
     FoodIcon,
@@ -29,8 +23,6 @@ import {
 } from './AnytimeIcons';
 import { useUpdatePhaseItemMutation } from 'store/api/dayOverviewApi';
 import type { AnytimeItem, AnytimeModalProps, AnytimeMeasurementItem } from 'types/anytime';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const getIconComponent = (icon: string, size: number = 24) => {
     switch (icon) {
@@ -49,6 +41,14 @@ const getIconComponent = (icon: string, size: number = 24) => {
     }
 };
 
+// Backend contract for drinks in phase items is FOOD + substanceType DRINK.
+const toApiAnytimeItem = (item: AnytimeItem) => {
+    if (item.type === 'DRINK') {
+        return { ...item, type: 'FOOD', substanceType: 'DRINK' };
+    }
+    return item;
+};
+
 export const AnytimeModal: React.FC<AnytimeModalProps> = ({
     date,
     icon,
@@ -62,41 +62,21 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
     isFutureDate = false,
 }) => {
     const theme = useTheme();
-    const insets = useSafeAreaInsets();
     const navigation = useNavigation<any>();
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
     const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
 
     const pendingItems = items.filter(item =>
-        item.status === PHASE_ITEM_STATUS.PENDING || item.status === PHASE_ITEM_STATUS.INCOMPLETE
-    );
+        item.status === PHASE_ITEM_STATUS.PENDING || item.status === PHASE_ITEM_STATUS.INCOMPLETE);
     const completedItems = items.filter(item => item.status === PHASE_ITEM_STATUS.DONE);
-
-    const toApiAnytimeItem = (item: AnytimeItem) => {
-        // Backend contract for drinks in phase items is FOOD + substanceType DRINK.
-        if (item.type === 'DRINK') {
-            return {
-                ...item,
-                type: 'FOOD',
-                substanceType: 'DRINK',
-            };
-        }
-        return item;
-    };
 
     const handleUpdateItem = async (data: AnytimeItem) => {
         if (disabled || !data.phaseId) { return; }
-        // const preparedData = {
-        //     ...data,
-        //     type: data.type === 'DRINK' ? 'FOOD' : data.type,
-        // };
         try {
-            const payload: any = toApiAnytimeItem(data);
             await updatePhaseItem({
                 id: data.id,
-                // data: preparedData,
-                data: payload,
                 phaseId: data.phaseId,
+                data: toApiAnytimeItem(data) as any,
             }).unwrap();
         } catch (error) {
             console.error('Failed to update anytime item:', error);
@@ -117,63 +97,31 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
         }
     };
 
-    const closeMeasurementModal = () => {
-        setSelectedMeasurement(null);
-    };
+    const closeMeasurementModal = () => setSelectedMeasurement(null);
 
-    // Calculate modal style based on mode
-    const getModalStyle = () => {
-        const baseStyle = styles.modal;
-        
-        if (fullScreen) {
-            return [baseStyle, { paddingBottom: insets.bottom }];
-            // Align to below DayOverview header (menu + TimeSwitcher), full height to bottom
-            // return [baseStyle, { top: headerHeight }];
-        }
-        
-        // Partial mode
-        const calculatedMaxHeight = maxHeight || SCREEN_HEIGHT * 0.8;
-        return [
-            baseStyle,
-            {
-                bottom: 0,
-                top: undefined,
-                borderTopWidth: 1,
-                maxHeight: calculatedMaxHeight,
-                borderTopColor: theme.colors.border,
-            }
-        ];
-    };
-
-    if (!visible) { return null; }
+    const isMeasurementList = icon === 'ruler';
+    const isExerciseStub = icon === 'running';
 
     return (
-        <View style={styles.overlay}>
-            <TouchableOpacity
-                onPress={onClose}
-                activeOpacity={1}
-                style={StyleSheet.absoluteFill}
-            />
-      
-            <View style={[getModalStyle(), { backgroundColor: theme.colors.surface }]}>
-                <View style={[styles.header, { backgroundColor: '#E0EBF7', borderBottomColor: theme.colors.border }]}>
+        <>
+            <BottomGlassModal
+                visible={visible}
+                onClose={onClose}
+                maxHeight={maxHeight}
+                fullScreen={fullScreen}
+            >
+                <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
                     <View style={styles.headerLeft}>
-                        {/* <View style={styles.badgeContainer}> */}
                         <Badge count={pendingItems.length} bgColor={theme.colors.aqua} showZero>
                             {getIconComponent(icon, 24)}
                         </Badge>
-                        {/* </View> */}
                         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
                             {title}
                         </Text>
                     </View>
-          
-                    <TouchableOpacity
-                        onPress={onClose}
-                        disabled={disabled}
-                        style={styles.closeButton}
-                    >
-                        <CloseIcon size={24} color="#181818" />
+
+                    <TouchableOpacity onPress={onClose} disabled={disabled} style={styles.closeButton}>
+                        <CloseIcon size={24} color={theme.colors.text} />
                     </TouchableOpacity>
                 </View>
 
@@ -202,6 +150,8 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                             ))}
                         </ScrollView>
                     ) : icon === 'running' ? (
+                <View style={styles.content}>
+                    {isExerciseStub ? (
                         <View style={styles.emptyState}>
                             <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
                                 Exercise functionality will be implemented separately
@@ -209,7 +159,9 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                         </View>
                     ) : items.length === 0 ? (
                         <View style={styles.emptyState}>
-                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No items found</Text>
+                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                                No items found
+                            </Text>
                         </View>
                     ) : (
                         <ScrollView style={styles.scrollView}>
@@ -220,6 +172,7 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                                     key={`pending-${item.id}`}
                                     isFutureDate={isFutureDate}
                                     onUpdateItem={handleUpdateItem}
+                                    onPress={isMeasurementList ? () => handleMeasurementPress(item) : undefined}
                                 />
                             ))}
                             {completedItems.map(item => (
@@ -229,55 +182,37 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                                     isFutureDate={isFutureDate}
                                     key={`completed-${item.id}`}
                                     onUpdateItem={handleUpdateItem}
+                                    onPress={isMeasurementList ? () => handleMeasurementPress(item) : undefined}
                                 />
                             ))}
                         </ScrollView>
                     )}
                 </View>
-            </View>
+            </BottomGlassModal>
+
+            {/* Nested measurement modal — sibling so it stacks above BottomGlassModal
+                in its own native <Modal> layer. */}
             {selectedMeasurement && (
                 <MeasurementInputModal
+                    disabled={disabled}
                     item={selectedMeasurement}
                     visible={!!selectedMeasurement}
                     onClose={closeMeasurementModal}
                     disabled={disabled || isFutureDate}
                 />
             )}
-        </View>
+        </>
     );
 };
 
 const styles = StyleSheet.create({
-    overlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: 999,
-    },
-    modal: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        backgroundColor: COLORS.WHITE,
-        elevation: 7,
-        shadowColor: COLORS.BLACK,
-        shadowOffset: {
-            width: 0,
-            height: -2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-    },
     header: {
         paddingVertical: 20,
         borderBottomWidth: 1,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 24,
-        backgroundColor: '#E0EBF7',
         justifyContent: 'space-between',
-        borderBottomColor: COLORS.LIGHTER_GREY,
     },
     headerLeft: {
         flexDirection: 'row',
@@ -287,11 +222,9 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         marginLeft: 16,
-        color: '#181818',
         fontWeight: '700',
     },
     closeButton: {
-        // padding: 8,
         borderRadius: 20,
     },
     content: {
@@ -308,7 +241,6 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#808080',
         textAlign: 'center',
     },
     opacityFuture: {

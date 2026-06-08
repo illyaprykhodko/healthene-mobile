@@ -26,6 +26,11 @@ export interface ThemeColors {
   background: string;
   surface: string;
   surfaceAlt?: string;
+  // Navigation header surface + on-header foreground (brand teal in light, dark surface in dark)
+  headerBg?: string;
+  headerText?: string;
+  // Skeleton/shimmer placeholder fill (subtle elevated tone on dark)
+  skeleton?: string;
   text: string;
   textSecondary: string;
   border: string;

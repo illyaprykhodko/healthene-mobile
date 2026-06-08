@@ -5,7 +5,7 @@ import { Modal, StyleSheet, TouchableOpacity, View, Platform, Image } from 'reac
 // local dependencies
 import Text from 'components/Text';
 import { OFFSET } from 'constants/offset';
-import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
 import DefImage from 'components/DefImage';
 
 interface ConfirmationReplaceModalProps {
@@ -23,6 +23,7 @@ const ConfirmationReplaceModal: React.FC<ConfirmationReplaceModalProps> = memo((
     onClose,
     onApply,
 }) => {
+    const theme = useTheme();
     const handleApply = useCallback(() => {
         onApply({ prevItem, nextItem });
         onClose();
@@ -49,26 +50,26 @@ const ConfirmationReplaceModal: React.FC<ConfirmationReplaceModalProps> = memo((
 
     return (
         <Modal visible={visible} transparent animationType="slide">
-            <View style={styles.wrapper}>
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle} textAlign="center">
+            <View style={[styles.wrapper, { backgroundColor: theme.colors.background }]}>
+                <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt }]}>
+                    <Text style={[styles.headerTitle, { color: theme.colors.text }]} textAlign="center">
                         Replacement Options
                     </Text>
                     <TouchableOpacity style={styles.close} onPress={onClose}>
-                        <Icon name="times" color={COLORS.BLACK} size={24} iconStyle="solid" />
+                        <Icon name="times" color={theme.colors.text} size={24} iconStyle="solid" />
                     </TouchableOpacity>
                 </View>
-                <View style={styles.container}>
+                <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
                     <View style={styles.logoWrap}>
                         {nextImage ? (
                             <DefImage src={nextImage} style={styles.logo} />
                         ) : null}
                         {nextName ? (
-                            <Text style={styles.itemName}>{nextName}</Text>
+                            <Text style={[styles.itemName, { color: theme.colors.text }]}>{nextName}</Text>
                         ) : null}
                     </View>
                     <View style={styles.contentWrapper}>
-                        <Text style={styles.title} textAlign="center">
+                        <Text style={[styles.title, { color: theme.colors.text }]} textAlign="center">
                             Replace {prevName || 'this item'} with {nextName || 'selected item'}?
                         </Text>
                         <View style={styles.buttonsRow}>
@@ -96,7 +97,6 @@ const styles = StyleSheet.create({
         top: Platform.OS === 'ios' ? 100 : 60,
         bottom: 0,
         elevation: 7,
-        backgroundColor: COLORS.WHITE,
         zIndex: 999,
         flex: 1,
         justifyContent: 'flex-start',
@@ -105,13 +105,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#E0EBF7',
         height: 56,
         position: 'relative',
     },
     headerTitle: {
         flex: 1,
-        color: '#181818',
         fontSize: 15,
         fontWeight: '500',
         textAlign: 'center',
@@ -127,7 +125,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL * 1.5,
         paddingTop: OFFSET.VERTICAL * 2,
         paddingBottom: OFFSET.VERTICAL * 2,
-        backgroundColor: COLORS.WHITE,
         justifyContent: 'space-between',
     },
     logoWrap: {
@@ -145,7 +142,6 @@ const styles = StyleSheet.create({
     itemName: {
         fontSize: 23,
         fontWeight: '600',
-        color: COLORS.BLACK,
     },
     contentWrapper: {
         flexGrow: 2,
@@ -156,7 +152,6 @@ const styles = StyleSheet.create({
         fontSize: 32,
         fontWeight: '500',
         marginBottom: 24,
-        color: COLORS.BLACK,
         textAlign: 'center',
         paddingHorizontal: OFFSET.HORIZONTAL * 1.5,
     },

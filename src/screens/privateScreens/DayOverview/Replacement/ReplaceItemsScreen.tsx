@@ -81,11 +81,13 @@ const ReplaceItemsScreen: React.FC = () => {
 
                             await updatePhase({ phaseId, items }).unwrap();
                             
-                            // Navigate back to Edit with success toast
-                            navigation.navigate(ROUTES.EDIT, {
+                            // popTo (not navigate): return to the existing Edit screen and drop every
+                            // replacement screen left above it in the stack, so Back from Edit goes to
+                            // Day Overview instead of back into the replacement catalog.
+                            navigation.popTo(ROUTES.EDIT, {
                                 phaseId,
                                 isToast: true,
-                            }, { pop: true });
+                            }, { merge: true });
                         } catch (error) {
                             console.error('Replace error:', error);
                         }
@@ -100,7 +102,7 @@ const ReplaceItemsScreen: React.FC = () => {
     }
     return (
         <Screen initialized style={styles.container}>
-            <View style={[styles.title, { backgroundColor: '#E0EBF7' }]}>
+            <View style={[styles.title, { backgroundColor: theme.colors.surfaceAlt }]}>
                 <Text variant="h3" textAlign="center" style={[styles.titleText, { color: theme.colors.text }]}>
                     Replacement options
                 </Text>
@@ -167,6 +169,7 @@ const ReplaceItemsScreen: React.FC = () => {
                 disabled={selectedIndex === null || isUpdating}
                 style={[
                     styles.replaceBtn,
+                    selectedIndex === null && { backgroundColor: theme.colors.muted },
                     selectedIndex !== null ? styles.replaceBtnActive : styles.replaceBtnDisabled,
                 ]}
             >

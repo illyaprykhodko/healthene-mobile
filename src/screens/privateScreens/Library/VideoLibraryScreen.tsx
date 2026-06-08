@@ -14,6 +14,7 @@ import { ROUTES } from 'constants/routes';
 import { VIDEO_LIBRARY } from 'types/video';
 import { Skeleton } from 'components/Skeleton';
 import StackHeader from 'components/StackHeader';
+import { EmptyState } from 'components/EmptyState';
 import {
     useGetFoodTreeQuery,
     useGetMedicalProblemsQuery,
@@ -111,6 +112,50 @@ const VideoLibraryScreen: React.FC = () => {
                             variant="h3"
                             textAlign="center"
                             color={COLORS.DARK_GREY}
+            {isEmpty ? (
+                <EmptyState
+                    icon="video"
+                    title="No videos yet"
+                    subtitle="Videos shared with you will appear here."
+                />
+            ) : (
+                <ScrollView>
+                    {diseaseVideo.length > 0 && (
+                        <TouchableOpacity
+                            style={[styles.item, { borderBottomColor: theme.colors.border }]}
+                            onPress={() => handleNavigateToCategory(VIDEO_LIBRARY.DISEASE, diseaseVideo)}
+                        >
+                            <Text variant="h4" style={{ color: theme.colors.text }}>
+                                {humanizeLibraryName(VIDEO_LIBRARY.DISEASE)}
+                            </Text>
+                            <Icon
+                                size={24}
+                                iconStyle="solid"
+                                color={COLORS.GREY}
+                                name="chevron-right"
+                            />
+                        </TouchableOpacity>
+                    )}
+                    {foodTree.length > 0 && (
+                        <TouchableOpacity
+                            style={[styles.item, { borderBottomColor: theme.colors.border }]}
+                            onPress={() => handleNavigateToCategory(VIDEO_LIBRARY.FOOD, foodTree)}
+                        >
+                            <Text variant="h4" style={{ color: theme.colors.text }}>
+                                {humanizeLibraryName(VIDEO_LIBRARY.FOOD)}
+                            </Text>
+                            <Icon
+                                size={24}
+                                iconStyle="solid"
+                                color={COLORS.GREY}
+                                name="chevron-right"
+                            />
+                        </TouchableOpacity>
+                    )}
+                    {otherVideo.length > 0 && (
+                        <TouchableOpacity
+                            style={[styles.item, { borderBottomColor: theme.colors.border }]}
+                            onPress={() => handleNavigateToCategory(VIDEO_LIBRARY.GENERAL, otherVideo)}
                         >
                         No videos has been seen yet
                         </Text>

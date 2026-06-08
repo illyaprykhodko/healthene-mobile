@@ -1,7 +1,8 @@
 // outsource dependencies
 import { useNavigation } from '@react-navigation/native';
-import { StyleSheet, View, SectionList, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, SectionList } from 'react-native';
 import React, { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -9,10 +10,13 @@ import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import { useTheme } from 'hooks/useTheme';
+import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
 import { Button } from 'components/Button';
 import { SHOPPING_STEP } from 'constants/spec';
 import { useAppDispatch, useAppSelector } from 'store';
+import { PressableScale } from 'components/PressableScale';
 import {
     setCurrentStep,
     toggleStockItem,
@@ -50,6 +54,7 @@ const ALL_CATEGORY: { name: string; id?: number | null } = { name: 'All' };
 const ADDITIONAL_CATEGORY_NAME = 'Additional';
 
 const StockList: React.FC = () => {
+    const theme = useTheme();
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
 
@@ -159,7 +164,7 @@ const StockList: React.FC = () => {
 
     const disabled = isLoading || isUpdating;
 
-    const renderItem = useCallback(({ item }: { item: StockItem }) => {
+    const renderItem = useCallback(({ item, index }: { item: StockItem; index: number }) => {
         const isChecked = checkedItems.includes(item.id);
 
         // Convert weight
@@ -172,49 +177,65 @@ const StockList: React.FC = () => {
         }
 
         return (
-            <TouchableOpacity
-                disabled={disabled}
-                style={styles.itemContainer}
-                onPress={() => handleToggleItem(item)}
+            <Animated.View
+                exiting={FadeOut.duration(220)}
+                layout={LinearTransition.springify().damping(20)}
+                entering={FadeInDown.delay(Math.min(index, 10) * 80).springify().mass(1.2).damping(30)}
             >
-                <DefImage
-                    src={item.food?.coverImage?.url}
-                    style={isChecked ? { ...styles.image, ...styles.imageChecked } : styles.image}
-                />
-                <View style={styles.textContainer}>
-                    <Text
-                        variant="h5"
-                        style={isChecked ? styles.textDecoration : undefined}
-                    >
-                        {item.food?.name}
-                    </Text>
-                    <Text
-                        variant="h6"
-                        color={COLORS.GREY}
-                        style={isChecked ? styles.textDecoration : undefined}
-                    >
-                        {convertedWeight} {unit}
-                    </Text>
-                </View>
-                <View style={[styles.checkbox, !isChecked && styles.checkboxUnchecked]}>
-                    {isChecked && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-            </TouchableOpacity>
+                <PressableScale
+                    scale={1}
+                    haptic="success"
+                    disabled={disabled}
+                    style={styles.itemContainer}
+                    onPress={() => handleToggleItem(item)}
+                >
+                    <DefImage
+                        src={item.food?.coverImage?.url}
+                        style={isChecked ? { ...styles.image, ...styles.imageChecked } : styles.image}
+                    />
+                    <View style={styles.textContainer}>
+                        <Text
+                            variant="h5"
+                            style={isChecked ? styles.textDecoration : undefined}
+                        >
+                            {item.food?.name}
+                        </Text>
+                        <Text
+                            variant="h6"
+                            color={COLORS.GREY}
+                            style={isChecked ? styles.textDecoration : undefined}
+                        >
+                            {convertedWeight} {unit}
+                        </Text>
+                    </View>
+                    {/* Visual-only checkbox — pointerEvents=none so the row PressableScale owns the tap. */}
+                    <View pointerEvents="none" style={styles.checkboxWrap}>
+                        <Checkbox
+                            editable={false}
+                            value={isChecked}
+                            onChange={() => {}}
+                        />
+                    </View>
+                </PressableScale>
+            </Animated.View>
         );
     }, [checkedItems, disabled, handleToggleItem]);
 
     const renderSectionHeader = useCallback(({ section }: { section: GroupedSection }) => (
-        <View style={isAllCategory ? styles.sectionMuted : styles.section}>
-            <Text variant="h3" style={styles.sectionTitle}>
+        <View style={[
+            isAllCategory ? styles.sectionMuted : styles.section,
+            { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border },
+        ]}>
+            <Text variant="h3" style={styles.sectionTitle} color={theme.colors.primary}>
                 {isAllCategory ? section.title : `Select all ${section.title} You Need`}
             </Text>
         </View>
-    ), [isAllCategory]);
+    ), [isAllCategory, theme.colors]);
     const renderListHeader = useCallback(() => (
-        <View style={styles.section}>
-            <Text variant="h3" style={styles.sectionTitle}>Select all Produce You Need</Text>
+        <View style={[styles.section, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
+            <Text variant="h3" style={styles.sectionTitle} color={theme.colors.primary}>Select all Produce You Need</Text>
         </View>
-    ), [isAllCategory]);
+    ), [theme.colors]);
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
@@ -335,25 +356,10 @@ const styles = StyleSheet.create({
         textDecorationStyle: 'solid',
         textDecorationLine: 'line-through',
     },
-    checkbox: {
-        width: 27,
-        height: 27,
-        borderRadius: 4,
-        backgroundColor: COLORS.GREEN,
+    // Visual checkbox is now `<Checkbox>` (FA5 icon). This wrapper just reserves space + right alignment.
+    checkboxWrap: {
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    checkboxUnchecked: {
-        backgroundColor: COLORS.WHITE,
-        // backgroundColor: COLORS.GREEN,
-        borderWidth: 2,
-        borderColor: COLORS.GREY,
-    },
-    checkmark: {
-        color: COLORS.WHITE,
-        fontWeight: 'bold',
-        fontSize: 20,
-        // alignSelf: 'center',
     },
     buttonControl: {
         borderTopWidth: 1,

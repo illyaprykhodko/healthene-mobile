@@ -11,6 +11,7 @@ import Text from 'components/Text';
 import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
 import { TAG_TYPE } from 'constants/spec';
+import { useTheme } from 'hooks/useTheme';
 import DefImage from 'components/DefImage';
 import { PhaseItem, Ingredient } from 'types/overview';
 import ApproveButtons from 'components/ApproveButtons';
@@ -106,7 +107,7 @@ const Ingredients: React.FC<IngredientsProps> = ({ item, disabled }) => {
     if (!recipe || !ingredients.length) {
         return (
             <View style={styles.emptyContainer}>
-                <Text textAlign="center" style={{ color: COLORS.GREY, fontSize: 16 }}>
+                <Text textAlign="center" style={{ color: theme.colors.textSecondary, fontSize: 16 }}>
                     No ingredients information available
                 </Text>
             </View>
@@ -116,7 +117,7 @@ const Ingredients: React.FC<IngredientsProps> = ({ item, disabled }) => {
     if (isPatientRecipe) {
         return (
             <View style={styles.container}>
-                <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: COLORS.BLACK }]}>
+                <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: theme.colors.text }]}>
                     {recipe.name}
                 </Text>
 
@@ -126,7 +127,7 @@ const Ingredients: React.FC<IngredientsProps> = ({ item, disabled }) => {
                     </Text>
                 </View>
 
-                <Text style={[styles.subtitle, { fontSize: 18, color: COLORS.BLACK }]}>Ingredients:</Text>
+                <Text style={[styles.subtitle, { fontSize: 18, color: theme.colors.text }]}>Ingredients:</Text>
 
                 <ScrollView contentContainerStyle={styles.scroller}>
                     {localIngredients.length === 0 ? (
@@ -159,7 +160,7 @@ const Ingredients: React.FC<IngredientsProps> = ({ item, disabled }) => {
                                 </TouchableOpacity>
                             )}
                             renderItem={({ item: ing }) => (
-                                <View style={styles.listItemWrapper}>
+                                <View style={[styles.listItemWrapper, { backgroundColor: theme.colors.background }]}>
                                     <View style={styles.listItem}>
                                         <View style={styles.main}>
                                             <TouchableOpacity
@@ -175,7 +176,7 @@ const Ingredients: React.FC<IngredientsProps> = ({ item, disabled }) => {
                                                         <Text
                                                             variant="h6"
                                                             numberOfLines={2}
-                                                            style={[styles.offset, { color: COLORS.BLACK, fontSize: 14 }]}
+                                                            style={[styles.offset, { color: theme.colors.text, fontSize: 14 }]}
                                                         >
                                                             {prepareIngredientNameWithUnit({
                                                                 ingredient: ing,
@@ -184,13 +185,13 @@ const Ingredients: React.FC<IngredientsProps> = ({ item, disabled }) => {
                                                             })}
                                                         </Text>
                                                         {ing?.modified && (
-                                                            <Text style={[styles.offset, { fontSize: 12, color: COLORS.GREY }]}>
+                                                            <Text style={[styles.offset, { fontSize: 12, color: theme.colors.textSecondary }]}>
                                                                 edited by me
                                                             </Text>
                                                         )}
                                                     </View>
                                                     <View style={styles.checkboxContainer}>
-                                                        <Icon iconStyle="solid" name="chevron-right" color={COLORS.DARK_GREY} size={14} />
+                                                        <Icon iconStyle="solid" name="chevron-right" color={theme.colors.textSecondary} size={14} />
                                                     </View>
                                                 </View>
                                             </TouchableOpacity>
@@ -216,8 +217,8 @@ const Ingredients: React.FC<IngredientsProps> = ({ item, disabled }) => {
     }
 
     return (
-        <ScrollView style={[styles.container, disabled && styles.disabledOpacity]}>
-            <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: COLORS.BLACK }]}>
+        <ScrollView style={styles.container}>
+            <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: theme.colors.text }]}>
                 {recipe.name}
             </Text>
 
@@ -227,7 +228,7 @@ const Ingredients: React.FC<IngredientsProps> = ({ item, disabled }) => {
                 </Text>
             </View>
 
-            <Text style={[styles.subtitle, { fontSize: 18, color: COLORS.BLACK }]}>Ingredients:</Text>
+            <Text style={[styles.subtitle, { fontSize: 18, color: theme.colors.text }]}>Ingredients:</Text>
 
             <FlatList
                 scrollEnabled={false}
@@ -297,7 +298,6 @@ const styles = StyleSheet.create({
     },
     // For editable ingredients (patient recipes)
     listItemWrapper: {
-        backgroundColor: COLORS.WHITE,
         borderRightWidth: 7,
         borderRightColor: '#8EF9F3',
     },
@@ -352,13 +352,11 @@ const styles = StyleSheet.create({
         lineHeight: 26,
         paddingRight: 5,
         paddingLeft: OFFSET.HORIZONTAL,
-        color: COLORS.BLACK,
     },
     ingredientText: {
         lineHeight: 24,
         flex: 1,
         paddingRight: OFFSET.HORIZONTAL,
-        color: COLORS.BLACK,
     },
     disabledOpacity: {
         opacity: 0.4,

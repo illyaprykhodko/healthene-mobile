@@ -55,6 +55,7 @@ export const ERROR_MESSAGES = {
 export const THEME = {
     DARK: 'dark',
     LIGHT: 'light',
+    SYSTEM: 'system',
 } as const;
 
 export const THEME_PREFERENCE_KEY = 'theme_preference';

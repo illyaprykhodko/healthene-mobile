@@ -87,14 +87,16 @@ export default function ExerciseDetails () {
     //             ? resistanceData
     //             : fallbackData;
     
-    const isLoading = useMemo(() => (exercise?.type === ExerciseType.STRETCHING
-        ? stretchingLoading
-        : exercise?.type === ExerciseType.AEROBIC
-            ? aerobicLoading
-            : exercise?.type === ExerciseType.RESISTANCE
-                ? resistanceLoading
-                : fallbackLoading),
-    [exercise?.type, stretchingLoading, aerobicLoading, resistanceLoading, fallbackLoading]);
+    const isLoading = useMemo(
+        () => (exercise?.type === ExerciseType.STRETCHING
+            ? stretchingLoading
+            : exercise?.type === ExerciseType.AEROBIC
+                ? aerobicLoading
+                : exercise?.type === ExerciseType.RESISTANCE
+                    ? resistanceLoading
+                    : fallbackLoading),
+        [exercise?.type, stretchingLoading, aerobicLoading, resistanceLoading, fallbackLoading]
+    );
     // const isLoading = exercise?.type === ExerciseType.STRETCHING
     //     ? stretchingLoading
     //     : exercise?.type === ExerciseType.AEROBIC
@@ -253,8 +255,7 @@ export default function ExerciseDetails () {
     // Step management functions
     const updateStepCallback = useCallback((stepId: string | number, vals: any) => {
         const updatedSteps = (memoizedSteps || [])?.map((step: any) =>
-            (step.id === stepId ? { ...step, ...vals, modified: true } : step)
-        );
+            (step.id === stepId ? { ...step, ...vals, modified: true } : step));
         dispatch(updateSteps({
             isDirty: true,
             steps: updatedSteps,
@@ -264,8 +265,7 @@ export default function ExerciseDetails () {
 
     const completeStep = useCallback((stepId: string | number) => {
         const updatedSteps = (memoizedSteps || [])?.map((step: any) =>
-            (step.id === stepId ? { ...step, completed: !step.completed } : step)
-        );
+            (step.id === stepId ? { ...step, completed: !step.completed } : step));
         dispatch(updateSteps({
             isDirty: true,
             steps: updatedSteps,
@@ -283,7 +283,7 @@ export default function ExerciseDetails () {
                         key={tab.key}
                         style={[
                             styles.tabButton,
-                            { backgroundColor: theme.colors.lightGrey },
+                            { backgroundColor: theme.colors.surfaceAlt },
                             isActive && [styles.activeTabButton, { backgroundColor: theme.colors.info }],
                             { borderRightWidth: TABS.length === index + 1 ? 0 : 2, borderRightColor: theme.colors.primary },
                         ]}
@@ -449,9 +449,13 @@ export default function ExerciseDetails () {
                 <Text textAlign="center" style={[styles.name, { color: theme.colors.text }]}>
                     {title}
                 </Text>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <IconButton iconStyle="solid" icon="times" size={24} color={theme.colors.text} />
-                </TouchableOpacity>
+                <IconButton
+                    size={24}
+                    icon="times"
+                    iconStyle="solid"
+                    color={theme.colors.text}
+                    onPress={() => navigation.goBack()}
+                />
             </View>
             <ScrollView>
                 <View style={styles.tabContent}>
@@ -710,7 +714,7 @@ const styles = StyleSheet.create({
 });
 
 const renderNode = ({ node, parent, defaultRenderer, index }: any) => {
-    if (node?.data === '\n') { return <View />; }
+    if (node?.data === '\n') { return <View key={`ws-${index}`} />; }
     if (node?.name === 'li') {
         const flattenText = (children: any[] = []): string => children.map(child => {
             if (!child) { return ''; }

@@ -4,18 +4,22 @@ import Animated, {
     Easing,
     withDelay,
     withTiming,
+    interpolate,
     withSequence,
+    Extrapolation,
     useSharedValue,
     useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
+import { GlassSurface } from 'components/GlassSurface';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import FeatherIcon from '@react-native-vector-icons/feather';
+import { DayAdherenceCard } from 'components/DayAdherenceCard';
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, Platform, ScrollView } from 'react-native';
 
 // local dependencies
@@ -41,6 +45,7 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { COLORS } from 'constants/colors';
 import { filters } from 'services/filter';
+import { useHaptic } from 'hooks/useHaptic';
 import { Highlight } from 'components/Highlight';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppDispatch, useAppSelector } from 'store';
@@ -61,6 +66,32 @@ const ICON_MARGIN = 10;
 const TIMELINE_WIDTH = 50;
 const CONNECTOR_WIDTH = 1;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Custom backdrop for the calendar BottomSheet. Replaces gorhom's hardcoded black
+// fade with a frosted-glass overlay that animates in lockstep with the sheet's index.
+const GlassBackdrop: React.FC<{ animatedIndex: { value: number }; onClose: () => void }> = ({
+    animatedIndex,
+    onClose,
+}) => {
+    const animatedStyle = useAnimatedStyle(() => ({
+        opacity: interpolate(animatedIndex.value, [-1, 0], [0, 1], Extrapolation.CLAMP),
+    }));
+    return (
+        <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
+            <GlassSurface
+                tint="dark"
+                intensity={5}
+                pointerEvents="none"
+                style={StyleSheet.absoluteFill}
+            />
+            <TouchableOpacity
+                onPress={onClose}
+                activeOpacity={1}
+                style={StyleSheet.absoluteFill}
+            />
+        </Animated.View>
+    );
+};
 
 const TimelineSVG: React.FC<{ phases: PhaseItem[]; incompleteDay?: boolean }> = ({ phases, incompleteDay = false }) => {
     const theme = useTheme();
@@ -587,6 +618,13 @@ const styles = StyleSheet.create({
     opacityFuture: {
         opacity: 0.4,
     },
+    glassBar: {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        position: 'absolute',
+        // paddingTop: 10,
+    },
 });
 
 const getIconColorByType = (type: AddPhaseItemData['type']) => {
@@ -613,6 +651,7 @@ const getIconColorByType = (type: AddPhaseItemData['type']) => {
 
 export const Overview: React.FC = () => {
     const theme = useTheme();
+    const haptics = useHaptic();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const dispatch = useAppDispatch();
     const bottomSheetRef = useRef<BottomSheet>(null);
@@ -646,6 +685,7 @@ export const Overview: React.FC = () => {
     }, [dispatch]);
 
     const handleDayPress = useCallback((day: { dateString: string }) => {
+        haptics.selection();
         const nextDate = day.dateString;
         const isCurrent = moment(nextDate).isSame(moment(), 'day');
         const isFuture = moment(nextDate).isAfter(moment(), 'day');
@@ -659,15 +699,13 @@ export const Overview: React.FC = () => {
             calendarDays: { ...calendarDays, [nextDate]: { selected: true } },
         }));
         bottomSheetRef.current?.close();
-    }, [dispatch, calendarDays]);
+    }, [dispatch, calendarDays, haptics]);
 
     const renderBackdrop = useCallback(
         (props: any) => (
-            <BottomSheetBackdrop
-                {...props}
-                disappearsOnIndex={-1}
-                appearsOnIndex={0}
-                opacity={0.5}
+            <GlassBackdrop
+                animatedIndex={props.animatedIndex}
+                onClose={() => bottomSheetRef.current?.close()}
             />
         ),
         []
@@ -967,55 +1005,43 @@ export const Overview: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            <View style={styles.container}>
-                <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                    <View style={[styles.content, isFutureDate && styles.opacityFuture]}>
-                        {/* Health Question Section */}
-                        <HealthQuestion date={currentDate} isFutureDate={Boolean(isFutureDate)} />
+            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                <View style={styles.content}>
+                    {/* Health Question Section */}
+                    <HealthQuestion date={currentDate} isFutureDate={isFutureDateCheck} />
 
-                        <Text style={styles.title}>My Daily Plan</Text>
+                    {/* <DayAdherenceCard date={currentDate} /> */}
 
-                        <View style={styles.timelineContainer}>
-                            <TimelineSVG phases={phases} incompleteDay={incompleteDay} />
-                            <FlatList
-                                data={phases}
-                                scrollEnabled={false}
-                                style={{ marginBottom: 35 }}
-                                keyExtractor={item => String(item.id)}
-                                renderItem={({ item }) => {
-                                    const { bg, fg, name } = getIconColorByType(item.type);
-                                    const isMeal = isMealPhase(item.type);
-                                    const iconMarginLeft = isMeal
-                                        ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
-                                        : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
+                    <Text style={styles.title}>My Daily Plan</Text>
 
-                                    const isIncomplete = item.status === PHASE_ITEM_STATUS.INCOMPLETE;
-                                    const isDone = item.status === PHASE_ITEM_STATUS.DONE;
-                                    const shouldHighlight = incompleteDay && isIncomplete;
-                                    const showArrowIcon = shouldHighlight && (item.type === 'MEAL' || item.type === 'ADDED_BY_PATIENT');
+                    <View style={styles.timelineContainer}>
+                        <TimelineSVG phases={phases} incompleteDay={incompleteDay} />
+                        <FlatList
+                            data={phases}
+                            scrollEnabled={false}
+                            style={{ marginBottom: 35 }}
+                            keyExtractor={item => String(item.id)}
+                            renderItem={({ item }) => {
+                                const { bg, fg, name } = getIconColorByType(item.type);
+                                const isMeal = isMealPhase(item.type);
+                                const iconMarginLeft = isMeal
+                                    ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
+                                    : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
 
-                                    const displayTitle = item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title);
+                                const isIncomplete = item.status === PHASE_ITEM_STATUS.INCOMPLETE;
+                                const isDone = item.status === PHASE_ITEM_STATUS.DONE;
+                                const shouldHighlight = incompleteDay && isIncomplete;
+                                const showArrowIcon = shouldHighlight && (item.type === 'MEAL' || item.type === 'ADDED_BY_PATIENT');
 
-                                    const renderStatusIndicator = () => {
-                                        if (isDone) {
-                                            return (
-                                                <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
-                                            );
-                                        }
-                                        if (incompleteDay && isIncomplete) {
-                                            return (
-                                                <FeatherIcon name="info" size={18} color={COLORS.BROWN} />
-                                            );
-                                        }
-                                        return null;
-                                    };
+                                const displayTitle = item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title);
 
-                                    // Status indicator left position - exactly where the dot would be
-                                    // TIMELINE_WIDTH/2 = 25 for MEAL, offsetLineX = 105 for non-MEAL
-                                    // Subtract half of icon size (18/2 = 9) to center it
-                                    const statusLeftPosition = isMeal ? 16 : 96;
-
-                                    if (shouldHighlight) {
+                                const renderStatusIndicator = () => {
+                                    if (isDone) {
+                                        return (
+                                            <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
+                                        );
+                                    }
+                                    if (incompleteDay && isIncomplete) {
                                         return (
                                             <TouchableOpacity
                                                 key={String(item.id)}
@@ -1083,10 +1109,16 @@ export const Overview: React.FC = () => {
                             />
                         </View>
                     </View>
-                </ScrollView>
-
-                <AnytimeMenu
-                    date={currentDate}
+                </View>
+            </ScrollView>
+            <AnytimeMenu
+                date={currentDate}
+                disabled={isFetching || isLoading}
+            />
+            {!showCalendar && data?.id && !isFutureDateCheck && (
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={handleAddButtonPress}
                     disabled={isFetching || isLoading}
                 />
 
@@ -1175,7 +1207,7 @@ export const Overview: React.FC = () => {
                             <Text
                                 variant="h3"
                                 textAlign="center"
-                                style={styles.calendarDayText}
+                                style={[styles.calendarDayText, { color: theme.colors.secondary }]}
                             >
                                 {moment(currentDate).format('DD')}
                             </Text>
