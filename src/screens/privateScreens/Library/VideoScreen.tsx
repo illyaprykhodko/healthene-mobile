@@ -12,7 +12,6 @@ import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import YoutubeVideo from 'components/YoutubeVideo';
 import PrivateVideo from 'components/PrivateVideo';
-import StackHeader from 'components/StackHeader';
 import { VIDEO_LIBRARY_TYPE } from 'constants/spec';
 import { navigate as rootNavigate } from 'services/navigation';
 import {
@@ -20,8 +19,8 @@ import {
     useMarkOverviewVideoWatchedMutation,
     useMarkHealthProfileVideoWatchedMutation,
 } from 'store/api/videoApi';
-import type { Attachment } from 'types/video';
 
+import type { Attachment } from 'types/video';
 interface VideoScreenParams {
     id?: number;
     video: Attachment;
@@ -102,11 +101,11 @@ const VideoScreen: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            <StackHeader
-                title="Video"
-                onBack={handleClose}
-                onOpenDrawer={() => navigation.openDrawer?.()}
-            />
+            {/*<StackHeader*/}
+            {/*    title="Video"*/}
+            {/*    onBack={handleClose}*/}
+            {/*    onOpenDrawer={() => navigation.openDrawer?.()}*/}
+            {/*/>*/}
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {video?.title && (
                     <Text

@@ -3,6 +3,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 
 // local dependencies
 import { baseQuery } from './baseApi';
+import { dayOverviewApi } from './dayOverviewApi';
 import {
     DiseaseQuestion,
     GeneralQuestion,
@@ -30,7 +31,7 @@ export interface LibraryElement {
 export const questionApi = createApi({
     baseQuery,
     reducerPath: 'questionApi',
-    tagTypes: ['Questions', 'DiseaseQuestions', 'LibraryElements', 'DayOverview'],
+    tagTypes: ['Questions', 'DiseaseQuestions', 'LibraryElements'],
     endpoints: builder => ({
         // Get disease questions by date (displayed in Day Overview)
         getDiseaseQuestions: builder.query<QuestionCategory[], string>({
@@ -67,7 +68,15 @@ export const questionApi = createApi({
                 method: 'PUT',
                 url: '/patient-service/patient/me/answer-question',
             }),
-            invalidatesTags: ['Questions', 'DayOverview', 'LibraryElements'],
+            invalidatesTags: ['Questions', 'LibraryElements'],
+            async onQueryStarted (_, { dispatch, queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    dispatch(dayOverviewApi.util.invalidateTags(['PhaseItems', 'DayOverview']));
+                } catch (_error) {
+                    // best-effort cross-slice invalidation; ignore answer errors here
+                }
+            },
         }),
 
         // Answer food category question
@@ -77,7 +86,15 @@ export const questionApi = createApi({
                 method: 'PUT',
                 url: '/patient-service/patient/me/answer-food-category-question',
             }),
-            invalidatesTags: ['Questions', 'DayOverview', 'LibraryElements'],
+            invalidatesTags: ['Questions', 'LibraryElements'],
+            async onQueryStarted (_, { dispatch, queryFulfilled }) {
+                try {
+                    await queryFulfilled;
+                    dispatch(dayOverviewApi.util.invalidateTags(['PhaseItems', 'DayOverview']));
+                } catch (_error) {
+                    // best-effort cross-slice invalidation; ignore answer errors here
+                }
+            },
         }),
 
         // Answer general tree question
