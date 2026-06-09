@@ -14,7 +14,7 @@ import Checkbox from 'components/Checkbox';
 import StackHeader from 'components/StackHeader';
 import ConfirmationAlert from 'components/ConfirmationAlert';
 import { TagType, CuisineTag, CuisineFrequency } from 'types/cuisineDistribution';
-import { useReviewAlert } from 'screens/privateScreens/CuisineDistribution/ReviewAlertContext';
+import { useReviewAlert } from 'components/ReviewAlertContext';
 import {
     useGetCuisineTagsQuery,
     useGetCuisineFrequencyQuery,

@@ -15,7 +15,7 @@ import Checkbox from 'components/Checkbox';
 import StackHeader from 'components/StackHeader';
 import { RootStackParamList } from 'services/navigation';
 import ConfirmationAlert from 'components/ConfirmationAlert';
-import { useReviewAlert } from 'screens/privateScreens/MealPreferences/ReviewAlertContext';
+import { useReviewAlert } from 'components/ReviewAlertContext';
 import {
     MealPreferenceType,
     MealTemplatePreference,

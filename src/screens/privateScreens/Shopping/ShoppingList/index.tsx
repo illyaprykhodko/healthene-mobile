@@ -131,8 +131,8 @@ const ShoppingList: React.FC = () => {
         itemType: separateRescueItems ? itemType : null,
         categories: activeCategoryIds,
         withExcluded: excluded,
-        page,
         size: 20,
+        page,
     });
 
     const [updateItem] = useUpdateShoppingItemMutation();

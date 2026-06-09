@@ -14,7 +14,7 @@ import StackHeader from 'components/StackHeader';
 import { RangeSlider } from 'components/RangeSlider';
 import ConfirmationAlert from 'components/ConfirmationAlert';
 import { TagType, CuisineFrequency } from 'types/cuisineDistribution';
-import { useReviewAlert } from 'screens/privateScreens/CuisineDistribution/ReviewAlertContext';
+import { useReviewAlert } from 'components/ReviewAlertContext';
 import {
     useGetCuisineFrequencyQuery,
     useUpdateCuisineFrequencyMutation,
