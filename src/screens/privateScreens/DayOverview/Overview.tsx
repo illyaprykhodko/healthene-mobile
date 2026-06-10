@@ -604,9 +604,10 @@ const styles = StyleSheet.create({
     },
     incompleteLabelContainer: {
         position: 'absolute',
+        marginRight: -10,
         bottom: 100,
+        zIndex: 0,
         right: 0,
-        marginRight: Platform.OS === 'ios' ? -10 : -20,
     },
     statusIndicator: {
         position: 'absolute',
@@ -1165,9 +1166,9 @@ export const Overview: React.FC = () => {
                         <Highlight color={COLORS.DARKER_PINK}>
                             <View style={styles.incompleteLabel}>
                                 <Text
-                                    style={styles.incompleteText}
-                                    color={COLORS.DARKENED_GRAY}
                                     textAlign="left"
+                                    color={COLORS.DARKENED_GRAY}
+                                    style={styles.incompleteText}
                                 >
                                 Please
                                 </Text>
