@@ -11,10 +11,10 @@ import {
     useMicrophonePermission,
 } from 'react-native-vision-camera';
 import Toast from 'react-native-toast-message';
-import { Platform, StyleSheet, View } from 'react-native';
-import ReactNativeBlobUtil from 'react-native-blob-util';
-import { createThumbnail } from 'react-native-create-thumbnail';
 import { useIsFocused } from '@react-navigation/native';
+import ReactNativeBlobUtil from 'react-native-blob-util';
+import { Platform, StyleSheet, View } from 'react-native';
+import { createThumbnail } from 'react-native-create-thumbnail';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 // local dependencies
@@ -180,9 +180,9 @@ const Camera = ({ cameraPosition = 'back', captureMode = 'photo', onCapture }: C
                     const finalPath = await ensureMp4Extension(filePath);
                     const thumbnailPath = await generateAndroidThumbnail(finalPath);
                     setResult({
+                        thumbnailPath,
                         type: 'video',
                         path: finalPath,
-                        thumbnailPath,
                         duration: Math.floor(elapsedMs / 1000),
                     });
                 },
@@ -225,9 +225,9 @@ const Camera = ({ cameraPosition = 'back', captureMode = 'photo', onCapture }: C
                 <RNCamera
                     ref={camera}
                     device={device}
+                    outputs={outputs}
                     isActive={isActive}
                     style={StyleSheet.absoluteFill}
-                    outputs={outputs}
                 />
                 <CameraControls
                     onTakePhoto={takePhoto}

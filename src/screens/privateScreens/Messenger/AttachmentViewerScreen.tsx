@@ -31,11 +31,11 @@ const buildHtml = (uri: string, mimeType: string, backgroundColor: string) => {
             padding: 0;
             width: 100%;
             height: 100%;
-            background: ${backgroundColor};
             display: flex;
+            overflow: hidden;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            background: ${backgroundColor};
         }
     `;
 

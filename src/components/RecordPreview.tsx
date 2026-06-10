@@ -15,8 +15,8 @@ import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import { Attachment } from 'types/messenger.ts';
 import AudioPlayer from 'components/AudioPlayer.tsx';
-import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { RootStackParamList } from 'services/navigation';
+import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { handleCapture } from 'utils/attachment/mediaCapture.ts';
 
 export interface CapturedMedia {
@@ -24,7 +24,7 @@ export interface CapturedMedia {
     duration?: number;
     type: 'photo' | 'video';
     // Generated first-frame image for Android video previews — see Camera/index.tsx
-    // (Honor MagicOS / ExoPlayer crash workaround).
+    // (Android ExoPlayer crash workaround).
     thumbnailPath?: string;
 }
 

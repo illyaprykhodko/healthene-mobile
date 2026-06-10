@@ -1,8 +1,6 @@
 // outsource dependencies
 import React, { useEffect, useState } from 'react';
-import {
-    Pressable, StyleSheet, View
-} from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Icon from '@react-native-vector-icons/material-icons';
 
 // local dependencies

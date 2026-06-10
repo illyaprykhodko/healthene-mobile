@@ -145,8 +145,8 @@ const Attachments = ({
                 // and the hamburger — truncate so it doesn't overlap the right icon.
                 const headerTitle = title.length > 20 ? `${title.slice(0, 20)}…` : title;
                 navigation.navigate(ROUTES.MESSENGER_ATTACHMENT_VIEWER, {
-                    uri: localUri,
                     mimeType,
+                    uri: localUri,
                     title: headerTitle,
                 });
                 return;
@@ -158,8 +158,8 @@ const Attachments = ({
             } else {
                 await viewDocument({
                     mimeType,
-                    headerTitle: title,
                     uri: localUri,
+                    headerTitle: title,
                     presentationStyle: 'pageSheet'
                 });
             }

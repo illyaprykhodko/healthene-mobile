@@ -72,8 +72,8 @@ export type RootStackParamList = {
   } | undefined;
   [ROUTES.MESSENGER_ATTACHMENT_VIEWER]: {
     uri: string;
-    mimeType: string;
     title?: string;
+    mimeType: string;
   };
   
   // Example of a screen that requires params
