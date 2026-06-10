@@ -60,7 +60,7 @@ const MessengerList = () => {
 
     // Handle delete chain messages
     const [deleteChain] = useDeleteChainsMutation();
-    const handleDelete = async (item: [{id: number}]) => {
+    const handleDelete = async (item: [{ id: number }]) => {
         const { value } = await MessageService.confirmation({
             uid: 'Address',
             title: 'Delete address',
@@ -151,9 +151,15 @@ const MessengerList = () => {
                 contentContainerStyle={styles.flexGrow}
                 ListEmptyComponent={
                     <EmptyState
-                        icon="message-circle"
-                        title="No messages yet"
-                        subtitle="Start a conversation with your care team — tap New Message below."
+                        title="No Messages Yet!"
+                        iconNode={
+                            <Icon
+                                name="comments"
+                                size={120}
+                                color={theme.colors.grey}
+                                style={styles.emptyIcon}
+                            />
+                        }
                     />
                 }
                 keyExtractor={({ id }) => String(id)}
@@ -210,5 +216,8 @@ const styles = StyleSheet.create({
     },
     flexGrow: {
         flexGrow: 1
-    }
+    },
+    emptyIcon: {
+        marginBottom: OFFSET.VERTICAL,
+    },
 });

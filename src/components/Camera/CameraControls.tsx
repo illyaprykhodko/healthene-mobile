@@ -1,5 +1,5 @@
 // outsource dependencies
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Pressable, StyleSheet, View
 } from 'react-native';
@@ -20,7 +20,6 @@ const STOP_BUTTON_SIZE = BUTTON_SIZE - (BUTTON_SIZE * 0.35) * 2;
 interface CameraControlsProps {
     isRecording: boolean;
     onTakePhoto: () => void;
-    recordingDuration: number;
     changePosition: () => void;
     onToggleRecording: () => void;
     captureMode: 'photo' | 'video';
@@ -31,10 +30,26 @@ const CameraControls = ({
     isRecording,
     onTakePhoto,
     changePosition,
-    recordingDuration,
     onToggleRecording,
 }: CameraControlsProps) => {
     const theme = useTheme();
+    // Timer lives here so per-second ticks do not re-render the parent <Camera>,
+    // which would pass a fresh `outputs` reference to <RNCamera> and reconfigure the
+    // native session mid-recording on Android.
+    const [recordingDuration, setRecordingDuration] = useState(0);
+
+    useEffect(() => {
+        if (!isRecording) {
+            setRecordingDuration(0);
+            return;
+        }
+        const startedAt = Date.now();
+        setRecordingDuration(0);
+        const interval = setInterval(() => {
+            setRecordingDuration(Math.floor((Date.now() - startedAt) / 1000));
+        }, 500);
+        return () => clearInterval(interval);
+    }, [isRecording]);
 
     const controlBtn = () => {
         const isVideo = captureMode === 'video';
