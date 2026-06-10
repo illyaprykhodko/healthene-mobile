@@ -70,6 +70,11 @@ export type RootStackParamList = {
   [ROUTES.SELECT_RECIPIENT]: {
     selectedId?: number;
   } | undefined;
+  [ROUTES.MESSENGER_ATTACHMENT_VIEWER]: {
+    uri: string;
+    mimeType: string;
+    title?: string;
+  };
   
   // Example of a screen that requires params
   [ROUTES.SMART_SCALE]: {

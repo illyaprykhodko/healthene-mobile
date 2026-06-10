@@ -16,6 +16,7 @@ import CameraScreen from 'screens/privateScreens/Messenger/CameraScreen.tsx';
 import ReadMessageScreen from 'screens/privateScreens/Messenger/ReadMessageScreen.tsx';
 import WriteMessageScreen from 'screens/privateScreens/Messenger/WriteMessageScreen.tsx';
 import SelectRecipientScreen from 'screens/privateScreens/Messenger/SelectRecipientScreen.tsx';
+import AttachmentViewerScreen from 'screens/privateScreens/Messenger/AttachmentViewerScreen.tsx';
 
 const Stack = createStackNavigator();
 const MessengerStack = () => {
@@ -30,7 +31,7 @@ const MessengerStack = () => {
                 drawerPosition: 'right',
                 gestureDirection: 'horizontal-inverted',
                 headerLeft: () => <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />,
-                headerRight: () => <Hamburger style={{ marginRight: OFFSET.HORIZONTAL / 2 }} onPress={() => drawerNavigation.openDrawer?.()} />,
+                headerRight: () => <Hamburger style={{ marginRight: OFFSET.HORIZONTAL }} onPress={() => drawerNavigation.openDrawer?.()} />,
                 headerStyle: {
                     backgroundColor: theme.colors.headerBg,
                 },
@@ -60,6 +61,11 @@ const MessengerStack = () => {
                 name={ROUTES.SELECT_RECIPIENT}
                 component={SelectRecipientScreen}
                 options={{ title: 'Select Recipient' }}
+            />
+            <Stack.Screen
+                name={ROUTES.MESSENGER_ATTACHMENT_VIEWER}
+                component={AttachmentViewerScreen}
+                options={({ route }: {route: { params?: { title?: string } }}) => ({ title: route.params?.title || 'Preview' })}
             />
         </Stack.Navigator>
     );

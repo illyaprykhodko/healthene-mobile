@@ -1,19 +1,22 @@
 // outsource dependencies
 import Video from 'react-native-video';
 import React, { useState } from 'react';
-import Toast from 'react-native-toast-message';
+import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/material-icons';
-import ReactNativeBlobUtil, { ReactNativeBlobUtilStat } from 'react-native-blob-util';
+import { ReactNativeBlobUtilStat } from 'react-native-blob-util';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Dimensions, Image, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text.tsx';
+import { ROUTES } from 'constants/routes.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import { Attachment } from 'types/messenger.ts';
 import AudioPlayer from 'components/AudioPlayer.tsx';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
+import { RootStackParamList } from 'services/navigation';
 import { handleCapture } from 'utils/attachment/mediaCapture.ts';
 
 export interface CapturedMedia {
@@ -34,6 +37,7 @@ interface RecordPreviewProps {
 
 export const RecordPreview = ({ file, onRetake, onCapture, recordType }: RecordPreviewProps) => {
     const theme = useTheme();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const isVideo = Boolean(file && 'type' in file && file.type === 'video');
     const [preloader, setPreloader] = useState<boolean>(false);
     const androidThumbnail = Platform.OS === 'android' && file && 'thumbnailPath' in file
@@ -61,21 +65,15 @@ export const RecordPreview = ({ file, onRetake, onCapture, recordType }: RecordP
         onRetake();
     };
 
-    // Android: hand the file to the OS's video viewer instead of mounting <Video>.
-    // ExoPlayer crashes natively on some OEM media stacks (Honor MagicOS, etc.),
-    // but the system video viewer uses whatever player the device ships and is reliable.
-    // FileProvider URI generation is handled by react-native-blob-util's bundled provider.
-    const openInExternalViewer = async () => {
+    // Android: open the recording in the in-app WebView viewer (Chrome media stack,
+    // no ExoPlayer codec init, controls visible, stays in the messenger flow).
+    const openInViewer = () => {
         if (!file?.path) { return; }
-        try {
-            await ReactNativeBlobUtil.android.actionViewIntent(file.path, 'video/mp4');
-        } catch {
-            Toast.show({
-                type: 'error',
-                text1: 'Cannot open video',
-                text2: 'No video player is available on this device.',
-            });
-        }
+        navigation.navigate(ROUTES.MESSENGER_ATTACHMENT_VIEWER, {
+            uri: `file://${file.path}`,
+            mimeType: 'video/mp4',
+            title: 'Preview',
+        });
     };
 
     return <>
@@ -92,7 +90,7 @@ export const RecordPreview = ({ file, onRetake, onCapture, recordType }: RecordP
                             // the preview to a plain <Image>. Falls back to a film icon
                             // placeholder if thumbnail generation failed for some reason.
                             ? androidThumbnail
-                                ? <Pressable onPress={openInExternalViewer} style={styles.media}>
+                                ? <Pressable onPress={openInViewer} style={styles.media}>
                                     <Image
                                         source={{ uri: `file://${androidThumbnail}` }}
                                         style={styles.media}
@@ -181,10 +179,6 @@ const styles = StyleSheet.create({
     },
     placeholderLabel: {
         marginTop: OFFSET.POINT,
-    },
-    placeholderHint: {
-        marginTop: OFFSET.POINT,
-        paddingHorizontal: OFFSET.HORIZONTAL,
     },
     durationBadge: {
         position: 'absolute',
