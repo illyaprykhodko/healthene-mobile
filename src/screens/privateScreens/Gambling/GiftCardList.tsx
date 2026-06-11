@@ -17,6 +17,7 @@ import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { RootStackParamList } from 'services/navigation';
 import { GiftCardBrand, useGetGiftCardBrandsQuery } from 'store/api/giftCardApi';
 
@@ -28,6 +29,7 @@ const HORIZONTAL_PADDING = 32;
 
 const GiftCardList: React.FC = () => {
     const navigation = useNavigation<Navigation>();
+    const theme = useTheme();
     const { width: screenWidth } = useWindowDimensions();
     const { data: brands = [], isLoading, isError } = useGetGiftCardBrandsQuery();
 
@@ -55,16 +57,20 @@ const GiftCardList: React.FC = () => {
             <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => handleBrandPress(item)}
-                style={[styles.card, styles.cardActive, { width: itemWidth }]}
+                style={[
+                    styles.card,
+                    styles.cardActive,
+                    { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, width: itemWidth },
+                ]}
             >
                 <View style={styles.logoContainer}>
                     {item.imageUrl ? (
                         <Image source={{ uri: item.imageUrl }} style={styles.logo} resizeMode="contain" />
                     ) : (
-                        <View style={styles.logoPlaceholder} />
+                        <View style={[styles.logoPlaceholder, { backgroundColor: theme.colors.border }]} />
                     )}
                 </View>
-                <Text variant="h5" style={styles.providerName} numberOfLines={1}>
+                <Text variant="h5" style={[styles.providerName, { color: theme.colors.text }]} numberOfLines={1}>
                     {item.name}
                 </Text>
             </TouchableOpacity>
@@ -75,21 +81,21 @@ const GiftCardList: React.FC = () => {
         if (isLoading) {
             return (
                 <View style={styles.centered}>
-                    <ActivityIndicator size="large" color="#2A7EA4" />
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
             );
         }
         if (isError) {
             return (
                 <View style={styles.centered}>
-                    <Text variant="h5" style={styles.errorText}>Failed to load gift card brands.</Text>
+                    <Text variant="h5" style={[styles.errorText, { color: theme.colors.textSecondary }]}>Failed to load gift card brands.</Text>
                 </View>
             );
         }
         if (brands.length === 0) {
             return (
                 <View style={styles.centered}>
-                    <Text variant="h5" style={styles.errorText}>No gift card brands available.</Text>
+                    <Text variant="h5" style={[styles.errorText, { color: theme.colors.textSecondary }]}>No gift card brands available.</Text>
                 </View>
             );
         }
@@ -107,9 +113,9 @@ const GiftCardList: React.FC = () => {
     };
 
     return (
-        <Screen initialized style={styles.container}>
-            <View style={styles.header}>
-                <Text variant="h3" style={styles.heading}>Get Gift Card</Text>
+        <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
+                <Text variant="h3" style={[styles.heading, { color: theme.colors.text }]}>Get Gift Card</Text>
             </View>
             {renderContent()}
             <View style={styles.footer}>
@@ -129,7 +135,6 @@ export default GiftCardList;
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#F5F5F5',
         justifyContent: 'space-between',
         paddingHorizontal: OFFSET.HORIZONTAL,
         paddingVertical: OFFSET.VERTICAL,
@@ -140,13 +145,11 @@ const styles = StyleSheet.create({
         paddingBottom: OFFSET.VERTICAL,
         alignItems: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: '#000',
     },
     heading: {
         fontWeight: '400',
         fontFamily: 'Open Sans',
         fontSize: 24,
-        color: '#090909',
     },
     listContent: {
         paddingBottom: 8,
@@ -164,9 +167,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 4,
     },
     cardActive: {
-        backgroundColor: '#FFFFFF',
         borderWidth: 1,
-        borderColor: '#D9D9D9',
     },
     logoContainer: {
         flex: 1,
@@ -181,13 +182,11 @@ const styles = StyleSheet.create({
     logoPlaceholder: {
         width: '60%',
         height: '60%',
-        backgroundColor: '#E0E0E0',
         borderRadius: 4,
     },
     providerName: {
         fontFamily: 'Open Sans',
         fontSize: 12,
-        color: '#333333',
         textAlign: 'center',
         marginTop: 4,
     },
@@ -197,7 +196,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     errorText: {
-        color: '#666666',
         textAlign: 'center',
     },
     footer: {

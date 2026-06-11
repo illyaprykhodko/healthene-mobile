@@ -16,6 +16,7 @@ import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { RootStackParamList } from 'services/navigation';
 import { useGetGiftCardBrandQuery } from 'store/api/giftCardApi';
 import { useGetPatientGamblingPointsQuery } from 'store/api/gamblingPointsApi';
@@ -23,7 +24,6 @@ import { useGetPatientGamblingPointsQuery } from 'store/api/gamblingPointsApi';
 type Navigation = NativeStackNavigationProp<RootStackParamList>;
 type RouteProps = RouteProp<RootStackParamList, typeof ROUTES.GAMBLING_GIFT_CARD_DENOMINATIONS>;
 
-// "Nice" preset steps (in cents) used when brand has variablePrice: true
 const VARIABLE_PRICE_STEPS_IN_CENTS = [
     500, 1000, 1500, 2000, 2500, 5000, 7500,
     10000, 15000, 20000, 25000, 50000, 75000,
@@ -33,6 +33,7 @@ const VARIABLE_PRICE_STEPS_IN_CENTS = [
 const GiftCardDenominations: React.FC = () => {
     const route = useRoute<RouteProps>();
     const navigation = useNavigation<Navigation>();
+    const theme = useTheme();
     const { brandCode, brandName, imageUrl } = route.params;
 
     const [selectedPriceInCents, setSelectedPriceInCents] = useState<number | null>(null);
@@ -76,6 +77,7 @@ const GiftCardDenominations: React.FC = () => {
                 activeOpacity={isDisabled ? 1 : 0.8}
                 style={[
                     styles.denominationRow,
+                    { borderBottomColor: theme.colors.border },
                     isSelected && styles.denominationRowSelected,
                     isDisabled && styles.denominationRowDisabled,
                 ]}
@@ -83,28 +85,14 @@ const GiftCardDenominations: React.FC = () => {
                 <View style={[styles.checkboxBox, isSelected && styles.checkboxBoxSelected]}>
                     {isSelected && <Icon name="check" iconStyle="solid" size={22} color="#FFFFFF" />}
                 </View>
-                {/* <Icon
-                    size={40}
-                    iconStyle={!isSelected ? 'solid' : 'regular'}
-                    name={isSelected ? 'check-square' : 'square'}
-                    color={isDisabled ? '#D0D0D0' : isSelected ? '#FFFFFF' : '#A0A0A0'}
-                    // color={isDisabled ? '#D0D0D0' : isSelected ? '#2A7EA4' : '#A0A0A0'}
-                    style={[styles.checkboxIcon, isSelected && styles.checkboxChecked]}
-                /> */}
-                {/* <Checkbox
-                    value={isSelected}
-                    onChange={handlePress}
-                    editable={!isDisabled}
-                    style={styles.checkbox}
-                /> */}
                 <Text
                     variant="h4"
                     style={
                         isDisabled
-                            ? styles.denominationTextDisabled
+                            ? [styles.denominationTextDisabled, { color: theme.colors.textMuted }]
                             : isSelected
-                                ? [styles.denominationText, styles.denominationTextSelected]
-                                : styles.denominationText
+                                ? [styles.denominationText, styles.denominationTextSelected, { color: theme.colors.text }]
+                                : [styles.denominationText, { color: theme.colors.textSecondary }]
                     }
                 >
                     ${dollars}
@@ -117,21 +105,21 @@ const GiftCardDenominations: React.FC = () => {
         if (isBrandLoading) {
             return (
                 <View style={styles.centered}>
-                    <ActivityIndicator size="large" color="#2A7EA4" />
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
             );
         }
         if (isError || !brand) {
             return (
                 <View style={styles.centered}>
-                    <Text variant="h5" style={styles.errorText}>Failed to load denominations.</Text>
+                    <Text variant="h5" style={[styles.errorText, { color: theme.colors.textSecondary }]}>Failed to load denominations.</Text>
                 </View>
             );
         }
         if (prices.length === 0) {
             return (
                 <View style={styles.centered}>
-                    <Text variant="h5" style={styles.errorText}>No denominations available.</Text>
+                    <Text variant="h5" style={[styles.errorText, { color: theme.colors.textSecondary }]}>No denominations available.</Text>
                 </View>
             );
         }
@@ -147,14 +135,13 @@ const GiftCardDenominations: React.FC = () => {
     };
 
     return (
-        <Screen initialized style={styles.container}>
+        <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={styles.content}>
-                {/* Get Gift Card{'\n'}{brandName} */}
-                <View style={styles.header}>
-                    <Text variant="h3" style={styles.heading}>
+                <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
+                    <Text variant="h3" style={[styles.heading, { color: theme.colors.text }]}>
                     Get Gift Card
                     </Text>
-                    <Text variant="h1" style={styles.brandName}>{brandName}</Text>
+                    <Text variant="h1" style={[styles.brandName, { color: theme.colors.text }]}>{brandName}</Text>
                 </View>
                 {renderContent()}
             </View>
@@ -185,35 +172,18 @@ export default GiftCardDenominations;
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#F5F5F5',
         justifyContent: 'space-between',
-        // padding: 16,
         paddingBottom: OFFSET.VERTICAL,
     },
     content: {
         flex: 1,
-        // marginTop: 8,
         gap: 16,
     },
     heading: {
         fontWeight: '400',
         fontFamily: 'Open Sans',
         fontSize: 24,
-        color: '#111111',
     },
-    // checkboxIcon: {
-    //     // width: 40,
-    //     // height: 40,
-    //     // backgroundColor: '#D9D9D9',
-    //     // borderWidth: 0,
-    //     // borderWidth: 0,
-    // },
-    // checkboxChecked: {
-    //     backgroundColor: '#9CFD83',
-    //     borderColor: '#000000',
-    //     borderWidth: 1,
-    //     // padding: 4,
-    // },
     checkboxBox: {
         width: 40,
         height: 40,
@@ -228,12 +198,9 @@ const styles = StyleSheet.create({
         borderColor: '#000000',
     },
     header: {
-        // marginBottom: 16,
-        // paddingHorizontal: OFFSET.HORIZONTAL * 1.5,
         paddingVertical: OFFSET.VERTICAL * 1.5,
         alignItems: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: '#000',
         gap: 8,
         marginHorizontal: OFFSET.HORIZONTAL,
     },
@@ -241,7 +208,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         fontFamily: 'Open Sans',
         fontSize: 40,
-        color: '#090909',
     },
     listContent: {
         paddingBottom: 8,
@@ -252,12 +218,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 16,
         paddingVertical: OFFSET.VERTICAL,
-        // paddingHorizontal: 12,
-        // borderRadius: 6,
-        // marginBottom: 4,
-        // backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
-        borderBottomColor: '#E1E1E1',
     },
     denominationRowSelected: {
         backgroundColor: '#D6EEF8',
@@ -269,16 +230,13 @@ const styles = StyleSheet.create({
     denominationText: {
         fontFamily: 'Open Sans',
         fontSize: 24,
-        color: '#A9A9A9',
     },
     denominationTextSelected: {
         fontWeight: '600',
-        color: '#181818',
     },
     denominationTextDisabled: {
         fontFamily: 'Open Sans',
         fontSize: 22,
-        color: '#BBBBBB',
     },
     centered: {
         flex: 1,
@@ -286,7 +244,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     errorText: {
-        color: '#666666',
         textAlign: 'center',
     },
     footer: {
@@ -323,7 +280,6 @@ const styles = StyleSheet.create({
         borderColor: '#A9A9A9',
     },
     getGiftCardButtonText: {
-        // width: '70%',
         fontWeight: '700',
         fontFamily: 'Open Sans',
         fontSize: 18,

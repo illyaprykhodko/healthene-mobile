@@ -39,7 +39,7 @@ const ListItem: React.FC<ListItemProps> = ({ item, isSelected, onPress }) => {
     }, [onPress, item]);
 
     return (
-        <View style={[styles.itemWrapper, { backgroundColor: theme.colors.white }]}>
+        <View style={[styles.itemWrapper, { backgroundColor: theme.colors.surface }]}>
             <TouchableOpacity
                 onPress={handlePress}
                 style={[styles.itemContainer, { borderBottomColor: theme.colors.border }]}
@@ -224,7 +224,7 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
 
     return (
         <Screen
-            style={styles.container}
+            style={[styles.container, { backgroundColor: theme.colors.background }]}
             initialized={!isLoading}
         >
             <StackHeader
@@ -233,7 +233,7 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
                 onOpenDrawer={() => navigation.openDrawer?.()}
             />
             <View style={styles.content}>
-                <View style={[styles.titleButtons, { backgroundColor: theme.colors.white }]}>
+                <View style={[styles.titleButtons, { backgroundColor: theme.colors.surface }]}>
                     <TouchableOpacity
                         onPress={clearChoose}
                         style={[styles.changeButton, { borderBottomColor: theme.colors.border }]}
@@ -255,7 +255,7 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
 
                 <FlatList
                     data={allTags}
-                    style={styles.list}
+                    style={[styles.list, { backgroundColor: theme.colors.surface }]}
                     initialNumToRender={15}
                     renderItem={renderItem}
                     keyExtractor={keyExtractor}
@@ -293,7 +293,6 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
     },
     content: {
         flex: 1,
@@ -318,9 +317,7 @@ const styles = StyleSheet.create({
         marginBottom: OFFSET.VERTICAL,
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
-    list: {
-        backgroundColor: '#FFFFFF',
-    },
+    list: {},
     listContent: {
         paddingBottom: OFFSET.VERTICAL * 2,
     },

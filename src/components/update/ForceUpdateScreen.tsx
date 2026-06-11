@@ -7,6 +7,7 @@ import Text from 'components/Text';
 import { UpdatePolicy } from 'types';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
+import { useTheme } from '../../hooks/useTheme';
 
 interface ForceUpdateScreenProps {
     policy: UpdatePolicy;
@@ -14,8 +15,9 @@ interface ForceUpdateScreenProps {
 }
 
 export const ForceUpdateScreen: React.FC<ForceUpdateScreenProps> = ({ policy, onUpdate }) => {
+    const theme = useTheme();
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={styles.content}>
                 <Text variant="h3" textAlign="center" style={styles.title}>
                     {policy.forceTitle || 'Update Required'}
@@ -37,7 +39,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
-        backgroundColor: '#FFFFFF',
         paddingHorizontal: OFFSET.HORIZONTAL * 1.5,
     },
     content: {

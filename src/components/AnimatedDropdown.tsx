@@ -161,7 +161,6 @@ const styles = StyleSheet.create({
         marginTop: 0,
         borderWidth: 0,
         borderRadius: 0,
-        backgroundColor: '#FFFFFF',
         position: 'absolute',
     },
     dropdownScroll: {

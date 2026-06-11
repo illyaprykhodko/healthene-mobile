@@ -3,16 +3,25 @@ import React, { memo } from 'react';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
+// local dependencies
+import { useTheme } from 'hooks/useTheme';
+
 interface ShowAllDataButtonProps {
     onPress: () => void;
 }
 
-const ShowAllDataButton: React.FC<ShowAllDataButtonProps> = ({ onPress }) => (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
-        <Text style={styles.buttonText}>Show All Data</Text>
-        <Icon iconStyle="solid" name="chevron-right" size={14} color="#000" />
-    </TouchableOpacity>
-);
+const ShowAllDataButton: React.FC<ShowAllDataButtonProps> = ({ onPress }) => {
+    const theme = useTheme();
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            style={[styles.button, { backgroundColor: theme.colors.surfaceAlt, borderColor: theme.colors.border }]}
+        >
+            <Text style={[styles.buttonText, { color: theme.colors.text }]}>Show All Data</Text>
+            <Icon iconStyle="solid" name="chevron-right" size={14} color={theme.colors.text} />
+        </TouchableOpacity>
+    );
+};
 
 export default memo(ShowAllDataButton);
 
@@ -22,13 +31,10 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         flexDirection: 'row',
         alignItems: 'center',
-        borderColor: '#E0E0E0',
-        backgroundColor: '#E0EBF780',
         justifyContent: 'space-between',
     },
     buttonText: {
         fontSize: 18,
-        color: '#000',
         fontWeight: '500',
     },
 });

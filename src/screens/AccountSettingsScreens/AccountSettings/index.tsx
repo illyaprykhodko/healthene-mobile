@@ -22,7 +22,7 @@ const AccountSettings = () => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100}
         >
-            <ScrollView style={[styles.container, { backgroundColor: theme.colors.white }]}>
+            <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
                 <EmailForm onPreloader={setPreloader} />
                 <AccountInformationForm onPreloader={setPreloader} />
                 <Button onPress={() => navigate(ROUTES.CHANGE_PASSWORD)} style={styles.sheetBtn} variant="outline" title="CHANGE PASSWORD" />

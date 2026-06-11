@@ -2,24 +2,34 @@
 import moment from 'moment';
 import Icon from '@react-native-vector-icons/feather';
 import { KeyboardAwareSectionList } from 'react-native-keyboard-aware-scroll-view';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, Modal, RefreshControl } from 'react-native';
 import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { useNavigation, useRoute, useIsFocused, StackActions } from '@react-navigation/native';
-import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
-import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
+import StackHeader from 'components/StackHeader';
 import { EmptyState } from 'components/EmptyState';
 import { useAppDispatch, useAppSelector } from 'store';
+import { useShoppingDrawer } from '../useShoppingDrawer';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { useGetCurrentLibraryElementsQuery } from 'store/api/questionApi';
-import { SHOPPING_STEP, SHOPPING_STATUS, SHOPPING_ITEM_TYPE, SHOPPING_CONFIRMED_ITEM_TYPE, DESTINATIONS, QUESTION_TYPE, VIDEO_LIBRARY_TYPE } from 'constants/spec';
+import {
+    DESTINATIONS,
+    QUESTION_TYPE,
+    SHOPPING_STEP,
+    SHOPPING_STATUS,
+    SHOPPING_ITEM_TYPE,
+    VIDEO_LIBRARY_TYPE,
+    SHOPPING_CONFIRMED_ITEM_TYPE
+} from 'constants/spec';
 import {
     setItemType,
     selectShopping,
@@ -41,7 +51,6 @@ import {
     useUpdateShoppingItemMutation,
     useConfirmShopOnMyOwnMutation,
     useGetShoppingPreferencesQuery,
-    // TEMP: needed while we route "shop on my own" through PUT /shopping-list; revert once backend re-adds /shop-on-my-own
     useUpdateShoppingListStatusMutation,
 } from 'store/api/shoppingApi';
 import ShoppingItem from './ShoppingItem';
@@ -65,6 +74,7 @@ const ShoppingList: React.FC = () => {
     const route = useRoute<any>();
     const dispatch = useAppDispatch();
     const isFocused = useIsFocused();
+    const openDrawer = useShoppingDrawer({ guarded: true });
 
     const {
         status,
@@ -131,8 +141,8 @@ const ShoppingList: React.FC = () => {
         itemType: separateRescueItems ? itemType : null,
         categories: activeCategoryIds,
         withExcluded: excluded,
-        page,
         size: 20,
+        page,
     });
 
     const [updateItem] = useUpdateShoppingItemMutation();
@@ -241,20 +251,16 @@ const ShoppingList: React.FC = () => {
         || (status === SHOPPING_STATUS.SHOP_ON_MY_OWN && itemType === confirmedItemsType)
     ), [status, itemType, confirmedItemsType]);
 
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerTitle: () => (
-                <View style={styles.headerContainer}>
-                    <Text variant="bold" style={styles.headerTitle}>Shopping list</Text>
-                    {shoppingListDates && (
-                        <Text variant="bold" style={styles.dateText}>
-                            {shoppingListDates.from} - {shoppingListDates.to}
-                        </Text>
-                    )}
-                </View>
-            ),
-        });
-    }, [shoppingListDates, navigation]);
+    const headerCenter = useMemo(() => (
+        <View style={styles.headerContainer}>
+            <Text variant="bold" style={[styles.headerTitle, { color: theme.colors.headerText }]}>Shopping list</Text>
+            {shoppingListDates && (
+                <Text variant="bold" style={[styles.dateText, { color: theme.colors.headerText }]}>
+                    {shoppingListDates.from} - {shoppingListDates.to}
+                </Text>
+            )}
+        </View>
+    ), [shoppingListDates, theme.colors.headerText]);
 
     const handleCategoryChange = useCallback((item: any) => {
         dispatch(setActiveCategory(item.activeItem || item));
@@ -308,11 +314,6 @@ const ShoppingList: React.FC = () => {
         navigation.goBack();
     }, [navigation, isListTouched, stockList, currentStep, status, dispatch, isFinalizeAlertOpen]);
 
-    useEffect(() => {
-        navigation.setOptions({
-            headerLeft: () => <BackBtn onPress={handleBack} />,
-        });
-    }, [navigation, handleBack]);
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', (event: any) => {
@@ -521,6 +522,11 @@ const ShoppingList: React.FC = () => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
+            <StackHeader
+                onBack={handleBack}
+                onOpenDrawer={openDrawer}
+                centerContent={headerCenter}
+            />
             {includeRescueFoodsInShoppingList && separateRescueItems && (
                 <ListSwitcher
                     itemType={itemType}
@@ -793,7 +799,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: 16,
         paddingHorizontal: 16,
-        backgroundColor: '#E8F4FC',
         borderBottomWidth: 1,
         borderBottomColor: COLORS.LIGHT_GREY,
     },
@@ -862,7 +867,6 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         marginBottom: 150,
         alignItems: 'center',
-        backgroundColor: '#fff',
     },
     alertTitle: {
         fontSize: 20,

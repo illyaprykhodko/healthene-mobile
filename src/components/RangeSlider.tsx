@@ -52,10 +52,10 @@ const RangeSliderComponent: React.FC<RangeSliderProps> = ({
     }, [onChange, item]);
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.white }, style]}>
+        <View style={[styles.container, { backgroundColor: theme.colors.surface }, style]}>
             <View style={styles.content}>
                 <Text variant="body" style={styles.title}>{title}</Text>
-                <View style={styles.sliderContainer} />
+                <View style={[styles.sliderContainer, { borderBottomColor: theme.colors.text }]} />
                 <View style={styles.sliderWrapper}>
                     <Slider
                         value={value}
@@ -119,7 +119,6 @@ const styles = StyleSheet.create({
         marginVertical: 10,
         alignSelf: 'stretch',
         borderBottomWidth: 1,
-        borderBottomColor: '#000',
     },
     sliderWrapper: {
         width: '100%',

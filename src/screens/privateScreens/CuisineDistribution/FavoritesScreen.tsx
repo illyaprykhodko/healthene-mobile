@@ -149,7 +149,7 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
 
     return (
         <Screen
-            style={styles.container}
+            style={[styles.container, { backgroundColor: theme.colors.background }]}
             initialized={!isLoading && !isFetching}
         >
             <StackHeader
@@ -159,7 +159,7 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
             />
             <View style={styles.content}>
                 <View style={[styles.titleButtons,
-                    { backgroundColor: theme.colors.white }
+                    { backgroundColor: theme.colors.surface }
                 ]}>
                     <TouchableOpacity
                         onPress={navigateToList}
@@ -226,7 +226,6 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
     },
     content: {
         flex: 1,

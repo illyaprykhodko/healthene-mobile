@@ -1,6 +1,6 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/ionicons';
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, ViewStyle, Modal, ScrollView } from 'react-native';
 
 // local dependencies
@@ -28,6 +28,31 @@ interface DescriptionProps {
 const Description: React.FC<DescriptionProps> = memo(
     ({ style, video, onClose, isActive, description }) => {
         const theme = useTheme();
+        const htmlStyles = useMemo(() => StyleSheet.create({
+            p: {
+                fontSize: 16,
+                marginBottom: 10,
+                color: theme.colors.text,
+                lineHeight: 24,
+            },
+            strong: { fontWeight: 'bold' },
+            b: { fontWeight: 'bold' },
+            em: { fontStyle: 'italic' },
+            ins: { textDecorationLine: 'underline' },
+            u: { textDecorationLine: 'underline' },
+            li: {
+                flex: 1,
+                fontSize: 16,
+                color: theme.colors.text,
+                marginVertical: 5,
+                paddingRight: OFFSET.VERTICAL * 2,
+                lineHeight: 24,
+            },
+            ul: {
+                marginLeft: 15,
+                marginVertical: 5,
+            },
+        }), [theme]);
         const [showDescription, setShowDescription] = useState(false);
         const isVideoEnabled = Boolean(video);
         const toggleText = useCallback(() => {
@@ -207,38 +232,3 @@ const styles = StyleSheet.create({
     },
 });
 
-const htmlStyles = StyleSheet.create({
-    p: {
-        fontSize: 16,
-        marginBottom: 10,
-        color: '#333',
-        lineHeight: 24,
-    },
-    strong: {
-        fontWeight: 'bold',
-    },
-    b: {
-        fontWeight: 'bold',
-    },
-    em: {
-        fontStyle: 'italic',
-    },
-    ins: {
-        textDecorationLine: 'underline',
-    },
-    u: {
-        textDecorationLine: 'underline',
-    },
-    li: {
-        flex: 1,
-        fontSize: 16,
-        color: '#333',
-        marginVertical: 5,
-        paddingRight: OFFSET.VERTICAL * 2,
-        lineHeight: 24,
-    },
-    ul: {
-        marginLeft: 15,
-        marginVertical: 5,
-    },
-});

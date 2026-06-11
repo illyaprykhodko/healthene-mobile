@@ -65,7 +65,7 @@ const QuestionCategoryScreen: React.FC = () => {
 
         return (
             <TouchableOpacity
-                style={styles.item}
+                style={[styles.item, { borderBottomColor: theme.colors.border }]}
                 onPress={() => handleCategoryPress(item)}
             >
                 <Text
@@ -129,12 +129,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     item: {
-        // height: 60,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
     },
     itemTitle: {
         flex: 1,
@@ -161,6 +159,5 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
     },
 });

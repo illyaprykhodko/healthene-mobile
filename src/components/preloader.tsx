@@ -51,7 +51,6 @@ const MStyles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#fff',
     },
     spinnerRow: {
         display: 'flex',
@@ -96,7 +95,6 @@ const BPStyles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#fff',
     },
 });
 

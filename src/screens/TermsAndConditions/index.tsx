@@ -36,7 +36,7 @@ export const TermsAndConditions = () => {
             : null
         }
         <View style={styles.footer}>
-            <Text>
+            <Text style={styles.footerText}>
         Healthene® &copy;
                 {' '}
                 {moment().format('MMMM, YYYY')}
@@ -63,6 +63,9 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#F3F3F3',
         textDecorationLine: 'underline',
+    },
+    footerText: {
+        color: '#F3F3F3',
     },
 });
 

@@ -12,7 +12,7 @@ import AccountInformationForm from 'screens/AccountSettingsScreens/AccountSettin
 const AccountSettings = () => {
     const theme = useTheme();
     const [preloader, setPreloader] = useState(false);
-    return <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
+    return <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <LoadingOverlay init={preloader} />
         <EmailForm onPreloader={setPreloader} />
         <AccountInformationForm onPreloader={setPreloader} />

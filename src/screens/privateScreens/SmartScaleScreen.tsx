@@ -223,7 +223,7 @@ const SmartScaleScreen: React.FC = () => {
             )}
 
             <View style={styles.scaleContainer}>
-                <View style={[styles.valueContainer, { borderColor: theme.colors.text }]}>
+                <View style={[styles.valueContainer, { borderColor: theme.colors.text, backgroundColor: theme.colors.muted }]}>
                     <Text style={[styles.weightText, { color: theme.colors.text }]}>
                         {weightData ? `${weightData.weight.toFixed(1)} lbs` : '0.0 lbs'}
                     </Text>
@@ -302,7 +302,6 @@ const styles = StyleSheet.create({
         marginVertical: 20,
         borderWidth: 2,
         borderRadius: 16,
-        backgroundColor: '#F5F5F5',
         alignItems: 'center',
     },
     weightText: {

@@ -6,6 +6,7 @@ import { StyleSheet, View, TouchableOpacity } from 'react-native';
 // local dependencies
 import Text from './Text';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 
 interface ControlsProps {
     amount: number;
@@ -17,6 +18,7 @@ interface ControlsProps {
 }
 
 const Controls: React.FC<ControlsProps> = ({ amount, updateData, disabled, unit }) => {
+    const theme = useTheme();
     return (
         <View style={styles.container}>
             <View style={styles.controls}>
@@ -28,7 +30,7 @@ const Controls: React.FC<ControlsProps> = ({ amount, updateData, disabled, unit 
                     <Icon iconStyle="solid" name="minus" color="#76A7D8" size={24} />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.count}>
+                    <Text style={[styles.count, { color: theme.colors.text }]}>
                         {amount}
                     </Text>
                 </View>
@@ -41,7 +43,7 @@ const Controls: React.FC<ControlsProps> = ({ amount, updateData, disabled, unit 
                 </TouchableOpacity>
             </View>
             {unit && (
-                <Text style={styles.units}>{unit}</Text>
+                <Text style={[styles.units, { color: theme.colors.textSecondary }]}>{unit}</Text>
             )}
         </View>
     );
@@ -73,11 +75,9 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         textAlign: 'center',
         paddingHorizontal: OFFSET.HORIZONTAL,
-        color: '#000000',
     },
     units: {
         textTransform: 'uppercase',
-        color: '#7B7B7B',
         textAlign: 'center',
         marginTop: 8,
         fontSize: 14,

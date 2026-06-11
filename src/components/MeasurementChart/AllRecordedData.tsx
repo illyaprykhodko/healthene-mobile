@@ -9,7 +9,9 @@ import {
     Dimensions,
     ActivityIndicator,
 } from 'react-native';
+
 // local dependencies
+import { useTheme } from 'hooks/useTheme';
 import { useGetLoggedMeasurementDataMutation } from 'store/api/dayOverviewApi';
 
 interface RecordItem {
@@ -27,6 +29,7 @@ const AllRecordedData: React.FC<AllRecordedDataProps> = ({
     measurementType,
     title,
 }) => {
+    const theme = useTheme();
     const [page, setPage] = useState(0);
     const [records, setRecords] = useState<RecordItem[]>([]);
     const [totalPages, setTotalPages] = useState(0);
@@ -76,28 +79,28 @@ const AllRecordedData: React.FC<AllRecordedDataProps> = ({
 
     const renderItem = useCallback(
         ({ item }: { item: RecordItem }) => (
-            <View style={styles.row}>
-                <Text style={styles.value}>{item.value}</Text>
-                <Text style={styles.date}>{item.date}</Text>
+            <View style={[styles.row, { borderBottomColor: theme.colors.border }]}>
+                <Text style={[styles.value, { color: theme.colors.text }]}>{item.value}</Text>
+                <Text style={[styles.date, { color: theme.colors.textSecondary }]}>{item.date}</Text>
             </View>
         ),
-        []
+        [theme.colors]
     );
 
     const renderFooter = useCallback(() => {
         if (!isLoading) { return null; }
         return (
             <View style={styles.footer}>
-                <ActivityIndicator size="small" color="#2978A0" />
+                <ActivityIndicator size="small" color={theme.colors.info} />
             </View>
         );
-    }, [isLoading]);
+    }, [isLoading, theme.colors.info]);
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerText}>{title}</Text>
-                <Text style={styles.headerText}>Date</Text>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <View style={[styles.header, { backgroundColor: theme.colors.muted, borderBottomColor: theme.colors.border }]}>
+                <Text style={[styles.headerText, { color: theme.colors.textSecondary }]}>{title}</Text>
+                <Text style={[styles.headerText, { color: theme.colors.textSecondary }]}>Date</Text>
             </View>
             <FlatList
                 data={records}
@@ -115,27 +118,22 @@ const AllRecordedData: React.FC<AllRecordedDataProps> = ({
 
 export default AllRecordedData;
 
-// Configure
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
     },
     header: {
         paddingVertical: 10,
         borderBottomWidth: 1,
         flexDirection: 'row',
         paddingHorizontal: 15,
-        backgroundColor: '#F4F4F4',
-        borderBottomColor: '#E0E0E0',
         justifyContent: 'space-between',
     },
     headerText: {
         fontSize: 14,
         fontWeight: '300',
-        color: '#888888',
         width: '50%',
     },
     row: {
@@ -144,17 +142,14 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         paddingHorizontal: 7,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
     },
     value: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#333333',
         width: '45%',
     },
     date: {
         fontSize: 14,
-        color: '#888888',
         width: '50%',
         textAlign: 'left',
     },

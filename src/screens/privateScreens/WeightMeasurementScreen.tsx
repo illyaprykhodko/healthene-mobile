@@ -99,7 +99,7 @@ const WeightMeasurementScreen: React.FC = () => {
         [submit]
     );
 
-    return (<View style={styles.container}>
+    return (<View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {isPanelOpen && (
             <TouchableOpacity
                 activeOpacity={1}
@@ -113,7 +113,7 @@ const WeightMeasurementScreen: React.FC = () => {
             style={[
                 styles.scaleButton,
                 isFutureDay && styles.opacityFuture,
-                { borderColor: theme.colors.success }
+                { borderColor: theme.colors.success, backgroundColor: theme.colors.muted }
             ]}
         >
             <Text style={[styles.scaleButtonText, { color: theme.colors.darkGrey }]}>
@@ -126,7 +126,7 @@ const WeightMeasurementScreen: React.FC = () => {
             style={[
                 styles.manualButton,
                 isFutureDay && styles.opacityFuture,
-                { borderColor: theme.colors.primary }
+                { borderColor: theme.colors.primary, backgroundColor: theme.colors.surface }
             ]}
         >
             <Text style={[styles.manualButtonText, { color: theme.colors.primary }]}>
@@ -259,7 +259,6 @@ export default WeightMeasurementScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
     },
     swipeablePanel: {
         paddingTop: 25,
@@ -277,7 +276,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#E8F5E9',
     },
     scaleButtonText: {
         fontSize: 24,
@@ -291,7 +289,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
     },
     manualButtonText: {
         fontSize: 18,

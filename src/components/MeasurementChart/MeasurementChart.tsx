@@ -6,6 +6,7 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 // local dependencies
 import DateTabs from './DateTabs';
 import Text from 'components/Text';
+import { useTheme } from 'hooks/useTheme';
 import { filters } from 'services/filter';
 import ChartRenderer from './ChartRenderer';
 import { prepareChartData } from './chart-helpers';
@@ -61,6 +62,7 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
     totalChangeSystolic,
     totalChangeDiastolic,
 }) => {
+    const theme = useTheme();
     const [tooltip, setTooltip] = useState<any | null>(null);
     const currentStart = activeTab.options.startDate;
     const currentEnd = activeTab.options.endDate;
@@ -194,8 +196,8 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
     );
     return (
         <PanGestureHandler onHandlerStateChange={onPanGesture}>
-            <View style={styles.container}>
-                <Text style={styles.title}>{filters.humanize(measurementType)}</Text>
+            <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+                <Text style={[styles.title, { color: theme.colors.textSecondary }]}>{filters.humanize(measurementType)}</Text>
                 <DateTabs
                     date={currentDate}
                     activeTab={activeTab}
@@ -236,13 +238,11 @@ export default MeasurementChart;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
     },
     title: {
         fontSize: 24,
         fontWeight: '400',
         marginVertical: 5,
-        color: '#7B7B7B',
         alignSelf: 'center',
     },
 });

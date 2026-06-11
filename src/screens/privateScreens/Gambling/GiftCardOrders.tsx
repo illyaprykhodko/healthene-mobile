@@ -21,6 +21,7 @@ import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { RootStackParamList } from 'services/navigation';
 import { GiftCardOrder, useLazyGetGiftCardOrdersQuery } from 'store/api/giftCardApi';
 
@@ -42,6 +43,7 @@ const formatDate = (iso: string) =>
 
 const GiftCardOrders: React.FC = () => {
     const navigation = useNavigation<Navigation>();
+    const theme = useTheme();
     const { width: screenWidth } = useWindowDimensions();
     const tileWidth = (screenWidth - OFFSET.HORIZONTAL * 2 - COLUMN_GAP) / 2;
 
@@ -66,24 +68,12 @@ const GiftCardOrders: React.FC = () => {
         }
     }, [fetchOrders]);
 
-    // Load seen IDs from AsyncStorage once on mount
     useEffect(() => {
         AsyncStorage.getItem(SEEN_ORDER_IDS_KEY).then(raw => {
             setSeenIds(raw ? new Set(JSON.parse(raw)) : new Set());
         });
     }, []);
 
-    // [SCREEN-VISIT approach] — uncomment to mark all visible orders as seen on screen visit
-    // useEffect(() => {
-    //     if (orders.length === 0) { return; }
-    //     AsyncStorage.getItem(SEEN_ORDER_IDS_KEY).then(raw => {
-    //         const existing: number[] = raw ? JSON.parse(raw) : [];
-    //         const updated = [...new Set([...existing, ...orders.map(o => o.id)])];
-    //         AsyncStorage.setItem(SEEN_ORDER_IDS_KEY, JSON.stringify(updated));
-    //     });
-    // }, [orders.length]);
-
-    // Refresh list every time screen gains focus (e.g., after claiming a new card)
     useFocusEffect(
         useCallback(() => {
             setOrders([]);
@@ -109,30 +99,34 @@ const GiftCardOrders: React.FC = () => {
 
     const renderTile = ({ item }: { item: GiftCardOrder }) => {
         const isNew = !seenIds.has(item.id);
-        const statusColor = STATUS_COLORS[item.status] ?? '#888888';
+        const statusColor = STATUS_COLORS[item.status] ?? theme.colors.textMuted;
         const dollars = (item.priceInCents / 100).toFixed(2);
 
         return (
-            <View style={[styles.tile, { width: tileWidth }, isNew && styles.tileNew]}>
+            <View style={[
+                styles.tile,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, width: tileWidth },
+                isNew && styles.tileNew,
+            ]}>
                 {isNew && (
                     <View style={styles.newBadge}>
                         <Text style={styles.newBadgeText}>NEW</Text>
                     </View>
                 )}
-                <View style={[styles.tileImageContainer, { width: tileWidth }]}>
+                <View style={[styles.tileImageContainer, { width: tileWidth, backgroundColor: theme.colors.muted }]}>
                     {item.imageUrl ? (
                         <Image source={{ uri: item.imageUrl }} style={styles.tileImage} resizeMode="contain" />
                     ) : (
-                        <View style={styles.tileImagePlaceholder}>
+                        <View style={[styles.tileImagePlaceholder, { backgroundColor: theme.colors.border }]}>
                             <Text style={styles.tileImagePlaceholderText}>{item.brandCode[0]}</Text>
                         </View>
                     )}
                 </View>
                 <View style={styles.tileInfo}>
-                    <Text style={styles.tileBrand} numberOfLines={1}>{humanize(item.brandCode)}</Text>
-                    <Text style={styles.tileAmount}>${dollars}</Text>
+                    <Text style={[styles.tileBrand, { color: theme.colors.text }]} numberOfLines={1}>{humanize(item.brandCode)}</Text>
+                    <Text style={[styles.tileAmount, { color: theme.colors.text }]}>${dollars}</Text>
                     {item.claimedAt ? (
-                        <Text style={styles.tileDate}>{formatDate(item.claimedAt)}</Text>
+                        <Text style={[styles.tileDate, { color: theme.colors.textSecondary }]}>{formatDate(item.claimedAt)}</Text>
                     ) : null}
                     {item.expiresAt ? (
                         <Text style={styles.tileExpiry}>Exp. {formatDate(item.expiresAt)}</Text>
@@ -163,7 +157,7 @@ const GiftCardOrders: React.FC = () => {
         if (!isFetching || page === 0) { return null; }
         return (
             <View style={styles.footerSpinner}>
-                <ActivityIndicator size="small" color="#2A7EA4" />
+                <ActivityIndicator size="small" color={theme.colors.primary} />
             </View>
         );
     };
@@ -172,21 +166,21 @@ const GiftCardOrders: React.FC = () => {
         if (isFetching && orders.length === 0) {
             return (
                 <View style={styles.centered}>
-                    <ActivityIndicator size="large" color="#2A7EA4" />
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
             );
         }
         if (isError && orders.length === 0) {
             return (
                 <View style={styles.centered}>
-                    <Text variant="h5" style={styles.errorText}>Failed to load gift card orders.</Text>
+                    <Text variant="h5" style={[styles.errorText, { color: theme.colors.textSecondary }]}>Failed to load gift card orders.</Text>
                 </View>
             );
         }
         if (!isFetching && orders.length === 0) {
             return (
                 <View style={styles.centered}>
-                    <Text variant="h5" style={styles.emptyText}>No gift cards yet.{'\n'}Redeem your points to get started!</Text>
+                    <Text variant="h5" style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No gift cards yet.{'\n'}Redeem your points to get started!</Text>
                 </View>
             );
         }
@@ -204,7 +198,7 @@ const GiftCardOrders: React.FC = () => {
                 contentContainerStyle={styles.listContent}
                 refreshControl={
                     <RefreshControl
-                        tintColor="#2A7EA4"
+                        tintColor={theme.colors.primary}
                         refreshing={isRefreshing}
                         onRefresh={handleRefresh}
                     />
@@ -214,7 +208,7 @@ const GiftCardOrders: React.FC = () => {
     };
 
     return (
-        <Screen initialized style={styles.container}>
+        <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
             {renderContent()}
             <View style={styles.footer}>
                 <TouchableOpacity
@@ -234,7 +228,6 @@ export default GiftCardOrders;
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#F5F5F5',
         paddingBottom: OFFSET.VERTICAL,
         justifyContent: 'space-between',
     },
@@ -248,11 +241,9 @@ const styles = StyleSheet.create({
         marginBottom: COLUMN_GAP,
     },
     tile: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 10,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: '#E0E0E0',
         ...Platform.select({
             ios: {
                 shadowColor: '#000000',
@@ -264,7 +255,6 @@ const styles = StyleSheet.create({
         }),
     },
     tileNew: {
-        backgroundColor: '#F0FFF4',
         borderColor: '#86EFAC',
     },
     newBadge: {
@@ -285,7 +275,6 @@ const styles = StyleSheet.create({
     },
     tileImageContainer: {
         height: 100,
-        backgroundColor: '#FAFAFA',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -297,7 +286,6 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 8,
-        backgroundColor: '#D0D0D0',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -316,18 +304,15 @@ const styles = StyleSheet.create({
         fontFamily: 'Open Sans',
         fontWeight: '600',
         fontSize: 13,
-        color: '#333333',
     },
     tileAmount: {
         fontFamily: 'Open Sans',
         fontWeight: '700',
         fontSize: 16,
-        color: '#111111',
     },
     tileDate: {
         fontFamily: 'Open Sans',
         fontSize: 11,
-        color: '#888888',
     },
     tileExpiry: {
         fontFamily: 'Open Sans',
@@ -365,11 +350,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 32,
     },
     errorText: {
-        color: '#666666',
         textAlign: 'center',
     },
     emptyText: {
-        color: '#888888',
         textAlign: 'center',
         lineHeight: 24,
     },

@@ -8,6 +8,7 @@ import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { RootStackParamList } from 'services/navigation';
 
 type GameType = 'SLOTS' | 'BLACKJACK';
@@ -20,6 +21,7 @@ const games: Array<{ id: GameType; title: string; image: ImageSourcePropType }> 
 
 const GameSelection: React.FC = () => {
     const navigation = useNavigation<Navigation>();
+    const theme = useTheme();
     const [selectedGame, setSelectedGame] = useState<GameType>('SLOTS');
 
     const selectedGameTitle = useMemo(
@@ -28,9 +30,9 @@ const GameSelection: React.FC = () => {
     );
 
     return (
-        <Screen initialized style={styles.container}>
-            <Text variant="common" style={styles.title}>Games</Text>
-            <View style={styles.divider} />
+        <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <Text variant="common" style={[styles.title, { color: theme.colors.text }]}>Games</Text>
+            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
             <View style={styles.cardRow}>
                 {games.map(game => {
@@ -42,7 +44,11 @@ const GameSelection: React.FC = () => {
                             style={styles.gameButton}
                             onPress={() => setSelectedGame(game.id)}
                         >
-                            <View style={[styles.imageCard, isSelected && styles.imageCardSelected]}>
+                            <View style={[
+                                styles.imageCard,
+                                { backgroundColor: theme.colors.surface, borderColor: theme.colors.text },
+                                isSelected && styles.imageCardSelected,
+                            ]}>
                                 <Image
                                     source={game.image}
                                     resizeMode="contain"
@@ -52,7 +58,7 @@ const GameSelection: React.FC = () => {
                                     ]}
                                 />
                             </View>
-                            <Text variant="h3" style={styles.cardTitle}>{game.title}</Text>
+                            <Text variant="h3" style={[styles.cardTitle, { color: theme.colors.text }]}>{game.title}</Text>
                         </TouchableOpacity>
                     );
                 })}
@@ -78,7 +84,7 @@ const GameSelection: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            <Text variant="h6" style={styles.hintText}>
+            <Text variant="h6" style={[styles.hintText, { color: theme.colors.textSecondary }]}>
                 Selected: {selectedGameTitle}
             </Text>
         </Screen>
@@ -89,22 +95,16 @@ export default GameSelection;
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#FFFFFF',
         paddingHorizontal: 16,
         paddingTop: 16,
         paddingBottom: 18,
     },
     title: {
-        // marginTop: OFFSET.VERTICAL,
         fontFamily: 'Outfit-Regular',
         fontSize: 40,
-        color: '#000',
-        // marginBottom: 8,
     },
     divider: {
         height: 1,
-        backgroundColor: '#8080808C',
-        // marginVertical: OFFSET.VERTICAL * 1.5,
         marginTop: 10,
         marginBottom: OFFSET.VERTICAL,
     },
@@ -114,7 +114,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     gameButton: {
-        // width: 122,
         alignItems: 'center',
     },
     imageCard: {
@@ -122,10 +121,8 @@ const styles = StyleSheet.create({
         height: 114,
         borderRadius: 8,
         borderWidth: 4,
-        borderColor: '#000',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#FFFFFF',
     },
     imageCardSelected: {
         borderColor: '#007CD6',
@@ -149,7 +146,6 @@ const styles = StyleSheet.create({
     },
     cardTitle: {
         marginTop: 8,
-        color: '#000',
         fontFamily: 'Outfit-Regular',
         fontSize: 24,
     },
@@ -210,7 +206,6 @@ const styles = StyleSheet.create({
         color: '#000',
     },
     hintText: {
-        color: '#6F6F6F',
         marginTop: 8,
         textAlign: 'right',
     },

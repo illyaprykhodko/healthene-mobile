@@ -6,22 +6,27 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
+import { useTheme } from 'hooks/useTheme';
 import { RootStackParamList } from 'services/navigation';
 
 type Navigation = NativeStackNavigationProp<RootStackParamList>;
 
 const Bank: React.FC = () => {
     const navigation = useNavigation<Navigation>();
+    const theme = useTheme();
 
     return (
         <Screen initialized style={styles.container}>
             <View style={styles.content}>
-                <Text variant="h3" style={styles.title}>$ Bank</Text>
-                <Text variant="h5" style={styles.subtitle}>
+                <Text variant="h3" style={[styles.title, { color: theme.colors.text }]}>$ Bank</Text>
+                <Text variant="h5" style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
                     Placeholder screen. Bank details and transactions come next.
                 </Text>
             </View>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={[styles.backButton, { borderColor: theme.colors.border }]}
+            >
                 <Text variant="h5" style={styles.backText}>Back</Text>
             </TouchableOpacity>
         </Screen>
@@ -41,17 +46,13 @@ const styles = StyleSheet.create({
     },
     title: {
         fontFamily: 'Outfit-Bold',
-        color: '#111111',
     },
-    subtitle: {
-        color: '#5F5F5F',
-    },
+    subtitle: {},
     backButton: {
         borderWidth: 1,
         borderRadius: 8,
         paddingVertical: 8,
         paddingHorizontal: 16,
-        borderColor: '#A9A9A9',
         alignSelf: 'flex-start',
         backgroundColor: '#F8A0A0',
     },
