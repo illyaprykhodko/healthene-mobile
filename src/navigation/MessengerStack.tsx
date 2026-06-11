@@ -65,7 +65,11 @@ const MessengerStack = () => {
             <Stack.Screen
                 name={ROUTES.MESSENGER_ATTACHMENT_VIEWER}
                 component={AttachmentViewerScreen}
-                options={({ route }: {route: { params?: { title?: string } }}) => ({ title: route.params?.title || 'Preview' })}
+                options={({ route }: {route: { params?: { title?: string } }}) => ({
+                    presentation: 'modal',
+                    gestureDirection: 'vertical',
+                    title: route.params?.title || 'Preview',
+                })}
             />
         </Stack.Navigator>
     );
