@@ -87,7 +87,6 @@ export const ROUTES = {
     MESSENGER_AUDIO: 'MessengerAudio',
     MESSENGER_CAMERA: 'MessengerCamera',
     SELECT_RECIPIENT: 'SelectRecipient',
-    MESSENGER_ATTACHMENT_VIEWER: 'MessengerAttachmentViewer',
 
     // Shopping routes
     STOCK_LIST: 'StockList',

@@ -66,7 +66,7 @@ const MessageChainItem = memo(({ sender, date, text, attachments, onPreloader }:
                         : null
                 }
             </View>
-            <Icon iconStyle="solid" name={isExpanded ? 'chevron-up' : 'chevron-down'} color={theme.colors.black} size={16} style={styles.chevronIcon}/>
+            <Icon iconStyle="solid" name={isExpanded ? 'chevron-up' : 'chevron-down'} color={theme.colors.text} size={16} style={styles.chevronIcon}/>
         </View>
         <Animated.View style={[styles.animatedView, animatedStyle]}>
             <View
@@ -76,6 +76,7 @@ const MessageChainItem = memo(({ sender, date, text, attachments, onPreloader }:
                 <HTMLView
                     value={text}
                     renderNode={renderNode}
+                    textComponentProps={{ style: { color: theme.colors.text } }}
                 />
                 {
                     attachments.length

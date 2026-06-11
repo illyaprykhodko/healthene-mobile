@@ -36,7 +36,7 @@ const ReadMessageScreen = () => {
     const goToWriteMessage = useCallback(() => navigation.navigate(ROUTES.WRITE_MESSAGE), [dispatch, navigation]);
     return <Screen initialized={!isLoading} style={styles.container}>
         <View style={styles.header}>
-            <Text style={styles.subject} variant="h4" color={theme.colors.darkGrey}>{data?.subject}</Text>
+            <Text style={styles.subject} variant="h4" color={theme.colors.headerText}>{data?.subject}</Text>
             <Pressable onPress={goToWriteMessage} hitSlop={8}>
                 <Icon iconStyle="solid" name="reply" color={theme.colors.grey} size={24} />
             </Pressable>

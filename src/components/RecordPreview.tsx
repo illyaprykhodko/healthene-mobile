@@ -1,23 +1,20 @@
 // outsource dependencies
 import Video from 'react-native-video';
 import React, { useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/material-icons';
 import { ReactNativeBlobUtilStat } from 'react-native-blob-util';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Dimensions, Image, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text.tsx';
-import { ROUTES } from 'constants/routes.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import { Attachment } from 'types/messenger.ts';
 import AudioPlayer from 'components/AudioPlayer.tsx';
-import { RootStackParamList } from 'services/navigation';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { handleCapture } from 'utils/attachment/mediaCapture.ts';
+import AttachmentViewerModal from 'screens/privateScreens/Messenger/components/AttachmentViewerModal.tsx';
 
 export interface CapturedMedia {
     path: string;
@@ -37,9 +34,9 @@ interface RecordPreviewProps {
 
 export const RecordPreview = ({ file, onRetake, onCapture, recordType }: RecordPreviewProps) => {
     const theme = useTheme();
-    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const isVideo = Boolean(file && 'type' in file && file.type === 'video');
     const [preloader, setPreloader] = useState<boolean>(false);
+    const [previewVisible, setPreviewVisible] = useState<boolean>(false);
     const androidThumbnail = Platform.OS === 'android' && file && 'thumbnailPath' in file
         ? file.thumbnailPath
         : undefined;
@@ -65,15 +62,11 @@ export const RecordPreview = ({ file, onRetake, onCapture, recordType }: RecordP
         onRetake();
     };
 
-    // Android: open the recording in the in-app WebView viewer (Chrome media stack,
-    // no ExoPlayer codec init, controls visible, stays in the messenger flow).
+    // Android: open the recording in the in-app modal viewer (Chrome media stack,
+    // no ExoPlayer codec init, controls visible, overlays the capture preview).
     const openInViewer = () => {
         if (!file?.path) { return; }
-        navigation.navigate(ROUTES.MESSENGER_ATTACHMENT_VIEWER, {
-            uri: `file://${file.path}`,
-            mimeType: 'video/mp4',
-            title: 'Preview',
-        });
+        setPreviewVisible(true);
     };
 
     return <>
@@ -142,6 +135,14 @@ export const RecordPreview = ({ file, onRetake, onCapture, recordType }: RecordP
                 <Button variant="outline" style={styles.flex} title="Ready" onPress={() => onPressSave()} />
             </View>
         </View>
+        {previewVisible && file?.path
+            ? <AttachmentViewerModal
+                title="Preview"
+                mimeType="video/mp4"
+                uri={`file://${file.path}`}
+                onClose={() => setPreviewVisible(false)}
+            />
+            : null}
     </>;
 };
 

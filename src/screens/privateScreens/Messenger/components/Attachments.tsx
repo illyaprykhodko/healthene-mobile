@@ -2,22 +2,19 @@
 import React from 'react';
 import Toast from 'react-native-toast-message';
 import RNBlobUtil from 'react-native-blob-util';
-import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { MaterialIndicator } from 'react-native-indicators';
 import { viewDocument } from '@react-native-documents/viewer';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // local dependencies
 import { config } from 'constants';
 import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme.ts';
-import { ROUTES } from 'constants/routes.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Attachment } from 'types/messenger.ts';
 import { sessionManager } from 'store/api/baseApi.ts';
-import { RootStackParamList } from 'services/navigation';
+import AttachmentViewerModal from 'screens/privateScreens/Messenger/components/AttachmentViewerModal.tsx';
 
 // configure
 type FileIconName =
@@ -49,8 +46,8 @@ const Attachments = ({
     isUploadFile = false,
 }: AttachmentsProps) => {
     const theme = useTheme();
-    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const [isDownload, setIsDownload] = React.useState(false);
+    const [preview, setPreview] = React.useState<{ uri: string; mimeType: string } | null>(null);
 
     const iconNameForMime = (mime: string): FileIconName => {
         const [primary] = mime.split('/');
@@ -121,10 +118,10 @@ const Attachments = ({
             });
     };
 
-    // Types the in-app WebView viewer can render reliably via HTML5 native handling.
-    // PDFs are excluded — Android WebView doesn't ship a PDF renderer (and iOS
-    // WKWebView only does on newer iOS), so we let the OS PDF viewer handle them.
-    const isInAppPreviewable = (mime: string): boolean => {
+    // Types the Android in-app WebView modal can render reliably. PDFs/docs/etc.
+    // are handled by the OS via actionViewIntent. iOS doesn't use the modal at all —
+    // viewDocument already gives the right Quick Look experience on that platform.
+    const isAndroidModalPreviewable = (mime: string): boolean => {
         const [primary] = mime.split('/');
         return primary === 'video'
             || primary === 'audio'
@@ -136,22 +133,14 @@ const Attachments = ({
             onPreloader(true);
             const result = await fetchForPreview();
             const localUri = `file://${result.path()}`;
-            // In-app WebView viewer for media (video/audio/image) — keeps the user in
-            // context, shows native HTML5 controls without a fullscreen takeover, and avoids
-            // the OEM-specific ExoPlayer crashes on Android because WebView uses Chrome's
-            // media stack instead.
-            if (isInAppPreviewable(mimeType)) {
-                // Header title slot can't accommodate long filenames between the back button
-                // and the hamburger — truncate so it doesn't overlap the right icon.
-                const headerTitle = title.length > 20 ? `${title.slice(0, 20)}…` : title;
-                navigation.navigate(ROUTES.MESSENGER_ATTACHMENT_VIEWER, {
-                    mimeType,
-                    uri: localUri,
-                    title: headerTitle,
-                });
-                return;
-            }
             if (Platform.OS === 'android') {
+                // In-app modal viewer for media (video/audio/image) — overlays the current
+                // screen with the WebView (Chrome media stack, no ExoPlayer codec init,
+                // avoids OEM-specific crashes).
+                if (isAndroidModalPreviewable(mimeType)) {
+                    setPreview({ uri: localUri, mimeType });
+                    return;
+                }
                 // Android 7+ refuses raw file:// URIs across app boundaries; hand the file to
                 // the OS via blob-util's FileProvider-backed intent so the stock viewer opens.
                 await RNBlobUtil.android.actionViewIntent(result.path(), mimeType);
@@ -184,33 +173,43 @@ const Attachments = ({
         />
     );
 
-    return <View
-        style={[styles.container, { borderColor: theme.colors.border, borderRadius: theme.borderRadius.md },]}
-    >
-        <Pressable
-            style={styles.row}
-            onPress={openRemoteFile}
+    return <>
+        <View
+            style={[styles.container, { borderColor: theme.colors.border, borderRadius: theme.borderRadius.md },]}
         >
-            {getIcon()}
-            <Text style={styles.flexShrink} numberOfLines={1}>{title}</Text>
-        </Pressable>
-        {isUploadFile ? (
-            <Pressable onPress={onRemove} hitSlop={8}>
-                <Icon
-                    size={16}
-                    iconStyle="solid"
-                    style={styles.icon}
-                    name="times-circle"
-                    color={theme.colors.error || theme.colors.darkGrey}
-                />
+            <Pressable
+                style={styles.row}
+                onPress={openRemoteFile}
+            >
+                {getIcon()}
+                <Text style={styles.flexShrink} numberOfLines={1}>{title}</Text>
             </Pressable>
-        ) : <Pressable onPress={downloadFile}>
-            {isDownload
-                ? <MaterialIndicator style={styles.icon} color={theme.colors.darkGrey} size={14}/>
-                : <Icon iconStyle="solid" style={styles.icon} name="download" size={14} color={theme.colors.darkGrey}/>
-            }
-        </Pressable>}
-    </View>;
+            {isUploadFile ? (
+                <Pressable onPress={onRemove} hitSlop={8}>
+                    <Icon
+                        size={16}
+                        iconStyle="solid"
+                        style={styles.icon}
+                        name="times-circle"
+                        color={theme.colors.error || theme.colors.darkGrey}
+                    />
+                </Pressable>
+            ) : <Pressable onPress={downloadFile}>
+                {isDownload
+                    ? <MaterialIndicator style={styles.icon} color={theme.colors.darkGrey} size={14}/>
+                    : <Icon iconStyle="solid" style={styles.icon} name="download" size={14} color={theme.colors.darkGrey}/>
+                }
+            </Pressable>}
+        </View>
+        {preview
+            ? <AttachmentViewerModal
+                title={title}
+                uri={preview.uri}
+                mimeType={preview.mimeType}
+                onClose={() => setPreview(null)}
+            />
+            : null}
+    </>;
 };
 
 export default Attachments;
