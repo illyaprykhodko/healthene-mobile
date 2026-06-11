@@ -3,7 +3,7 @@ import Icon from '@react-native-vector-icons/fontawesome5';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useCallback, useLayoutEffect, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useState, useEffect, useRef } from 'react';
 
 // local dependencies
 import Text from 'components/Text';
@@ -32,7 +32,7 @@ export default function ExerciseCategories () {
     const date = route.params?.date;
     const title = route.params?.title || 'Exercise';
     const deepPhaseId = route.params?.deepPhaseId;
-    const exercisePhaseStatus = route.params?.exercisePhaseStatus;
+    const isTopLevel = (route.params?.deepCounter || 0) === 0;
     const [currentList, setCurrentList] = useState<any[]>(route.params?.list || []);
     const [isNeedUpdateDayOverview, setNeedUpdateDayOverview] = useState(false);
     const [scrollEnabled, setScrollEnabled] = useState(true);
@@ -43,11 +43,15 @@ export default function ExerciseCategories () {
     const [updatePhase] = useUpdatePhaseMutation();
     const [updatePhaseItem] = useUpdatePhaseItemMutation();
 
+    // Single source of truth for the PHYSICAL_ACTIVITY phase — shared by category list,
+    // activeExercisesCount, allExercises roll-up, and the cached phase.status.
+    const physicalActivityPhase = useMemo(
+        () => dayOverviewData?.phases?.find(phase => phase.type === 'PHYSICAL_ACTIVITY'),
+        [dayOverviewData]
+    );
+
     // Build exercise categories from physical activity items
     const exerciseCategories = useMemo(() => {
-        if (!dayOverviewData?.phases) { return []; }
-
-        const physicalActivityPhase = dayOverviewData.phases.find(phase => phase.type === 'PHYSICAL_ACTIVITY');
         if (!physicalActivityPhase?.items) { return []; }
 
         // Group exercises by type
@@ -78,7 +82,7 @@ export default function ExerciseCategories () {
                 list: items.length ? items : null
             };
         });
-    }, [dayOverviewData]);
+    }, [physicalActivityPhase]);
 
     // Use exercise categories if no current list is set
     const displayList = currentList.length > 0 ? currentList : exerciseCategories;
@@ -92,11 +96,9 @@ export default function ExerciseCategories () {
 
     // Calculate active exercises count
     const activeExercisesCount = useMemo(() => {
-        if (!dayOverviewData?.phases) { return 0; }
-        const physicalActivityPhase = dayOverviewData.phases.find(phase => phase.type === 'PHYSICAL_ACTIVITY');
         if (!physicalActivityPhase?.items) { return 0; }
         return physicalActivityPhase.items.filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
-    }, [dayOverviewData]);
+    }, [physicalActivityPhase]);
 
     // Check if today to determine status logic
     const isToday = useMemo(() => {
@@ -104,46 +106,70 @@ export default function ExerciseCategories () {
         return today === date;
     }, [date]);
 
-    // Calculate new phase status based on all exercises
+    // Roll-up source for phase status. Filter out the PHYSICAL_ACTIVITY wrapper so the
+    // "all done" check matches the categories the user actually sees (the category list
+    // applies the same filter), otherwise an invisible PENDING item could block DONE.
     const allExercises = useMemo(() => {
-        if (!dayOverviewData?.phases) { return []; }
-        const physicalActivityPhase = dayOverviewData.phases.find(phase => phase.type === 'PHYSICAL_ACTIVITY');
-        return physicalActivityPhase?.items || [];
-    }, [dayOverviewData]);
+        if (!physicalActivityPhase?.items) { return []; }
+        return physicalActivityPhase.items.filter((item: any) => item.type !== 'PHYSICAL_ACTIVITY');
+    }, [physicalActivityPhase]);
 
-    const newPhaseStatus = useMemo(() => {
-        // Prefer local list
-        const source = currentList && currentList.length > 0 ? currentList : allExercises;
-        return getPhaseNewStatus(source as any[], isToday);
-    }, [currentList, allExercises, isToday]);
+    // Always compute against the full phase. The nested screen's currentList is only
+    // one category's items and would otherwise yield a premature DONE.
+    const newPhaseStatus = useMemo(
+        () => getPhaseNewStatus(allExercises as any[], isToday),
+        [allExercises, isToday]
+    );
 
-    // Update phase status when exercises change
+    // Live phase.status from cache — replaces the frozen route.params snapshot.
+    const currentPhaseStatus = physicalActivityPhase?.status;
+
+    // Reconcile phase.status with the rolled-up status. Runs only at the top level
+    // (deepCounter === 0) — the nested screen only sees one category's items and would
+    // incorrectly fire DONE for the whole phase. An inFlight ref blocks the same status
+    // from being re-sent if the server keeps returning a different value, preventing loops.
+    const inFlightStatusRef = useRef<string | null>(null);
     useEffect(() => {
-        if (exercisePhaseStatus && deepPhaseId && exercisePhaseStatus !== newPhaseStatus) {
-            try {
-                setNeedUpdateDayOverview(true);
-                updatePhase({
-                    id: deepPhaseId,
-                    data: { status: newPhaseStatus }
-                });
-            } catch (error) {
-                console.error('updatePhaseItem', error);
-            }
+        if (!isTopLevel || !deepPhaseId || !currentPhaseStatus || !physicalActivityPhase) { return; }
+        if (currentPhaseStatus === newPhaseStatus) {
+            inFlightStatusRef.current = null;
+            return;
         }
-    }, [exercisePhaseStatus, newPhaseStatus, deepPhaseId, updatePhase]);
+        if (inFlightStatusRef.current === newPhaseStatus) { return; }
+        inFlightStatusRef.current = newPhaseStatus;
+        // Server NPEs on a body of just `{ status }` (DayOverviewPhaseServiceImpl.runIncompleteStatusScenario
+        // dereferences required phase fields). Spread the full phase shape, drop items, override status —
+        // same convention used in DayOverview/Edit/index.tsx:520-526.
+        const { items: _items, ...phaseWithoutItems } = physicalActivityPhase as any;
+        updatePhase({
+            id: deepPhaseId,
+            data: { ...phaseWithoutItems, status: newPhaseStatus },
+        })
+            .unwrap()
+            .then(() => { setNeedUpdateDayOverview(true); })
+            .catch(error => {
+                inFlightStatusRef.current = null;
+                console.error('Failed to update phase status:', error);
+            });
+    }, [isTopLevel, currentPhaseStatus, newPhaseStatus, deepPhaseId, physicalActivityPhase, updatePhase]);
 
     // Function to update current list when exercise status changes
     const refreshCurrentList = useCallback((id: string | number, index: string, value: any) => {
         setCurrentList((prev: any[]) => {
             if (prev.length === 0) { return prev; } // If using exerciseCategories, don't modify
-            const newList = prev.map((item: any) => (item.id === id ? { ...item, [index]: value } : item));
-            // Update navigation params to persist changes
-            navigation.setParams({
-                list: newList,
-            });
-            return newList;
+            return prev.map((item: any) => (item.id === id ? { ...item, [index]: value } : item));
         });
-    }, [navigation, setCurrentList]);
+    }, []);
+
+    // Mirror the local list onto route params so that re-mounts (deep links, screen
+    // restoration) keep the latest statuses. Runs as a side effect — never call
+    // navigation.setParams inside a setState updater (it would update the navigator
+    // during render and trigger the "setState in render" warning).
+    useEffect(() => {
+        if (currentList.length > 0) {
+            navigation.setParams({ list: currentList });
+        }
+    }, [currentList, navigation]);
     const handleChangeStatus = useCallback(async (item: any, status: string) => {
         refreshCurrentList(item.id, 'status', status);
         if (!deepPhaseId) { return; }
