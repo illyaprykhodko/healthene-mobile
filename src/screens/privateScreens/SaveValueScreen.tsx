@@ -110,18 +110,25 @@ const SaveValueScreen: React.FC = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await deleteMeasurements(measurementIds).unwrap();
-                            MessageService.toastSuccess('Measurement deleted');
+                            // Flip the phase item to PENDING first so the server commits the new
+                            // status before deleteMeasurements invalidates 'DayOverview'. If we
+                            // delete first, the invalidation-triggered refetch can race the
+                            // updatePhaseItem PUT and overwrite the optimistic PENDING with the
+                            // still-DONE server snapshot (updatePhaseItem has no invalidatesTags
+                            // and never re-patches getDayOverview on queryFulfilled).
                             if (measurementPhaseItem) {
                                 await updatePhaseItem({
                                     id: measurementPhaseItem.id,
                                     phaseId: measurementPhaseItem.phaseId!,
+                                    date: currentDate,
                                     data: {
                                         ...measurementPhaseItem,
                                         status: PHASE_ITEM_STATUS.PENDING,
                                     },
                                 }).unwrap();
                             }
+                            await deleteMeasurements(measurementIds).unwrap();
+                            MessageService.toastSuccess('Measurement deleted');
                             navigation.goBack();
                         } catch (error) {
                             // console.error('[SaveValue] Delete error:', error);
@@ -135,7 +142,7 @@ const SaveValueScreen: React.FC = () => {
                 },
             ]
         );
-    }, [measurementIds, deleteMeasurements, navigation]);
+    }, [measurementIds, measurementPhaseItem, currentDate, deleteMeasurements, updatePhaseItem, navigation]);
 
     const handleDone = useCallback(async () => {
         try {
@@ -143,6 +150,7 @@ const SaveValueScreen: React.FC = () => {
                 await updatePhaseItem({
                     id: measurementPhaseItem.id,
                     phaseId: measurementPhaseItem.phaseId!,
+                    date: currentDate,
                     data: {
                         ...measurementPhaseItem,
                         status: PHASE_ITEM_STATUS.DONE,
@@ -158,7 +166,7 @@ const SaveValueScreen: React.FC = () => {
                 message: 'Failed to update measurement status',
             });
         }
-    }, [measurementPhaseItem, updatePhaseItem, navigation]);
+    }, [measurementPhaseItem, currentDate, updatePhaseItem, navigation]);
 
     const isDisabled = isDeleting || isFutureDate || measurementPhaseItem?.status === PHASE_ITEM_STATUS.DONE;
 
