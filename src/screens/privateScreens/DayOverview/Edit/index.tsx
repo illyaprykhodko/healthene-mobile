@@ -2,8 +2,8 @@
 import moment from 'moment';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 
 // local dependencies
 import {
@@ -930,12 +930,44 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
                 {/* {(currentPhase?.type === OVERVIEW_TYPE.MEAL
               || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? ( */}
-                <GlassSurface
-                    intensity={10}
-                    style={styles.glassBar}
-                    tint={theme.dark ? 'dark' : 'light'}
-                >
-                    <View style={styles.buttonContainer}>
+                {Platform.OS === 'ios'
+                    ? <GlassSurface
+                        intensity={10}
+                        style={styles.glassBar}
+                        tint={theme.dark ? 'dark' : 'light'}
+                    >
+                        <View style={styles.buttonContainer}>
+                            <Button
+                                icon="plus"
+                                title="Add"
+                                variant="primary"
+                                onPress={handleAddItem}
+                                disabled={isFutureDate}
+                                textStyle={styles.textAddButton}
+                                style={{
+                                    ...styles.button,
+                                    ...styles.addButtonActive,
+                                    width: isFutureDate ? '100%' : '45%',
+                                    backgroundColor: theme.colors.transparent,
+                                }}
+                            />
+                            {!isFutureDate && (
+                                <Button
+                                    title="Meal Done"
+                                    variant="secondary"
+                                    onPress={handlePhaseDone}
+                                    disabled={!allItemsDone || isLoading}
+                                    textStyle={styles.textMealDoneButton}
+                                    style={{
+                                        ...styles.button,
+                                        ...styles.mealDoneButton,
+                                        ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
+                                    }}
+                                />
+                            )}
+                        </View>
+                    </GlassSurface>
+                    : <View style={styles.buttonContainer}>
                         <Button
                             icon="plus"
                             title="Add"
@@ -965,7 +997,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             />
                         )}
                     </View>
-                </GlassSurface>
+                }
+
                 {/* ) : (
                     <Button
                         icon="plus"
