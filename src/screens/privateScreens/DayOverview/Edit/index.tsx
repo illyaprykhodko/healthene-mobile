@@ -244,10 +244,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         const isMealPhase = currentPhase?.type === OVERVIEW_TYPE.MEAL || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT;
         if (isMealPhase) {
             navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
-                date: targetDate,
                 prevItem: null,
-                entityType: 'PATIENT_FOOD',
+                date: targetDate,
                 substanceType: 'FOOD',
+                entityType: 'PATIENT_FOOD',
                 onApply: async (payload: any) => {
                     let isAddSuccessful = false;
                     setShouldScrollToAddedEnd(true);
@@ -569,9 +569,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             case ENTITY_TYPE.FOOD: {
                 navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
                     date: targetDate,
-                    entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
-                    substanceType: prevItem.substanceType || 'FOOD',
                     prevItem: prevItemWithoutRating,
+                    substanceType: prevItem.substanceType || 'FOOD',
+                    entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
                     onApply: (data: any) => {
                         setReplacementData({
                             prevItem: prevItemWithoutRating,
@@ -835,9 +835,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             <View style={styles.list}>
                 <ScrollView
                     ref={scrollViewRef}
+                    scrollEnabled={scrollEnabled}
                     style={isFutureDate && styles.opacity}
                     contentContainerStyle={styles.listContent}
-                    scrollEnabled={scrollEnabled}
                     onContentSizeChange={() => {
                         if (shouldScrollToAddedEnd && !isAddingAddedItem) {
                             setTimeout(() => {
