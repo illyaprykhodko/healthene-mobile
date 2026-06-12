@@ -45,8 +45,8 @@ import SwipeList, { SwipeValueChange } from 'components/SwipeList';
 import { CelebrationConfetti } from 'components/CelebrationConfetti';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { useUpdatePatientGamblingPointsMutation } from 'store/api/gamblingPointsApi.ts';
-import { selectDayOverview, addRecentlyCompletedPhase, meta as dayOverviewMeta } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
+import { selectDayOverview, addRecentlyCompletedPhase, meta as dayOverviewMeta } from 'store/slices/dayOverviewSlice';
 
 interface EditProps {
     date?: string;
@@ -144,21 +144,29 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         setTargetPhaseId(match?.id);
     }, [dayOverviewData, initialPhaseId]);
 
-    const { currentData: phaseItems, isFetching: isPhaseItemsFetching, refetch: refetchPhaseItems } = useGetPhaseItemsQuery(targetPhaseId, {
+    // Use `isLoading` (true only on the initial fetch) instead of `isFetching` (true on
+    // every refetch). updatePhase invalidates 'PhaseItems' on each status change which
+    // would otherwise re-trigger the Screen's full-page spinner. Optimistic patches in
+    // updatePhaseItem keep the list visible and correct during the background refetch.
+    const {
+        currentData: phaseItems,
+        refetch: refetchPhaseItems,
+        isLoading: isPhaseItemsLoading
+    } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
     });
     // mutations
-    const [updatePhase] = useUpdatePhaseMutation();
     const [addPhaseItem] = useAddPhaseItemMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
-    const [updatePhaseItem] = useUpdatePhaseItemMutation();
     // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
     const [addPhaseMealItem] = useAddPhaseMealItemMutation();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
     const [updatePatientGamblingPoints] = useUpdatePatientGamblingPointsMutation();
+    const [updatePhase, { isLoading: isUpdatingPhase }] = useUpdatePhaseMutation();
     const [interchangeMeals, { isLoading: isSwapping }] = useInterchangeMealsMutation();
+    const [updatePhaseItem, { isLoading: isUpdatingPhaseItem }] = useUpdatePhaseItemMutation();
     //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
 
@@ -677,7 +685,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         };
     }, [navigation]);
 
-    const isLoading = isPhaseItemsFetching || isSwapping;
+    const isLoading = isPhaseItemsLoading || isSwapping;
 
     // if (isLoading) {
     //     return (
@@ -861,11 +869,14 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 renderItem={({ item, index }, ...restProps) => {
                                     return <ListItem
                                         item={item}
-                                        disabled={false}
                                         date={targetDate}
                                         isFutureDate={isFutureDate}
                                         updateData={updatePhaseItem}
                                         handleCheckboxStatus={handleCheckboxStatus}
+                                        // Lock checkbox and swipe-to-skip while a status mutation
+                                        // is in flight. Prevents double-tap races where the phase
+                                        // status update could lag the checkbox state.
+                                        disabled={isUpdatingPhase || isUpdatingPhaseItem}
                                     />;
                                     // return (
                                     //     isPhaseItemsFetching

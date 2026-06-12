@@ -87,13 +87,20 @@ const TreeAddReplaceItem: React.FC = () => {
         return () => clearTimeout(handler);
     }, [searchQuery]);
 
+    // Reset paginated state whenever the (debounced) search term changes. Without this,
+    // editing the query while results are paginated would leave `page` at e.g. 2, so the
+    // next query fires with { nameFragment: <new>, page: 2 } and the items effect takes
+    // the append branch — new results would concat onto the previous ones.
+    // The clear-to-empty case on the RESTAURANT tab is preserved as a no-op so the tree
+    // browsing state isn't wiped when the user just clears the search there.
     useEffect(() => {
-        if (debouncedSearchQuery.trim().length === 0 && selectedTab !== TAG_TYPE.RESTAURANT) {
-            setPage(0);
-            setAllItems([]);
-            setAiFoods([]);
-            setIsAiFoodsAdded(false);
+        if (debouncedSearchQuery.trim().length === 0 && selectedTab === TAG_TYPE.RESTAURANT) {
+            return;
         }
+        setPage(0);
+        setAllItems([]);
+        setAiFoods([]);
+        setIsAiFoodsAdded(false);
     }, [debouncedSearchQuery, selectedTab]);
     const { data: categoryTreeData, isLoading: isCategoryTreeLoading } = useGetCategoryTreeNodesQuery(
         {
@@ -614,43 +621,46 @@ const TreeAddReplaceItem: React.FC = () => {
             </View>
             {renderTabs()}
             {renderSearchInput()}
-            {isShowMoreVisible && (
-                <TouchableOpacity
-                    disabled={isLoading || isAiLoading}
-                    onPress={handleShowMore}
-                    style={styles.showMoreContainer}
-                >
-                    {isAiLoading ? (
-                        <ActivityIndicator size="small" color={theme.colors.primary} />
-                    ) : (
-                        <Text style={styles.showMoreText}>✨  Show More...</Text>
-                    )}
-                </TouchableOpacity>
-            )}
             <FlatList
                 data={displayedItems}
                 renderItem={renderItem}
+                onEndReachedThreshold={0.1}
                 onEndReached={handleLoadMore}
                 keyboardDismissMode="on-drag"
+                keyboardShouldPersistTaps="handled"
                 contentContainerStyle={styles.listContent}
+                keyExtractor={({ id }) => String(id)}
                 onScrollBeginDrag={() => {
                     if (isKeyboardVisible) { Keyboard.dismiss(); }
                 }}
-                onEndReachedThreshold={0.1}
-                keyExtractor={({ id }) => String(id)}
-                keyboardShouldPersistTaps="handled"
                 ListEmptyComponent={
-                    !isLoading && !isAiLoading ? (
+                    isLoading || isAiLoading ? (
+                        <View style={styles.loadingMore}>
+                            <ActivityIndicator size="small" color={theme.colors.primary} />
+                        </View>
+                    ) : (
                         <Text style={styles.emptyScreen}>
                             {searchQuery.trim().length > 0 ? 'No items found' : 'Enter a search term'}
                         </Text>
-                    ) : null
+                    )
                 }
                 ListFooterComponent={
                     isLoading && page > 0 ? (
                         <View style={styles.loadingMore}>
                             <ActivityIndicator size="small" color={theme.colors.primary} />
                         </View>
+                    ) : isShowMoreVisible ? (
+                        <TouchableOpacity
+                            onPress={handleShowMore}
+                            style={styles.showMoreContainer}
+                            disabled={isLoading || isAiLoading}
+                        >
+                            {isAiLoading ? (
+                                <ActivityIndicator size="small" color={theme.colors.primary} />
+                            ) : (
+                                <Text style={styles.showMoreText}>✨  Show More...</Text>
+                            )}
+                        </TouchableOpacity>
                     ) : null
                 }
             />

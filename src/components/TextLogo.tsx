@@ -15,9 +15,9 @@ export const TextLogo: React.FC<TextLogoProps> = ({ style, color }) => {
     return (
         <Text
             style={StyleSheet.flatten([
+                style,
                 styles.textLogo,
                 resolved ? { color: resolved } : {},
-                style,
             ])}
             numberOfLines={1}
         >
