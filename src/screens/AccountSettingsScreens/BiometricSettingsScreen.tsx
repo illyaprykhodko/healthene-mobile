@@ -22,10 +22,12 @@ import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import TextInput from 'components/TextInput';
 import { biometricService } from 'services/biometricService';
+import { useVerifyPasswordMutation } from 'store/api/authApi';
 
 export const BiometricSettingsScreen: React.FC = () => {
     const theme = useTheme();
     const user = useAppSelector(state => state.app.user);
+    const [verifyPassword] = useVerifyPasswordMutation();
 
     const [isLoading, setIsLoading] = useState(true);
     const [isAvailable, setIsAvailable] = useState(false);
@@ -121,6 +123,21 @@ export const BiometricSettingsScreen: React.FC = () => {
 
         setIsProcessing(true);
         try {
+            try {
+                await verifyPassword({ username: user.email, password }).unwrap();
+            } catch (verifyError: any) {
+                const status = verifyError?.status;
+                const isAuthFailure = status === 401 || status === 400 || status === 403;
+                Toast.show({
+                    type: 'error',
+                    text1: isAuthFailure ? 'Incorrect Password' : 'Verification Failed',
+                    text2: isAuthFailure
+                        ? 'The password you entered is incorrect'
+                        : 'Unable to verify password. Please try again.',
+                });
+                return;
+            }
+
             const saved = await biometricService.saveCredentials(user.email, password);
 
             if (saved) {
@@ -147,7 +164,7 @@ export const BiometricSettingsScreen: React.FC = () => {
         } finally {
             setIsProcessing(false);
         }
-    }, [password, user?.email, biometryType]);
+    }, [password, user?.email, biometryType, verifyPassword]);
 
     const handleTestBiometric = useCallback(async () => {
         setIsProcessing(true);
