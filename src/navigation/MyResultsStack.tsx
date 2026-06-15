@@ -15,7 +15,7 @@ const renderCustomHeader = (options?: { showBackButton?: boolean }) =>
     (headerProps: any) => (
         <StackHeader
             title={headerProps.options.title}
-            showBack={options?.showBackButton !== false && !!headerProps.back}
+            showBack={options?.showBackButton !== false}
             onBack={() => headerProps.navigation.goBack()}
             onOpenDrawer={() => headerProps.navigation.openDrawer()}
         />
@@ -29,7 +29,7 @@ const MyResultsStack: React.FC = () => {
                 component={MyResultsScreen}
                 options={{
                     title: 'My Results',
-                    header: renderCustomHeader({ showBackButton: false }),
+                    header: renderCustomHeader({ showBackButton: true }),
                 }}
             />
             <Stack.Screen
