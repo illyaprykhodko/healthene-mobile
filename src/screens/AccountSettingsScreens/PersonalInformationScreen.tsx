@@ -96,20 +96,26 @@ export const PersonalInformationScreen = () => {
                         const uploadImage = async () => {
                             userImgSheetRef.current?.close();
                             setIsLoading(true);
-                            const url = await getPicture();
-                            if (url) {
-                                handleChange('coverImage.url')(url);
+                            try {
+                                const url = await getPicture();
+                                if (url) {
+                                    handleChange('coverImage.url')(url);
+                                }
+                            } finally {
+                                setIsLoading(false);
                             }
-                            setIsLoading(false);
                         };
                         const uploadCameraImage = async () => {
                             userImgSheetRef.current?.close();
                             setIsLoading(true);
-                            const url = await takePicture();
-                            if (url) {
-                                handleChange('coverImage.url')(url);
+                            try {
+                                const url = await takePicture();
+                                if (url) {
+                                    handleChange('coverImage.url')(url);
+                                }
+                            } finally {
+                                setIsLoading(false);
                             }
-                            setIsLoading(false);
                         };
                         return (
                             <>

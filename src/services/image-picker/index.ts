@@ -60,10 +60,16 @@ const checkPermission = async (permission: Permission): Promise<boolean> => {
     return false;
 };
 
+const isCancellation = (error: any): boolean =>
+    error?.code === 'E_PICKER_CANCELLED' || error?.message?.includes('cancel');
+
 export const takePicture = async () => {
     const isPermissionGranted = await checkPermission(PERMISSIONS_ITEM.CAMERA);
-    if (isPermissionGranted) {
-        return ImagePicker.openCamera({
+    if (!isPermissionGranted) {
+        return;
+    }
+    try {
+        const image = await ImagePicker.openCamera({
             width: 512,
             height: 512,
             cropping: true,
@@ -75,14 +81,23 @@ export const takePicture = async () => {
             cropperActiveWidgetColor: '#FFFFFF',
             cropperToolbarWidgetColor: '#FFFFFF',
             cropperToolbarTitle: 'Crop your image',
-        }).then(image => uploadPicture(image));
+        });
+        return uploadPicture(image);
+    } catch (error) {
+        if (isCancellation(error)) {
+            return;
+        }
+        throw error;
     }
 };
 
 export const getPicture = async () => {
     const isPermissionGranted = Platform.OS === 'android' ? true : await checkPermission(PERMISSIONS_ITEM.MEDIA);
-    if (isPermissionGranted) {
-        return ImagePicker.openPicker({
+    if (!isPermissionGranted) {
+        return;
+    }
+    try {
+        const image = await ImagePicker.openPicker({
             width: 512,
             height: 512,
             cropping: true,
@@ -93,7 +108,13 @@ export const getPicture = async () => {
             cropperActiveWidgetColor: '#FFFFFF',
             cropperToolbarWidgetColor: '#FFFFFF',
             cropperToolbarTitle: 'Crop your image',
-        }).then(image => uploadPicture(image));
+        });
+        return uploadPicture(image);
+    } catch (error) {
+        if (isCancellation(error)) {
+            return;
+        }
+        throw error;
     }
 };
 
@@ -116,10 +137,10 @@ const uploadPicture = async (file: PickerImage) => {
                 uploadImageInitiate({
                     body,
                     params: {
-                        x: 1,
-                        y: 1,
-                        width: file.cropRect?.width,
-                        height: file.cropRect?.height,
+                        x: file.cropRect.x,
+                        y: file.cropRect.y,
+                        width: file.cropRect.width,
+                        height: file.cropRect.height,
                     }
                 })
             );
