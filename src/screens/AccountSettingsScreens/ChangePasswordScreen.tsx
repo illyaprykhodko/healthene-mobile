@@ -13,6 +13,7 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
+import { isBadCredentialsError } from 'services/auth/errors';
 import { useChangePasswordMutation } from 'store/api/settingsApi.ts';
 
 // validation
@@ -45,8 +46,10 @@ const ChangePasswordScreen = () => {
         } catch (error: any) {
             Toast.show({
                 type: 'error',
-                text1: 'Password update failed',
-                text2: String(filters.humanize(error?.data?.errorCode)) || 'Something went wrong while changing your password. Please try again later.',
+                text1: isBadCredentialsError(error) ? 'Incorrect Current Password' : 'Password update failed',
+                text2: isBadCredentialsError(error)
+                    ? 'The current password you entered is incorrect. Please try again.'
+                    : String(filters.humanize(error?.data?.errorCode)) || 'Something went wrong while changing your password. Please try again later.',
             });
         }
     };

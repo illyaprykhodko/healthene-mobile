@@ -3,10 +3,8 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // local dependencies
-import { useTheme } from 'hooks/useTheme.ts';
-import { OFFSET } from 'constants/offset.ts';
 import { ROUTES } from 'constants/routes.ts';
-import BackButton from 'components/BackButton.tsx';
+import StackHeader from 'components/StackHeader';
 import FoodAllergies from 'screens/AccountSettingsScreens/FoodAllergies';
 import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
 import FoodPreferences from 'screens/AccountSettingsScreens/FoodPreferences';
@@ -21,28 +19,21 @@ import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/Person
 
 const Stack = createStackNavigator();
 
-export const AccountSettingsStack = () => {
-    const theme = useTheme();
+const renderHeader = (headerProps: any) => (
+    <StackHeader
+        title={headerProps.options.title}
+        showBack={!!headerProps.back}
+        onBack={() => headerProps.navigation.goBack()}
+    />
+);
 
+export const AccountSettingsStack = () => {
     return (
         <Stack.Navigator
-            screenOptions={({ navigation }) => ({
+            screenOptions={{
                 headerShown: true,
-                headerLeft: () => (
-                    <BackButton navigation={navigation} theme={theme} />
-                ),
-                headerTintColor: theme.colors.headerText,
-                headerStyle: {
-                    backgroundColor: theme.colors.headerBg,
-                },
-                headerTitleStyle: {
-                    fontWeight: '600'
-                },
-                headerTitleAlign: 'center',
-                headerLeftContainerStyle: {
-                    paddingLeft: OFFSET.HORIZONTAL,
-                },
-            })}
+                header: renderHeader,
+            }}
         >
             <Stack.Screen
                 name={ROUTES.SETTINGS}

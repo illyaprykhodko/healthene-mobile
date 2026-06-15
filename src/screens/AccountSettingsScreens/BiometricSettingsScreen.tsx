@@ -23,6 +23,7 @@ import { Button } from 'components/Button';
 import TextInput from 'components/TextInput';
 import { biometricService } from 'services/biometricService';
 import { useVerifyPasswordMutation } from 'store/api/authApi';
+import { isBadCredentialsError } from 'services/auth/errors';
 
 export const BiometricSettingsScreen: React.FC = () => {
     const theme = useTheme();
@@ -126,12 +127,11 @@ export const BiometricSettingsScreen: React.FC = () => {
             try {
                 await verifyPassword({ username: user.email, password }).unwrap();
             } catch (verifyError: any) {
-                const status = verifyError?.status;
-                const isAuthFailure = status === 401 || status === 400 || status === 403;
+                const badCredentials = isBadCredentialsError(verifyError);
                 Toast.show({
                     type: 'error',
-                    text1: isAuthFailure ? 'Incorrect Password' : 'Verification Failed',
-                    text2: isAuthFailure
+                    text1: badCredentials ? 'Incorrect Password' : 'Verification Failed',
+                    text2: badCredentials
                         ? 'The password you entered is incorrect'
                         : 'Unable to verify password. Please try again.',
                 });
