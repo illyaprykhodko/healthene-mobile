@@ -324,8 +324,15 @@ const QuestionScreen: React.FC = () => {
                                 editable={!isLoading}
                                 onChangeText={setDescription}
                                 placeholderTextColor="#999999"
-                                style={[styles.textarea, { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
                                 placeholder={responseItems[0]?.itemText || 'Enter your answer...'}
+                                style={[
+                                    styles.textarea,
+                                    {
+                                        color: theme.colors.text,
+                                        borderColor: theme.colors.border,
+                                        backgroundColor: theme.colors.surface
+                                    }
+                                ]}
                             />
                         </View>
                     ) : !isFinalMessage ? (

@@ -149,8 +149,11 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
 
     return (
         <Screen
-            style={[styles.container, { backgroundColor: theme.colors.background }]}
             initialized={!isLoading && !isFetching}
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.background }
+            ]}
         >
             <StackHeader
                 title="International Cuisine"
@@ -203,12 +206,14 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
                 title="SAVE"
                 variant="success"
                 onPress={handleSave}
+                textStyle={styles.submitBtnText}
                 disabled={!localFavoriteList.length || !hasUnsavedChanges || isUpdating}
                 style={[
                     styles.submitBtn,
-                    hasUnsavedChanges ? styles.submitBtnActive : styles.submitBtnInactive,
+                    hasUnsavedChanges
+                        ? styles.submitBtnActive
+                        : styles.submitBtnInactive,
                 ]}
-                textStyle={styles.submitBtnText}
             />
             <ConfirmationAlert
                 cancelTxt="Go Back"

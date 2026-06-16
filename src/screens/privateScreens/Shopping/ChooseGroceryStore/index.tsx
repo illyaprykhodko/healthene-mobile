@@ -10,12 +10,13 @@ import Screen from 'components/Screen';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import { useTheme } from 'hooks/useTheme';
 import { Button } from 'components/Button';
 import DefImage from 'components/DefImage';
-import { useTheme } from 'hooks/useTheme';
 import StackHeader from 'components/StackHeader';
 import { useAppDispatch, useAppSelector } from 'store';
 import { useShoppingDrawer } from '../useShoppingDrawer';
+import ConfirmationAlert from 'components/ConfirmationAlert';
 import { SHOPPING_STEP, SHOPPING_STATUS, SHOPPING_CONFIRMED_ITEM_TYPE } from 'constants/spec';
 import {
     selectShopping,
@@ -32,7 +33,6 @@ import {
     useGetIncompleteGroceryStoresQuery,
     useUpdateShoppingListStatusMutation,
 } from 'store/api/shoppingApi';
-import ConfirmationAlert from 'components/ConfirmationAlert';
 
 const SHOP_ON_MY_OWN_ID = 'SHOP_ON_MY_OWN';
 

@@ -203,8 +203,11 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
 
     return (
         <Screen
-            style={[styles.container, { backgroundColor: theme.colors.background }]}
             initialized={!isLoading}
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.background }
+            ]}
         >
             <StackHeader
                 onBack={() => navigation.goBack()}
@@ -242,7 +245,9 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
                 disabled={!hasUnsavedChanges || isSaving || isResetting}
                 style={[
                     styles.submitBtn,
-                    hasUnsavedChanges ? styles.submitBtnActive : styles.submitBtnInactive,
+                    hasUnsavedChanges
+                        ? styles.submitBtnActive
+                        : styles.submitBtnInactive,
                 ]}
             />
             <ConfirmationAlert

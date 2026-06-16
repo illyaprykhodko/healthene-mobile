@@ -198,9 +198,9 @@ const GiftCardOrders: React.FC = () => {
                 contentContainerStyle={styles.listContent}
                 refreshControl={
                     <RefreshControl
-                        tintColor={theme.colors.primary}
                         refreshing={isRefreshing}
                         onRefresh={handleRefresh}
+                        tintColor={theme.colors.primary}
                     />
                 }
             />

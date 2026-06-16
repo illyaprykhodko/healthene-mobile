@@ -48,13 +48,19 @@ const QuestionListScreen: React.FC = () => {
 
         return (
             <TouchableOpacity
-                style={[styles.item, { borderBottomColor: theme.colors.border }]}
                 onPress={() => handleQuestionPress(item)}
+                style={[
+                    styles.item,
+                    { borderBottomColor: theme.colors.border }
+                ]}
             >
                 <Text
                     variant="h4"
                     numberOfLines={1}
-                    style={[styles.itemTitle, { color: theme.colors.text }]}
+                    style={[
+                        styles.itemTitle,
+                        { color: theme.colors.text }
+                    ]}
                 >
                     {title}
                 </Text>
@@ -74,7 +80,10 @@ const QuestionListScreen: React.FC = () => {
                 <View style={styles.emptyContainer}>
                     <Text
                         variant="h3"
-                        style={[styles.emptyText, { color: theme.colors.text }]}
+                        style={[
+                            styles.emptyText,
+                            { color: theme.colors.text }
+                        ]}
                     >
                         No questions in this category
                     </Text>

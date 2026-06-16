@@ -16,9 +16,9 @@ import DefImage from 'components/DefImage';
 import { Button } from 'components/Button';
 import { SHOPPING_STEP } from 'constants/spec';
 import StackHeader from 'components/StackHeader';
-import { useShoppingDrawer } from '../useShoppingDrawer';
 import { useAppDispatch, useAppSelector } from 'store';
 import HorizontalMenu from 'components/HorizontalMenu';
+import { useShoppingDrawer } from '../useShoppingDrawer';
 import { PressableScale } from 'components/PressableScale';
 import ConfirmationAlert from 'components/ConfirmationAlert';
 import {

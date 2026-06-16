@@ -54,8 +54,8 @@ const QuestionCategoryScreen: React.FC = () => {
     const handleCategoryPress = useCallback((category: QuestionCategory) => {
         navigation.navigate(ROUTES.QUESTION_LIST, {
             date,
-            categoryId: category.libraryCategory.id,
             questions: category.questions,
+            categoryId: category.libraryCategory.id,
             categoryName: category.libraryCategory.name,
         });
     }, [navigation, date]);
@@ -65,8 +65,11 @@ const QuestionCategoryScreen: React.FC = () => {
 
         return (
             <TouchableOpacity
-                style={[styles.item, { borderBottomColor: theme.colors.border }]}
                 onPress={() => handleCategoryPress(item)}
+                style={[
+                    styles.item,
+                    { borderBottomColor: theme.colors.border }
+                ]}
             >
                 <Text
                     variant="h4"

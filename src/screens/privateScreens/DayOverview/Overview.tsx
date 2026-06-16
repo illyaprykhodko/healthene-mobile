@@ -834,24 +834,24 @@ export const Overview: React.FC = () => {
     }, [navigation]);
 
     const calendarTheme = useMemo(() => ({
-        dotColor: theme.colors.info,
         textDayFontSize: 16,
         textMonthFontSize: 18,
+        textDayHeaderFontSize: 14,
+        dotColor: theme.colors.info,
         arrowColor: theme.colors.info,
         dayTextColor: theme.colors.text,
         textDayFontWeight: '400' as const,
-        textDayHeaderFontSize: 14,
         monthTextColor: theme.colors.text,
         todayTextColor: theme.colors.info,
-        backgroundColor: theme.colors.surface,
         textMonthFontWeight: '600' as const,
         selectedDotColor: theme.colors.white,
-        textDisabledColor: theme.colors.skeleton,
-        calendarBackground: theme.colors.surface,
+        backgroundColor: theme.colors.surface,
         textDayHeaderFontWeight: '500' as const,
+        calendarBackground: theme.colors.surface,
+        textDisabledColor: theme.colors.skeleton,
         selectedDayTextColor: theme.colors.white,
-        textSectionTitleColor: theme.colors.textSecondary,
         selectedDayBackgroundColor: theme.colors.info,
+        textSectionTitleColor: theme.colors.textSecondary,
     }), [theme]);
 
     useEffect(() => {
@@ -1194,14 +1194,14 @@ export const Overview: React.FC = () => {
                         activeOpacity={0.8}
                         onPress={handleGamblingPress}
                         style={[
-                            styles.gamblingBtn,
-                            styles.shadowBtn,
                             styles.roundBtn,
+                            styles.shadowBtn,
+                            styles.gamblingBtn,
                             { backgroundColor: theme.colors.info },
                         ]}
                     >
                         <Text variant="h2" style={{ color: theme.colors.white, fontFamily: 'Outfit-Bold' }}>
-                        $
+                            $
                         </Text>
                     </TouchableOpacity>
                 )}

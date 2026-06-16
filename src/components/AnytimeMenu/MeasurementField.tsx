@@ -47,8 +47,13 @@ export const MeasurementField: React.FC<MeasurementFieldProps> = ({
         <View style={styles.container}>
             <View style={[
                 styles.inputContainer,
-                { borderColor: theme.colors.cerulean300, backgroundColor: theme.colors.surfaceAlt },
-                error && { borderColor: theme.colors.error },
+                {
+                    backgroundColor: theme.colors.surfaceAlt,
+                    borderColor: error
+                        ? theme.colors.error
+                        : theme.colors.cerulean300
+
+                },
             ]}>
                 <TextInput
                     value={value}

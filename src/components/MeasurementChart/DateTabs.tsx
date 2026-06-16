@@ -1,6 +1,7 @@
 // outsource dependencies
 import React, { memo, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
 import { getMeasurementTabs, type MeasurementTab } from 'constants/measurement-chart';
@@ -39,9 +40,12 @@ const DateTabs: React.FC<DateTabsProps> = ({
                             key={tab.name}
                             style={[
                                 styles.tabContainer,
-                                !isLast && [styles.borderRight, { borderRightColor: theme.colors.border }],
                                 isActive && styles.transparentBorder,
                                 isBeforeActive && styles.transparentBorder,
+                                !isLast && [
+                                    styles.borderRight,
+                                    { borderRightColor: theme.colors.border }
+                                ],
                             ]}
                         >
                             <TouchableOpacity

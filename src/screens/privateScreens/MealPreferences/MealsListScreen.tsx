@@ -288,8 +288,11 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
 
     return (
         <Screen
-            style={[styles.container, { backgroundColor: theme.colors.background }]}
             initialized={!isLoadingMeals && areQueriesReady}
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.background }
+            ]}
         >
             <StackHeader
                 title="Meal Preferences"

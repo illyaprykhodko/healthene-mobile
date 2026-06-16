@@ -173,13 +173,13 @@ const SaveValueScreen: React.FC = () => {
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <TouchableOpacity
+                disabled={!isSameDate}
+                onPress={handleGoToChart}
                 style={[
                     styles.graphButton,
-                    !isSameDate && [styles.graphButtonDisabled, { borderColor: theme.colors.skeleton }],
                     { borderColor: theme.colors.primary },
+                    !isSameDate && styles.graphButtonDisabled,
                 ]}
-                onPress={handleGoToChart}
-                disabled={!isSameDate}
             >
                 {isSameDate && <Icon iconStyle="solid" name="chart-line" size={18} color={theme.colors.primary} />}
                 <Text

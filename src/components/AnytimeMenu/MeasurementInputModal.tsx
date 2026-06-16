@@ -1,3 +1,4 @@
+
 // outsource dependencies
 import {
     View,
@@ -10,25 +11,30 @@ import {
     KeyboardAvoidingView,
 } from 'react-native';
 import { Formik } from 'formik';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 // components
 import Text from 'components/Text';
+
 // hooks
 import { useTheme } from 'hooks/useTheme';
 // import { useHealthIntegration } from 'hooks/useHealthIntegration';
 import { useGetLastMeasurementQuery } from 'store/api/dayOverviewApi';
 import { MeasurementItem, useMeasurementSubmit } from 'hooks/useMeasurementSubmit';
+
 // types
 import type { MeasurementType } from 'types/health';
+
 // utils
 import {
     getMeasurementConfig,
     getResolvedMeasurementField,
     getMeasurementValidationSchema,
 } from 'utils/measurement';
+
 // local dependencies
 import { GraphIcon, InfoIcon } from '../icons';
 import { MeasurementIcon } from './AnytimeIcons';
@@ -173,15 +179,15 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                 presentationStyle="pageSheet"
             >
                 <KeyboardAvoidingView
-                    style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: androidTopInset }]}
                     behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: androidTopInset }]}
                 >
                     <View
                         style={[
                             styles.header,
                             {
-                                backgroundColor: theme.colors.surfaceAlt,
                                 borderBottomColor: theme.colors.border,
+                                backgroundColor: theme.colors.surfaceAlt,
                             },
                         ]}
                     >

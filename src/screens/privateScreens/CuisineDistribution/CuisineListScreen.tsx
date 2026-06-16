@@ -224,8 +224,11 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
 
     return (
         <Screen
-            style={[styles.container, { backgroundColor: theme.colors.background }]}
             initialized={!isLoading}
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.background }
+            ]}
         >
             <StackHeader
                 title="International Cuisine"
@@ -255,7 +258,6 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
 
                 <FlatList
                     data={allTags}
-                    style={[styles.list, { backgroundColor: theme.colors.surface }]}
                     initialNumToRender={15}
                     renderItem={renderItem}
                     keyExtractor={keyExtractor}
@@ -263,6 +265,10 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
                     onEndReached={handleLoadMore}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.listContent}
+                    style={[
+                        styles.list,
+                        { backgroundColor: theme.colors.surface }
+                    ]}
                 />
             </View>
 
