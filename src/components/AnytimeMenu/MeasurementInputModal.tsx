@@ -180,7 +180,13 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
             >
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                    style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: androidTopInset }]}
+                    style={[
+                        styles.container,
+                        {
+                            paddingTop: androidTopInset,
+                            backgroundColor: theme.colors.background
+                        }
+                    ]}
                 >
                     <View
                         style={[
@@ -193,7 +199,10 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                     >
                         <View style={styles.headerLeft}>
                             <MeasurementIcon size={24} />
-                            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+                            <Text style={[
+                                styles.headerTitle,
+                                { color: theme.colors.text }
+                            ]}>
                                 {item.measurement?.name || 'Measurement'}
                             </Text>
                         </View>
