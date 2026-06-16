@@ -122,7 +122,7 @@ export const authApi = createApi({
             },
             invalidatesTags: ['Auth'],
         }),
-        forgotPassword: builder.mutation<void, { email: string }>({
+        forgotPassword: builder.mutation<void, { email: string; resetUrl: string }>({
             query: data => ({
                 url: '/auth/send-reset-password-token',
                 method: 'POST',
