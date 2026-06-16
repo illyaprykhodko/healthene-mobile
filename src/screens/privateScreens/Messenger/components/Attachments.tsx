@@ -51,16 +51,16 @@ const Attachments = ({
 
     const iconNameForMime = (mime: string): FileIconName => {
         const [primary] = mime.split('/');
+        if (primary === 'text') { return 'file-alt'; }
         if (primary === 'image') { return 'file-image'; }
         if (primary === 'video') { return 'file-video'; }
         if (primary === 'audio') { return 'file-audio'; }
-        if (primary === 'text') { return 'file-alt'; }
         if (mime === 'application/pdf') { return 'file-pdf'; }
-        if (mime.includes('word') || mime.includes('opendocument.text')) { return 'file-word'; }
         if (mime.includes('excel') || mime.includes('spreadsheet')) { return 'file-excel'; }
+        if (mime.includes('word') || mime.includes('opendocument.text')) { return 'file-word'; }
         if (mime.includes('powerpoint') || mime.includes('presentation')) { return 'file-powerpoint'; }
-        if (mime.includes('zip') || mime.includes('rar') || mime.includes('compressed') || mime.includes('tar')) { return 'file-archive'; }
         if (mime.includes('json') || mime.includes('javascript') || mime.includes('xml')) { return 'file-code'; }
+        if (mime.includes('zip') || mime.includes('rar') || mime.includes('compressed') || mime.includes('tar')) { return 'file-archive'; }
         return 'file';
     };
 

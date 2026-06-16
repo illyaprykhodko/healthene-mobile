@@ -11,9 +11,9 @@ import { useTheme } from 'hooks/useTheme.ts';
 
 interface AttachmentViewerModalProps {
     uri: string;
+    title?: string;
     mimeType: string;
     onClose: () => void;
-    title?: string;
 }
 
 type ViewerKind = 'video' | 'audio' | 'image' | 'unsupported';
@@ -35,11 +35,11 @@ const buildHtml = (uri: string, mimeType: string, backgroundColor: string) => {
             padding: 0;
             width: 100%;
             height: 100%;
-            background: ${backgroundColor};
             display: flex;
+            overflow: hidden;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            background: ${backgroundColor};
         }
     `;
 

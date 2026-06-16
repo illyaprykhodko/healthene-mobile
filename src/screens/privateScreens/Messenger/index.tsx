@@ -148,8 +148,8 @@ const MessengerList = () => {
                 onEndReachedThreshold={0.6}
                 rightOpenValue={-ITEM_HIDDEN_SIZE}
                 renderHiddenItem={renderHiddenItem}
-                contentContainerStyle={styles.flexGrow}
                 keyExtractor={({ id }) => String(id)}
+                contentContainerStyle={styles.flexGrow}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
                 ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.grey }]} />}
                 ListEmptyComponent={
