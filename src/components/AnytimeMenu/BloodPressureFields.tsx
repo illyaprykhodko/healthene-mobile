@@ -56,7 +56,15 @@ export const BloodPressureFields: React.FC<BloodPressureFieldsProps> = ({
         <View style={styles.container}>
             {/* Systolic */}
             <View style={styles.fieldWrapper}>
-                <View style={[styles.inputContainer, systolicError && { borderColor: theme.colors.error }]}>
+                <View style={[
+                    styles.inputContainer,
+                    {
+                        backgroundColor: theme.colors.surfaceAlt,
+                        borderColor: systolicError
+                            ? theme.colors.error
+                            : theme.colors.cerulean300,
+                    }
+                ]}>
                     <TextInput
                         maxLength={3}
                         editable={!disabled}
@@ -88,7 +96,15 @@ export const BloodPressureFields: React.FC<BloodPressureFieldsProps> = ({
 
             {/* Diastolic */}
             <View style={styles.fieldWrapper}>
-                <View style={[styles.inputContainer, diastolicError && { borderColor: theme.colors.error }]}>
+                <View style={[
+                    styles.inputContainer,
+                    {
+                        backgroundColor: theme.colors.surfaceAlt,
+                        borderColor: diastolicError
+                            ? theme.colors.error
+                            : theme.colors.cerulean300,
+                    },
+                ]}>
                     <TextInput
                         maxLength={3}
                         editable={!disabled}
@@ -128,11 +144,8 @@ const styles = StyleSheet.create({
     inputContainer: {
         width: '50%',
         borderWidth: 3,
-        borderColor: '#6A92BB',
         borderRadius: 10,
-        backgroundColor: '#E0EBF7',
         paddingHorizontal: 16,
-        // marginBottom: 8,
     },
     input: {
         height: 100,

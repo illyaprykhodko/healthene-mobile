@@ -385,7 +385,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                                 width: TOOLTIP_W,
                                 left: tooltipLeft,
                                 height: TOOLTIP_H,
-                                backgroundColor: '#E5E5E5',
+                                backgroundColor: theme.colors.muted,
                             },
                         ]}
                     >

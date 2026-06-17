@@ -70,9 +70,9 @@ export const AboutPlanScreen = () => {
 
             <View style={styles.marginVertical}>
                 <Text color={theme.colors.primary} variant="h3">Goals:</Text>
-                <Text style={styles.marginBottom} color={theme.colors.black}>{data?.goal ?? '-'}</Text>
+                <Text style={styles.marginBottom} color={theme.colors.text}>{data?.goal ?? '-'}</Text>
                 <Text color={theme.colors.primary} variant="h3">Summary:</Text>
-                <Text color={theme.colors.black}>{data?.descriptionForPatient ?? '-'}</Text>
+                <Text color={theme.colors.text}>{data?.descriptionForPatient ?? '-'}</Text>
             </View>
             <FlatList
                 scrollEnabled={false}
@@ -83,7 +83,7 @@ export const AboutPlanScreen = () => {
                     <Pressable onPress={() => Linking.openURL(item.url)}>
                         <Text style={styles.underline} color={theme.colors.primary} variant="h5">{item.name}</Text>
                     </Pressable>
-                    <Text>{item.description}</Text>
+                    <Text color={theme.colors.text}>{item.description}</Text>
                 </View>}
             />
         </ScrollView>

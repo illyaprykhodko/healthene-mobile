@@ -46,7 +46,7 @@ const ListItem: React.FC<ListItemProps> = ({ item, isSelected, onPress }) => {
     }, [onPress, item]);
 
     return (
-        <View style={[styles.itemWrapper, { backgroundColor: theme.colors.white }]}>
+        <View style={[styles.itemWrapper, { backgroundColor: theme.colors.surface }]}>
             <TouchableOpacity
                 onPress={handlePress}
                 style={[styles.itemContainer, { borderBottomColor: theme.colors.border }]}
@@ -203,8 +203,11 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
 
     return (
         <Screen
-            style={styles.container}
             initialized={!isLoading}
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.background }
+            ]}
         >
             <StackHeader
                 onBack={() => navigation.goBack()}
@@ -242,7 +245,9 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
                 disabled={!hasUnsavedChanges || isSaving || isResetting}
                 style={[
                     styles.submitBtn,
-                    hasUnsavedChanges ? styles.submitBtnActive : styles.submitBtnInactive,
+                    hasUnsavedChanges
+                        ? styles.submitBtnActive
+                        : styles.submitBtnInactive,
                 ]}
             />
             <ConfirmationAlert
@@ -261,7 +266,6 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
     },
     content: {
         flex: 1,

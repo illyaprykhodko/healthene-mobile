@@ -1,18 +1,22 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/fontisto';
 import { useNavigation } from '@react-navigation/native';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, FlatList } from 'react-native';
-import React, { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
+
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
-import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import { useTheme } from 'hooks/useTheme';
 import { Button } from 'components/Button';
 import DefImage from 'components/DefImage';
+import StackHeader from 'components/StackHeader';
 import { useAppDispatch, useAppSelector } from 'store';
+import { useShoppingDrawer } from '../useShoppingDrawer';
+import ConfirmationAlert from 'components/ConfirmationAlert';
 import { SHOPPING_STEP, SHOPPING_STATUS, SHOPPING_CONFIRMED_ITEM_TYPE } from 'constants/spec';
 import {
     selectShopping,
@@ -29,7 +33,6 @@ import {
     useGetIncompleteGroceryStoresQuery,
     useUpdateShoppingListStatusMutation,
 } from 'store/api/shoppingApi';
-import ConfirmationAlert from 'components/ConfirmationAlert';
 
 const SHOP_ON_MY_OWN_ID = 'SHOP_ON_MY_OWN';
 
@@ -42,6 +45,8 @@ export const LOCATION_TYPES = {
 const ChooseGroceryStore: React.FC = () => {
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
+    const theme = useTheme();
+    const openDrawer = useShoppingDrawer();
 
     const [showFinalizeAlert, setShowFinalizeAlert] = useState(false);
 
@@ -71,21 +76,15 @@ const ChooseGroceryStore: React.FC = () => {
             ...combinedStores,
             {
                 groceryStore: {
+                    image: undefined,
                     id: SHOP_ON_MY_OWN_ID,
                     name: 'I will shop on my own.',
-                    image: undefined,
                 },
             } as GroceryStoreItem,
         ];
     }, [storesData, incompleteStoresData]);
 
     const isShopOnMyOwn = selectedStore?.groceryStore?.id === SHOP_ON_MY_OWN_ID;
-
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerLeft: () => <BackBtn onPress={handleGoBack} />,
-        });
-    }, [navigation]);
 
     // Go back logic matching original // TODO: refactor this
     const handleGoBack = useCallback(() => {
@@ -139,8 +138,8 @@ const ChooseGroceryStore: React.FC = () => {
             if (shoppingListId) {
                 await updateShoppingListStatus({
                     id: shoppingListId,
-                    status: SHOPPING_STATUS.SHOP_ON_MY_OWN,
                     separateRescueItems,
+                    status: SHOPPING_STATUS.SHOP_ON_MY_OWN,
                     confirmedItemsType: newConfirmedItemsType,
                 }).unwrap();
             }
@@ -188,16 +187,16 @@ const ChooseGroceryStore: React.FC = () => {
 
         return (
             <TouchableOpacity
-                onPress={() => handleSelectStore(item)}
                 disabled={disabled}
+                onPress={() => handleSelectStore(item)}
                 style={[styles.storeItem, isSelected && styles.storeItemSelected]}
             >
                 <View style={styles.info}>
                     <View style={styles.titleContainer}>
                         {!isItemShopOnMyOwn && item.groceryStore?.image?.url ? (
                             <DefImage
-                                src={item.groceryStore.image.url}
                                 style={styles.storeImage}
+                                src={item.groceryStore.image.url}
                             />
                         ) : null}
                         <Text variant="h3" style={styles.storeName}>
@@ -223,9 +222,9 @@ const ChooseGroceryStore: React.FC = () => {
 
                 <TouchableOpacity onPress={() => handleSelectStore(item)} disabled={disabled}>
                     <Icon
-                        name={isSelected ? 'radio-btn-active' : 'radio-btn-passive'}
-                        color={isSelected ? COLORS.BLACK : COLORS.GREY}
                         size={24}
+                        color={isSelected ? COLORS.BLACK : COLORS.GREY}
+                        name={isSelected ? 'radio-btn-active' : 'radio-btn-passive'}
                     />
                 </TouchableOpacity>
             </TouchableOpacity>
@@ -234,7 +233,12 @@ const ChooseGroceryStore: React.FC = () => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
-            <View style={styles.title}>
+            <StackHeader
+                title="Shopping List"
+                onBack={handleGoBack}
+                onOpenDrawer={openDrawer}
+            />
+            <View style={[styles.title, { backgroundColor: theme.colors.muted }]}>
                 <Text variant="h2">Choose Grocery Store</Text>
             </View>
 
@@ -288,7 +292,6 @@ const styles = StyleSheet.create({
     },
     title: {
         padding: 20,
-        backgroundColor: '#D9D9D9',
     },
     list: {
         flex: 1,

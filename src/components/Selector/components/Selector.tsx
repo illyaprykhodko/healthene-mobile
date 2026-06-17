@@ -19,14 +19,14 @@ interface SelectorProps {
 export const Selector = ({ label, touched, errorText, value, openModalSheet }: SelectorProps) => {
     const theme = useTheme();
     return <View>
-        <Text color={touched && errorText ? theme.colors.error : theme.colors.black} variant="caption">
+        <Text color={touched && errorText ? theme.colors.error : theme.colors.text} variant="caption">
             {label}
         </Text>
         <Pressable
             onPress={openModalSheet}
             style={[styles.selectBtn, { borderBottomColor: touched && errorText ? theme.colors.error : theme.colors.grey }]}
         >
-            <Text color={value ? theme.colors.black : theme.colors.grey}>
+            <Text color={value ? theme.colors.text : theme.colors.grey}>
                 {value ? humanize(value) : 'Select item'}
             </Text>
             <Ionicons color={theme.colors.grey} name="chevron-down-sharp" size={16} />

@@ -79,7 +79,7 @@ const MealItem: React.FC<MealItemProps> = ({
 
     return (
         <View>
-            <View style={[styles.mealHeader, { backgroundColor: theme.colors.white }]}>
+            <View style={[styles.mealHeader, { backgroundColor: theme.colors.surface }]}>
                 <TouchableOpacity
                     onPress={handleNavigate}
                     style={[styles.mealButton, { borderBottomColor: theme.colors.border }]}
@@ -123,6 +123,7 @@ const MealItem: React.FC<MealItemProps> = ({
 };
 
 const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
+    const theme = useTheme();
     const { hasShown, markShown, sessionId } = useReviewAlert();
     const [trackedSessionId, setTrackedSessionId] = useState(sessionId);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
@@ -287,8 +288,11 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
 
     return (
         <Screen
-            style={styles.container}
             initialized={!isLoadingMeals && areQueriesReady}
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.background }
+            ]}
         >
             <StackHeader
                 title="Meal Preferences"
@@ -332,7 +336,6 @@ const MealsListScreen: React.FC<MealsListScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
     },
     content: {
         flex: 1,

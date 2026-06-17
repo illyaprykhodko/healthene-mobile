@@ -37,6 +37,8 @@ const OptionSelector = ({ label, touched, errorText, data, onSelect, style, valu
                 ref={modalSheetRef}
                 enablePanDownToClose
                 enableDynamicSizing
+                backgroundStyle={{ backgroundColor: theme.colors.surface }}
+                handleIndicatorStyle={{ backgroundColor: theme.colors.border }}
                 backdropComponent={backdropProps => (
                     // show overlay
                     (<BottomSheetBackdrop
@@ -57,7 +59,7 @@ const OptionSelector = ({ label, touched, errorText, data, onSelect, style, valu
                                 ? <Icon name="radio-button-checked" size={24} color={theme.colors.primary}/>
                                 : <Icon name="radio-button-off" size={24} color={theme.colors.grey}/>
                             }
-                            <Text style={styles.itemText}>{item.label}</Text>
+                            <Text style={[styles.itemText, { color: theme.colors.text }]}>{item.label}</Text>
                         </Pressable>;
                     }}
                 />

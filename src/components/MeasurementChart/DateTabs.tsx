@@ -1,7 +1,9 @@
 // outsource dependencies
 import React, { memo, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+
 // local dependencies
+import { useTheme } from 'hooks/useTheme';
 import { getMeasurementTabs, type MeasurementTab } from 'constants/measurement-chart';
 
 interface DateTabsProps {
@@ -17,8 +19,9 @@ const DateTabs: React.FC<DateTabsProps> = ({
     onTabChange,
     disabled = false,
 }) => {
+    const theme = useTheme();
     const tabs = useMemo(() => getMeasurementTabs(date), [date]);
-    
+
     const activeIndex = useMemo(
         () => tabs.findIndex(tab => tab.name === activeTab.name),
         [tabs, activeTab]
@@ -26,7 +29,7 @@ const DateTabs: React.FC<DateTabsProps> = ({
 
     return (
         <View style={styles.container}>
-            <View style={styles.wrapper}>
+            <View style={[styles.wrapper, { backgroundColor: theme.colors.muted }]}>
                 {tabs.map((tab, index) => {
                     const isActive = tab.name === activeTab.name;
                     const isBeforeActive = index === activeIndex - 1;
@@ -37,9 +40,12 @@ const DateTabs: React.FC<DateTabsProps> = ({
                             key={tab.name}
                             style={[
                                 styles.tabContainer,
-                                !isLast && styles.borderRight,
                                 isActive && styles.transparentBorder,
                                 isBeforeActive && styles.transparentBorder,
+                                !isLast && [
+                                    styles.borderRight,
+                                    { borderRightColor: theme.colors.border }
+                                ],
                             ]}
                         >
                             <TouchableOpacity
@@ -47,12 +53,13 @@ const DateTabs: React.FC<DateTabsProps> = ({
                                 onPress={() => onTabChange(tab)}
                                 style={[
                                     styles.tab,
-                                    isActive && styles.activeTab,
+                                    isActive && [styles.activeTab, { backgroundColor: theme.colors.surface }],
                                 ]}
                             >
                                 <Text
                                     style={[
                                         styles.tabText,
+                                        { color: theme.colors.text },
                                         isActive && styles.activeTabText,
                                     ]}
                                 >
@@ -77,7 +84,6 @@ const styles = StyleSheet.create({
     wrapper: {
         flexDirection: 'row',
         borderRadius: 6,
-        backgroundColor: '#E5E5E5',
         paddingVertical: 3,
         paddingHorizontal: 1,
     },
@@ -91,7 +97,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     activeTab: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -101,14 +106,12 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 14,
-        color: '#000000',
     },
     activeTabText: {
         fontWeight: '600',
     },
     borderRight: {
         borderRightWidth: 1,
-        borderRightColor: '#000000',
     },
     transparentBorder: {
         borderRightWidth: 0,

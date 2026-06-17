@@ -463,11 +463,6 @@ const AnimatedCheckmark: React.FC<AnimatedCheckmarkProps> = ({
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    header: {
-        paddingHorizontal: OFFSET.HORIZONTAL,
-        paddingVertical: OFFSET.POINT * 3,
-        backgroundColor: '#156F93',
-    },
     content: {
         flex: 1,
         paddingBottom: OFFSET.VERTICAL,
@@ -500,7 +495,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#7B7B7B',
         marginVertical: OFFSET.VERTICAL,
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
@@ -521,7 +515,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 20,
         bottom: 90,
-        backgroundColor: '#2978A0',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -529,18 +522,13 @@ const styles = StyleSheet.create({
         position: 'absolute',
         right: 20,
         bottom: 170,
-        backgroundColor: '#4CAF50',
         alignItems: 'center',
         justifyContent: 'center',
     },
     addBtnText: {
-        color: '#FFFFFF',
         fontWeight: 'bold',
         textTransform: 'uppercase',
         fontSize: 12,
-    },
-    disabledBtn: {
-        backgroundColor: '#CCCCCC',
     },
     shadowBtn: {
         shadowColor: '#000000',
@@ -561,16 +549,13 @@ const styles = StyleSheet.create({
         borderRadius: 30,
     },
     calendarMonth: {
-        backgroundColor: '#F55454',
         flex: 1,
         width: '100%',
     },
     calendarMonthText: {
         fontWeight: 'bold',
-        color: '#FFFFFF',
     },
     calendarDay: {
-        backgroundColor: '#FFFFFF',
         flex: 2,
         width: '100%',
         justifyContent: 'center',
@@ -578,11 +563,7 @@ const styles = StyleSheet.create({
     calendarDayText: {
         fontWeight: 'bold',
     },
-    bottomSheetBg: {
-        backgroundColor: '#FFFFFF',
-    },
     bottomSheetIndicator: {
-        backgroundColor: '#DADADA',
         width: 40,
     },
     calendarContainer: {
@@ -604,9 +585,10 @@ const styles = StyleSheet.create({
     },
     incompleteLabelContainer: {
         position: 'absolute',
+        marginRight: -10,
         bottom: 100,
+        zIndex: 0,
         right: 0,
-        marginRight: Platform.OS === 'ios' ? -10 : -20,
     },
     statusIndicator: {
         position: 'absolute',
@@ -641,25 +623,28 @@ const styles = StyleSheet.create({
     },
 });
 
-const getIconColorByType = (type: AddPhaseItemData['type']) => {
+const getIconColorByType = (
+    type: AddPhaseItemData['type'],
+    colors: ReturnType<typeof useTheme>['colors'],
+) => {
     switch (type) {
         case 'MEAL':
-            return { bg: '#FFD9B3', fg: '#C56A00', name: 'utensils' as const };
+            return { bg: colors.anytimeFoodBg, fg: colors.anytimeFoodFg, name: 'utensils' as const };
         case 'ADDED_BY_PATIENT':
-            return { bg: '#D4E09B', fg: '#647C2E', name: 'utensils' as const };
+            return { bg: colors.anytimeMeasurementBg, fg: colors.anytimeMeasurementFg, name: 'utensils' as const };
         case 'MEASUREMENT':
-            return { bg: '#F3F3F3', fg: '#000000', name: 'ruler' as const };
+            return { bg: colors.muted, fg: colors.text, name: 'ruler' as const };
         case 'SUPPLEMENT':
         case 'MEDICATION':
-            return { bg: '#F3F3F3', fg: '#000000', name: 'capsules' as const };
+            return { bg: colors.muted, fg: colors.text, name: 'capsules' as const };
         case 'PHYSICAL_ACTIVITY':
-            return { bg: '#F9C1C3', fg: '#000000', name: 'running' as const };
+            return { bg: colors.anytimeActivityBg, fg: colors.anytimeActivityFg, name: 'running' as const };
         case 'QUESTION':
-            return { bg: '#E3F2FD', fg: '#1976D2', name: 'question' as const };
+            return { bg: colors.anytimeDrinkBg, fg: colors.anytimeDrinkFg, name: 'question' as const };
         case 'ANYTIME':
-            return { bg: '#FFF3E0', fg: '#E65100', name: 'clock' as const };
+            return { bg: colors.anytimeMonoBg, fg: colors.anytimeMonoFg, name: 'clock' as const };
         default:
-            return { bg: '#DADADA', fg: '#7B7B7B', name: 'dot-circle' as const };
+            return { bg: colors.border, fg: colors.textSecondary, name: 'dot-circle' as const };
     }
 };
 
@@ -848,6 +833,27 @@ export const Overview: React.FC = () => {
         (navigation as any).navigate(ROUTES.GAMBLING_HOME);
     }, [navigation]);
 
+    const calendarTheme = useMemo(() => ({
+        textDayFontSize: 16,
+        textMonthFontSize: 18,
+        textDayHeaderFontSize: 14,
+        dotColor: theme.colors.info,
+        arrowColor: theme.colors.info,
+        dayTextColor: theme.colors.text,
+        textDayFontWeight: '400' as const,
+        monthTextColor: theme.colors.text,
+        todayTextColor: theme.colors.info,
+        textMonthFontWeight: '600' as const,
+        selectedDotColor: theme.colors.white,
+        backgroundColor: theme.colors.surface,
+        textDayHeaderFontWeight: '500' as const,
+        calendarBackground: theme.colors.surface,
+        textDisabledColor: theme.colors.skeleton,
+        selectedDayTextColor: theme.colors.white,
+        selectedDayBackgroundColor: theme.colors.info,
+        textSectionTitleColor: theme.colors.textSecondary,
+    }), [theme]);
+
     useEffect(() => {
         if (!isFocused || !pendingOpenPhaseId) {
             return;
@@ -869,7 +875,7 @@ export const Overview: React.FC = () => {
         const calendarDays: Record<string, any> = { [currentDate]: { selected: true } };
         (data.currentWeekIncompleteDays || []).forEach(d => {
             if (d?.date) {
-                calendarDays[d.date] = { selected: true, selectedColor: '#dc73de' };
+                calendarDays[d.date] = { selected: true, selectedColor: theme.colors.darkerPink };
             }
         });
         dispatch(meta({ calendarDays }));
@@ -1025,7 +1031,7 @@ export const Overview: React.FC = () => {
                         {/* Health Question Section */}
                         <HealthQuestion date={currentDate} isFutureDate={Boolean(isFutureDate)} />
 
-                        <Text style={styles.title}>My Daily Plan</Text>
+                        <Text style={[styles.title, { color: theme.colors.textSecondary }]}>My Daily Plan</Text>
 
                         <View style={styles.timelineContainer}>
                             <TimelineSVG phases={phases} incompleteDay={incompleteDay} />
@@ -1035,7 +1041,7 @@ export const Overview: React.FC = () => {
                                 style={{ marginBottom: 35 }}
                                 keyExtractor={item => String(item.id)}
                                 renderItem={({ item }) => {
-                                    const { bg, fg, name } = getIconColorByType(item.type);
+                                    const { bg, fg, name } = getIconColorByType(item.type, theme.colors);
                                     const isMeal = isMealPhase(item.type);
                                     const iconMarginLeft = isMeal
                                         ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
@@ -1151,11 +1157,11 @@ export const Overview: React.FC = () => {
                             styles.addBtn,
                             styles.roundBtn,
                             styles.shadowBtn,
-                            (isFetching || isLoading) && styles.disabledBtn,
+                            { backgroundColor: (isFetching || isLoading) ? theme.colors.skeleton : theme.colors.success },
                         ]}
                     >
-                        <FeatherIcon name="plus" color="#FFFFFF" size={22} />
-                        <Text style={styles.addBtnText}>Add</Text>
+                        <FeatherIcon name="plus" color={theme.colors.white} size={22} />
+                        <Text style={[styles.addBtnText, { color: theme.colors.white }]}>Add</Text>
                     </TouchableOpacity>
                 )}
 
@@ -1165,9 +1171,9 @@ export const Overview: React.FC = () => {
                         <Highlight color={COLORS.DARKER_PINK}>
                             <View style={styles.incompleteLabel}>
                                 <Text
-                                    style={styles.incompleteText}
-                                    color={COLORS.DARKENED_GRAY}
                                     textAlign="left"
+                                    color={COLORS.DARKENED_GRAY}
+                                    style={styles.incompleteText}
                                 >
                                 Please
                                 </Text>
@@ -1188,13 +1194,14 @@ export const Overview: React.FC = () => {
                         activeOpacity={0.8}
                         onPress={handleGamblingPress}
                         style={[
-                            styles.gamblingBtn,
-                            styles.shadowBtn,
                             styles.roundBtn,
+                            styles.shadowBtn,
+                            styles.gamblingBtn,
+                            { backgroundColor: theme.colors.info },
                         ]}
                     >
-                        <Text variant="h2" style={{ color: '#FFFFFF', fontFamily: 'Outfit-Bold' }}>
-                        $
+                        <Text variant="h2" style={{ color: theme.colors.white, fontFamily: 'Outfit-Bold' }}>
+                            $
                         </Text>
                     </TouchableOpacity>
                 )}
@@ -1213,17 +1220,17 @@ export const Overview: React.FC = () => {
                 >
                     <View style={[
                         styles.roundBtn,
-                        { backgroundColor: incompleteDay ? '#dc73de' : '#2978A0', overflow: 'hidden' }
+                        { backgroundColor: incompleteDay ? theme.colors.darkerPink : theme.colors.info, overflow: 'hidden' }
                     ]}>
-                        <View style={styles.calendarMonth}>
+                        <View style={[styles.calendarMonth, { backgroundColor: theme.colors.error }]}>
                             <Text
                                 textAlign="center"
-                                style={styles.calendarMonthText}
+                                style={[styles.calendarMonthText, { color: theme.colors.white }]}
                             >
                                 {moment(currentDate).format('MMM')}
                             </Text>
                         </View>
-                        <View style={styles.calendarDay}>
+                        <View style={[styles.calendarDay, { backgroundColor: theme.colors.surface }]}>
                             <Text
                                 variant="h3"
                                 textAlign="center"
@@ -1244,34 +1251,15 @@ export const Overview: React.FC = () => {
                 snapPoints={['60%']}
                 onChange={handleSheetChanges}
                 backdropComponent={renderBackdrop}
-                backgroundStyle={styles.bottomSheetBg}
-                handleIndicatorStyle={styles.bottomSheetIndicator}
+                backgroundStyle={{ backgroundColor: theme.colors.surface }}
+                handleIndicatorStyle={[styles.bottomSheetIndicator, { backgroundColor: theme.colors.border }]}
             >
                 <BottomSheetView style={styles.calendarContainer}>
                     <Calendar
                         current={currentDate}
                         markedDates={calendarDays}
                         onDayPress={handleDayPress}
-                        theme={{
-                            dotColor: '#2978A0',
-                            textDayFontSize: 16,
-                            textMonthFontSize: 18,
-                            arrowColor: '#2978A0',
-                            dayTextColor: '#2d4150',
-                            textDayFontWeight: '400',
-                            textDayHeaderFontSize: 14,
-                            monthTextColor: '#2d4150',
-                            todayTextColor: '#2978A0',
-                            backgroundColor: '#ffffff',
-                            textMonthFontWeight: '600',
-                            selectedDotColor: '#ffffff',
-                            textDisabledColor: '#d9e1e8',
-                            calendarBackground: '#ffffff',
-                            textDayHeaderFontWeight: '500',
-                            selectedDayTextColor: '#ffffff',
-                            textSectionTitleColor: '#7B7B7B',
-                            selectedDayBackgroundColor: '#2978A0',
-                        }}
+                        theme={calendarTheme}
                     />
                 </BottomSheetView>
             </BottomSheet>

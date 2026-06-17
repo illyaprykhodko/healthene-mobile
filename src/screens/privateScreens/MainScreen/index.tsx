@@ -92,29 +92,39 @@ export const MainScreen: React.FC = () => {
                         {timeGreeting()}
                     </Text>
                 </View>
-                { theme.dark
-                    ? <View style={styles.altWrapper}>
-                        {/* <DayAdherenceCard date={moment().format('YYYY-MM-DD')} /> */}
-                        {adherence.hasData && (
-                            <ActivityRings
-                                gap={4}
-                                size={250}
-                                strokeWidth={25}
-                                rings={adherence.rings}
-                                centerText={`${Math.round(adherence.overall * 100)}%`}
-                            />)}
-                    </View>
-                    : <View style={styles.imageWrapper}>
-                        {welcomeImageUrl && (
+                {/*{ theme.dark*/}
+                {/*    ? <View style={styles.altWrapper}>*/}
+                {/*        /!* <DayAdherenceCard date={moment().format('YYYY-MM-DD')} /> *!/*/}
+                {/*        {adherence.hasData && (*/}
+                {/*            <ActivityRings*/}
+                {/*                gap={4}*/}
+                {/*                size={250}*/}
+                {/*                strokeWidth={25}*/}
+                {/*                rings={adherence.rings}*/}
+                {/*                centerText={`${Math.round(adherence.overall * 100)}%`}*/}
+                {/*            />)}*/}
+                {/*    </View>*/}
+                {/*    : <View style={styles.imageWrapper}>*/}
+                {/*        {welcomeImageUrl && (*/}
+                {/*        // <DefImage src={welcomeImageUrl} style={styles.image} />*/}
+                {/*            <Image*/}
+                {/*                resizeMode="contain"*/}
+                {/*                style={styles.image}*/}
+                {/*                source={{ uri: welcomeImageUrl }}*/}
+                {/*            />*/}
+                {/*        )}*/}
+                {/*    </View>*/}
+                {/*}*/}
+                <View style={styles.imageWrapper}>
+                    {welcomeImageUrl && (
                         // <DefImage src={welcomeImageUrl} style={styles.image} />
-                            <Image
-                                resizeMode="contain"
-                                style={styles.image}
-                                source={{ uri: welcomeImageUrl }}
-                            />
-                        )}
-                    </View>
-                }
+                        <Image
+                            resizeMode="contain"
+                            style={styles.image}
+                            source={{ uri: welcomeImageUrl }}
+                        />
+                    )}
+                </View>
                 <Button
                     title="Get Started"
                     onPress={handleGetStarted}
@@ -161,8 +171,8 @@ const styles = StyleSheet.create({
         paddingTop: OFFSET.VERTICAL * 2,
     },
     image: {
-        height: '100%',
         width: '100%',
+        height: '100%',
         resizeMode: 'contain',
     },
     button: {

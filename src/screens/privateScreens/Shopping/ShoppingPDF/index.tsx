@@ -5,6 +5,7 @@ import Icon from '@react-native-vector-icons/fontawesome5';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { memo, useCallback, useState, useEffect } from 'react';
 import { StyleSheet, View, Platform, Alert, ActivityIndicator } from 'react-native';
+
 // local dependencies
 import { config } from 'constants';
 import Text from 'components/Text';
@@ -12,11 +13,14 @@ import Screen from 'components/Screen';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
+import StackHeader from 'components/StackHeader';
 import { sessionManager } from 'store/api/baseApi';
+import { useShoppingDrawer } from '../useShoppingDrawer';
 
 const ShoppingPDF: React.FC = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
+    const openDrawer = useShoppingDrawer();
 
     const [isDownloading, setIsDownloading] = useState(false);
     const [token, setToken] = useState<string | null>(null);
@@ -108,6 +112,11 @@ const ShoppingPDF: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
+            <StackHeader
+                title="Download File"
+                onOpenDrawer={openDrawer}
+                onBack={() => navigation.goBack()}
+            />
             <View style={styles.content}>
                 <Icon name="file-pdf" color={COLORS.DARK_GREY} size={150} iconStyle="solid" style={styles.icon} />
 

@@ -45,7 +45,16 @@ export const MeasurementField: React.FC<MeasurementFieldProps> = ({
 
     return (
         <View style={styles.container}>
-            <View style={[styles.inputContainer, error && { borderColor: theme.colors.error }]}>
+            <View style={[
+                styles.inputContainer,
+                {
+                    backgroundColor: theme.colors.surfaceAlt,
+                    borderColor: error
+                        ? theme.colors.error
+                        : theme.colors.cerulean300
+
+                },
+            ]}>
                 <TextInput
                     value={value}
                     onBlur={onBlur}
@@ -87,9 +96,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 3,
-        borderColor: '#6A92BB',
         borderRadius: 10,
-        backgroundColor: '#E0EBF7',
         paddingHorizontal: 16,
     },
     input: {

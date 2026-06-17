@@ -173,13 +173,13 @@ const SaveValueScreen: React.FC = () => {
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <TouchableOpacity
+                disabled={!isSameDate}
+                onPress={handleGoToChart}
                 style={[
                     styles.graphButton,
-                    !isSameDate && styles.graphButtonDisabled,
                     { borderColor: theme.colors.primary },
+                    !isSameDate && styles.graphButtonDisabled,
                 ]}
-                onPress={handleGoToChart}
-                disabled={!isSameDate}
             >
                 {isSameDate && <Icon iconStyle="solid" name="chart-line" size={18} color={theme.colors.primary} />}
                 <Text
@@ -205,7 +205,7 @@ const SaveValueScreen: React.FC = () => {
                     <View
                         style={[
                             styles.valueContainer,
-                            { borderColor: theme.colors.text, backgroundColor: '#F3F3F3' },
+                            { borderColor: theme.colors.text, backgroundColor: theme.colors.muted },
                         ]}
                     >
                         {displayValue ? (
@@ -221,7 +221,7 @@ const SaveValueScreen: React.FC = () => {
                                     : displayValue}
                             </Text>
                         ) : (
-                            <Text textAlign="center" style={styles.noDataText}>
+                            <Text textAlign="center" style={[styles.noDataText, { color: theme.colors.textSecondary }]}>
                                 No {measurementName} was recorded recently
                             </Text>
                         )}
@@ -235,8 +235,8 @@ const SaveValueScreen: React.FC = () => {
                                 {
                                     backgroundColor:
                                         isDisabled || measurementIds.length === 0
-                                            ? '#CCCCCC'
-                                            : '#FFB3B3',
+                                            ? theme.colors.skeleton
+                                            : theme.colors.pink,
                                     borderColor: theme.colors.text,
                                 },
                             ]}
@@ -259,14 +259,14 @@ const SaveValueScreen: React.FC = () => {
                 style={[
                     styles.doneBtn,
                     {
-                        backgroundColor: isDisabled ? '#EEEEEE' : '#96E072',
+                        backgroundColor: isDisabled ? theme.colors.muted : theme.colors.successAlt,
                     },
                 ]}
             >
                 <Text
                     style={[
                         styles.doneBtnText,
-                        { color: isDisabled ? '#888888' : '#4E733C' },
+                        { color: isDisabled ? theme.colors.textMuted : theme.colors.successAltText },
                     ]}
                 >
                     Done
@@ -298,9 +298,7 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         gap: 10,
     },
-    graphButtonDisabled: {
-        borderColor: '#CCCCCC',
-    },
+    graphButtonDisabled: {},
     graphButtonText: {
         fontSize: 16,
         fontWeight: '600',
@@ -327,7 +325,6 @@ const styles = StyleSheet.create({
     },
     noDataText: {
         fontSize: 16,
-        color: '#777777',
     },
     deleteBtnWrapper: {
         flexDirection: 'row',

@@ -11,13 +11,14 @@ import {
 } from 'store/api/shoppingApi';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
-import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { Button } from 'components/Button';
+import StackHeader from 'components/StackHeader';
 import { useAppDispatch, useAppSelector } from 'store';
+import { useShoppingDrawer } from '../useShoppingDrawer';
 import { PressableScale } from 'components/PressableScale';
 import ConfirmationAlert from 'components/ConfirmationAlert';
 import { SHOPPING_STEP, SHOPPING_STATUS } from 'constants/spec';
@@ -66,11 +67,7 @@ const ShoppingPreferences: React.FC = () => {
         }
     }, [preferences]);
 
-    useEffect(() => {
-        navigation.setOptions({
-            headerLeft: () => <BackBtn onPress={requestExit} />,
-        });
-    }, [navigation, requestExit]);
+    const openDrawer = useShoppingDrawer({ guarded: true });
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', (event: any) => {
@@ -189,6 +186,11 @@ const ShoppingPreferences: React.FC = () => {
     }
     return (
         <Screen initialized={!isLoading} style={styles.container}>
+            <StackHeader
+                onBack={requestExit}
+                onOpenDrawer={openDrawer}
+                title="Shopping Preferences"
+            />
             <View style={styles.description}>
                 <Text textAlign="center" variant="h3" color={COLORS.DARK_BLUE}>
                     People Eating Per Meal

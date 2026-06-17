@@ -34,7 +34,7 @@ export const PhoneInput = ({
         {label
             ? <Text
                 variant="caption"
-                color={isShowError ? theme.colors.error : theme.colors.black}
+                color={isShowError ? theme.colors.error : theme.colors.text}
             >
                 {label}
             </Text>
@@ -52,8 +52,8 @@ export const PhoneInput = ({
             style={[
                 styles.inputStyle,
                 {
-                    color: isShowError ? theme.colors.error : theme.colors.black,
-                    borderBottomColor: isShowError ? theme.colors.error : theme.colors.grey
+                    color: isShowError ? theme.colors.error : theme.colors.text,
+                    borderBottomColor: isShowError ? theme.colors.error : theme.colors.border
                 }
             ]}
         />

@@ -8,6 +8,7 @@ import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { RootStackParamList } from 'services/navigation';
 
 type Navigation = NativeStackNavigationProp<RootStackParamList>;
@@ -16,6 +17,7 @@ type RouteProps = RouteProp<RootStackParamList, typeof ROUTES.GAMBLING_GIFT_CARD
 const GiftCardSuccess: React.FC = () => {
     const navigation = useNavigation<Navigation>();
     const route = useRoute<RouteProps>();
+    const theme = useTheme();
     const { brandName, imageUrl, giftLink } = route.params;
 
     const handleDone = () => {
@@ -29,14 +31,14 @@ const GiftCardSuccess: React.FC = () => {
     return (
         <Screen initialized style={styles.container}>
             <View style={styles.content}>
-                <Text variant="h2" style={styles.thankYouText}>
+                <Text variant="h2" style={[styles.thankYouText, { color: theme.colors.text }]}>
                     Thank You from{'\n'}{brandName}
                 </Text>
                 <View style={styles.logoContainer}>
                     {imageUrl ? (
                         <Image source={{ uri: imageUrl }} style={styles.logo} resizeMode="contain" />
                     ) : (
-                        <View style={styles.logoPlaceholder}>
+                        <View style={[styles.logoPlaceholder, { backgroundColor: theme.colors.border }]}>
                             <Text variant="h4" style={styles.logoPlaceholderText}>{brandName[0]}</Text>
                         </View>
                     )}
@@ -66,7 +68,6 @@ export default GiftCardSuccess;
 
 const styles = StyleSheet.create({
     container: {
-        // backgroundColor: '#F5F5F5',
         justifyContent: 'space-between',
         padding: 16,
     },
@@ -80,7 +81,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         fontFamily: 'Open Sans',
         fontSize: 40,
-        color: '#111111',
         textAlign: 'center',
         lineHeight: 50,
     },
@@ -98,7 +98,6 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 12,
-        backgroundColor: '#D0D0D0',
         alignItems: 'center',
         justifyContent: 'center',
     },

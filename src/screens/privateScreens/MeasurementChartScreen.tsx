@@ -208,14 +208,14 @@ const MeasurementChartScreen: React.FC = () => {
 
     if (isLoadingAggregate) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2978A0" />
+            <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+                <ActivityIndicator size="large" color={theme.colors.info} />
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={{ height: '90%' }}>
                 <MeasurementChart
                     data={chartData}
@@ -240,9 +240,9 @@ const MeasurementChartScreen: React.FC = () => {
             </View>
             <TouchableOpacity
                 onPress={handleDone}
-                style={[styles.doneButton, { backgroundColor: theme.colors.successAlt || '#96E072' }]}
+                style={[styles.doneButton, { backgroundColor: theme.colors.successAlt }]}
             >
-                <Text style={[styles.doneButtonText, { color: theme.colors.successAltText || '#4E733C' }]}>DONE</Text>
+                <Text style={[styles.doneButtonText, { color: theme.colors.successAltText }]}>DONE</Text>
             </TouchableOpacity>
         </View>
     );
@@ -253,13 +253,11 @@ export default MeasurementChartScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
     },
     doneButton: {
         borderWidth: 0,

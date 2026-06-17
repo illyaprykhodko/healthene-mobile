@@ -21,6 +21,7 @@ import Screen from 'components/Screen';
 import { NestBird } from 'animation/NestBird.tsx';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { RootStackParamList } from 'services/navigation';
 import { sessionManager, TOKEN_KEYS } from 'store/api/baseApi';
 
@@ -47,6 +48,7 @@ const PanelCloseIcon = () => (
 const SlotMachine: React.FC = () => {
     const navigation = useNavigation<Navigation>();
     const route = useRoute<SlotRoute>();
+    const theme = useTheme();
     const webViewRef = useRef<WebView>(null);
     const [reloadKey, setReloadKey] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
@@ -164,9 +166,9 @@ const SlotMachine: React.FC = () => {
             <Pressable style={styles.backdrop} onPress={() => closePanel()} />
 
             <Animated.View style={[styles.panelContainer, { transform: [{ translateY: panelTranslateY }] }]}>
-                <View style={styles.panelCard}>
+                <View style={[styles.panelCard, { backgroundColor: theme.colors.surface }]}>
                     <View style={styles.handleTouchArea} {...panelPanResponder.panHandlers}>
-                        <View style={styles.handle} />
+                        <View style={[styles.handle, { backgroundColor: theme.colors.border }]} />
                     </View>
                     <View style={styles.topRow}>
                         <View style={styles.topRowEdges}>
@@ -290,11 +292,9 @@ const styles = StyleSheet.create({
         width: 46,
         height: 5,
         borderRadius: 4,
-        backgroundColor: '#A9A9A9',
     },
     panelCard: {
         height: '90%',
-        backgroundColor: '#F4F5F7',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         paddingHorizontal: 8,

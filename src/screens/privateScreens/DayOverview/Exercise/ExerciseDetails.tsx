@@ -339,7 +339,7 @@ export default function ExerciseDetails () {
                         </TouchableOpacity>
                     ) : null}
                     
-                    <View style={styles.imageContainer}>
+                    <View style={[styles.imageContainer, { backgroundColor: theme.dark ? theme.colors.grey : theme.colors.white }]}>
                         {image ? (
                             <Image
                                 resizeMode="contain"
@@ -403,6 +403,30 @@ export default function ExerciseDetails () {
     const [toggle, setToggle] = useState(false);
     const toggleText = useCallback(() => setToggle(prevState => !prevState), []);
 
+    // Theme-aware HTML stylesheet for HTMLView so paragraphs/lists/headings adapt to dark mode.
+    const themedHtmlStyles = useMemo(() => StyleSheet.create({
+        ...htmlStyles,
+        ol: { marginLeft: 15 },
+        div: { color: theme.colors.text },
+        span: { color: theme.colors.text },
+        u: { ...htmlStyles.u, color: theme.colors.text },
+        b: { ...htmlStyles.b, color: theme.colors.text },
+        p: { ...htmlStyles.p, color: theme.colors.text },
+        em: { ...htmlStyles.em, color: theme.colors.text },
+        li: { ...htmlStyles.li, color: theme.colors.text },
+        ins: { ...htmlStyles.ins, color: theme.colors.text },
+        strong: { ...htmlStyles.strong, color: theme.colors.text },
+        a: { color: theme.colors.info, textDecorationLine: 'underline' },
+        h1: { fontSize: 24, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h2: { fontSize: 22, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h3: { fontSize: 20, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h4: { fontSize: 18, fontWeight: 'bold', marginVertical: 6, color: theme.colors.text },
+        h5: { fontSize: 16, fontWeight: 'bold', marginVertical: 6, color: theme.colors.text },
+        h6: { fontSize: 14, fontWeight: 'bold', marginVertical: 4, color: theme.colors.text },
+    }), [theme.colors.text, theme.colors.info]);
+
+    const themedRenderNode = useMemo(() => createRenderNode(theme.colors.text), [theme.colors.text]);
+
     // Render science content
     const renderScienceContent = useCallback(() => (
         <View>
@@ -414,26 +438,26 @@ export default function ExerciseDetails () {
                                 ? scientificVideo?.embedUrl
                                     ? <YoutubeVideo url={scientificVideo?.embedUrl} />
                                     : <PrivateVideo video={scientificVideo} />
-                                : <Text>No video available</Text>
+                                : <Text color={theme.colors.textSecondary}>No video available</Text>
                             : scientificDescription?.length > 0 ? (
                                 <HTMLView
                                     value={scientificDescription}
-                                    renderNode={renderNode}
-                                    stylesheet={htmlStyles}
+                                    renderNode={themedRenderNode}
+                                    stylesheet={themedHtmlStyles}
                                 />
-                            ) : <Text>No scientific information available</Text>}
+                            ) : <Text color={theme.colors.textSecondary}>No scientific information available</Text>}
                     </View>
                     <TouchableOpacity onPress={toggleText}>
-                        <Text style={[styles.helpLink, styles.swipePanelButton]}>
+                        <Text style={[styles.helpLink, styles.swipePanelButton, { color: theme.colors.info }]}>
                             {toggle ? 'Back' : 'More'}
                         </Text>
                     </TouchableOpacity>
                 </View>
             ) : (
-                <Text>No scientific information available</Text>
+                <Text color={theme.colors.textSecondary}>No scientific information available</Text>
             )}
         </View>
-    ), [scientificVideo, scientificDescription, toggle, toggleText]);
+    ), [scientificVideo, scientificDescription, toggle, toggleText, theme.colors.info, theme.colors.textSecondary, themedHtmlStyles, themedRenderNode]);
 
     // const clearHandler = useCallback(() => {
     //     dispatch(updateSteps({ steps: memoizedSteps, selectedSteps: [] }));
@@ -462,6 +486,7 @@ export default function ExerciseDetails () {
             </ScrollView>
 
             <Description
+                style={{ backgroundColor: theme.colors.background }}
                 video={videoData}
                 isPanelOpen={isPanelOpen}
                 description={instructionData}
@@ -493,7 +518,29 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
     const toggleText = useCallback(() => setToggle(prevState => !prevState), []);
     const normalizedDescription = normalizeDescription(description);
     const hasDescription = normalizedDescription.trim().length > 0;
+    console.log(normalizedDescription);
     const hasVideo = Boolean(video);
+    const themedHtmlStyles = useMemo(() => StyleSheet.create({
+        ...htmlStyles,
+        p: { ...htmlStyles.p, color: theme.colors.text },
+        li: { ...htmlStyles.li, color: theme.colors.text },
+        h1: { fontSize: 24, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h2: { fontSize: 22, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h3: { fontSize: 20, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h4: { fontSize: 18, fontWeight: 'bold', marginVertical: 6, color: theme.colors.text },
+        h5: { fontSize: 16, fontWeight: 'bold', marginVertical: 6, color: theme.colors.text },
+        h6: { fontSize: 14, fontWeight: 'bold', marginVertical: 4, color: theme.colors.text },
+        strong: { ...htmlStyles.strong, color: theme.colors.text },
+        b: { ...htmlStyles.b, color: theme.colors.text },
+        em: { ...htmlStyles.em, color: theme.colors.text },
+        ins: { ...htmlStyles.ins, color: theme.colors.text },
+        u: { ...htmlStyles.u, color: theme.colors.text },
+        span: { color: theme.colors.text },
+        div: { color: theme.colors.text },
+        ol: { marginLeft: 15 },
+        a: { color: theme.colors.info, textDecorationLine: 'underline' },
+    }), [theme.colors.text, theme.colors.info]);
+    const themedRenderNode = useMemo(() => createRenderNode(theme.colors.text), [theme.colors.text]);
     return (
         <SwipeablePanel
             fullWidth
@@ -522,25 +569,25 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
                                 : <PrivateVideo video={video} />
                             : hasDescription
                                 ? <HTMLView
-                                    renderNode={renderNode}
-                                    stylesheet={htmlStyles}
+                                    renderNode={themedRenderNode}
+                                    stylesheet={themedHtmlStyles}
                                     value={normalizedDescription}
                                 />
-                                : <Text textAlign="center">No video available</Text>
+                                : <Text textAlign="center" color={theme.colors.textSecondary}>No video available</Text>
                         : <HTMLView
-                            renderNode={renderNode}
-                            stylesheet={htmlStyles}
+                            renderNode={themedRenderNode}
+                            stylesheet={themedHtmlStyles}
                             value={normalizedDescription}
                         />}
                 </View>
                 {hasDescription && hasVideo
                     ? <TouchableOpacity onPress={toggleText}>
-                        <Text style={[styles.helpLink, styles.swipePanelButton]}>
+                        <Text style={[styles.helpLink, styles.swipePanelButton, { color: theme.colors.info }]}>
                             {toggle ? 'Back' : 'More'}
                         </Text>
                     </TouchableOpacity>
                     : <TouchableOpacity onPress={closePanel}>
-                        <Text style={[styles.helpLink, styles.swipePanelButton]}>Close</Text>
+                        <Text style={[styles.helpLink, styles.swipePanelButton, { color: theme.colors.info }]}>Close</Text>
                     </TouchableOpacity>}
             </View>
         </SwipeablePanel>
@@ -652,9 +699,9 @@ const styles = StyleSheet.create({
         marginVertical: 10,
     },
     image: {
-        resizeMode: 'contain',
         width: '100%',
         height: 150,
+        resizeMode: 'contain',
     },
     repsContainer: {
         flexDirection: 'row',
@@ -710,7 +757,7 @@ const styles = StyleSheet.create({
     },
 });
 
-const renderNode = ({ node, parent, defaultRenderer, index }: any) => {
+const createRenderNode = (textColor: string) => ({ node, index }: any) => {
     if (node?.data === '\n') { return <View key={`ws-${index}`} />; }
     if (node?.name === 'li') {
         const flattenText = (children: any[] = []): string => children.map(child => {
@@ -723,8 +770,8 @@ const renderNode = ({ node, parent, defaultRenderer, index }: any) => {
         const renderedChildren = flattenText(node.children);
         return (
             <View key={`li-${index}`} style={styles.htmlViewTextContainer}>
-                <Text style={{ marginRight: 5, marginTop: 5 }}>•</Text>
-                <Text style={htmlStyles.li}>{renderedChildren}</Text>
+                <Text style={{ marginRight: 5, marginTop: 5, color: textColor }}>•</Text>
+                <Text style={[htmlStyles.li, { color: textColor }]}>{renderedChildren}</Text>
             </View>
         );
     }

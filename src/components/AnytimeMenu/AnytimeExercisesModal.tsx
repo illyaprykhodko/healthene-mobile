@@ -177,7 +177,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
             />
       
             <View style={[styles.modal, { backgroundColor: theme.colors.surface }]}>
-                <View style={[styles.header, { backgroundColor: '#E0EBF7', borderBottomColor: theme.colors.border }]}>
+                <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
                     <View style={styles.headerLeft}>
                         <Badge count={activeExercisesCount} bgColor={theme.colors.aqua} showZero>
                             <ActivityIcon size={24} />
@@ -192,7 +192,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                         disabled={disabled}
                         style={styles.closeButton}
                     >
-                        <CloseIcon size={24} color="#181818" />
+                        <CloseIcon size={24} color={theme.colors.text} />
                     </TouchableOpacity>
                 </View>
 
@@ -242,7 +242,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                 </View>
                 {listIsDone && (
                     <View style={styles.completionContainer}>
-                        <Text style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>
+                        <Text style={[styles.goodWorkText, { backgroundColor: theme.colors.surface, color: theme.colors.text }]}>
                             Keep It Up!
                         </Text>
                         <TouchableOpacity
@@ -273,7 +273,6 @@ const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
-        backgroundColor: '#FFFFFF',
         elevation: 7,
         shadowColor: '#000000',
         shadowOffset: {
@@ -289,9 +288,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 24,
         paddingVertical: 20,
-        backgroundColor: '#E0EBF7',
         borderBottomWidth: 1,
-        borderBottomColor: '#CCDCE4',
     },
     headerLeft: {
         flexDirection: 'row',
@@ -302,16 +299,9 @@ const styles = StyleSheet.create({
         marginLeft: 16,
         fontSize: 20,
         fontWeight: '700',
-        color: '#181818',
     },
     closeButton: {
-        // padding: 8,
         borderRadius: 20,
-    },
-    closeText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#181818',
     },
     content: {
         flex: 1,
@@ -325,7 +315,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 24,
-        borderBottomColor: '#E1E1E1',
         justifyContent: 'space-between',
     },
     exerciseContent: {
@@ -335,30 +324,11 @@ const styles = StyleSheet.create({
     exerciseName: {
         fontSize: 18,
         fontWeight: '500',
-        color: '#181818',
         marginBottom: 4,
-    },
-    exerciseType: {
-        fontSize: 14,
-        color: '#666666',
-    },
-    completedBadge: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: '#96E072',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    completedText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
     },
     finishBadge: {
         paddingHorizontal: 12,
         paddingVertical: 6,
-        backgroundColor: '#FFE17A',
         borderRadius: 5,
     },
     finishText: {
@@ -368,7 +338,6 @@ const styles = StyleSheet.create({
     },
     chevron: {
         fontSize: 28,
-        color: '#666666',
     },
     emptyState: {
         flex: 1,
@@ -378,7 +347,6 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#808080',
         textAlign: 'center',
     },
     completionContainer: {
@@ -389,8 +357,6 @@ const styles = StyleSheet.create({
     goodWorkText: {
         fontSize: 32,
         fontWeight: '500',
-        color: '#181818',
-        backgroundColor: 'white',
         borderRadius: 12,
         padding: 16,
         elevation: 2,
@@ -400,7 +366,6 @@ const styles = StyleSheet.create({
         width: '90%',
         borderRadius: 30,
         alignSelf: 'center',
-        backgroundColor: '#96E072',
         borderColor: 'transparent',
         paddingVertical: 15,
         alignItems: 'center',
@@ -409,6 +374,5 @@ const styles = StyleSheet.create({
     nextActivityText: {
         fontSize: 20,
         fontWeight: '500',
-        color: '#FFFFFF',
     },
 });

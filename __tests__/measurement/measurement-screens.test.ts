@@ -157,16 +157,16 @@ describe('Measurement Screens Logic', () => {
 
     describe('Navigation Flow Logic', () => {
         it('determines correct screen for DONE measurement', () => {
-            const status = 'DONE';
+            const status = 'DONE' as 'DONE' | 'PENDING';
             const nextScreen = status === 'DONE' ? 'SaveValue' : 'InputModal';
-            
+
             expect(nextScreen).toBe('SaveValue');
         });
 
         it('determines correct screen for PENDING measurement', () => {
-            const status = 'PENDING';
+            const status = 'PENDING' as 'DONE' | 'PENDING';
             const nextScreen = status === 'DONE' ? 'SaveValue' : 'InputModal';
-            
+
             expect(nextScreen).toBe('InputModal');
         });
 

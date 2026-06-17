@@ -225,7 +225,7 @@ const QuestionScreen: React.FC = () => {
     }, []);
 
     const renderResponseItem = useCallback(({ item }: { item: ResponseItem }) => (
-        <View style={styles.itemWrapper}>
+        <View style={[styles.itemWrapper, { borderBottomColor: theme.colors.border }]}>
             <TouchableOpacity
                 style={styles.item}
                 onPress={() => handleSelectItem(item.id)}
@@ -254,7 +254,7 @@ const QuestionScreen: React.FC = () => {
         return (
             <Screen initialized style={styles.container}>
                 <View style={[styles.headerContainer, { backgroundColor: theme.colors.primary }]}>
-                    <View style={styles.headerWrapper}>
+                    <View style={[styles.headerWrapper, { backgroundColor: theme.colors.surface }]}>
                         <TouchableOpacity onPress={handleCancel} style={styles.headerButton}>
                             <Text variant="h5" color={COLORS.BLUE}>Cancel</Text>
                         </TouchableOpacity>
@@ -264,7 +264,7 @@ const QuestionScreen: React.FC = () => {
                         </View>
                     </View>
                 </View>
-                <View style={styles.questionContainer}>
+                <View style={[styles.questionContainer, { backgroundColor: theme.colors.muted }]}>
                     <Text style={styles.questionText}>No question data available</Text>
                 </View>
             </Screen>
@@ -278,7 +278,7 @@ const QuestionScreen: React.FC = () => {
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 <View style={[styles.headerContainer, { backgroundColor: theme.colors.primary }]}>
-                    <View style={styles.headerWrapper}>
+                    <View style={[styles.headerWrapper, { backgroundColor: theme.colors.surface }]}>
                         <TouchableOpacity
                             onPress={handleCancel}
                             style={styles.headerButton}
@@ -299,7 +299,7 @@ const QuestionScreen: React.FC = () => {
                         >
                             <Text
                                 variant="h5"
-                                color={isSubmitDisabled ? '#CCCCCC' : COLORS.BLUE}
+                                color={isSubmitDisabled ? theme.colors.textMuted : COLORS.BLUE}
                             >
                                 {isFinalMessage ? 'Done' : 'Submit'}
                             </Text>
@@ -307,7 +307,7 @@ const QuestionScreen: React.FC = () => {
                     </View>
                 </View>
 
-                <View style={styles.questionContainer}>
+                <View style={[styles.questionContainer, { backgroundColor: theme.colors.muted }]}>
                     <Text style={[styles.questionText, { color: theme.colors.text }]}>
                         {questionContent.question}
                     </Text>
@@ -324,8 +324,15 @@ const QuestionScreen: React.FC = () => {
                                 editable={!isLoading}
                                 onChangeText={setDescription}
                                 placeholderTextColor="#999999"
-                                style={[styles.textarea, { color: theme.colors.text }]}
                                 placeholder={responseItems[0]?.itemText || 'Enter your answer...'}
+                                style={[
+                                    styles.textarea,
+                                    {
+                                        color: theme.colors.text,
+                                        borderColor: theme.colors.border,
+                                        backgroundColor: theme.colors.surface
+                                    }
+                                ]}
                             />
                         </View>
                     ) : !isFinalMessage ? (
@@ -352,13 +359,11 @@ const styles = StyleSheet.create({
     },
     headerContainer: {
         paddingTop: Platform.OS === 'ios' ? 50 : 10,
-        backgroundColor: '#156F93',
     },
     headerWrapper: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
         borderTopRightRadius: 30,
         borderTopLeftRadius: 30,
         paddingVertical: 15,
@@ -374,7 +379,6 @@ const styles = StyleSheet.create({
     questionContainer: {
         paddingVertical: OFFSET.VERTICAL * 2,
         paddingHorizontal: OFFSET.HORIZONTAL,
-        backgroundColor: '#F5F5F5',
     },
     questionText: {
         fontSize: 18,
@@ -389,17 +393,14 @@ const styles = StyleSheet.create({
     },
     textarea: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
         borderRadius: 8,
         padding: 12,
         minHeight: 120,
         fontSize: 16,
         textAlignVertical: 'top',
-        backgroundColor: '#FFFFFF',
     },
     itemWrapper: {
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
     },
     item: {
         flexDirection: 'row',
@@ -416,8 +417,5 @@ const styles = StyleSheet.create({
     },
     checkIcon: {
         marginLeft: 10,
-    },
-    disabledText: {
-        color: '#CCCCCC',
     },
 });

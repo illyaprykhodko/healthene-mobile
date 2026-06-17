@@ -1,12 +1,12 @@
 // outsource dependencies
 import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View, SectionList } from 'react-native';
-import React, { memo, useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
+
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
-import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
@@ -15,8 +15,12 @@ import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
 import { Button } from 'components/Button';
 import { SHOPPING_STEP } from 'constants/spec';
+import StackHeader from 'components/StackHeader';
 import { useAppDispatch, useAppSelector } from 'store';
+import HorizontalMenu from 'components/HorizontalMenu';
+import { useShoppingDrawer } from '../useShoppingDrawer';
 import { PressableScale } from 'components/PressableScale';
+import ConfirmationAlert from 'components/ConfirmationAlert';
 import {
     setCurrentStep,
     toggleStockItem,
@@ -28,8 +32,6 @@ import {
     useUpdateStockItemsMutation,
     useMoveStocksToShoppingListMutation
 } from 'store/api/shoppingApi';
-import HorizontalMenu from 'components/HorizontalMenu';
-import ConfirmationAlert from 'components/ConfirmationAlert';
 
 interface StockItem {
     id: number;
@@ -57,6 +59,7 @@ const StockList: React.FC = () => {
     const theme = useTheme();
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
+    const openDrawer = useShoppingDrawer();
 
     const [open, setOpen] = useState(true);
     const [activeCategory, setActiveCategory] = useState<{ name: string; id?: number | null }>(ALL_CATEGORY);
@@ -124,12 +127,6 @@ const StockList: React.FC = () => {
 
         return Object.entries(grouped).map(([title, data]) => ({ title, data }));
     }, [stockList, uncategorizedCategoryName]);
-
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerLeft: () => <BackBtn onPress={handleGoBack} />,
-        });
-    }, [navigation]);
 
     const handleGoBack = useCallback(() => {
         dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
@@ -239,6 +236,11 @@ const StockList: React.FC = () => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
+            <StackHeader
+                title="Stock List"
+                onBack={handleGoBack}
+                onOpenDrawer={openDrawer}
+            />
             <View style={styles.content}>
                 {groupedList.length === 0 ? (
                     <Text textAlign="center" color={COLORS.GREY} style={styles.emptyText}>
@@ -314,7 +316,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row',
         borderBottomWidth: 1,
-        backgroundColor: '#E8F4FC',
         justifyContent: 'space-between',
         borderBottomColor: COLORS.LIGHT_GREY,
     },

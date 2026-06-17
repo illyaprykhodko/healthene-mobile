@@ -1,3 +1,4 @@
+
 // outsource dependencies
 import {
     View,
@@ -13,21 +14,27 @@ import { Formik } from 'formik';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 // components
 import Text from 'components/Text';
+
 // hooks
 import { useTheme } from 'hooks/useTheme';
 // import { useHealthIntegration } from 'hooks/useHealthIntegration';
 import { useGetLastMeasurementQuery } from 'store/api/dayOverviewApi';
 import { MeasurementItem, useMeasurementSubmit } from 'hooks/useMeasurementSubmit';
+
 // types
 import type { MeasurementType } from 'types/health';
+
 // utils
 import {
     getMeasurementConfig,
     getResolvedMeasurementField,
     getMeasurementValidationSchema,
 } from 'utils/measurement';
+
 // local dependencies
 import { GraphIcon, InfoIcon } from '../icons';
 import { MeasurementIcon } from './AnytimeIcons';
@@ -50,6 +57,8 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
     disabled = false,
 }) => {
     const theme = useTheme();
+    const insets = useSafeAreaInsets();
+    const androidTopInset = Platform.OS === 'android' ? insets.top : 0;
     const measurementType = item.measurement?.type as MeasurementType;
     const config = useMemo(
         () => getMeasurementConfig(measurementType),
@@ -170,21 +179,30 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                 presentationStyle="pageSheet"
             >
                 <KeyboardAvoidingView
-                    style={styles.container}
                     behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    style={[
+                        styles.container,
+                        {
+                            paddingTop: androidTopInset,
+                            backgroundColor: theme.colors.background
+                        }
+                    ]}
                 >
                     <View
                         style={[
                             styles.header,
                             {
-                                backgroundColor: '#E0EBF7',
                                 borderBottomColor: theme.colors.border,
+                                backgroundColor: theme.colors.surfaceAlt,
                             },
                         ]}
                     >
                         <View style={styles.headerLeft}>
                             <MeasurementIcon size={24} />
-                            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+                            <Text style={[
+                                styles.headerTitle,
+                                { color: theme.colors.text }
+                            ]}>
                                 {item.measurement?.name || 'Measurement'}
                             </Text>
                         </View>
@@ -273,7 +291,7 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                                         onPress={openPanel}
                                     >
                                         <InfoIcon />
-                                        <Text style={[styles.infoButtonText, { color: '#2978A0' }]}>
+                                        <Text style={[styles.infoButtonText, { color: theme.colors.info }]}>
                       How do I measure this?
                                         </Text>
                                     </TouchableOpacity>
@@ -289,12 +307,10 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                                         <TouchableOpacity
                                             onPress={goToChart}
                                             disabled={isSubmitting}
-                                            style={styles.graphButton}
+                                            style={[styles.graphButton, { borderColor: theme.colors.info }]}
                                         >
-                                            <Text
-                                                style={[styles.graphButtonText, { color: '#2978A0' }]}
-                                            >
-                      GRAPH
+                                            <Text style={[styles.graphButtonText, { color: theme.colors.info }]} >
+                                                GRAPH
                                             </Text>
                                             <GraphIcon />
                                         </TouchableOpacity>
@@ -325,24 +341,29 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                                         disabled={
                                             isSubmitting || Object.keys(errors).length > 0 || disabled
                                         }
-                                        style={
-                                            isSubmitting || Object.keys(errors).length > 0 || disabled
-                                                ? [styles.saveButton, styles.saveButtonDisabled]
-                                                : styles.saveButton
-                                        }
+                                        style={[
+                                            styles.saveButton,
+                                            {
+                                                backgroundColor:
+                                                    isSubmitting || Object.keys(errors).length > 0 || disabled
+                                                        ? theme.colors.muted
+                                                        : theme.colors.successAlt,
+                                            },
+                                        ]}
                                     >
                                         {isSubmitting ? (
-                                            <ActivityIndicator color="#4E733C" />
+                                            <ActivityIndicator color={theme.colors.successAltText} />
                                         ) : (
                                             <Text
-                                                style={
-                                                    Object.keys(errors).length > 0 || disabled
-                                                        ? [
-                                                            styles.saveButtonText,
-                                                            styles.saveButtonTextDisabled,
-                                                        ]
-                                                        : styles.saveButtonText
-                                                }
+                                                style={[
+                                                    styles.saveButtonText,
+                                                    {
+                                                        color:
+                                                            Object.keys(errors).length > 0 || disabled
+                                                                ? theme.colors.textMuted
+                                                                : theme.colors.successAltText,
+                                                    },
+                                                ]}
                                             >
                       SAVE
                                             </Text>
@@ -361,7 +382,6 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
     },
     header: {
         flexDirection: 'row',
@@ -415,22 +435,14 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
     saveButton: {
-        backgroundColor: '#96E072',
         paddingVertical: 18,
         borderRadius: 25,
         width: '100%',
         alignItems: 'center',
     },
-    saveButtonDisabled: {
-        backgroundColor: '#EEEEEE',
-    },
     saveButtonText: {
-        color: '#4E733C',
         fontSize: 20,
         fontWeight: '700',
-    },
-    saveButtonTextDisabled: {
-        color: '#888888',
     },
     infoButton: {
         alignSelf: 'flex-start',
@@ -452,7 +464,6 @@ const styles = StyleSheet.create({
         marginHorizontal: 25,
         marginBottom: 24,
         borderWidth: 2,
-        borderColor: '#2978A0',
         borderRadius: 25,
         flexDirection: 'row',
         alignItems: 'center',
@@ -465,7 +476,6 @@ const styles = StyleSheet.create({
         marginRight: 5,
     },
     swipePanel: {
-        backgroundColor: '#fff',
         height: '55%',
     },
     panelContent: {

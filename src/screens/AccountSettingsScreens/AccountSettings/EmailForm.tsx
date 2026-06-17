@@ -151,7 +151,7 @@ const EmailForm = ({ onPreloader }: EmailFormProps) => {
                     touched={touched}
                     value={values.email}
                     label="Email Address"
-                    color={theme.colors.black}
+                    color={theme.colors.text}
                     onChangeText={handleChange('email')}
                     error={touched.email && errors.email ? { email: errors.email } : undefined}
                 />
