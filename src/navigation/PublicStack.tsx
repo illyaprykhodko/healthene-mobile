@@ -14,8 +14,8 @@ const Stack = createStackNavigator();
 const renderHeader = (headerProps: any) => (
     <StackHeader
         backLabel={null}
-        title={headerProps.options.title}
         showBack={!!headerProps.back}
+        title={headerProps.options.title}
         onBack={() => headerProps.navigation.goBack()}
     />
 );
@@ -34,8 +34,8 @@ export const PublicStack = () => {
                 name={ROUTES.TERMS_AND_CONDITIONS}
                 options={{
                     headerShown: true,
-                    title: 'Term and Conditions',
                     header: renderHeader,
+                    title: 'Term and Conditions',
                 }}
             />
         </Stack.Navigator>

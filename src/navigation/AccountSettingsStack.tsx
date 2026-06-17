@@ -21,8 +21,8 @@ const Stack = createStackNavigator();
 
 const renderHeader = (headerProps: any) => (
     <StackHeader
-        title={headerProps.options.title}
         showBack={!!headerProps.back}
+        title={headerProps.options.title}
         onBack={() => headerProps.navigation.goBack()}
     />
 );

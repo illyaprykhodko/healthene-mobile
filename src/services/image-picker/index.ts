@@ -20,8 +20,8 @@ const PERMISSIONS_ITEM = {
 const CROPPER_OPTIONS = {
     width: 512,
     height: 512,
-    mediaType: 'photo' as const,
     cropperCircleOverlay: true,
+    mediaType: 'photo' as const,
     cropperToolbarColor: '#156F93',
     cropperActiveWidgetColor: '#FFFFFF',
     cropperToolbarWidgetColor: '#FFFFFF',
