@@ -118,9 +118,9 @@ const SaveValueScreen: React.FC = () => {
                             // and never re-patches getDayOverview on queryFulfilled).
                             if (measurementPhaseItem) {
                                 await updatePhaseItem({
+                                    date: currentDate,
                                     id: measurementPhaseItem.id,
                                     phaseId: measurementPhaseItem.phaseId!,
-                                    date: currentDate,
                                     data: {
                                         ...measurementPhaseItem,
                                         status: PHASE_ITEM_STATUS.PENDING,
@@ -148,9 +148,9 @@ const SaveValueScreen: React.FC = () => {
         try {
             if (measurementPhaseItem) {
                 await updatePhaseItem({
+                    date: currentDate,
                     id: measurementPhaseItem.id,
                     phaseId: measurementPhaseItem.phaseId!,
-                    date: currentDate,
                     data: {
                         ...measurementPhaseItem,
                         status: PHASE_ITEM_STATUS.DONE,
@@ -181,19 +181,22 @@ const SaveValueScreen: React.FC = () => {
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <TouchableOpacity
+                disabled={!isSameDate}
+                onPress={handleGoToChart}
                 style={[
                     styles.graphButton,
-                    !isSameDate && styles.graphButtonDisabled,
                     { borderColor: theme.colors.primary },
+                    !isSameDate && styles.graphButtonDisabled,
                 ]}
-                onPress={handleGoToChart}
-                disabled={!isSameDate}
             >
                 {isSameDate && <Icon iconStyle="solid" name="chart-line" size={18} color={theme.colors.primary} />}
                 <Text
                     style={[
                         styles.graphButtonText,
-                        { color: isSameDate ? theme.colors.primary : theme.colors.grey },
+                        { color: isSameDate
+                                ? theme.colors.primary
+                                : theme.colors.grey
+                        },
                     ]}
                 >
                     Graph

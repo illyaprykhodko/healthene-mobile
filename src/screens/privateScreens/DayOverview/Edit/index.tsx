@@ -144,10 +144,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         setTargetPhaseId(match?.id);
     }, [dayOverviewData, initialPhaseId]);
 
-    // Use `isLoading` (true only on the initial fetch) instead of `isFetching` (true on
-    // every refetch). updatePhase invalidates 'PhaseItems' on each status change which
-    // would otherwise re-trigger the Screen's full-page spinner. Optimistic patches in
-    // updatePhaseItem keep the list visible and correct during the background refetch.
     const {
         currentData: phaseItems,
         refetch: refetchPhaseItems,
@@ -873,9 +869,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                         isFutureDate={isFutureDate}
                                         updateData={updatePhaseItem}
                                         handleCheckboxStatus={handleCheckboxStatus}
-                                        // Lock checkbox and swipe-to-skip while a status mutation
-                                        // is in flight. Prevents double-tap races where the phase
-                                        // status update could lag the checkbox state.
                                         disabled={isUpdatingPhase || isUpdatingPhaseItem}
                                     />;
                                     // return (

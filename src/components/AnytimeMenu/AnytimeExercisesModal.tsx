@@ -2,6 +2,7 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useCallback, useMemo, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+
 // local dependencies
 import { Badge } from './Badge';
 import Text from 'components/Text';
@@ -24,8 +25,8 @@ interface AnytimeExercisesModalProps {
     visible: boolean;
     disabled?: boolean;
     onClose: () => void;
-     maxHeight: number | undefined;
-                    fullScreen: boolean;
+    fullScreen: boolean;
+    maxHeight: number | undefined;
 }
 
 export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
@@ -121,10 +122,6 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
     }, [allAnytimeExercises, isToday]);
 
     // Update anytime phase status when exercises change.
-    // Server NPEs on a body of just `{ status }` (DayOverviewPhaseServiceImpl.runIncompleteStatusScenario
-    // dereferences required phase fields), so spread the full phase shape and override status —
-    // same convention used in DayOverview/Edit/index.tsx:520-526. The inFlight ref prevents a loop
-    // if the server keeps returning a status that disagrees with our computed value.
     const inFlightStatusRef = useRef<string | null>(null);
     useEffect(() => {
         if (!anytimePhaseStatus || !anytimePhaseId || !anytimePhase) { return; }

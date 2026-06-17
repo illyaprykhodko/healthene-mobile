@@ -98,8 +98,8 @@ const TreeAddReplaceItem: React.FC = () => {
             return;
         }
         setPage(0);
-        setAllItems([]);
         setAiFoods([]);
+        setAllItems([]);
         setIsAiFoodsAdded(false);
     }, [debouncedSearchQuery, selectedTab]);
     const { data: categoryTreeData, isLoading: isCategoryTreeLoading } = useGetCategoryTreeNodesQuery(
@@ -628,8 +628,8 @@ const TreeAddReplaceItem: React.FC = () => {
                 onEndReached={handleLoadMore}
                 keyboardDismissMode="on-drag"
                 keyboardShouldPersistTaps="handled"
-                contentContainerStyle={styles.listContent}
                 keyExtractor={({ id }) => String(id)}
+                contentContainerStyle={styles.listContent}
                 onScrollBeginDrag={() => {
                     if (isKeyboardVisible) { Keyboard.dismiss(); }
                 }}

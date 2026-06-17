@@ -1,7 +1,7 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/fontawesome5';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useLayoutEffect, useMemo, useState, useEffect, useRef } from 'react';
 
