@@ -15,7 +15,7 @@ import { Button } from 'components/Button';
 import StackHeader from 'components/StackHeader';
 import { RangeSlider } from 'components/RangeSlider';
 import ConfirmationAlert from 'components/ConfirmationAlert';
-import { useReviewAlert } from 'screens/privateScreens/MealPreferences/ReviewAlertContext';
+import { useReviewAlert } from 'components/ReviewAlertContext';
 import {
     MealPreferenceType,
     MealWithPreferences,

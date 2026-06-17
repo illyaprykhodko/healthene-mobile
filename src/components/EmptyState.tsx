@@ -13,20 +13,24 @@ type FeatherIconName = React.ComponentProps<typeof Icon>['name'];
 interface EmptyStateProps {
     title: string;
     subtitle?: string;
-    /** Feather icon name. Defaults to a neutral "inbox". */
+    /** Feather icon name. Defaults to a neutral "inbox". Ignored if `iconNode` is provided. */
     icon?: FeatherIconName;
+    /** Override the default circle+feather icon with a custom node (e.g. a different icon family). */
+    iconNode?: React.ReactNode;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ title, subtitle, icon = 'inbox' }) => {
+export const EmptyState: React.FC<EmptyStateProps> = ({ title, subtitle, icon = 'inbox', iconNode }) => {
     const theme = useTheme();
     return (
         <Animated.View
             style={styles.container}
             entering={FadeInDown.duration(420).springify().mass(0.9).damping(20)}
         >
-            <View style={[styles.iconCircle, { backgroundColor: theme.colors.surfaceAlt }]}>
-                <Icon name={icon} size={34} color={theme.colors.textSecondary} />
-            </View>
+            {iconNode ?? (
+                <View style={[styles.iconCircle, { backgroundColor: theme.colors.surfaceAlt }]}>
+                    <Icon name={icon} size={34} color={theme.colors.textSecondary} />
+                </View>
+            )}
             <Text variant="h4" textAlign="center" style={styles.title} color={theme.colors.text}>
                 {title}
             </Text>

@@ -13,8 +13,8 @@ import { Button } from 'components/Button';
 import StackHeader from 'components/StackHeader';
 import { RangeSlider } from 'components/RangeSlider';
 import ConfirmationAlert from 'components/ConfirmationAlert';
+import { useReviewAlert } from 'components/ReviewAlertContext';
 import { TagType, CuisineFrequency } from 'types/cuisineDistribution';
-import { useReviewAlert } from 'screens/privateScreens/CuisineDistribution/ReviewAlertContext';
 import {
     useGetCuisineFrequencyQuery,
     useUpdateCuisineFrequencyMutation,

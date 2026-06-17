@@ -36,8 +36,8 @@ const ReadMessageScreen = () => {
     const goToWriteMessage = useCallback(() => navigation.navigate(ROUTES.WRITE_MESSAGE), [dispatch, navigation]);
     return <Screen initialized={!isLoading} style={styles.container}>
         <View style={styles.header}>
-            <Text variant="h4" color={theme.colors.darkGrey}>{data?.subject}</Text>
-            <Pressable onPress={goToWriteMessage}>
+            <Text style={styles.subject} variant="h4" color={theme.colors.headerText}>{data?.subject}</Text>
+            <Pressable onPress={goToWriteMessage} hitSlop={8}>
                 <Icon iconStyle="solid" name="reply" color={theme.colors.grey} size={24} />
             </Pressable>
         </View>
@@ -54,7 +54,11 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
-    }
+    },
+    subject: {
+        flex: 1,
+        marginRight: OFFSET.HORIZONTAL,
+    },
 });
