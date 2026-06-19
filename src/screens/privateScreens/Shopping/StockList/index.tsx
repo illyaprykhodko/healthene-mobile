@@ -1,7 +1,7 @@
 // outsource dependencies
-import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View, SectionList } from 'react-native';
 import React, { memo, useCallback, useMemo, useState } from 'react';
+import { useNavigation, StackActions } from '@react-navigation/native';
 import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 // local dependencies
@@ -14,23 +14,26 @@ import { useTheme } from 'hooks/useTheme';
 import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
 import { Button } from 'components/Button';
-import { SHOPPING_STEP } from 'constants/spec';
 import StackHeader from 'components/StackHeader';
 import { useAppDispatch, useAppSelector } from 'store';
 import HorizontalMenu from 'components/HorizontalMenu';
 import { useShoppingDrawer } from '../useShoppingDrawer';
 import { PressableScale } from 'components/PressableScale';
 import ConfirmationAlert from 'components/ConfirmationAlert';
+import { SHOPPING_STEP, SHOPPING_STATUS, SHOPPING_CONFIRMED_ITEM_TYPE } from 'constants/spec';
 import {
+    selectShopping,
     setCurrentStep,
     toggleStockItem,
+    setShoppingStatus,
     selectCheckedStockItems,
 } from 'store/slices/shoppingSlice';
 import {
     useGetStockListQuery,
     useGetStockCategoriesQuery,
     useUpdateStockItemsMutation,
-    useMoveStocksToShoppingListMutation
+    useMoveStocksToShoppingListMutation,
+    useUpdateShoppingListStatusMutation,
 } from 'store/api/shoppingApi';
 
 interface StockItem {
@@ -62,9 +65,16 @@ const StockList: React.FC = () => {
     const openDrawer = useShoppingDrawer();
 
     const [open, setOpen] = useState(true);
+    const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
     const [activeCategory, setActiveCategory] = useState<{ name: string; id?: number | null }>(ALL_CATEGORY);
     const [page, setPage] = useState(0);
     const checkedItems = useAppSelector(selectCheckedStockItems);
+    const {
+        confirmedItemsType,
+        separateRescueItems,
+        id: shoppingListId,
+    } = useAppSelector(selectShopping);
+    const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
     const hasActiveCategoryId = Object.prototype.hasOwnProperty.call(activeCategory || {}, 'id');
     const selectedStockCategoryId = hasActiveCategoryId
         ? activeCategory.id
@@ -75,9 +85,12 @@ const StockList: React.FC = () => {
         size: 20,
     });
     // const { data: stockData, isLoading } = useGetStockListQuery();
+    // TEMP: updateStock is kept for the upcoming revert — the call site below is commented in handleNextBtn.
+    // eslint-disable-next-line no-unused-vars
     const [updateStock, { isLoading: isUpdating }] = useUpdateStockItemsMutation();
     const { data: categoriesData } = useGetStockCategoriesQuery();
-    const [moveStocksToShoppingList] = useMoveStocksToShoppingListMutation();
+    const [moveStocksToShoppingList, { isLoading: isMovingStocks }] = useMoveStocksToShoppingListMutation();
+    const [updateShoppingListStatus, { isLoading: isFinalizing }] = useUpdateShoppingListStatusMutation();
     const stockList = stockData?.content || [];
     const isAllCategory = activeCategory?.name === 'All';
     // Get unique categories
@@ -143,12 +156,53 @@ const StockList: React.FC = () => {
                 // await updateStock({ ids: checkedItems }).unwrap();
                 await moveStocksToShoppingList({ ids: checkedItems }).unwrap();
             }
-            dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
-            navigation.navigate(ROUTES.SHOPPING_LIST);
+            // HS-3113: third shopping-list review removed. Instead of flipping to
+            // SHOPPING_STEP.CHECK and bouncing back to ShoppingList, prompt the
+            // finalize confirmation right here. Kept commented to ease revert.
+            // dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
+            // navigation.navigate(ROUTES.SHOPPING_LIST);
+            setIsFinalizeOpen(true);
         } catch (error) {
             console.error('Error updating stock:', error);
         }
-    }, [checkedItems, updateStock, dispatch, navigation, moveStocksToShoppingList, checkedItems]);
+    }, [checkedItems, moveStocksToShoppingList]);
+
+    const buildShopOnMyOwnPayload = useCallback(() => {
+        const allItems = includeRescueFoodsInShoppingList;
+        const mainCondition = confirmedItemsType === SHOPPING_CONFIRMED_ITEM_TYPE.NONE;
+        const newConfirmedItemsType = allItems
+            ? SHOPPING_CONFIRMED_ITEM_TYPE.ALL
+            : mainCondition
+                ? SHOPPING_CONFIRMED_ITEM_TYPE.ORIGINAL
+                : SHOPPING_CONFIRMED_ITEM_TYPE.ALL;
+        return { newConfirmedItemsType };
+    }, [includeRescueFoodsInShoppingList, confirmedItemsType]);
+
+    const handleFinalize = useCallback(async () => {
+        try {
+            // TEMP: mirrors ShoppingList.handleFinalize until /shop-on-my-own is restored on backend.
+            if (shoppingListId) {
+                const { newConfirmedItemsType } = buildShopOnMyOwnPayload();
+                await updateShoppingListStatus({
+                    separateRescueItems,
+                    id: shoppingListId,
+                    status: SHOPPING_STATUS.SHOP_ON_MY_OWN,
+                    confirmedItemsType: newConfirmedItemsType,
+                }).unwrap();
+                dispatch(setShoppingStatus({
+                    status: SHOPPING_STATUS.SHOP_ON_MY_OWN,
+                    confirmedItemsType: newConfirmedItemsType,
+                }));
+            }
+            dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
+            setIsFinalizeOpen(false);
+            navigation.dispatch(StackActions.replace(ROUTES.SHOPPING_LIST, { isShopOnMyOwn: true }));
+        } catch (error) {
+            console.error('Error finalizing shopping list:', error);
+        }
+    }, [shoppingListId, separateRescueItems, buildShopOnMyOwnPayload, updateShoppingListStatus, dispatch, navigation]);
+
+    const handleCloseFinalizeAlert = useCallback(() => setIsFinalizeOpen(false), []);
 
     const handleCategoryChange = useCallback((item: any) => {
         const next = item?.activeItem ?? item;
@@ -159,7 +213,7 @@ const StockList: React.FC = () => {
 
     const handleCloseAlert = useCallback(() => setOpen(false), []);
 
-    const disabled = isLoading || isUpdating;
+    const disabled = isLoading || isUpdating || isMovingStocks || isFinalizing;
 
     const renderItem = useCallback(({ item, index }: { item: StockItem; index: number }) => {
         const isChecked = checkedItems.includes(item.id);
@@ -273,12 +327,13 @@ const StockList: React.FC = () => {
 
             <View style={styles.buttonControl}>
                 <Button
+                    title="Finalize"
                     variant="primary"
                     disabled={disabled}
                     style={styles.nextBtn}
                     onPress={handleNextBtn}
                     textStyle={styles.nextBtnText}
-                    title={checkedItems.length === 0 ? 'Skip' : 'Next'}
+                    // title={checkedItems.length === 0 ? 'Skip' : 'Next'}
                 />
             </View>
 
@@ -291,6 +346,19 @@ const StockList: React.FC = () => {
                 onClose={handleCloseAlert}
                 onSubmit={handleCloseAlert}
                 message="Check that these items are still in your kitchen."
+            />
+            {/* HS-3113: finalize confirmation moved here from ShoppingList. With the third
+                review (SHOPPING_STEP.CHECK) removed, StockList's Next button must prompt
+                the same "Are you done?" alert instead of bouncing back
+                to ShoppingList in CHECK mode. */}
+            <ConfirmationAlert
+                cancelTxt="Cancel"
+                applyTxt="Finalize"
+                disabled={disabled}
+                title="Are you done?"
+                isOpen={isFinalizeOpen}
+                onSubmit={handleFinalize}
+                onClose={handleCloseFinalizeAlert}
             />
         </Screen>
     );

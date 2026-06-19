@@ -80,7 +80,9 @@ const ShoppingList: React.FC = () => {
         status,
         itemType,
         currentStep,
-        isListTouched,
+        // HS-3113: isListTouched gated the (now-removed) CHECK branches in handleNextBtn
+        // and handleBack. Kept commented for easy revert.
+        // isListTouched,
         activeCategory,
         shoppingListDates,
         isCustomAlertOpen,
@@ -109,13 +111,14 @@ const ShoppingList: React.FC = () => {
     // Queries
     const { data: statusData } = useGetShoppingListStatusQuery();
     const { data: datesData } = useGetShoppingListDatesQuery();
-    const { data: stockData } = useGetStockListQuery({
+    const { data: stockData, isLoading: isStockLoading, isFetching: isStockFetching } = useGetStockListQuery({
         shoppingCartCategoryId: undefined,
         page: 0,
         size: 20,
     });
     const stockList = stockData?.content || [];
-    const excluded = currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.CHECK;
+    // HS-3113: Final Check step removed — was: currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.CHECK
+    const excluded = currentStep === SHOPPING_STEP.MAIN;
     const shoppingItemType = separateRescueItems
         ? itemType ? itemType : SHOPPING_ITEM_TYPE.ORIGINAL
         : SHOPPING_ITEM_TYPE.ORIGINAL;
@@ -160,7 +163,10 @@ const ShoppingList: React.FC = () => {
     const video = patientVideos?.[0]?.libraryItem;
     const question = patientQuestions?.[0];
 
-    const isLoading = isCategoriesLoading || isListLoading;
+    // HS-3113: stock-list query must be settled before Next can branch on stockList.length;
+    // otherwise an unloaded stock query reads as "no stock" and skips StockList review.
+    const isLoading = isCategoriesLoading || isListLoading || isStockLoading;
+    const isStockResolving = isStockLoading || isStockFetching;
 
     useEffect(() => {
         if (statusData && isFocused) {
@@ -277,31 +283,42 @@ const ShoppingList: React.FC = () => {
     }, [updateItem, dispatch]);
 
     const handleNextBtn = useCallback(() => {
+        // HS-3113: bail out while the stock-list query hasn't resolved — an unloaded
+        // response reads as empty and would incorrectly route to the finalize alert.
+        if (isStockResolving && !stockData) {
+            return;
+        }
         if (currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.MEAL) {
             if (stockList.length > 0) {
                 setOpen(false);
                 dispatch(setCurrentStep(SHOPPING_STEP.STOCK));
                 navigation.navigate(ROUTES.STOCK_LIST);
-            } else if (isListTouched) {
-                dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
-                refetch();
+            // HS-3113: Final Check step removed. Previously, a touched list with no stock
+            // items entered SHOPPING_STEP.CHECK for a third review. Now it falls through
+            // to the finalize alert. Kept commented for easy revert.
+            // } else if (isListTouched) {
+            //     dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
+            //     refetch();
             } else {
                 setIsFinalizeOpen(true);
             }
         } else {
             setIsFinalizeOpen(true);
         }
-    }, [navigation, currentStep, stockList, isListTouched, dispatch, refetch]);
+    }, [navigation, currentStep, stockList, dispatch, isStockResolving, stockData]);
 
     const handleBack = useCallback(() => {
-        if (isListTouched && stockList.length === 0 && currentStep === SHOPPING_STEP.CHECK) {
-            dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
-            return;
-        }
+        // HS-3113: Final Check step removed. Previously this returned to MAIN when
+        // backing out of a touched CHECK review with no stock. Block kept for easy revert.
+        // if (isListTouched && stockList.length === 0 && currentStep === SHOPPING_STEP.CHECK) {
+        //     dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
+        //     return;
+        // }
         if (
             status === SHOPPING_STATUS.PENDING
             && !isFinalizeAlertOpen
-            && currentStep !== SHOPPING_STEP.CHECK
+            // HS-3113: CHECK step unreachable; guard simplified.
+            // && currentStep !== SHOPPING_STEP.CHECK
         ) {
             pendingBackActionRef.current = null;
             dispatch(updateShoppingMeta({ isFinalizeAlertOpen: true, isTryToOpenSideMenu: false }));
@@ -312,7 +329,7 @@ const ShoppingList: React.FC = () => {
             return;
         }
         navigation.goBack();
-    }, [navigation, isListTouched, stockList, currentStep, status, dispatch, isFinalizeAlertOpen]);
+    }, [navigation, status, dispatch, isFinalizeAlertOpen]);
 
 
     useEffect(() => {
@@ -321,17 +338,17 @@ const ShoppingList: React.FC = () => {
                 allowBackRef.current = false;
                 return;
             }
-            if (
-                status === SHOPPING_STATUS.PENDING
-                && currentStep !== SHOPPING_STEP.CHECK
-            ) {
+            // HS-3113: Final Check step removed. Previously the guard also required
+            // currentStep !== SHOPPING_STEP.CHECK to allow leaving during the third
+            // review. With CHECK unreachable, the PENDING check alone is sufficient.
+            if (status === SHOPPING_STATUS.PENDING) {
                 event.preventDefault();
                 pendingBackActionRef.current = event.data.action;
                 dispatch(updateShoppingMeta({ isFinalizeAlertOpen: true, isTryToOpenSideMenu: false }));
             }
         });
         return unsubscribe;
-    }, [navigation, status, currentStep, dispatch]);
+    }, [navigation, status, dispatch]);
 
     // TEMP: backend /shopping-list/shop-on-my-own returns 404, so we replicate V1 behavior by flipping status via PUT /shopping-list.
     // Revert both handlers to `confirmShopOnMyOwn({}).unwrap()` once backend re-adds the dedicated endpoint.
@@ -486,14 +503,16 @@ const ShoppingList: React.FC = () => {
                     : 'Here\'s your shopping list.',
             };
         }
-        if (currentStep === SHOPPING_STEP.CHECK) {
-            return {
-                title: 'Final Check',
-                message: shoppingListDates
-                    ? `Review your ${shoppingListDates.from}-${shoppingListDates.to} list one last time.`
-                    : 'Review your list one last time.',
-            };
-        }
+        // HS-3113: third shopping-list review removed. The "Final Check" popover
+        // is the popover called out in the ticket. Block kept for easy revert.
+        // if (currentStep === SHOPPING_STEP.CHECK) {
+        //     return {
+        //         title: 'Final Check',
+        //         message: shoppingListDates
+        //             ? `Review your ${shoppingListDates.from}-${shoppingListDates.to} list one last time.`
+        //             : 'Review your list one last time.',
+        //     };
+        // }
         if (isShopOnMyOwn && status === SHOPPING_STATUS.SHOP_ON_MY_OWN) {
             return { title: 'Shopping List', message: 'You can now shop on your own.' };
         }

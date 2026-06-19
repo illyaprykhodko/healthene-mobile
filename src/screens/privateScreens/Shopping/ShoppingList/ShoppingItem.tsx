@@ -116,8 +116,10 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
         });
     }, [item, isPurchased, disabled, isConfirmed, onUpdate]);
 
-    const showExcludeButton = (currentStep === SHOPPING_STEP.MAIN
-        || currentStep === SHOPPING_STEP.CHECK)
+    // HS-3113: Final Check step removed. Was:
+    //   (currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.CHECK)
+    // CHECK is now unreachable, so the clause was dropped.
+    const showExcludeButton = currentStep === SHOPPING_STEP.MAIN
         && status !== SHOPPING_STATUS.CONFIRMED
         && status !== SHOPPING_STATUS.SHOP_ON_MY_OWN
     ;
