@@ -26,6 +26,7 @@ export interface ThemeColors {
   background: string;
   surface: string;
   surfaceAlt?: string;
+  surfaceSecond?: string;
   // Navigation header surface + on-header foreground (brand teal in light, dark surface in dark)
   headerBg?: string;
   headerText?: string;
