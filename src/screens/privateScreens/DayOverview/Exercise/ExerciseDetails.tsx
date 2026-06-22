@@ -328,7 +328,7 @@ export default function ExerciseDetails () {
                     {(video || instruction) ? (
                         <TouchableOpacity
                             disabled={isFutureDay}
-                            style={[{ alignSelf: 'flex-end' }, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.5 }]}
+                            style={[{ alignSelf: 'flex-end' }, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.1 }]}
                             onPress={() => {
                                 setVideoData(video);
                                 setIsPanelOpen(true);

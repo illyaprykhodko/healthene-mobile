@@ -45,8 +45,8 @@ import SwipeList, { SwipeValueChange } from 'components/SwipeList';
 import { CelebrationConfetti } from 'components/CelebrationConfetti';
 import ConfirmationReplaceModal from 'components/modals/ConfirmationReplaceModal';
 import { useUpdatePatientGamblingPointsMutation } from 'store/api/gamblingPointsApi.ts';
-import { selectDayOverview, addRecentlyCompletedPhase, meta as dayOverviewMeta } from 'store/slices/dayOverviewSlice';
 import { OVERVIEW_TYPE, ENTITY_TYPE, SECTION, PHASE_ITEM_STATUS, SUBSTANCE_TYPE } from 'constants/spec';
+import { selectDayOverview, addRecentlyCompletedPhase, meta as dayOverviewMeta } from 'store/slices/dayOverviewSlice';
 
 interface EditProps {
     date?: string;
@@ -144,21 +144,25 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         setTargetPhaseId(match?.id);
     }, [dayOverviewData, initialPhaseId]);
 
-    const { currentData: phaseItems, isFetching: isPhaseItemsFetching, refetch: refetchPhaseItems } = useGetPhaseItemsQuery(targetPhaseId, {
+    const {
+        currentData: phaseItems,
+        refetch: refetchPhaseItems,
+        isLoading: isPhaseItemsLoading
+    } = useGetPhaseItemsQuery(targetPhaseId, {
         skip: !targetPhaseId,
     });
     // mutations
-    const [updatePhase] = useUpdatePhaseMutation();
     const [addPhaseItem] = useAddPhaseItemMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
-    const [updatePhaseItem] = useUpdatePhaseItemMutation();
     // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
     const [addPhaseMealItem] = useAddPhaseMealItemMutation();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
     const [updatePatientGamblingPoints] = useUpdatePatientGamblingPointsMutation();
+    const [updatePhase, { isLoading: isUpdatingPhase }] = useUpdatePhaseMutation();
     const [interchangeMeals, { isLoading: isSwapping }] = useInterchangeMealsMutation();
+    const [updatePhaseItem, { isLoading: isUpdatingPhaseItem }] = useUpdatePhaseItemMutation();
     //  const [updatePhaseItem, { isLoading: isUpdatePhaseItemLoading }] = useUpdatePhaseItemMutation();
     const currentPhase = dayOverviewData?.phases?.find(phase => phase.id === targetPhaseId);
 
@@ -236,10 +240,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         const isMealPhase = currentPhase?.type === OVERVIEW_TYPE.MEAL || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT;
         if (isMealPhase) {
             navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
-                date: targetDate,
                 prevItem: null,
-                entityType: 'PATIENT_FOOD',
+                date: targetDate,
                 substanceType: 'FOOD',
+                entityType: 'PATIENT_FOOD',
                 onApply: async (payload: any) => {
                     let isAddSuccessful = false;
                     setShouldScrollToAddedEnd(true);
@@ -561,9 +565,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             case ENTITY_TYPE.FOOD: {
                 navigation.navigate(ROUTES.TREE_ADD_REPLACE_ITEM, {
                     date: targetDate,
-                    entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
-                    substanceType: prevItem.substanceType || 'FOOD',
                     prevItem: prevItemWithoutRating,
+                    substanceType: prevItem.substanceType || 'FOOD',
+                    entityType: prevItem.substanceType === 'DRINK' ? 'PATIENT_DRINK' : 'PATIENT_FOOD',
                     onApply: (data: any) => {
                         setReplacementData({
                             prevItem: prevItemWithoutRating,
@@ -677,7 +681,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         };
     }, [navigation]);
 
-    const isLoading = isPhaseItemsFetching || isSwapping;
+    const isLoading = isPhaseItemsLoading || isSwapping;
 
     // if (isLoading) {
     //     return (
@@ -827,9 +831,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             <View style={styles.list}>
                 <ScrollView
                     ref={scrollViewRef}
+                    scrollEnabled={scrollEnabled}
                     style={isFutureDate && styles.opacity}
                     contentContainerStyle={styles.listContent}
-                    scrollEnabled={scrollEnabled}
                     onContentSizeChange={() => {
                         if (shouldScrollToAddedEnd && !isAddingAddedItem) {
                             setTimeout(() => {
@@ -861,11 +865,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 renderItem={({ item, index }, ...restProps) => {
                                     return <ListItem
                                         item={item}
-                                        disabled={false}
                                         date={targetDate}
                                         isFutureDate={isFutureDate}
                                         updateData={updatePhaseItem}
                                         handleCheckboxStatus={handleCheckboxStatus}
+                                        disabled={isUpdatingPhase || isUpdatingPhaseItem}
                                     />;
                                     // return (
                                     //     isPhaseItemsFetching
@@ -992,7 +996,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 style={{
                                     ...styles.button,
                                     ...styles.mealDoneButton,
-                                    ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
+                                    ...isLoading && styles.mealDoneButtonDisabled,
                                 }}
                             />
                         )}

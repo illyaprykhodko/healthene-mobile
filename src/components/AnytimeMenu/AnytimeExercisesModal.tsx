@@ -1,7 +1,8 @@
 // outsource dependencies
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useMemo, useEffect } from 'react';
+import React, { useCallback, useMemo, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+
 // local dependencies
 import { Badge } from './Badge';
 import Text from 'components/Text';
@@ -24,8 +25,8 @@ interface AnytimeExercisesModalProps {
     visible: boolean;
     disabled?: boolean;
     onClose: () => void;
-     maxHeight: number | undefined;
-                    fullScreen: boolean;
+    fullScreen: boolean;
+    maxHeight: number | undefined;
 }
 
 export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
@@ -120,19 +121,27 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
         return getPhaseNewStatus(allAnytimeExercises, isToday);
     }, [allAnytimeExercises, isToday]);
 
-    // Update anytime phase status when exercises change
+    // Update anytime phase status when exercises change.
+    const inFlightStatusRef = useRef<string | null>(null);
     useEffect(() => {
-        if (anytimePhaseStatus && anytimePhaseId && anytimePhaseStatus !== newAnytimePhaseStatus) {
-            try {
-                updatePhase({
-                    id: anytimePhaseId,
-                    data: { status: newAnytimePhaseStatus }
-                });
-            } catch (error) {
-                console.error('Failed to update anytime phase status:', error);
-            }
+        if (!anytimePhaseStatus || !anytimePhaseId || !anytimePhase) { return; }
+        if (anytimePhaseStatus === newAnytimePhaseStatus) {
+            inFlightStatusRef.current = null;
+            return;
         }
-    }, [anytimePhaseStatus, newAnytimePhaseStatus, anytimePhaseId, updatePhase]);
+        if (inFlightStatusRef.current === newAnytimePhaseStatus) { return; }
+        inFlightStatusRef.current = newAnytimePhaseStatus;
+        const { items: _items, ...phaseWithoutItems } = anytimePhase as any;
+        updatePhase({
+            id: anytimePhaseId,
+            data: { ...phaseWithoutItems, status: newAnytimePhaseStatus },
+        })
+            .unwrap()
+            .catch(error => {
+                inFlightStatusRef.current = null;
+                console.error('Failed to update anytime phase status:', error);
+            });
+    }, [anytimePhase, anytimePhaseStatus, newAnytimePhaseStatus, anytimePhaseId, updatePhase]);
 
     // Function to refresh anytime exercises when status changes
     const refreshAnytimeExercises = useCallback(() => {
