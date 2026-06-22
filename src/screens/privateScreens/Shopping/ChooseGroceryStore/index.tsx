@@ -51,7 +51,9 @@ const ChooseGroceryStore: React.FC = () => {
     const [showFinalizeAlert, setShowFinalizeAlert] = useState(false);
 
     const selectedStore = useAppSelector(selectSelectedStore);
-    const { isListTouched, isStockTouched, id: shoppingListId, separateRescueItems, confirmedItemsType } = useAppSelector(selectShopping);
+    // HS-3113: isListTouched / isStockTouched gated the (now-removed) CHECK transitions
+    // in handleGoBack. Kept in the comment block above; not destructured here.
+    const { id: shoppingListId, separateRescueItems, confirmedItemsType } = useAppSelector(selectShopping);
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
 
     const { data: storesData, isLoading: isLoadingStores } = useGetGroceryStoresQuery();
@@ -89,20 +91,28 @@ const ChooseGroceryStore: React.FC = () => {
     // Go back logic matching original // TODO: refactor this
     const handleGoBack = useCallback(() => {
         if (!stockList.length) {
-            if (isListTouched) {
-                dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
-            } else {
-                dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
-            }
+            // HS-3113: Final Check step removed — was setCurrentStep(SHOPPING_STEP.CHECK)
+            // when isListTouched. Land on MAIN unconditionally so back-nav surfaces the
+            // primary review (the only remaining shopping-list review).
+            // if (isListTouched) {
+            //     dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
+            // } else {
+            //     dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
+            // }
+            dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
         } else {
-            if (isListTouched || isStockTouched) {
-                dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
-            } else {
-                dispatch(setCurrentStep(SHOPPING_STEP.STOCK));
-            }
+            // HS-3113: Final Check step removed — was setCurrentStep(SHOPPING_STEP.CHECK)
+            // when isListTouched || isStockTouched. Fall back to STOCK so the user returns
+            // to the stock review they came from.
+            // if (isListTouched || isStockTouched) {
+            //     dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
+            // } else {
+            //     dispatch(setCurrentStep(SHOPPING_STEP.STOCK));
+            // }
+            dispatch(setCurrentStep(SHOPPING_STEP.STOCK));
         }
         navigation.goBack();
-    }, [navigation, dispatch, stockList, isListTouched, isStockTouched]);
+    }, [navigation, dispatch, stockList]);
 
     const handleSelectStore = useCallback((item: GroceryStoreItem) => {
         dispatch(setSelectedStore(item));
