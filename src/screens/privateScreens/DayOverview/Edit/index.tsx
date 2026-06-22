@@ -964,7 +964,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 style={{
                                     ...styles.button,
                                     ...styles.mealDoneButton,
-                                    ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
+                                    ...isLoading && styles.mealDoneButtonDisabled,
+                                    // ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
                                 }}
                             />
                         )}
