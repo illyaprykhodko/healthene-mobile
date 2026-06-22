@@ -5,7 +5,7 @@ import { StyleSheet, Text as UIText, TextStyle } from 'react-native';
 import { useTheme } from 'hooks/useTheme';
 import { useFontScale } from 'hooks/useFontScale';
 import { useBoldTextEnabled } from 'hooks/useBoldTextEnabled';
-import { BOLD_FONT_MAP, MAX_FONT_SCALE } from 'constants/typography.ts';
+import { BOLD_FONT_MAP, MAX_FONT_SCALE, OUTFIT_WEIGHT_RANK, WEIGHT_TO_OUTFIT } from 'constants/typography.ts';
 
 // export type TextVariant = 'common' | 'bold' | 'caption';
 export type TextVariant =
@@ -62,11 +62,23 @@ const Text: React.FC<TextProps> = ({
     }
     const flat = StyleSheet.flatten(allStyles);
     // RN 0.84 / iOS 26 SDK changed CoreText to apply `fontWeight` ON TOP of an explicit
-    // `fontFamily` (synth-bold / weight-axis interpolation). On RN 0.81 it was ignored.
-    // Our design system already encodes weight via the variant's fontFamily (Outfit-Regular /
-    // Outfit-Medium / Outfit-Bold). Stripping fontWeight here keeps rendering deterministic
-    // and matches the pre-upgrade visual.
-    if (flat.fontFamily && flat.fontWeight != null) {
+    // `fontFamily` (synth-bold / weight-axis interpolation), so weight must be expressed via the
+    // Outfit fontFamily, not `fontWeight`. But many styles encode weight only as `fontWeight`
+    // (e.g. `fontWeight: '700'`); simply deleting it dropped the intended boldness and rendered
+    // Outfit-Regular. Instead, map the requested weight onto the matching Outfit face — but only
+    // UPGRADE to a heavier face (never lighter than the variant/caller chose) and only for Outfit
+    // families (leave e.g. Nunito Sans untouched) — then drop `fontWeight` for deterministic
+    // rendering.
+    if (flat.fontWeight != null) {
+        const targetFamily = WEIGHT_TO_OUTFIT[String(flat.fontWeight)];
+        const currentFamily = typeof flat.fontFamily === 'string' ? flat.fontFamily : undefined;
+        const isOutfitFamily = !currentFamily || currentFamily.startsWith('Outfit-');
+        if (targetFamily && isOutfitFamily) {
+            const currentRank = OUTFIT_WEIGHT_RANK[currentFamily ?? 'Outfit-Regular'] ?? 400;
+            if (OUTFIT_WEIGHT_RANK[targetFamily] > currentRank) {
+                flat.fontFamily = targetFamily;
+            }
+        }
         delete flat.fontWeight;
     }
     // iOS "Bold Text" accessibility setting: our weight is encoded via fontFamily (fontWeight

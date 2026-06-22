@@ -170,7 +170,7 @@ export const AnytimeExerciseList: React.FC = () => {
         <View style={styles.container}>
             <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
                 <View style={styles.headerLeft}>
-                    <Badge count={activeExercisesCount} bgColor={theme.colors.aqua} showZero>
+                    <Badge count={activeExercisesCount} bgColor={theme.colors.aqua}>
                         <ActivityIcon size={24} />
                     </Badge>
                     <Text style={[styles.headerTitle, { color: theme.colors.text }]}>

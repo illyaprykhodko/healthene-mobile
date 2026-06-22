@@ -106,6 +106,7 @@ const DayOverviewStack: React.FC = () => {
                     <TimeSwitcher
                         date={currentDate}
                         disabled={options?.disabled ?? true}
+                        isHideLeftBtn={!options?.showDateButtons}
                         isHideRightBtn={!options?.showDateButtons}
                         init={({ date: nextDate }) => handleDateChange(nextDate)}
                     />
