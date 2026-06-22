@@ -1234,7 +1234,7 @@ export const Overview: React.FC = () => {
                             <Text
                                 variant="h3"
                                 textAlign="center"
-                                style={[styles.calendarDayText, { color: theme.colors.secondary }]}
+                                style={[styles.calendarDayText, { color: theme.colors.text }]}
                             >
                                 {moment(currentDate).format('DD')}
                             </Text>

@@ -414,9 +414,9 @@ const StatsScreen: React.FC = () => {
             <View style={[styles.submitBtnContainer, { backgroundColor: theme.colors.background }]}>
                 <Button
                     variant="success"
+                    disabled={!isValid}
                     onPress={handleSubmit}
                     title="SAVE INFORMATION"
-                    disabled={isSubmitting || !isValid}
                 />
             </View>
             <DatePickerSelector

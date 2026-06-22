@@ -24,9 +24,9 @@ export const TextLogo: React.FC<TextLogoProps> = ({ style, color }) => {
             key={`${boldText ? 'b' : 'n'}-${fontScale}`}
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             style={StyleSheet.flatten([
+                style,
                 styles.textLogo,
                 resolved ? { color: resolved } : {},
-                style,
             ])}
             numberOfLines={1}
         >

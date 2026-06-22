@@ -19,7 +19,8 @@ export type TextVariant =
   | 'bold'
   | 'small'
   | 'common'
-  | 'caption';
+  | 'caption'
+  | 'semiBold';
 
 interface TextProps {
     color?: string;
@@ -125,6 +126,10 @@ const textStyles: Record<TextVariant, TextStyle> = {
     bold: {
         fontSize: 16,
         fontFamily: 'Outfit-Bold',
+    },
+    semiBold: {
+        fontSize: 16,
+        fontFamily: 'Outfit-SemiBold',
     },
     h1: {
         fontSize: 32,

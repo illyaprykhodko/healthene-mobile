@@ -9,8 +9,8 @@ import { OFFSET } from 'constants/offset';
 
 interface BackBtnProps {
     color?: string;
-    label?: string;
     onPress: () => void;
+    label?: string | null;
 }
 
 const BackBtn: React.FC<BackBtnProps> = ({
@@ -21,7 +21,7 @@ const BackBtn: React.FC<BackBtnProps> = ({
     return (
         <TouchableOpacity style={styles.container} onPress={onPress}>
             <Icon iconStyle="solid" name="chevron-left" size={16} color={color} />
-            <Text style={[styles.text, { color }]}>{label}</Text>
+            {label ? <Text style={[styles.text, { color }]}>{label}</Text> : null}
         </TouchableOpacity>
     );
 };

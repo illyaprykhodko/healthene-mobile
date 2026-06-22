@@ -8,9 +8,9 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 
 interface ConfirmationAlertProps {
-    isOpen: boolean;
     title: string;
-    message: string;
+    isOpen: boolean;
+    message?: string;
     applyTxt?: string;
     cancelTxt?: string;
     disabled?: boolean;
@@ -63,12 +63,12 @@ const ConfirmationAlert: React.FC<ConfirmationAlertProps> = memo(({
                     >
                         {title}
                     </Text>
-                    <Text
+                    {message && <Text
                         color={theme.colors.textSecondary}
                         style={isLegacy ? { ...styles.message, ...styles.messageLegacy } : styles.message}
                     >
                         {message}
-                    </Text>
+                    </Text>}
 
                     <View style={[styles.actions, isLegacy && styles.actionsLegacy]}>
                         {!hideCancelBtn && (

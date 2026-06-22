@@ -238,7 +238,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <Pressable onPress={goToAccountSettings} style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
                 <ProfileImage style={styles.userIcon} uri={user?.coverImage?.url} />
-                <View>
+                <View style={styles.profileTextContainer}>
                     <Text variant="h4" style={styles.userName} color={theme.colors.text}>
                         {user?.firstName} {user?.lastName}
                     </Text>
@@ -412,5 +412,8 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 16,
         fontWeight: '600',
+    },
+    profileTextContainer: {
+        flex: 1,
     },
 });

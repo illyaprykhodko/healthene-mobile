@@ -328,7 +328,7 @@ export default function ExerciseDetails () {
                     {(video || instruction) ? (
                         <TouchableOpacity
                             disabled={isFutureDay}
-                            style={[{ alignSelf: 'flex-end' }, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.5 }]}
+                            style={[{ alignSelf: 'flex-end' }, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.1 }]}
                             onPress={() => {
                                 setVideoData(video);
                                 setIsPanelOpen(true);
@@ -493,7 +493,11 @@ export default function ExerciseDetails () {
                 closePanel={() => setIsPanelOpen(false)}
             />
             {showGoodWork && (
-                <Animated.View style={[styles.goodWorkContainer, { opacity: fadeAnim }]}>
+                <Animated.View style={[
+                    { opacity: fadeAnim },
+                    styles.goodWorkContainer,
+                    { backgroundColor: theme.colors.surfaceAlt },
+                ]}>
                     <Text style={[styles.goodWorkText, { color: theme.colors.text }]}>Good Work!</Text>
                 </Animated.View>
             )}
@@ -714,24 +718,21 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     goodWorkContainer: {
-        alignItems: 'center',
         zIndex: 10,
+        alignItems: 'center',
     },
     goodWorkText: {
-        fontSize: 32,
-        fontWeight: '500',
-        color: COLORS.BLACK,
-        backgroundColor: 'white',
-        borderRadius: 12,
         padding: 16,
+        fontSize: 32,
+        borderRadius: 12,
+        fontWeight: '500',
     },
     submitBtn: {
         width: '90%',
         borderRadius: 30,
-        alignSelf: 'center',
-        // backgroundColor: '#96E072',
-        borderColor: 'transparent',
         marginBottom: 16,
+        alignSelf: 'center',
+        borderColor: 'transparent',
     },
     swipePanel: {
         backgroundColor: COLORS.WHITE,

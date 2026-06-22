@@ -55,14 +55,17 @@ export default function WalkingActivity () {
 
     const [isPastDateAlertOpen, setIsPastDateAlertOpen] = useState(false);
 
-    // Fetch exercise data to get step goal
-    const { data: aerobicData } = useGetAerobicExerciseQuery(exercise?.id?.toString() || '', {
+    // Fetch exercise data to get step goal. Force a refetch on each mount so revisiting the screen
+    // after Finish reads the just-persisted dayOverviewActivity instead of the pre-walk cache.
+    const { data: aerobicData, isFetching: isFetchingAerobic } = useGetAerobicExerciseQuery(exercise?.id?.toString() || '', {
         skip: !exercise?.id,
+        refetchOnMountOrArgChange: true,
     });
 
-    // Fetch current activity data for this phase item
-    const { data: phaseItemData } = useGetPhysicalActivityItemQuery(exercise?.id?.toString() || '', {
+    // Fetch current activity data for this phase item (same refetch reasoning).
+    const { data: phaseItemData, isFetching: isFetchingPhaseItem } = useGetPhysicalActivityItemQuery(exercise?.id?.toString() || '', {
         skip: !exercise?.id,
+        refetchOnMountOrArgChange: true,
     });
 
     const [startActivity] = useStartWalkingActivityMutation();
@@ -71,6 +74,9 @@ export default function WalkingActivity () {
     // Initialize walking data from API. If a session is already running in Redux (kept alive after the
     // screen was closed mid-walk), don't clobber its live counters — only refresh the static goal.
     useEffect(() => {
+        // Wait until the queries finish refetching so we initialize from the freshly persisted
+        // dayOverviewActivity, not from the pre-walk cache.
+        if (isFetchingAerobic || isFetchingPhaseItem) { return; }
         if (!aerobicData || !phaseItemData) { return; }
 
         const goalSteps = aerobicData?.steps?.[0]?.steps || 0;
@@ -128,7 +134,7 @@ export default function WalkingActivity () {
             initialized: true,
             disabled: false,
         }));
-    }, [aerobicData, phaseItemData, date, dispatch]);
+    }, [aerobicData, phaseItemData, isFetchingAerobic, isFetchingPhaseItem, date, dispatch]);
 
     // The stopwatch tick and the live pedometer subscription are owned by useWalkingSession
     // (mounted app-wide) so the session keeps counting after this screen is closed.

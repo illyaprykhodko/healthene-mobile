@@ -58,6 +58,13 @@ export const authApi = createApi({
                 return response;
             },
         }),
+        verifyPassword: builder.mutation<UserSession, LoginData>({
+            query: credentials => ({
+                method: 'POST',
+                body: credentials,
+                url: '/auth/token',
+            }),
+        }),
         login: builder.mutation<UserSession, LoginData>({
             query: credentials => ({
                 method: 'POST',
@@ -115,7 +122,7 @@ export const authApi = createApi({
             },
             invalidatesTags: ['Auth'],
         }),
-        forgotPassword: builder.mutation<void, { email: string }>({
+        forgotPassword: builder.mutation<void, { email: string; resetUrl: string }>({
             query: data => ({
                 url: '/auth/send-reset-password-token',
                 method: 'POST',
@@ -136,6 +143,7 @@ export const {
     // useSignUpMutation,
     useRestoreSessionQuery,
     useRefreshSessionMutation,
+    useVerifyPasswordMutation,
     useForgotPasswordMutation,
     useRegisterNotificationTokenMutation,
 } = authApi;

@@ -10,11 +10,11 @@ import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
-import DefImage from 'components/DefImage';
 import ProfileRow from 'components/ProfileRow';
 import ProfileCard from 'components/ProfileCard';
 import StackHeader from 'components/StackHeader';
 import { useGetSelfQuery } from 'store/api/authApi';
+import ProfileImage from 'components/ProfileImage.tsx';
 import {
     useGetPatientMedicationsQuery,
     useGetPatientMedicalProblemsQuery,
@@ -97,9 +97,9 @@ const MainInfoScreen: React.FC = () => {
                 onOpenDrawer={() => navigation.openDrawer?.()}
             />
             <ScrollView contentContainerStyle={styles.wrapper}>
-                <DefImage
+                <ProfileImage
                     style={styles.image}
-                    src={user?.coverImage?.url}
+                    uri={user?.coverImage?.url}
                 />
                 <Text variant="bold" textAlign="center" style={styles.nameText}>
                     {userName}

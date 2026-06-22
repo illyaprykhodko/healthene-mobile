@@ -128,7 +128,12 @@ const Ingredients: React.FC<IngredientsProps> = ({ item, disabled }) => {
                     </Text>
                 </View>
 
-                <Text style={[styles.subtitle, { fontSize: 18, color: theme.colors.text }]}>Ingredients:</Text>
+                <Text
+                    variant="bold"
+                    style={[styles.subtitle, { color: theme.colors.text }]}
+                >
+                    Ingredients:
+                </Text>
 
                 <ScrollView contentContainerStyle={styles.scroller}>
                     {localIngredients.length === 0 ? (
@@ -219,26 +224,39 @@ const Ingredients: React.FC<IngredientsProps> = ({ item, disabled }) => {
 
     return (
         <ScrollView style={[styles.container, disabled && styles.disabledOpacity]}>
-            <Text textAlign="center" style={[styles.title, { fontSize: 24, fontWeight: '700', color: theme.colors.text }]}>
+            <Text
+                variant="bold"
+                textAlign="center"
+                style={[
+                    styles.title,
+                    { fontSize: 24, fontWeight: '700', color: theme.colors.text }
+                ]}>
                 {recipe.name}
             </Text>
-
             <View style={styles.infoGroup}>
-                <Text style={styles.servings}>
+                <Text
+                    variant="semiBold"
+                    style={styles.servings}
+                >
                     Servings: {servingAmount} {servingName}
                 </Text>
             </View>
-
-            <Text style={[styles.subtitle, { fontSize: 18, color: theme.colors.text }]}>Ingredients:</Text>
-
+            <Text
+                variant="bold"
+                style={[
+                    styles.subtitle,
+                    { color: theme.colors.text }
+                ]}>
+                Ingredients:
+            </Text>
             <FlatList
-                scrollEnabled={false}
                 data={ingredients}
+                scrollEnabled={false}
                 keyExtractor={(ing, index) => String(ing?.id || index)}
                 renderItem={({ item: ing }) => (
                     <View style={styles.ingredientItem}>
                         <Text style={styles.listItmDot}>•</Text>
-                        <Text variant="h4" style={styles.ingredientText}>
+                        <Text style={styles.ingredientText}>
                             {prepareIngredientNameWithUnit({
                                 ingredient: ing,
                                 peopleEatingNumber,
@@ -262,7 +280,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 16,
+        // padding: 16,
     },
     title: {
         marginTop: OFFSET.VERTICAL,
@@ -272,23 +290,18 @@ const styles = StyleSheet.create({
     infoGroup: {
         flexDirection: 'row',
         justifyContent: 'center',
-        paddingHorizontal: OFFSET.HORIZONTAL,
+        // paddingTop: OFFSET.HORIZONTAL,
         paddingVertical: OFFSET.VERTICAL,
         marginBottom: OFFSET.VERTICAL,
     },
     servings: {
-        fontSize: 16,
-        fontWeight: '700',
+        fontSize: 21,
         color: '#2978A0',
     },
     subtitle: {
-        fontWeight: '700',
-        borderBottomWidth: 1,
-        paddingBottom: OFFSET.VERTICAL,
-        borderBottomColor: '#D9D9D9',
-        fontSize: 14,
+        fontSize: 18,
+        marginBottom: OFFSET.VERTICAL / 2,
         paddingHorizontal: OFFSET.HORIZONTAL,
-        marginBottom: OFFSET.VERTICAL,
     },
     scroller: {
         flexGrow: 1,
@@ -345,7 +358,7 @@ const styles = StyleSheet.create({
     ingredientItem: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        marginBottom: OFFSET.VERTICAL,
+        marginBottom: OFFSET.VERTICAL / 2,
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     listItmDot: {

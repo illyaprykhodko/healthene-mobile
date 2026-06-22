@@ -9,11 +9,11 @@ import {
 } from 'react-native';
 import * as yup from 'yup';
 import moment from 'moment';
-import { Formik } from 'formik';
+import { Formik, FormikProps } from 'formik';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import React, { useState, useCallback, useRef } from 'react';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 
 // local dependencies
 import { ROUTES } from 'constants/routes';
@@ -53,6 +53,16 @@ const WeightMeasurementScreen: React.FC = () => {
     });
     const hasRecentWeight = aggregateData?.data?.length > 0;
     const lastSubmittedValueRef = useRef<string | null>(null);
+    // WeightMeasurementScreen stays mounted in the stack while the user visits SaveValue
+    // and navigates back. Formik preserves its values across that round-trip, so the
+    // previously-typed weight would still be in the input. Reset the form on every focus
+    // so the manual-entry sheet starts empty again.
+    const formikRef = useRef<FormikProps<{ value: string }>>(null);
+    useFocusEffect(
+        useCallback(() => {
+            formikRef.current?.resetForm();
+        }, [])
+    );
     // const hasRecentWeight = aggregateData?.totalLastValuesByUnitType?.DEFAULT !== null
     //     && aggregateData?.totalLastValuesByUnitType?.DEFAULT !== undefined;
     const { submit, isSubmitting } = useMeasurementSubmit(item, {
@@ -146,6 +156,7 @@ const WeightMeasurementScreen: React.FC = () => {
             onClose={() => setIsPanelOpen(false)}
         >
             <Formik
+                innerRef={formikRef}
                 onSubmit={handleSubmit}
                 initialValues={{ value: '' }}
                 validationSchema={validationSchema}

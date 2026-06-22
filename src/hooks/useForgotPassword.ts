@@ -1,6 +1,7 @@
 // outsource dependencies
 import { useCallback, useState } from 'react';
 // local dependencies
+import { config } from '../constants';
 import { MessageService } from '../services/messages';
 import { useForgotPasswordMutation } from '../store/api/authApi';
 
@@ -14,8 +15,11 @@ export const useForgotPassword = () => {
         try {
             setError(null);
             setSuccess(false);
-      
-            await forgotPassword({ email }).unwrap();
+
+            await forgotPassword({
+                email,
+                resetUrl: `${config.websiteUrl}/public/change-password/`,
+            }).unwrap();
       
             setEmail(email);
             setSuccess(true);

@@ -22,12 +22,23 @@ import { SplashScreen } from 'components/SplashScreen';
 import BackgroundImage from 'components/BackgroundImage';
 import { AnimatedWelcome } from 'components/AnimatedWelcome';
 import { biometricService } from 'services/biometricService';
+import { isBadCredentialsError, isNetworkError } from 'services/auth/errors';
 // import { useGetLibraryItemsTotalTreeQuery } from 'store/api/dayOverviewApi';
 
 
 const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+};
+
+const getSignInErrorMessage = (error: any): string => {
+    if (isBadCredentialsError(error)) {
+        return 'The email or password you entered is incorrect. Please try again.';
+    }
+    if (isNetworkError(error)) {
+        return 'Unable to reach the server. Check your connection and try again.';
+    }
+    return error?.data?.message || 'Something went wrong. Please try again.';
 };
 
 export const SignIn: React.FC = (): React.ReactElement => {
@@ -162,7 +173,7 @@ export const SignIn: React.FC = (): React.ReactElement => {
             MessageService.error({
                 uid: 'SignIn',
                 title: 'Sign In Error',
-                message: 'Please try again',
+                message: getSignInErrorMessage(error),
             });
         } finally {
             setIsSubmitting(false);
@@ -186,11 +197,13 @@ export const SignIn: React.FC = (): React.ReactElement => {
                     message: 'Please use your password to log in',
                 });
             }
-        } catch (error) {
+        } catch (error: any) {
             MessageService.error({
                 uid: 'SignIn',
                 title: 'Biometric Failed',
-                message: 'Please use your password to log in',
+                message: isBadCredentialsError(error)
+                    ? 'Your saved credentials are no longer valid. Please log in with your password.'
+                    : getSignInErrorMessage(error),
             });
         } finally {
             setIsBiometricLoading(false);
@@ -207,7 +220,7 @@ export const SignIn: React.FC = (): React.ReactElement => {
         <AnimatedWelcome>
             <Screen initialized={true} style={styles.container}>
                 <BackgroundImage>
-                    <Text color={theme.colors.text}>Welcome to</Text>
+                    <Text color={theme.colors.white}>Welcome to</Text>
                     <TextLogo />
                 </BackgroundImage>
 
