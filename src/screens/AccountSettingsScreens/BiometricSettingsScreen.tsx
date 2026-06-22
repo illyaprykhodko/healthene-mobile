@@ -21,9 +21,9 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import TextInput from 'components/TextInput';
+import { isBadCredentialsError } from 'services/auth/errors';
 import { biometricService } from 'services/biometricService';
 import { useVerifyPasswordMutation } from 'store/api/authApi';
-import { isBadCredentialsError } from 'services/auth/errors';
 
 export const BiometricSettingsScreen: React.FC = () => {
     const theme = useTheme();

@@ -90,8 +90,8 @@ const ChangePasswordScreen = () => {
                     error={touched.currentPassword && errors.currentPassword ? { currentPassword: errors.currentPassword } : undefined}
                 />
                 <TextInput
-                    textAlign="left"
                     secureTextEntry
+                    textAlign="left"
                     touched={touched}
                     name="newPassword"
                     disabled={isLoading}
@@ -102,8 +102,8 @@ const ChangePasswordScreen = () => {
                     error={touched.newPassword && errors.newPassword ? { newPassword: errors.newPassword } : undefined}
                 />
                 <TextInput
-                    textAlign="left"
                     secureTextEntry
+                    textAlign="left"
                     touched={touched}
                     disabled={isLoading}
                     name="checkPassword"
