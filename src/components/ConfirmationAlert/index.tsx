@@ -65,7 +65,7 @@ const ConfirmationAlert: React.FC<ConfirmationAlertProps> = memo(({
                     </Text>
                     {message && <Text
                         color={theme.colors.textSecondary}
-                        style={isLegacy ? {...styles.message, ...styles.messageLegacy} : styles.message}
+                        style={isLegacy ? { ...styles.message, ...styles.messageLegacy } : styles.message}
                     >
                         {message}
                     </Text>}
