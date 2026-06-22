@@ -73,26 +73,41 @@ const ShoppingPDF: React.FC = () => {
             });
 
             const info = response.info();
+            const headers = (info.headers || {}) as Record<string, string>;
+            const contentType = (
+                headers['content-type'] || headers['Content-Type'] || ''
+            ).toLowerCase();
 
-            let fileContent: string | null = null;
-            try {
-                fileContent = await RNBlobUtil.fs.readFile(response.path(), 'utf8') as string;
-            } catch (readError) {
-                console.error('Failed to inspect downloaded file:', readError);
+            if (info.status < 200 || info.status >= 300) {
+                let errorBody: string | null = null;
+                try {
+                    errorBody = await RNBlobUtil.fs.readFile(response.path(), 'utf8') as string;
+                } catch (readError) {
+                    console.error('Failed to read error body:', readError);
+                }
+                Alert.alert(
+                    'Error',
+                    errorBody
+                        ? `Server returned: ${errorBody.substring(0, 200)}`
+                        : `Server returned status ${info.status}`
+                );
+                await RNBlobUtil.fs.unlink(response.path());
+                return;
             }
 
-            const isPdf = typeof fileContent === 'string' && fileContent.startsWith('%PDF');
-
-            if (!isPdf) {
-                if (fileContent) {
-                    console.error('API Error Content:', fileContent);
-                    Alert.alert(
-                        'Error',
-                        `Server returned: ${fileContent.substring(0, 200)}`
-                    );
-                } else {
-                    Alert.alert('Error', `Server returned status ${info.status}`);
+            if (contentType && !contentType.includes('pdf')) {
+                let errorBody: string | null = null;
+                try {
+                    errorBody = await RNBlobUtil.fs.readFile(response.path(), 'utf8') as string;
+                } catch (readError) {
+                    console.error('Failed to read non-PDF body:', readError);
                 }
+                Alert.alert(
+                    'Error',
+                    errorBody
+                        ? `Server returned: ${errorBody.substring(0, 200)}`
+                        : 'Server returned a non-PDF response'
+                );
                 await RNBlobUtil.fs.unlink(response.path());
                 return;
             }

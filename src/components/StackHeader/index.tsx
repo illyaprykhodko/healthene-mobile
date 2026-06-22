@@ -14,13 +14,15 @@ interface StackHeaderProps {
     title?: string;
     showBack?: boolean;
     onBack?: () => void;
-    onOpenDrawer: () => void;
+    backLabel?: string | null;
+    onOpenDrawer?: () => void;
     centerContent?: React.ReactNode;
 }
 
 const StackHeader: React.FC<StackHeaderProps> = ({
     title,
     onBack,
+    backLabel,
     onOpenDrawer,
     centerContent,
     showBack = true,
@@ -36,7 +38,11 @@ const StackHeader: React.FC<StackHeaderProps> = ({
         <View style={[styles.header, { paddingTop, backgroundColor: theme.colors.headerBg }]}>
             <View style={styles.side}>
                 {showBack && onBack ? (
-                    <BackBtn onPress={onBack} color={ theme.colors.headerText } />
+                    <BackBtn
+                        onPress={onBack}
+                        label={backLabel}
+                        color={theme.colors.headerText}
+                    />
                 ) : null}
             </View>
             <View style={styles.center}>
@@ -47,7 +53,7 @@ const StackHeader: React.FC<StackHeaderProps> = ({
                 )}
             </View>
             <View style={[styles.side, styles.sideRight]}>
-                <Hamburger onPress={onOpenDrawer} />
+                {onOpenDrawer ? <Hamburger onPress={onOpenDrawer} /> : null}
             </View>
         </View>
     );

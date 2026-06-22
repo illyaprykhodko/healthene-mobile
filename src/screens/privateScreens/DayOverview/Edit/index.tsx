@@ -905,7 +905,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                     (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
                                         <View style={[
                                             styles.separatorWrapper,
-                                            { backgroundColor: theme.colors.surfaceAlt }
+                                            { backgroundColor: theme.colors.surfaceSecond }
                                         ]}>
                                             <Text variant="h3" style={styles.offset} color={theme.colors.text}>
                                                 {section || 'No section'}

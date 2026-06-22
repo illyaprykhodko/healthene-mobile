@@ -5,16 +5,22 @@ import { createStackNavigator } from '@react-navigation/stack';
 // local dependencies
 import { SignIn } from 'screens/SignIn';
 import { ROUTES } from 'constants/routes';
-import { useTheme } from 'hooks/useTheme.ts';
-import { OFFSET } from 'constants/offset.ts';
-import BackButton from 'components/BackButton.tsx';
+import StackHeader from 'components/StackHeader';
 import { ForgotPasswordScreen } from 'screens/ForgotPassword';
 import { TermsAndConditions } from 'screens/TermsAndConditions';
 
 const Stack = createStackNavigator();
 
+const renderHeader = (headerProps: any) => (
+    <StackHeader
+        backLabel={null}
+        showBack={!!headerProps.back}
+        title={headerProps.options.title}
+        onBack={() => headerProps.navigation.goBack()}
+    />
+);
+
 export const PublicStack = () => {
-    const theme = useTheme();
     return (
         <Stack.Navigator
             screenOptions={{
@@ -26,23 +32,11 @@ export const PublicStack = () => {
             <Stack.Screen
                 component={TermsAndConditions}
                 name={ROUTES.TERMS_AND_CONDITIONS}
-                options={({ navigation }) => ({
+                options={{
                     headerShown: true,
+                    header: renderHeader,
                     title: 'Term and Conditions',
-                    headerLeft: () => (
-                        <BackButton navigation={navigation} theme={theme} />
-                    ),
-                    headerTintColor: theme.colors.headerText,
-                    headerStyle: {
-                        backgroundColor: theme.colors.headerBg,
-                    },
-                    headerLeftContainerStyle: {
-                        paddingLeft: OFFSET.HORIZONTAL,
-                    },
-                    headerTitleStyle: {
-                        fontWeight: '600'
-                    },
-                })}
+                }}
             />
         </Stack.Navigator>
     );
