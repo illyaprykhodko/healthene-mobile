@@ -30,6 +30,7 @@ import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
 import DefImage from 'components/DefImage';
 import { GlassSurface } from 'components/GlassSurface';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { RootStackParamList } from 'services/navigation';
 import { ENTITY_TYPE, SEARCH_TYPE, SUBSTANCE_TYPE, TAG_TYPE } from 'constants/spec';
 
@@ -539,6 +540,7 @@ const TreeAddReplaceItem: React.FC = () => {
                         setAiFoods([]);
                         setIsAiFoodsAdded(false);
                     }}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                     placeholderTextColor={theme.colors.textSecondary}
                     style={[styles.searchInput, { color: theme.colors.text }]}
                 />

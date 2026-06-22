@@ -26,6 +26,7 @@ const AnimationSettings: React.FC = () => {
                     <Text variant="body" color={theme.colors.text}>Bird Animation Sound</Text>
                     <Switch
                         value={birdSoundEnabled}
+                        accessibilityLabel="Bird Animation Sound"
                         onValueChange={v => {
                             dispatch(setBirdSoundEnabled(v));
                             AsyncStorage.setItem(BIRD_SOUND_KEY, String(v));

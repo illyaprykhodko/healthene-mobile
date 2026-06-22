@@ -9,6 +9,7 @@ import { useTheme } from 'hooks/useTheme';
 import YoutubeVideo from './YoutubeVideo';
 import PrivateVideo from './PrivateVideo';
 import type { Attachment } from 'types/video';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import HTMLView, { RenderNodeProps } from './HTMLView';
 
 // interface VideoAttachment {
@@ -71,8 +72,8 @@ const Description: React.FC<DescriptionProps> = memo(
 
                 return (
                     <View key={Math.random()} style={styles.htmlViewTextContainer}>
-                        <Text style={styles.bullet}>•</Text>
-                        <Text style={htmlStyles.li}>{renderedChildren}</Text>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.bullet}>•</Text>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={htmlStyles.li}>{renderedChildren}</Text>
                     </View>
                 );
             }
@@ -116,7 +117,7 @@ const Description: React.FC<DescriptionProps> = memo(
             if (isVideoEnabled) {
                 return (
                     <TouchableOpacity onPress={toggleText} style={styles.actionButton}>
-                        <Text style={[styles.helpLink, { color: theme.colors.blue }]}>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.helpLink, { color: theme.colors.blue }]}>
                             {showDescription ? 'Back to Video' : 'More'}
                         </Text>
                     </TouchableOpacity>
@@ -125,7 +126,7 @@ const Description: React.FC<DescriptionProps> = memo(
 
             return (
                 <TouchableOpacity onPress={onClose} style={styles.actionButton}>
-                    <Text style={[styles.helpLink, { color: theme.colors.blue }]}>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.helpLink, { color: theme.colors.blue }]}>
                         Close
                     </Text>
                 </TouchableOpacity>

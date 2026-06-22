@@ -5,6 +5,7 @@ import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 
 interface ShowAllDataButtonProps {
     onPress: () => void;
@@ -17,7 +18,7 @@ const ShowAllDataButton: React.FC<ShowAllDataButtonProps> = ({ onPress }) => {
             onPress={onPress}
             style={[styles.button, { backgroundColor: theme.colors.surfaceAlt, borderColor: theme.colors.border }]}
         >
-            <Text style={[styles.buttonText, { color: theme.colors.text }]}>Show All Data</Text>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.buttonText, { color: theme.colors.text }]}>Show All Data</Text>
             <Icon iconStyle="solid" name="chevron-right" size={14} color={theme.colors.text} />
         </TouchableOpacity>
     );

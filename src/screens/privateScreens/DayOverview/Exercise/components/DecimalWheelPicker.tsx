@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 // local dependencies
 import { ITEM_HEIGHT, WheelPicker } from './WheelPicker';
+import { MAX_FONT_SCALE } from '../../../../../constants/typography';
 // ---- Types
 type Field = {
   label: string;
@@ -89,7 +90,7 @@ const DecimalWheelPicker: React.FC<DecimalWheelPickerProps> = ({ field, onApply 
     return (
         <View style={styles.container}>
             <View style={styles.pickerColumn}>
-                <Text style={styles.title}>{field.label}</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.title}>{field.label}</Text>
                 <View style={styles.background}>
                     <WheelPicker
                         data={wholeData}
@@ -100,10 +101,10 @@ const DecimalWheelPicker: React.FC<DecimalWheelPickerProps> = ({ field, onApply 
                 </View>
             </View>
 
-            <Text style={styles.decimalPoint}>.</Text>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.decimalPoint}>.</Text>
 
             <View style={styles.pickerColumn}>
-                <Text style={styles.title}>Decimal</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.title}>Decimal</Text>
                 <View style={styles.background}>
                     <WheelPicker
                         data={decimalData}

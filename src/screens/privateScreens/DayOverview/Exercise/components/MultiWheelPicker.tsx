@@ -5,6 +5,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, ViewStyle } from '
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
 import { isDecimalField } from '../decimal-utils';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import DecimalWheelPicker from './DecimalWheelPicker';
 import { ITEM_HEIGHT, WheelPicker } from './WheelPicker';
 
@@ -271,7 +272,7 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
         const error = errors[field.key];
         return (
             <View key={field.key} style={isDecimal ? styles.inputFull : styles.pickerColumn}>
-                <Text style={[styles.title, { color: theme.colors.text }]}>{field.label}</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.title, { color: theme.colors.text }]}>{field.label}</Text>
                 <View style={[
                     styles.inputBox,
                     { backgroundColor: isEven ? bandBgFirst : bandBgSecond },
@@ -281,13 +282,14 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
                         maxLength={isDecimal ? 7 : 6}
                         value={inputs[field.key] ?? ''}
                         onBlur={() => handleInputBlur(field)}
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
                         placeholderTextColor={theme.colors.textSecondary}
                         onChangeText={text => handleInputChange(field, text)}
                         keyboardType={isDecimal ? 'decimal-pad' : 'number-pad'}
                         style={[styles.inputText, { color: theme.colors.text }]}
                     />
                 </View>
-                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                {error ? <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.errorText}>{error}</Text> : null}
             </View>
         );
     };
@@ -296,7 +298,7 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
         <View style={styles.wrapper}>
             <View style={styles.toggleRow}>
                 <TouchableOpacity onPress={toggleMode} style={[styles.toggleBtn, { borderColor: theme.colors.border }]} accessibilityRole="button">
-                    <Text style={[styles.toggleText, { color: theme.colors.text }]}>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.toggleText, { color: theme.colors.text }]}>
                         {mode === 'wheel' ? 'Type values' : 'Use wheels'}
                     </Text>
                 </TouchableOpacity>
@@ -311,7 +313,7 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
 
                             return (
                                 <View key={field.key} style={styles.pickerColumn}>
-                                    <Text style={[styles.title, { color: theme.colors.text }]}>{field.label}</Text>
+                                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.title, { color: theme.colors.text }]}>{field.label}</Text>
                                     <View style={{ backgroundColor: isEven ? bandBgFirst : bandBgSecond }}>
                                         <WheelPicker
                                             data={field.data ?? []}

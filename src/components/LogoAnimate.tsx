@@ -4,6 +4,7 @@ import { StyleSheet, Animated, Text, View } from 'react-native';
 import Svg, { Defs, G, Ellipse, Path, RadialGradient, Stop, LinearGradient } from 'react-native-svg';
 // local dependencies
 import { useTheme } from '../hooks/useTheme';
+import { MAX_FONT_SCALE } from '../constants/typography';
 
 interface LogoAnimateProps {
   size?: number;
@@ -259,7 +260,7 @@ export const LogoAnimate = ({ preload = true, onAnimationComplete, size }: LogoA
             </G>
         </Svg>
         {preload && <View style={styles.titleContainer}>
-            <Text style={styles.title}>Stand-by</Text>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.title}>Stand-by</Text>
             <AnimatedText style={StyleSheet.flatten([styles.title, { opacity: dot1 }])}>.</AnimatedText>
             <AnimatedText style={StyleSheet.flatten([styles.title, { opacity: dot2 }])}>.</AnimatedText>
             <AnimatedText style={StyleSheet.flatten([styles.title, { opacity: dot3 }])}>.</AnimatedText>

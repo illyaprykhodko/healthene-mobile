@@ -7,6 +7,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // local dependencies
 import { COLORS } from 'constants/colors';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import { OVERVIEW_TYPE, PHASE_ITEM_STATUS } from 'constants/spec';
 
 export type SwipeValueChange = {
@@ -117,7 +118,7 @@ export const SwipeList: React.FC<SwipeListProps> = ({
                                         style={[styles.button, styles.listItemBtnReplace]}
                                     >
                                         <Icon iconStyle="solid" name="sync" color={COLORS.BLACK} size={30} />
-                                        <Text style={styles.replaceBtn}>Replace</Text>
+                                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.replaceBtn}>Replace</Text>
                                     </TouchableOpacity>
                                 )}
                             {(_.get(item, 'type') === 'RECIPE' || _.get(item, 'type') === 'FOOD') && !isAnytime ? (
@@ -135,8 +136,8 @@ export const SwipeList: React.FC<SwipeListProps> = ({
                                         style={[styles.button, styles.listItemBtnNotEat]}
                                     >
                                         <Icon iconStyle="solid" name="times" color={COLORS.BLACK} size={30} />
-                                        <Text style={[styles.notEatBtn, styles.offsetTop]}>Did</Text>
-                                        <Text style={styles.notEatBtn}>Not Eat</Text>
+                                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.notEatBtn, styles.offsetTop]}>Did</Text>
+                                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.notEatBtn}>Not Eat</Text>
                                     </TouchableOpacity>
                                 )
                             ) : (

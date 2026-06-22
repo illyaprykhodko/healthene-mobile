@@ -93,6 +93,7 @@ export const NotificationsScreen: React.FC = () => {
                         onValueChange={handleToggleAll}
                         thumbColor={theme.colors.white}
                         ios_backgroundColor={theme.colors.white}
+                        accessibilityLabel="Allow All Notifications"
                         trackColor={{ false: '#B2B2B2', true: '#4CDA64' }}
                     />
                 </View>
@@ -117,6 +118,7 @@ export const NotificationsScreen: React.FC = () => {
                                 ios_backgroundColor={theme.colors.white}
                                 onValueChange={() => handleToggleItem(item.id)}
                                 trackColor={{ false: '#B2B2B2', true: '#4CDA64' }}
+                                accessibilityLabel={humanizeNotificationType(item.notificationType)}
                             />
                         </View>
                     )}

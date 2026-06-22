@@ -3,6 +3,9 @@ import React from 'react';
 import { StyleSheet, Text as UIText, TextStyle } from 'react-native';
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { useFontScale } from 'hooks/useFontScale';
+import { useBoldTextEnabled } from 'hooks/useBoldTextEnabled';
+import { BOLD_FONT_MAP, MAX_FONT_SCALE } from 'constants/typography.ts';
 
 // export type TextVariant = 'common' | 'bold' | 'caption';
 export type TextVariant =
@@ -23,6 +26,8 @@ interface TextProps {
     variant?: TextVariant;
     numberOfLines?: number;
     children?: React.ReactNode;
+    allowFontScaling?: boolean;
+    maxFontSizeMultiplier?: number;
     style?: TextStyle | TextStyle[];
     textAlign?: 'auto' | 'left' | 'right' | 'center' | 'justify';
 }
@@ -36,9 +41,17 @@ const Text: React.FC<TextProps> = ({
     textAlign,
     numberOfLines,
     variant = 'common',
+    allowFontScaling = true,
+    maxFontSizeMultiplier = MAX_FONT_SCALE,
     ...attr
 }) => {
     const theme = useTheme();
+    // `fontScale` re-renders on OS text-size change — including when the app returns to the
+    // foreground after the user changed the setting in Settings (iOS delivers the live event
+    // unreliably while backgrounded, so we re-read on AppState 'active'). `boldText` reflects
+    // the iOS "Bold Text" setting (false on Android).
+    const fontScale = useFontScale();
+    const boldText = useBoldTextEnabled();
     const allStyles: TextStyle[] = [textStyles[variant] || textStyles.common];
     if (textAlign && allowedAlign.includes(textAlign)) {
         allStyles.push({ textAlign });
@@ -56,8 +69,35 @@ const Text: React.FC<TextProps> = ({
     if (flat.fontFamily && flat.fontWeight != null) {
         delete flat.fontWeight;
     }
+    // iOS "Bold Text" accessibility setting: our weight is encoded via fontFamily (fontWeight
+    // is stripped above), so bump the family one step heavier when it's on. No-op when off, or
+    // for families not in the map. Android `boldText` is always false.
+    if (boldText && flat.fontFamily) {
+        flat.fontFamily = BOLD_FONT_MAP[flat.fontFamily] ?? flat.fontFamily;
+    }
+    // Accessibility text scaling: RN multiplies `fontSize` by the OS font scale (capped by
+    // `maxFontSizeMultiplier`) but leaves an explicit `lineHeight` untouched, so large text
+    // clips/overlaps. Scale `lineHeight` by the same effective multiplier to keep spacing
+    // proportional. At the default OS size (fontScale === 1) this is a no-op, so the current
+    // design renders pixel-identical.
+    if (flat.lineHeight != null) {
+        const effectiveScale = allowFontScaling ? Math.min(fontScale, maxFontSizeMultiplier) : 1;
+        flat.lineHeight = flat.lineHeight * effectiveScale;
+    }
+    // iOS keeps a stale intrinsic-width measurement when the font size of an already-mounted
+    // text changes in place (esp. with numberOfLines / width-constrained single lines), so the
+    // label truncates ("Healthene®" -> "Health…") until a restart. Re-keying on the scale/bold
+    // value remounts the native text node, forcing a fresh measure — same result as a cold start.
+    // The key is stable across normal renders (changes only when the OS settings change).
     return (
-        <UIText style={flat} numberOfLines={numberOfLines} {...attr}>
+        <UIText
+            key={`${boldText ? 'b' : 'n'}-${fontScale}`}
+            style={flat}
+            numberOfLines={numberOfLines}
+            allowFontScaling={allowFontScaling}
+            maxFontSizeMultiplier={maxFontSizeMultiplier}
+            {...attr}
+        >
             {children}
         </UIText>
     );

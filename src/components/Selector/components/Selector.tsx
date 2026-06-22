@@ -37,7 +37,7 @@ export const Selector = ({ label, touched, errorText, value, openModalSheet }: S
 export default Selector;
 const styles = StyleSheet.create({
     selectBtn: {
-        height: 40,
+        minHeight: 40,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',

@@ -8,6 +8,7 @@ import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { config } from 'constants';
 import { BUSINESS_PROPERTIES } from 'types';
 import Screen from 'components/Screen.tsx';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { useGetTermsQuery } from 'store/api/publicApi.ts';
 
 export const TermsAndConditions = () => {
@@ -36,13 +37,13 @@ export const TermsAndConditions = () => {
             : null
         }
         <View style={styles.footer}>
-            <Text style={styles.footerText}>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.footerText}>
         Healthene® &copy;
                 {' '}
                 {moment().format('MMMM, YYYY')}
             </Text>
             <Pressable onPress={handleAttach}>
-                <Text style={styles.link}>www.Healthene.com</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.link}>www.Healthene.com</Text>
             </Pressable>
         </View>
     </Screen>;

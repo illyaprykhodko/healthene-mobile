@@ -4,6 +4,7 @@ import { View, TextInput, StyleSheet, Platform } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import type { MeasurementFieldConfig } from 'types/health';
 
 interface MeasurementFieldProps {
@@ -61,6 +62,7 @@ export const MeasurementField: React.FC<MeasurementFieldProps> = ({
                     editable={!disabled}
                     placeholder={field.placeholder}
                     onChangeText={handleChangeText}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                     maxLength={field.type === 'number' ? 3 : 5}
                     placeholderTextColor={theme.colors.textSecondary}
                     keyboardType={field.type === 'decimal' ? 'decimal-pad' : 'number-pad'}

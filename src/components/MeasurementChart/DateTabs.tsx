@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { getMeasurementTabs, type MeasurementTab } from 'constants/measurement-chart';
 
 interface DateTabsProps {
@@ -57,6 +58,7 @@ const DateTabs: React.FC<DateTabsProps> = ({
                                 ]}
                             >
                                 <Text
+                                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                                     style={[
                                         styles.tabText,
                                         { color: theme.colors.text },

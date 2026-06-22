@@ -22,6 +22,7 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { navigate as rootNavigate } from 'services/navigation';
 import { QUESTION_TYPE, QUESTION_RESPONSE_TYPE } from 'constants/spec';
 import {
@@ -324,6 +325,7 @@ const QuestionScreen: React.FC = () => {
                                 editable={!isLoading}
                                 onChangeText={setDescription}
                                 placeholderTextColor="#999999"
+                                maxFontSizeMultiplier={MAX_FONT_SCALE}
                                 placeholder={responseItems[0]?.itemText || 'Enter your answer...'}
                                 style={[
                                     styles.textarea,
