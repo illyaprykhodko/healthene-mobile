@@ -32,7 +32,7 @@ const AnimationSettings: React.FC = () => {
                             AsyncStorage.setItem(BIRD_SOUND_KEY, String(v));
                         }}
                         thumbColor={theme.colors.white}
-                        ios_backgroundColor={theme.colors.white}
+                        ios_backgroundColor={theme.colors.darkerGrey}
                         trackColor={{ false: '#B2B2B2', true: '#4CDA64' }}
                     />
                 </View>

@@ -577,20 +577,20 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingLeft: 0,
         paddingRight: 0,
-        paddingTop: OFFSET.VERTICAL,
+        // paddingTop: OFFSET.VERTICAL,
     },
     header: {
         backgroundColor: '#E0EBF7',
         paddingVertical: OFFSET.VERTICAL,
         paddingHorizontal: OFFSET.HORIZONTAL,
-        height: 65,
+        // height: 65,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: OFFSET.VERTICAL,
     },
     headerTitle: {
         fontSize: 18,
-        fontWeight: '400',
+        fontWeight: '500',
         color: '#181818',
     },
     // Tabs
@@ -663,12 +663,13 @@ const styles = StyleSheet.create({
     },
     unitText: {
         fontSize: 18,
-        fontWeight: '500',
+        fontWeight: '700',
         textTransform: 'capitalize',
     },
     // HS-3131: align unit dropdown shade to the V1 "correct version" (translucent light blue).
     unitTrigger: {
-        backgroundColor: '#E0EBF766',
+        backgroundColor: 'transparent',
+        // backgroundColor: '#E0EBF766',
     },
     // Ingredients tab
     ingredientsTab: {

@@ -60,7 +60,9 @@ export const AnimatedDropdown: React.FC<AnimatedDropdownProps> = ({
         overflow: 'hidden',
     }));
     const mergedTriggerTextStyle = useMemo(
-        () => StyleSheet.flatten([styles.triggerText, { color: theme.colors.blue }, triggerTextStyle]) || {},
+        () => StyleSheet.flatten([styles.triggerText, {
+            color: theme.colors.text // color.blue - check theme
+        }, triggerTextStyle]) || {},
         [theme.colors.blue, triggerTextStyle]
     );
     const mergedOptionTextStyle = useMemo(
@@ -90,7 +92,8 @@ export const AnimatedDropdown: React.FC<AnimatedDropdownProps> = ({
                     <Icon
                         size={16}
                         iconStyle="solid"
-                        color={theme.colors.blue}
+                        color={theme.colors.text}
+                        // color={theme.colors.blue}
                         name={isOpen ? 'chevron-up' : 'chevron-down'}
                     />
                 )}
