@@ -4,6 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 
 interface BloodPressureSummaryProps {
     unit: string;
@@ -34,26 +35,26 @@ const BloodPressureSummary: React.FC<BloodPressureSummaryProps> = ({
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.surfaceAlt }]}>
             <View style={styles.column}>
-                <Text style={[styles.label, { color: theme.colors.secondary }]}>Starting</Text>
-                <Text style={[styles.value, { color: theme.colors.text }]}>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.label, { color: theme.colors.secondary }]}>Starting</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.value, { color: theme.colors.text }]}>
                     {Math.round(startingSystolic)}
                     {' / '}
                     {Math.round(startingDiastolic)}
                 </Text>
-                <Text style={[styles.unit, { color: theme.colors.secondary }]}>{unit}</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.unit, { color: theme.colors.secondary }]}>{unit}</Text>
             </View>
 
             <View style={styles.column}>
-                <Text style={[styles.label, { color: theme.colors.secondary }]}>Total Change</Text>
-                <Text style={[styles.value, { color: theme.colors.text }]}>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.label, { color: theme.colors.secondary }]}>Total Change</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.value, { color: theme.colors.text }]}>
                     {displayChangeSystolic}
                     {' / '}
                     {displayChangeDiastolic}
                     {' '}
                 </Text>
-                <Text style={[styles.valueDiastolic, { color: theme.colors.text }]}>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.valueDiastolic, { color: theme.colors.text }]}>
                     {' '}
-                    <Text style={[styles.unit, { color: theme.colors.secondary }]}>{unit}</Text>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.unit, { color: theme.colors.secondary }]}>{unit}</Text>
                 </Text>
             </View>
         </View>

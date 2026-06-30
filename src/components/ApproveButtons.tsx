@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     cancelButton: {
-        height: 45,
+        minHeight: 45,
         width: 115,
         borderWidth: 1,
         borderRadius: 25,
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
     saveButton: {
-        height: 75,
+        minHeight: 75,
         width: 170,
         borderRadius: 45,
         backgroundColor: '#87CA67',

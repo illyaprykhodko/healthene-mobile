@@ -7,6 +7,7 @@ import { StyleSheet, View, TextInput as RNInput } from 'react-native';
 import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset.ts';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 
 interface TextInputProps {
     name: string;
@@ -76,6 +77,7 @@ const TextInput: React.FC<TextInputProps> = ({
                     secureTextEntry={isSecureText}
                     numberOfLines={multiline ? 6 : 1}
                     selectionColor={theme.colors.info}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                     onBlur={() => value && setIsBlur(true)}
                     textAlignVertical={multiline ? 'top' : 'center'}
                     placeholderTextColor={theme.colors.textSecondary}

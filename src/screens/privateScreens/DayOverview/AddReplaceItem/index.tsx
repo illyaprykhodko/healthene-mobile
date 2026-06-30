@@ -18,6 +18,7 @@ import { OFFSET } from 'constants/offset';
 import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
 import DefImage from 'components/DefImage';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import { CATALOG_TAG_TYPE, SEARCH_TYPE } from 'constants/spec';
 
 export const AddReplaceItem: React.FC = () => {
@@ -242,6 +243,7 @@ export const AddReplaceItem: React.FC = () => {
                     returnKeyType="search"
                     placeholder="Search..."
                     onChangeText={setSearchQuery}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                     placeholderTextColor={theme.colors.textSecondary}
                     style={[styles.searchInput, { color: theme.colors.text }]}
                 />

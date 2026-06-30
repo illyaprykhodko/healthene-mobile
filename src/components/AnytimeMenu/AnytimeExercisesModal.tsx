@@ -188,7 +188,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
             <View style={[styles.modal, { backgroundColor: theme.colors.surface }]}>
                 <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
                     <View style={styles.headerLeft}>
-                        <Badge count={activeExercisesCount} bgColor={theme.colors.aqua} showZero>
+                        <Badge count={activeExercisesCount} bgColor={theme.colors.aqua}>
                             <ActivityIcon size={24} />
                         </Badge>
                         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>

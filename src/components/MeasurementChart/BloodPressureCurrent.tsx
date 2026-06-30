@@ -4,6 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 
 interface BloodPressureCurrentProps {
     unit: string;
@@ -23,30 +24,30 @@ const BloodPressureCurrent: React.FC<BloodPressureCurrentProps> = ({
         <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
             <View style={styles.content}>
                 <View style={styles.valuesContainer}>
-                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Current</Text>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.label, { color: theme.colors.textSecondary }]}>Current</Text>
                     <View style={styles.valuesRow}>
                         <View style={styles.valueGroup}>
                             <View style={styles.labelRow}>
                                 <View style={[styles.dot, styles.systolicDot]} />
-                                <Text style={[styles.valueLabel, { color: theme.colors.textMuted }]}>SYSTOLIC</Text>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.valueLabel, { color: theme.colors.textMuted }]}>SYSTOLIC</Text>
                             </View>
-                            <Text style={[styles.value, { color: theme.colors.text }]}>
-                                {Math.round(systolic)} <Text style={[styles.separator, { color: theme.colors.textSecondary }]}>/</Text>{' '}
+                            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.value, { color: theme.colors.text }]}>
+                                {Math.round(systolic)} <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.separator, { color: theme.colors.textSecondary }]}>/</Text>{' '}
                             </Text>
                         </View>
                         <View style={styles.valueGroup}>
                             <View style={styles.labelRow}>
                                 <View style={[styles.dot, styles.diastolicDot]} />
-                                <Text style={[styles.valueLabel, { color: theme.colors.textMuted }]}>DIASTOLIC</Text>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.valueLabel, { color: theme.colors.textMuted }]}>DIASTOLIC</Text>
                             </View>
                             <View style={styles.diastolicValueRow}>
-                                <Text style={[styles.value, { color: theme.colors.text }]}>{Math.round(diastolic)}</Text>
-                                <Text style={[styles.unit, { color: theme.colors.secondary }]}> {unit}</Text>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.value, { color: theme.colors.text }]}>{Math.round(diastolic)}</Text>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.unit, { color: theme.colors.secondary }]}> {unit}</Text>
                             </View>
                         </View>
                     </View>
                 </View>
-                <Text style={[styles.dateText, { color: theme.colors.textSecondary }]}>{dateRange}</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.dateText, { color: theme.colors.textSecondary }]}>{dateRange}</Text>
             </View>
         </View>
     );

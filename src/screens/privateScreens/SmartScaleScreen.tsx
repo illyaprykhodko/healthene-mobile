@@ -16,6 +16,7 @@ import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
 import type { SmartScaleReading } from 'types/health';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { useMeasurementSubmit } from 'hooks/useMeasurementSubmit';
 import SmartScaleService from 'services/health/smart-scale.service';
 
@@ -129,27 +130,27 @@ const SmartScaleScreen: React.FC = () => {
             case State.PoweredOff:
                 return (
                     <View style={styles.messageContainer}>
-                        <Text style={[styles.messageText, { color: theme.colors.primary }]}>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.messageText, { color: theme.colors.primary }]}>
                         It seems that Bluetooth is turned off. Please enable it in your device&apos;s settings to continue.
                         </Text>
                         <TouchableOpacity
                             onPress={openSettings}
                             style={[styles.settingsButton, { backgroundColor: theme.colors.warning }]}
                         >
-                            <Text style={styles.settingsButtonText}>Open Settings</Text>
+                            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.settingsButtonText}>Open Settings</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={recheckBluetooth}
                             style={[styles.settingsButton, { backgroundColor: theme.colors.primary, marginTop: 10 }]}
                         >
-                            <Text style={styles.settingsButtonText}>Recheck Status</Text>
+                            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.settingsButtonText}>Recheck Status</Text>
                         </TouchableOpacity>
                     </View>
                 );
             case State.Unsupported:
                 return (
                     <View style={styles.messageContainer}>
-                        <Text style={[styles.messageText, { color: theme.colors.error }]}>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.messageText, { color: theme.colors.error }]}>
                             Bluetooth is not supported on this device. This feature requires
                             Bluetooth capabilities.
                         </Text>
@@ -158,7 +159,7 @@ const SmartScaleScreen: React.FC = () => {
             case State.Unauthorized:
                 return (
                     <View style={styles.messageContainer}>
-                        <Text style={[styles.messageText, { color: theme.colors.primary }]}>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.messageText, { color: theme.colors.primary }]}>
                             Bluetooth access is unauthorized. Please allow Bluetooth permissions for
                             this app in your device's settings.
                         </Text>
@@ -166,14 +167,14 @@ const SmartScaleScreen: React.FC = () => {
                             style={[styles.settingsButton, { backgroundColor: theme.colors.warning }]}
                             onPress={openSettings}
                         >
-                            <Text style={styles.settingsButtonText}>Open Settings</Text>
+                            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.settingsButtonText}>Open Settings</Text>
                         </TouchableOpacity>
                     </View>
                 );
             case State.Unknown:
                 return (
                     <View style={styles.messageContainer}>
-                        <Text style={[styles.messageText, { color: theme.colors.primary }]}>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.messageText, { color: theme.colors.primary }]}>
                             Checking Bluetooth status...
                         </Text>
                         <ActivityIndicator
@@ -185,7 +186,7 @@ const SmartScaleScreen: React.FC = () => {
                             style={[styles.settingsButton, { backgroundColor: theme.colors.primary, marginTop: 10 }]}
                             onPress={recheckBluetooth}
                         >
-                            <Text style={styles.settingsButtonText}>Recheck Status</Text>
+                            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.settingsButtonText}>Recheck Status</Text>
                         </TouchableOpacity>
                     </View>
                 );
@@ -201,7 +202,7 @@ const SmartScaleScreen: React.FC = () => {
             {renderBluetoothStatus()}
             {locationStatus && locationStatus !== RESULTS.GRANTED && (
                 <View style={styles.messageContainer}>
-                    <Text style={[styles.messageText, { color: theme.colors.primary }]}>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.messageText, { color: theme.colors.primary }]}>
                         Location services are required for Bluetooth to locate and connect with
                         devices accurately.
                     </Text>
@@ -209,14 +210,14 @@ const SmartScaleScreen: React.FC = () => {
                         style={[styles.settingsButton, { backgroundColor: theme.colors.warning }]}
                         onPress={openSettings}
                     >
-                        <Text style={styles.settingsButtonText}>Open Settings</Text>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.settingsButtonText}>Open Settings</Text>
                     </TouchableOpacity>
                 </View>
             )}
 
             {isReadyToScan && (
                 <Animated.View style={{ opacity }}>
-                    <Text style={[styles.instructionText, { color: theme.colors.primary }]}>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.instructionText, { color: theme.colors.primary }]}>
                         Please step on scale
                     </Text>
                 </Animated.View>
@@ -224,7 +225,7 @@ const SmartScaleScreen: React.FC = () => {
 
             <View style={styles.scaleContainer}>
                 <View style={[styles.valueContainer, { borderColor: theme.colors.text, backgroundColor: theme.colors.muted }]}>
-                    <Text style={[styles.weightText, { color: theme.colors.text }]}>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.weightText, { color: theme.colors.text }]}>
                         {weightData ? `${weightData.weight.toFixed(1)} lbs` : '0.0 lbs'}
                     </Text>
                     {isScanning && !weightData && (
@@ -252,7 +253,7 @@ const SmartScaleScreen: React.FC = () => {
                 {isSubmitting ? (
                     <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                    <Text style={styles.saveButtonText}>Save</Text>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.saveButtonText}>Save</Text>
                 )}
             </TouchableOpacity>
         </View>

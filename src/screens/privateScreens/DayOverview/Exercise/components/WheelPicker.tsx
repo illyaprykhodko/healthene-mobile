@@ -57,7 +57,10 @@ const WheelPickerImpl: React.FC<WheelPickerProps> = ({
     const renderItem = useCallback(
         ({ item, index }: ListRenderItemInfo<number>) => (
             <View style={[styles.item, index === selectedIndex && selectedItemStyle]}>
+                {/* Fixed-height wheel row (ITEM_HEIGHT + getItemLayout + snapToInterval): opt out of
+                    font scaling so the picker geometry and snap offsets stay stable. */}
                 <Text
+                    allowFontScaling={false}
                     style={[
                         styles.text,
                         { color: index === selectedIndex ? theme.colors.text : theme.colors.textSecondary },

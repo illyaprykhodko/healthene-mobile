@@ -19,6 +19,7 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { SwipeablePanel } from 'components/SwipeablePanel';
 import { RootStackParamList } from 'services/navigation/types';
 import { useMeasurementSubmit } from 'hooks/useMeasurementSubmit';
@@ -126,7 +127,7 @@ const WeightMeasurementScreen: React.FC = () => {
                 { borderColor: theme.colors.success, backgroundColor: theme.colors.muted }
             ]}
         >
-            <Text style={[styles.scaleButtonText, { color: theme.colors.darkGrey }]}>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.scaleButtonText, { color: theme.colors.darkGrey }]}>
                     Step on Scale
             </Text>
         </TouchableOpacity>
@@ -139,7 +140,7 @@ const WeightMeasurementScreen: React.FC = () => {
                 { borderColor: theme.colors.primary, backgroundColor: theme.colors.surface }
             ]}
         >
-            <Text style={[styles.manualButtonText, { color: theme.colors.primary }]}>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.manualButtonText, { color: theme.colors.primary }]}>
                 {isSubmitting
                     ? <ActivityIndicator size="small" color={theme.colors.primary} />
                     : 'Add your Weight Manually'
@@ -167,11 +168,11 @@ const WeightMeasurementScreen: React.FC = () => {
                                 style={styles.headerButton}
                                 onPress={() => setIsPanelOpen(false)}
                             >
-                                <Text style={[styles.headerButtonText, { color: theme.colors.primary }]}>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.headerButtonText, { color: theme.colors.primary }]}>
                                         Cancel
                                 </Text>
                             </TouchableOpacity>
-                            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+                            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.headerTitle, { color: theme.colors.text }]}>
                                     Weight
                             </Text>
                             <TouchableOpacity
@@ -180,6 +181,7 @@ const WeightMeasurementScreen: React.FC = () => {
                                 disabled={!values.value || !!errors.value || isSubmitting}
                             >
                                 <Text
+                                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                                     style={[styles.headerButtonText,
                                         {
                                             color: !values.value || errors.value
@@ -193,24 +195,24 @@ const WeightMeasurementScreen: React.FC = () => {
                             </TouchableOpacity>
                         </View>
                         {!hasRecentWeight && (
-                            <Text style={[styles.noRecentDataText, { color: theme.colors.primary }]}>
+                            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.noRecentDataText, { color: theme.colors.primary }]}>
                                     No Weight was recorded recently - please add it manually
                             </Text>
                         )}
                         <View style={styles.dateContainer}>
                             <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
-                                <Text style={[styles.itemLabel, { color: theme.colors.text }]}>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.itemLabel, { color: theme.colors.text }]}>
                                         Date
                                 </Text>
-                                <Text style={[styles.itemValue, { color: theme.colors.text }]}>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.itemValue, { color: theme.colors.text }]}>
                                     {moment().format('MMM Do YY')}
                                 </Text>
                             </View>
                             <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
-                                <Text style={[styles.itemLabel, { color: theme.colors.text }]}>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.itemLabel, { color: theme.colors.text }]}>
                                         Time
                                 </Text>
-                                <Text style={[styles.itemValue, { color: theme.colors.text }]}>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.itemValue, { color: theme.colors.text }]}>
                                     {moment().format('LT')}
                                 </Text>
                             </View>
@@ -222,6 +224,7 @@ const WeightMeasurementScreen: React.FC = () => {
                                 ]}
                             >
                                 <Text
+                                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                                     style={[
                                         styles.itemLabel,
                                         { color: theme.colors.text },
@@ -252,7 +255,7 @@ const WeightMeasurementScreen: React.FC = () => {
                                 />
                             </View>
                             {errors.value && touched.value && (
-                                <Text style={[styles.errorTextSmall, { color: theme.colors.error }]}>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.errorTextSmall, { color: theme.colors.error }]}>
                                     {errors.value}
                                 </Text>
                             )}

@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity, Animated, StyleSheet, Dimensions } from '
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import { SHOPPING_LIST_TAB, SHOPPING_ITEM_TYPE } from 'constants/spec';
 
 interface ListSwitcherProps {
@@ -101,6 +102,7 @@ const ListSwitcher: React.FC<ListSwitcherProps> = ({
                     onPress={() => handleTabPress(SHOPPING_LIST_TAB.ORIGINAL)}
                 >
                     <Text
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
                         style={[
                             styles.tabText,
                             { color: selectedTab === SHOPPING_LIST_TAB.ORIGINAL ? theme.colors.primary : theme.colors.textSecondary },
@@ -114,6 +116,7 @@ const ListSwitcher: React.FC<ListSwitcherProps> = ({
                     onPress={() => handleTabPress(SHOPPING_LIST_TAB.RESCUE)}
                 >
                     <Text
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
                         style={[
                             styles.tabText,
                             { color: selectedTab === SHOPPING_LIST_TAB.RESCUE ? theme.colors.primary : theme.colors.textSecondary },

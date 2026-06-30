@@ -12,6 +12,7 @@ import {
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { useGetLoggedMeasurementDataMutation } from 'store/api/dayOverviewApi';
 
 interface RecordItem {
@@ -80,8 +81,8 @@ const AllRecordedData: React.FC<AllRecordedDataProps> = ({
     const renderItem = useCallback(
         ({ item }: { item: RecordItem }) => (
             <View style={[styles.row, { borderBottomColor: theme.colors.border }]}>
-                <Text style={[styles.value, { color: theme.colors.text }]}>{item.value}</Text>
-                <Text style={[styles.date, { color: theme.colors.textSecondary }]}>{item.date}</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.value, { color: theme.colors.text }]}>{item.value}</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.date, { color: theme.colors.textSecondary }]}>{item.date}</Text>
             </View>
         ),
         [theme.colors]
@@ -99,8 +100,8 @@ const AllRecordedData: React.FC<AllRecordedDataProps> = ({
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={[styles.header, { backgroundColor: theme.colors.muted, borderBottomColor: theme.colors.border }]}>
-                <Text style={[styles.headerText, { color: theme.colors.textSecondary }]}>{title}</Text>
-                <Text style={[styles.headerText, { color: theme.colors.textSecondary }]}>Date</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.headerText, { color: theme.colors.textSecondary }]}>{title}</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.headerText, { color: theme.colors.textSecondary }]}>Date</Text>
             </View>
             <FlatList
                 data={records}

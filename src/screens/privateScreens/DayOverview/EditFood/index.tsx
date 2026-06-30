@@ -110,6 +110,7 @@ const UnitsView: React.FC<UnitsViewProps> = ({ unit, unitsList, handleUnit }) =>
                         label: item.unitName,
                     }))}
                     onSelect={option => handleUnit(Number(option.id))}
+                    triggerStyle={styles.unitTrigger}
                     triggerTextStyle={styles.unitText}
                 />
             </View>
@@ -537,9 +538,9 @@ export const EditFood: React.FC = () => {
     };
     return (
         <Screen initialized style={styles.container}>
-            {/* <View style={styles.header}>
+            <View style={styles.header}>
                 <Text style={styles.headerTitle}>Add item</Text>
-            </View> */}
+            </View>
 
             {renderTabs()}
             {activeTab === EDIT_FOOD_TABS.INGREDIENTS
@@ -576,7 +577,7 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingLeft: 0,
         paddingRight: 0,
-        paddingTop: OFFSET.VERTICAL,
+        // paddingTop: OFFSET.VERTICAL,
     },
     header: {
         backgroundColor: '#E0EBF7',
@@ -585,11 +586,11 @@ const styles = StyleSheet.create({
         // height: 65,
         justifyContent: 'center',
         alignItems: 'center',
-        // marginBottom: OFFSET.VERTICAL,
+        marginBottom: OFFSET.VERTICAL,
     },
     headerTitle: {
         fontSize: 18,
-        fontWeight: '400',
+        fontWeight: '500',
         color: '#181818',
     },
     // Tabs
@@ -662,8 +663,13 @@ const styles = StyleSheet.create({
     },
     unitText: {
         fontSize: 18,
-        fontWeight: '500',
+        fontWeight: '700',
         textTransform: 'capitalize',
+    },
+    // HS-3131: align unit dropdown shade to the V1 "correct version" (translucent light blue).
+    unitTrigger: {
+        backgroundColor: 'transparent',
+        // backgroundColor: '#E0EBF766',
     },
     // Ingredients tab
     ingredientsTab: {

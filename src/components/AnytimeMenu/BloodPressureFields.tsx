@@ -5,6 +5,7 @@ import { View, TextInput, StyleSheet, Platform } from 'react-native';
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
 import { COLORS } from 'constants/colors';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import type { MeasurementFieldConfig } from 'types/health';
 
 interface BloodPressureFieldsProps {
@@ -71,6 +72,7 @@ export const BloodPressureFields: React.FC<BloodPressureFieldsProps> = ({
                         value={systolicValue}
                         onBlur={onSystolicBlur}
                         keyboardType="number-pad"
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
                         // placeholder={systolicField.placeholder}
                         placeholderTextColor={theme.colors.textSecondary}
                         onChangeText={text => handleTextChange(onSystolicChange, text)}
@@ -111,6 +113,7 @@ export const BloodPressureFields: React.FC<BloodPressureFieldsProps> = ({
                         value={diastolicValue}
                         onBlur={onDiastolicBlur}
                         keyboardType="number-pad"
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
                         onChangeText={text => handleTextChange(onDiastolicChange, text)}
                         // placeholder={diastolicField.placeholder}
                         style={[

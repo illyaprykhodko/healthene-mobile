@@ -11,6 +11,7 @@ import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
 import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import { PressableScale } from 'components/PressableScale';
 import { selectCurrentStep } from 'store/slices/shoppingSlice';
 import { SHOPPING_STATUS, SHOPPING_STEP } from 'constants/spec';
@@ -162,6 +163,7 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                                     keyboardType="numeric"
                                     onChangeText={setAmount}
                                     value={cleanedStr(amount)}
+                                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                                     onFocus={() => onAmountFocus?.(item?.id)}
                                     style={[
                                         styles.selectInput,
@@ -320,7 +322,7 @@ const styles = StyleSheet.create({
     },
     selectInput: {
         width: 67,
-        height: 48,
+        minHeight: 48,
         padding: 10,
         maxWidth: 67,
         fontSize: 20,
@@ -331,7 +333,7 @@ const styles = StyleSheet.create({
     },
     amountContainer: {
         width: 60,
-        height: 40,
+        minHeight: 40,
         marginRight: 5,
         paddingVertical: 8,
         paddingHorizontal: 12,

@@ -26,12 +26,13 @@ const AnimationSettings: React.FC = () => {
                     <Text variant="body" color={theme.colors.text}>Bird Animation Sound</Text>
                     <Switch
                         value={birdSoundEnabled}
+                        accessibilityLabel="Bird Animation Sound"
                         onValueChange={v => {
                             dispatch(setBirdSoundEnabled(v));
                             AsyncStorage.setItem(BIRD_SOUND_KEY, String(v));
                         }}
                         thumbColor={theme.colors.white}
-                        ios_backgroundColor={theme.colors.white}
+                        ios_backgroundColor={theme.colors.darkerGrey}
                         trackColor={{ false: '#B2B2B2', true: '#4CDA64' }}
                     />
                 </View>

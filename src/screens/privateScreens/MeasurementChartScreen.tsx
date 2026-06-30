@@ -15,6 +15,7 @@ import {
 } from 'store/api/dayOverviewApi';
 import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { RootStackParamList } from 'services/navigation/types';
 
 type Navigation = StackNavigationProp<RootStackParamList>;
@@ -242,7 +243,7 @@ const MeasurementChartScreen: React.FC = () => {
                 onPress={handleDone}
                 style={[styles.doneButton, { backgroundColor: theme.colors.successAlt }]}
             >
-                <Text style={[styles.doneButtonText, { color: theme.colors.successAltText }]}>DONE</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.doneButtonText, { color: theme.colors.successAltText }]}>DONE</Text>
             </TouchableOpacity>
         </View>
     );

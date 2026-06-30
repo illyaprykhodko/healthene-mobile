@@ -10,8 +10,8 @@ import {
 } from 'react-native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 
 // local dependencies
 import {
@@ -29,7 +29,9 @@ import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
 import DefImage from 'components/DefImage';
+import { AnytimeMenu } from 'components/AnytimeMenu';
 import { GlassSurface } from 'components/GlassSurface';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { RootStackParamList } from 'services/navigation';
 import { ENTITY_TYPE, SEARCH_TYPE, SUBSTANCE_TYPE, TAG_TYPE } from 'constants/spec';
 
@@ -74,6 +76,10 @@ const TreeAddReplaceItem: React.FC = () => {
     const [isAiItemLoading, setIsAiItemLoading] = useState(false);
     const [aiFoods, setAiFoods] = useState<any[]>([]);
     const [isAiFoodsAdded, setIsAiFoodsAdded] = useState(false);
+    // Count of distinct committed (debounced) searches in the current session. HS-3130: the
+    // GPT "Show More" must NOT appear during the first search, only from the second onward.
+    const [searchRound, setSearchRound] = useState(0);
+    const lastCountedQuery = useRef('');
     const isRecipesTab = selectedTab === TAG_TYPE.PATIENT_RECIPES;
     const isRestaurantTab = selectedTab === TAG_TYPE.RESTAURANT;
     const hasSearch = debouncedSearchQuery.trim().length > 0;
@@ -102,6 +108,21 @@ const TreeAddReplaceItem: React.FC = () => {
         setAllItems([]);
         setIsAiFoodsAdded(false);
     }, [debouncedSearchQuery, selectedTab]);
+
+    // Track distinct searches so GPT "Show More" stays hidden on the first one (HS-3130).
+    // Resets to 0 when the query is cleared (incl. tab change, which empties the query).
+    useEffect(() => {
+        const query = debouncedSearchQuery.trim();
+        if (query.length === 0) {
+            lastCountedQuery.current = '';
+            setSearchRound(0);
+            return;
+        }
+        if (query !== lastCountedQuery.current) {
+            lastCountedQuery.current = query;
+            setSearchRound(round => round + 1);
+        }
+    }, [debouncedSearchQuery]);
     const { data: categoryTreeData, isLoading: isCategoryTreeLoading } = useGetCategoryTreeNodesQuery(
         {
             filter: {
@@ -533,8 +554,8 @@ const TreeAddReplaceItem: React.FC = () => {
 
     const renderSearchInput = () => (
         <View style={styles.searchContainer}>
-            <View style={[styles.searchInputWrapper, { backgroundColor: theme.colors.surfaceAlt, borderColor: theme.colors.border }]}>
-                <Icon iconStyle="solid" name="search" size={14} color={theme.colors.textSecondary} style={styles.searchIcon} />
+            <View style={[styles.searchInputWrapper, { backgroundColor: theme.colors.surface, borderColor: theme.colors.blue }]}>
+                <Icon iconStyle="solid" name="search" size={14} color={theme.colors.blue} style={styles.searchIcon} />
                 <TextInput
                     value={searchQuery}
                     autoCorrect={false}
@@ -546,6 +567,7 @@ const TreeAddReplaceItem: React.FC = () => {
                         setAiFoods([]);
                         setIsAiFoodsAdded(false);
                     }}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                     placeholderTextColor={theme.colors.textSecondary}
                     style={[styles.searchInput, { color: theme.colors.text }]}
                 />
@@ -603,8 +625,9 @@ const TreeAddReplaceItem: React.FC = () => {
         () => selectedTab === TAG_TYPE.PATIENT_FOOD
             && searchType === SEARCH_TYPE.ITEM
             && debouncedSearchQuery.trim().length > 3
+            && searchRound > 1
             && !isAiFoodsAdded,
-        [selectedTab, searchType, debouncedSearchQuery, isAiFoodsAdded]
+        [selectedTab, searchType, debouncedSearchQuery, searchRound, isAiFoodsAdded]
     );
 
     // if (isLoading && page === 0 && allItems.length === 0) {
@@ -688,6 +711,7 @@ const TreeAddReplaceItem: React.FC = () => {
                     <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
             )}
+            <AnytimeMenu date={date} />
         </Screen>
     );
 };
@@ -862,11 +886,11 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     glassBar: {
-        left: 0,
-        right: 0,
-        bottom: 0,
+        // left: 0,
+        // right: 0,
+        // bottom: 0,
         paddingTop: 6,
-        position: 'absolute',
+        // position: 'absolute',
     },
     listContent: {
         // Room so the last items scroll up above the floating glass SCAN bar.
