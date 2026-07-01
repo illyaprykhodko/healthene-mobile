@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "matcher": "(git\\s+reset\\s+--hard|git\\s+clean\\s+-fd|rm\\s+-rf\\s+/|rm\\s+-rf\\s+\\.|:\\(\\)\\{\\s*:\\|:\\s*&\\s*\\};:)",
+        "command": ".cursor/hooks/warn-shell.sh"
+      },
+      {
+        "matcher": "(curl\\s|wget\\s|scp\\s|ssh\\s)",
+        "command": ".cursor/hooks/warn-shell.sh"
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "matcher": "UserPromptSubmit",
+        "command": ".cursor/hooks/check-prompt-secrets.sh"
+      }
+    ]
+  }
+}

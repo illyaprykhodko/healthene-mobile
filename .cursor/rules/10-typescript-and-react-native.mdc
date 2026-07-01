@@ -1,0 +1,18 @@
+---
+description: TypeScript and React Native coding conventions
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# TypeScript and React Native Standards
+
+- Use strict, explicit types for props, params, and function returns on public helpers.
+- Avoid `any`; if unavoidable, isolate and document why it is needed.
+- Prefer named exports in shared modules unless file already follows default-export style.
+- Keep components small and focused; move repeated logic into hooks or utilities.
+
+## React Native specifics
+
+- Prefer platform-safe styles and primitives already used in the codebase.
+- Keep UI text and constants centralized instead of hardcoding repeated strings.
+- Handle loading, empty, and error states explicitly in screen-level components.

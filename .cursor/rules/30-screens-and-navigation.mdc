@@ -1,0 +1,18 @@
+---
+description: Screen and navigation implementation patterns
+globs: src/screens/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Screens and Navigation
+
+- Keep screen containers responsible for orchestration, not heavy business logic.
+- For new routes, follow existing navigator organization and naming in `src/navigation/`.
+- Pass only required params through navigation; keep payloads small and typed.
+- Do not break existing route names or parameter contracts without migration.
+
+## UX consistency
+
+- Reuse existing shared components before creating new UI primitives.
+- Ensure every screen handles loading, empty, and recoverable error states.
+- Keep side effects (analytics, fetches) in hooks or sagas, not inline in render code.
