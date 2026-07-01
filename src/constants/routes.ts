@@ -19,6 +19,7 @@ export const ROUTES = {
     ABOUT_PLAN: 'AboutPlan',
     SMART_SCALE: 'SmartScale',
     REPLACEMENT: 'Replacement',
+    HELP_SUPPORT: 'HelpSupport',
     DAY_OVERVIEW: 'DayOverview',
     GAMBLING_HOME: 'GamblingHome',
     GAMBLING_BANK: 'GamblingBank',

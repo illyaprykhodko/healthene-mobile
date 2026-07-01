@@ -20,6 +20,7 @@ import HealthProfileStack from 'navigation/HealthProfileStack';
 import MealPreferencesStack from 'navigation/MealPreferencesStack';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
 import CuisineDistributionStack from 'navigation/CuisineDistributionStack';
+import { HelpSupportScreen } from 'screens/privateScreens/HelpSupportScreen';
 
 
 const Drawer = createDrawerNavigator();
@@ -148,6 +149,18 @@ export const PrivateDrawer: React.FC = () => {
                     title: 'Library',
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="book" size={24} color={color} />
+                    ),
+                }}
+            />
+
+            <Drawer.Screen
+                name={ROUTES.HELP_SUPPORT}
+                component={HelpSupportScreen}
+                options={{
+                    headerShown: false,
+                    title: 'Help & Support',
+                    drawerIcon: ({ color }) => (
+                        <Icon iconStyle="solid" name="question-circle" size={24} color={color} />
                     ),
                 }}
             />
