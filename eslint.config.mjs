@@ -9,6 +9,16 @@ import tsPlugin from "@typescript-eslint/eslint-plugin";
 const defineConfig = config => config;
 export default defineConfig([
     {
+        ignores: [
+            'node_modules/**',
+            'android/**',
+            'ios/**',
+            'coverage/**',
+            'dist/**',
+            'build/**',
+        ],
+    },
+    {
         files: ['**/*.ts', '**/*.tsx'],
         languageOptions: {
             parser: TSParser,
@@ -29,6 +39,11 @@ export default defineConfig([
             "@typescript-eslint": tsPlugin,
             "jsx-a11y": jsxA11yPlugin,
             "import": importPlugin,
+        },
+        settings: {
+            react: {
+                version: 'detect',
+            },
         },
         "rules": {
             "no-bitwise": "off",
@@ -51,10 +66,15 @@ export default defineConfig([
             "init-declarations": ["off"],
             "lines-around-comment": ["off"],
             "line-comment-position": ["off"],
-            "object-curly-newline": ["off"],
+            // "object-curly-newline": ["warn", {
+            //     "ObjectExpression": { "multiline": true, "consistent": true },
+            //     "ObjectPattern": { "multiline": true, "consistent": true },
+            //     "ImportDeclaration": { "minProperties": 3, "multiline": true, "consistent": true },
+            //     "ExportDeclaration": { "minProperties": 3, "multiline": true, "consistent": true }
+            // }],
             "react/jsx-wrap-multilines": ["off"],
             "react/jsx-closing-tag-location": ["off"],
-            "react/jsx-indent-props": ["off"],
+            "react/jsx-indent-props": ["warn", 4],
             "jsx-a11y/anchor-is-valid": ["error", {
                 "components": ["Link"],
                 "specialLink": ["to", "hrefLeft", "hrefRight"],
@@ -151,7 +171,7 @@ export default defineConfig([
             "no-duplicate-imports": ["error", { "includeExports": true }],
             "no-underscore-dangle": ["error", { "allow": ["_object", "_number", "__REDUX_DEVTOOLS_EXTENSION_COMPOSE__"] }],
             "no-mixed-operators": ["error", { "groups": [["&&", "||"]] }],
-            "import/no-cycle": ["error", { "maxDepth": 1 }],
+            "import/no-cycle": ["error", { "maxDepth": 1, "ignoreExternal": true }],
             "no-spaced-func": ["error"],
             "no-unused-labels": ["error"],
             "no-floating-decimal": ["error"],
@@ -182,6 +202,12 @@ export default defineConfig([
             "no-confusing-arrow": ["warn", { "allowParens": true }],
             "no-multi-spaces": ["warn", { "ignoreEOLComments": true }],
             "no-trailing-spaces": ["warn", { "skipBlankLines": true }],
+            "object-property-newline": ["warn", { "allowAllPropertiesOnSameLine": true }],
+            // "array-bracket-newline": ["warn", { "multiline": true, "minItems": 3 }],
+            // "array-element-newline": ["warn", { "multiline": true, "minItems": 3 }],
+            "function-paren-newline": ["warn", "multiline-arguments"],
+            "react/jsx-first-prop-new-line": ["warn", "multiline-multiprop"],
+            "react/jsx-max-props-per-line": ["warn", { "maximum": 1, "when": "multiline" }],
             "one-var": ["off"],
             "no-shadow": ["off"],
             "import/order": ["off"],
