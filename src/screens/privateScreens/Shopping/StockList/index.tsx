@@ -26,6 +26,7 @@ import {
     setCurrentStep,
     toggleStockItem,
     setShoppingStatus,
+    updateShoppingMeta,
     selectCheckedStockItems,
 } from 'store/slices/shoppingSlice';
 import {
@@ -62,7 +63,7 @@ const StockList: React.FC = () => {
     const theme = useTheme();
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
-    const openDrawer = useShoppingDrawer();
+    const openDrawer = useShoppingDrawer({ guarded: true });
 
     const [open, setOpen] = useState(true);
     const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
@@ -72,6 +73,7 @@ const StockList: React.FC = () => {
     const {
         confirmedItemsType,
         separateRescueItems,
+        isFinalizeAlertOpen,
         id: shoppingListId,
     } = useAppSelector(selectShopping);
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
@@ -150,22 +152,14 @@ const StockList: React.FC = () => {
         dispatch(toggleStockItem(item.id));
     }, [dispatch]);
 
-    const handleNextBtn = useCallback(async () => {
-        try {
-            if (checkedItems.length > 0) {
-                // await updateStock({ ids: checkedItems }).unwrap();
-                await moveStocksToShoppingList({ ids: checkedItems }).unwrap();
-            }
-            // HS-3113: third shopping-list review removed. Instead of flipping to
-            // SHOPPING_STEP.CHECK and bouncing back to ShoppingList, prompt the
-            // finalize confirmation right here. Kept commented to ease revert.
-            // dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
-            // navigation.navigate(ROUTES.SHOPPING_LIST);
-            setIsFinalizeOpen(true);
-        } catch (error) {
-            console.error('Error updating stock:', error);
-        }
-    }, [checkedItems, moveStocksToShoppingList]);
+    const handleNextBtn = useCallback(() => {
+        // HS-3113: third shopping-list review removed. Instead of flipping to
+        // SHOPPING_STEP.CHECK and bouncing back to ShoppingList, prompt the
+        // finalize confirmation right here. Kept commented to ease revert.
+        // dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
+        // navigation.navigate(ROUTES.SHOPPING_LIST);
+        setIsFinalizeOpen(true);
+    }, []);
 
     const buildShopOnMyOwnPayload = useCallback(() => {
         const allItems = includeRescueFoodsInShoppingList;
@@ -180,12 +174,16 @@ const StockList: React.FC = () => {
 
     const handleFinalize = useCallback(async () => {
         try {
+            if (checkedItems.length > 0) {
+                // await updateStock({ ids: checkedItems }).unwrap();
+                await moveStocksToShoppingList({ ids: checkedItems }).unwrap();
+            }
             // TEMP: mirrors ShoppingList.handleFinalize until /shop-on-my-own is restored on backend.
             if (shoppingListId) {
                 const { newConfirmedItemsType } = buildShopOnMyOwnPayload();
                 await updateShoppingListStatus({
-                    separateRescueItems,
                     id: shoppingListId,
+                    separateRescueItems,
                     status: SHOPPING_STATUS.SHOP_ON_MY_OWN,
                     confirmedItemsType: newConfirmedItemsType,
                 }).unwrap();
@@ -200,9 +198,27 @@ const StockList: React.FC = () => {
         } catch (error) {
             console.error('Error finalizing shopping list:', error);
         }
-    }, [shoppingListId, separateRescueItems, buildShopOnMyOwnPayload, updateShoppingListStatus, dispatch, navigation]);
+    }, [checkedItems, moveStocksToShoppingList, shoppingListId, separateRescueItems, buildShopOnMyOwnPayload, updateShoppingListStatus, dispatch, navigation]);
 
     const handleCloseFinalizeAlert = useCallback(() => setIsFinalizeOpen(false), []);
+
+    const handleFinishUpAlert = useCallback(() => {
+        dispatch(updateShoppingMeta({ isFinalizeAlertOpen: false, isTryToOpenSideMenu: false }));
+    }, [dispatch]);
+
+    const handleNotNowAlert = useCallback(() => {
+        dispatch(updateShoppingMeta({ isFinalizeAlertOpen: false, isTryToOpenSideMenu: false }));
+        const parentNav = (navigation as any)?.getParent?.();
+        if (parentNav?.toggleDrawer) {
+            parentNav.toggleDrawer();
+            return;
+        }
+        if (parentNav?.openDrawer) {
+            parentNav.openDrawer();
+            return;
+        }
+        (navigation as any).toggleDrawer?.();
+    }, [dispatch, navigation]);
 
     const handleCategoryChange = useCallback((item: any) => {
         const next = item?.activeItem ?? item;
@@ -359,6 +375,16 @@ const StockList: React.FC = () => {
                 isOpen={isFinalizeOpen}
                 onSubmit={handleFinalize}
                 onClose={handleCloseFinalizeAlert}
+            />
+            <ConfirmationAlert
+                title="Oops!"
+                variant="legacy"
+                cancelTxt="Not Now"
+                applyTxt="Finish Up"
+                onClose={handleNotNowAlert}
+                isOpen={isFinalizeAlertOpen}
+                onSubmit={handleFinishUpAlert}
+                message="Looks like your list isn’t done yet. Finish it before you go?"
             />
         </Screen>
     );

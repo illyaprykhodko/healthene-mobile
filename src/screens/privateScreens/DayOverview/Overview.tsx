@@ -1113,7 +1113,7 @@ export const Overview: React.FC = () => {
                                             onPress={() => handlePhasePress(item)}
                                         >
                                             {isDone && (
-                                                <View style={[styles.doneStatusIndicator, { left: isMeal ? 16 : 96 }]}>
+                                                <View style={[styles.doneStatusIndicator, { left: isMeal ? 16 : 86 }]}>
                                                     <AnimatedCheckmark
                                                         isDone={isDone}
                                                         phaseId={item.id}

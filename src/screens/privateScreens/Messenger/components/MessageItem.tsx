@@ -26,9 +26,23 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
     const handlePress = () => goToReadMessage(id);
 
     return (
-        <Pressable onPress={handlePress} style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.surface : theme.colors.surfaceAlt }]}>
+        <Pressable
+            onPress={handlePress}
+            style={[
+                styles.container,
+                { backgroundColor: (!isIncoming || lastMessage?.isRead)
+                    ? theme.colors.surface
+                    : theme.colors.surfaceAlt
+                }
+            ]}>
             <View style={[styles.row, styles.alignItems]}>
-                <View style={[styles.unreadDot, { backgroundColor: lastMessage?.isRead ? 'transparent' : theme.colors.primary }]} />
+                <View style={[
+                    styles.unreadDot,
+                    { backgroundColor: (!isIncoming || lastMessage?.isRead)
+                        ? 'transparent'
+                        : theme.colors.primary
+                    }
+                ]} />
                 <ProfileImage uri={owner?.coverImage?.url} />
             </View>
             <View style={styles.messageInfoContainer}>

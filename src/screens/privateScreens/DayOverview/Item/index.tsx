@@ -246,7 +246,7 @@ const Item: React.FC = () => {
                                 styles.tabButton,
                                 isActive && styles.activeTabButton,
                                 { borderRightWidth: tabs.length === index + 1 ? 0 : 2 },
-                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceAlt },
+                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceSecond },
                             ]}
                             onPress={() => setActiveTab(tab.value)}
                         >
