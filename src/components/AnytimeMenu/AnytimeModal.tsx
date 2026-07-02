@@ -112,7 +112,7 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
             >
                 <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
                     <View style={styles.headerLeft}>
-                        <Badge count={pendingItems.length} bgColor={theme.colors.aqua} showZero>
+                        <Badge count={pendingItems.length} bgColor={theme.colors.aqua} >
                             {getIconComponent(icon, 24)}
                         </Badge>
                         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
