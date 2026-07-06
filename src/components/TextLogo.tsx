@@ -8,11 +8,12 @@ import { MAX_FONT_SCALE } from 'constants/typography';
 import { useBoldTextEnabled } from 'hooks/useBoldTextEnabled';
 
 interface TextLogoProps {
+    size?: number;
     color?: string;
     style?: StyleProp<TextStyle>;
 }
 
-export const TextLogo: React.FC<TextLogoProps> = ({ style, color }) => {
+export const TextLogo: React.FC<TextLogoProps> = ({ style, color, size }) => {
     const theme = useTheme();
     const fontScale = useFontScale();
     const boldText = useBoldTextEnabled();
@@ -26,6 +27,8 @@ export const TextLogo: React.FC<TextLogoProps> = ({ style, color }) => {
             style={StyleSheet.flatten([
                 style,
                 styles.textLogo,
+                // `size` (when provided) overrides the default 26; existing callers are unaffected.
+                size ? { fontSize: size } : {},
                 resolved ? { color: resolved } : {},
             ])}
             numberOfLines={1}

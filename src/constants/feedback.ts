@@ -1,8 +1,9 @@
 // local dependencies
 import { FeedbackType } from 'types/feedback';
 
-// Max characters for the free-text feedback message (mirrors the Figma "Characters remaining" counter).
-export const FEEDBACK_MESSAGE_MAX = 500;
+// Hard cap on the free-text feedback message. A limit message appears only once this cap is hit
+// (see HelpSupportScreen); maxLength prevents typing past it. Lower temporarily to test.
+export const FEEDBACK_MESSAGE_MAX = 2000;
 
 // Max number of file attachments a user can add to one feedback submission.
 export const FEEDBACK_MAX_ATTACHMENTS = 3;

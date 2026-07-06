@@ -3,7 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { pick, types } from '@react-native-documents/picker';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput as RNTextInput, View } from 'react-native';
 
 // local dependencies
 import { config } from 'constants';
@@ -12,9 +12,9 @@ import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
-import TextInput from 'components/TextInput';
 import StackHeader from 'components/StackHeader';
 import { MessageService } from 'services/messages';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import { IconLogo, TextLogo } from 'components/TextLogo';
 import { useSubmitFeedback } from 'hooks/useSubmitFeedback';
 import { FeedbackAttachmentRef, FeedbackMediaType, FeedbackType } from 'types/feedback';
@@ -46,7 +46,7 @@ export const HelpSupportScreen: React.FC = () => {
     const [deleteFile] = useDeleteFileMutation();
     const { submit, isSubmitting } = useSubmitFeedback();
 
-    const remaining = FEEDBACK_MESSAGE_MAX - message.length;
+    const atLimit = message.length >= FEEDBACK_MESSAGE_MAX;
     const canSubmit = !!message.trim() && !isSubmitting && !isBusy;
 
     const handleAttach = useCallback(async () => {
@@ -119,11 +119,11 @@ export const HelpSupportScreen: React.FC = () => {
                 contentContainerStyle={styles.content}
             >
                 <View style={styles.brand}>
-                    <IconLogo disabled />
-                    <TextLogo color={theme.colors.primary} />
+                    <IconLogo style={styles.iconSize} disabled />
+                    <TextLogo size={40} color={theme.colors.primary} />
                 </View>
 
-                <Text variant="h5" color={theme.colors.text} style={styles.question}>
+                <Text variant="h4" color={theme.colors.text} style={styles.question}>
                     What type of feedback would you like to provide?
                 </Text>
 
@@ -151,21 +151,33 @@ export const HelpSupportScreen: React.FC = () => {
                     })}
                 </View>
 
-                <Text variant="h5" color={theme.colors.text} style={styles.label}>
+                <Text variant="h4" color={theme.colors.text} style={styles.label}>
                     Please share your feedback
                 </Text>
-                <TextInput
-                    multiline
-                    value={message}
-                    disabled={false}
-                    name="feedbackMessage"
-                    onChangeText={setMessage}
-                    maxLength={FEEDBACK_MESSAGE_MAX}
-                    placeholder="Share your feedback..."
-                />
-                <Text variant="caption" color={theme.colors.textSecondary}>
-                    Characters remaining: {remaining}
-                </Text>
+                <View
+                    style={[
+                        styles.messageBox,
+                        { borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+                    ]}
+                >
+                    <RNTextInput
+                        multiline
+                        value={message}
+                        textAlignVertical="top"
+                        onChangeText={setMessage}
+                        maxLength={FEEDBACK_MESSAGE_MAX}
+                        selectionColor={theme.colors.info}
+                        placeholder="Share your feedback..."
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
+                        placeholderTextColor={theme.colors.textSecondary}
+                        style={[styles.messageInput, { color: theme.colors.text }]}
+                    />
+                </View>
+                {atLimit && (
+                    <Text variant="caption" style={styles.counter} color={theme.colors.error}>
+                        You've reached the {FEEDBACK_MESSAGE_MAX}-character limit.
+                    </Text>
+                )}
 
                 <View style={styles.attachments}>
                     {attachments.map(item => (
@@ -209,11 +221,13 @@ export const HelpSupportScreen: React.FC = () => {
                 </View>
 
                 <Button
+                    size="lg"
                     title="Done"
                     style={styles.submit}
                     disabled={!canSubmit}
                     onPress={handleSubmit}
                     loading={isSubmitting}
+                    textStyle={styles.submitText}
                 />
             </ScrollView>
         </Screen>
@@ -234,11 +248,15 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     brand: {
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+        gap: OFFSET.POINT * 2,
         marginBottom: OFFSET.VERTICAL,
     },
     question: {
         marginBottom: OFFSET.POINT * 3,
+        fontSize: 22
     },
     options: {
         gap: OFFSET.POINT * 2,
@@ -253,6 +271,23 @@ const styles = StyleSheet.create({
     },
     label: {
         marginBottom: OFFSET.POINT,
+        fontSize: 22
+    },
+    messageBox: {
+        borderWidth: 1,
+        minHeight: 140,
+        padding: OFFSET.POINT * 2,
+        borderRadius: OFFSET.POINT * 2,
+    },
+    messageInput: {
+        flex: 1,
+        padding: 0,
+        fontSize: 16,
+        minHeight: 132,
+    },
+    counter: {
+        marginTop: OFFSET.POINT,
+        alignSelf: 'flex-end',
     },
     attachments: {
         gap: OFFSET.POINT * 2,
@@ -276,8 +311,16 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
     },
     submit: {
-        width: '30%',
+        width: '42%',
+        borderRadius: 25,
         alignSelf: 'flex-end',
         marginTop: OFFSET.VERTICAL * 1.5,
     },
+    submitText: {
+        fontSize: 20
+    },
+    iconSize: {
+        width: 50,
+        height: 50
+    }
 });
