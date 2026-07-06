@@ -480,7 +480,7 @@ const TreeAddReplaceItem: React.FC = () => {
                                 styles.tabButton,
                                 isActive && styles.activeTabButton,
                                 { borderRightWidth: tabs.length === index + 1 ? 0 : 2 },
-                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceAlt },
+                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceSecond },
                             ]}
                             onPress={() => handleTabPress(tab.value)}
                         >
@@ -561,7 +561,6 @@ const TreeAddReplaceItem: React.FC = () => {
                     autoCorrect={false}
                     autoCapitalize="none"
                     returnKeyType="search"
-                    placeholder="Search..."
                     onChangeText={(value: string) => {
                         setSearchQuery(value);
                         setAiFoods([]);
@@ -663,7 +662,7 @@ const TreeAddReplaceItem: React.FC = () => {
                         </View>
                     ) : (
                         <Text style={styles.emptyScreen}>
-                            {searchQuery.trim().length > 0 ? 'No items found' : 'Enter a search term'}
+                            {searchQuery.trim().length > 0 && 'No items found'}
                         </Text>
                     )
                 }

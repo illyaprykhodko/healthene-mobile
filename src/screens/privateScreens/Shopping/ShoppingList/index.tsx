@@ -755,8 +755,6 @@ const ShoppingList: React.FC = () => {
                 onSubmit={handleFinishUpAlert}
                 message="Looks like your list isn’t done yet. Finish it before you go?"
             />
-
-
             {popoverText && !isCustomAlertOpen && (
                 <ConfirmationAlert
                     hideCancelBtn
