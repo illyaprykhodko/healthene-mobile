@@ -3,7 +3,8 @@ import React, { useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { pick, types } from '@react-native-documents/picker';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput as RNTextInput, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput as RNTextInput, View } from 'react-native';
 
 // local dependencies
 import { config } from 'constants';
@@ -113,14 +114,20 @@ export const HelpSupportScreen: React.FC = () => {
                 onBack={() => navigation.goBack()}
                 onOpenDrawer={() => navigation.openDrawer?.()}
             />
-            <ScrollView
+            <KeyboardAwareScrollView
+                enableOnAndroid
                 style={styles.scroll}
+                extraScrollHeight={20}
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={styles.content}
             >
                 <View style={styles.brand}>
-                    <IconLogo style={styles.iconSize} disabled />
-                    <TextLogo size={40} color={theme.colors.primary} />
+                    <View style={styles.brandInner}>
+                        <View style={styles.brandIcon}>
+                            <IconLogo style={styles.iconSize} disabled />
+                        </View>
+                        <TextLogo size={40} color={theme.colors.primary} />
+                    </View>
                 </View>
 
                 <Text variant="h4" color={theme.colors.text} style={styles.question}>
@@ -219,17 +226,27 @@ export const HelpSupportScreen: React.FC = () => {
                     )}
                     {isBusy && <ActivityIndicator color={theme.colors.primary} style={styles.busy} />}
                 </View>
+            </KeyboardAwareScrollView>
 
+            <View style={styles.footer}>
                 <Button
-                    size="lg"
                     title="Done"
-                    style={styles.submit}
                     disabled={!canSubmit}
                     onPress={handleSubmit}
                     loading={isSubmitting}
-                    textStyle={styles.submitText}
+                    style={[
+                        styles.submit,
+                        {
+                            borderColor: canSubmit ? theme.colors.successAlt : theme.colors.textMuted,
+                            backgroundColor: canSubmit ? theme.colors.successAlt : 'transparent',
+                        },
+                    ]}
+                    textStyle={StyleSheet.flatten([
+                        styles.submitText,
+                        { color: canSubmit ? theme.colors.successAltText : theme.colors.textMuted },
+                    ])}
                 />
-            </ScrollView>
+            </View>
         </Screen>
     );
 };
@@ -248,19 +265,27 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     brand: {
-        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: OFFSET.VERTICAL * 2,
+    },
+    brandInner: {
         alignItems: 'center',
         justifyContent: 'center',
-        gap: OFFSET.POINT * 2,
-        marginBottom: OFFSET.VERTICAL,
+    },
+    brandIcon: {
+        top: 0,
+        bottom: 0,
+        position: 'absolute',
+        justifyContent: 'center',
+        left: -(50 + OFFSET.POINT * 3),
     },
     question: {
-        marginBottom: OFFSET.POINT * 3,
-        fontSize: 22
+        fontSize: 22,
+        marginBottom: OFFSET.VERTICAL * 1.5,
     },
     options: {
-        gap: OFFSET.POINT * 2,
-        marginBottom: OFFSET.VERTICAL,
+        gap: OFFSET.POINT * 3,
+        marginBottom: OFFSET.VERTICAL * 2,
     },
     option: {
         minHeight: 48,
@@ -270,8 +295,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     label: {
-        marginBottom: OFFSET.POINT,
-        fontSize: 22
+        fontSize: 22,
+        marginBottom: OFFSET.POINT * 2,
     },
     messageBox: {
         borderWidth: 1,
@@ -291,7 +316,7 @@ const styles = StyleSheet.create({
     },
     attachments: {
         gap: OFFSET.POINT * 2,
-        marginTop: OFFSET.VERTICAL,
+        marginTop: OFFSET.VERTICAL * 1.5,
     },
     attachmentRow: {
         borderWidth: 1,
@@ -310,14 +335,19 @@ const styles = StyleSheet.create({
     busy: {
         alignSelf: 'flex-start',
     },
+    footer: {
+        paddingTop: OFFSET.POINT * 2,
+        paddingBottom: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL,
+    },
     submit: {
-        width: '42%',
-        borderRadius: 25,
-        alignSelf: 'flex-end',
-        marginTop: OFFSET.VERTICAL * 1.5,
+        width: '90%',
+        borderWidth: 2,
+        borderRadius: 30,
+        alignSelf: 'center',
     },
     submitText: {
-        fontSize: 20
+        fontSize: 16,
     },
     iconSize: {
         width: 50,
