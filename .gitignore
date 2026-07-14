@@ -84,3 +84,6 @@ yarn-error.log
 # Claude Code (local agent instructions / notes)
 CLAUDE.md
 .claude/
+
+.cursor/hooks/hooks.log
+.native-backups/

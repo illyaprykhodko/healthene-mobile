@@ -43,8 +43,6 @@
 		8718D080F10B4156A7A6D697 /* Outfit-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C21F33B2FCFB418F88C52555 /* Outfit-ExtraLight.ttf */; };
 		A2C2A6B938BF41A291054053 /* icomoon.eot in Resources */ = {isa = PBXBuildFile; fileRef = F7E0DDAB33F3407F8137D738 /* icomoon.eot */; };
 		AAB311E0ABBA47F5827B08D0 /* NunitoSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4394A60DA0674554974B7969 /* NunitoSans-Regular.ttf */; };
-		B7355F69AFDBB19776494A1C /* libPods-Healthene.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C508E6979759EC39730F275B /* libPods-Healthene.a */; };
-		ADAB1B6D08D648A789EA2293 /* Outfit-VariableFont_wght.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 898CA87DBEB142DDBFAC3F35 /* Outfit-VariableFont_wght.ttf */; };
 		BBD971098C904D25956B7208 /* icomoon.svg in Resources */ = {isa = PBXBuildFile; fileRef = 8E9CE330C5584C06B9A13F50 /* icomoon.svg */; };
 		BE140B0A2D114FD882470720 /* Outfit-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D6B118AE5C97473FB719E97F /* Outfit-Black.ttf */; };
 		D5FB69660D62417A9797E990 /* Outfit-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 06C5D465D67047B59EA3EED2 /* Outfit-Regular.ttf */; };
@@ -579,10 +577,7 @@
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
-				);
+				OTHER_CFLAGS = "$(inherited)";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DFOLLY_NO_CONFIG",
@@ -590,7 +585,6 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -657,10 +651,7 @@
 					"\"$(inherited)\"",
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
-				);
+				OTHER_CFLAGS = "$(inherited)";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DFOLLY_NO_CONFIG",
@@ -668,7 +659,6 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
