@@ -6,9 +6,10 @@ import {
     useVideoOutput,
     useCameraDevice,
     Camera as RNCamera,
-    type CameraPosition,
     useCameraPermission,
+    type CameraPosition,
     useMicrophonePermission,
+    type TargetCameraPosition,
 } from 'react-native-vision-camera';
 import Toast from 'react-native-toast-message';
 import { useIsFocused } from '@react-navigation/native';
@@ -71,7 +72,12 @@ const Camera = ({ cameraPosition = 'back', captureMode = 'photo', onCapture }: C
     const camera = useRef<CameraRef>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [result, setResult] = useState<CapturedMedia | null>(null);
-    const [position, setPosition] = useState<CameraPosition>(cameraPosition);
+    // vision-camera 5.1: useCameraDevice now takes TargetCameraPosition (front/back/external,
+    // no 'unspecified'). Coerce the incoming CameraPosition prop to a concrete target, defaulting
+    // to the back camera.
+    const [position, setPosition] = useState<TargetCameraPosition>(
+        cameraPosition === 'front' || cameraPosition === 'external' ? cameraPosition : 'back',
+    );
     const recordingStartRef = useRef<number | null>(null);
     const recorderRef = useRef<Recorder | null>(null);
     const permissionsRequestedRef = useRef(false);
