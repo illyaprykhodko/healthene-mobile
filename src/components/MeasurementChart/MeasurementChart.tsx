@@ -1,8 +1,8 @@
 // outsource dependencies
 import moment from 'moment';
 import { View, StyleSheet } from 'react-native';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { usePanGesture, GestureDetector } from 'react-native-gesture-handler';
 // local dependencies
 import DateTabs from './DateTabs';
 import Text from 'components/Text';
@@ -72,12 +72,9 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
     // }, [initialDate]);
 
     // Handle swipe gesture
-    const onPanGesture = useCallback(
-        (event: any) => {
-            if (!event?.nativeEvent) { return; }
-            const { translationX, state } = event.nativeEvent;
-
-            if (Math.abs(translationX) > 50 && Math.abs(translationX) < 300 && state === State.END) {
+    const onSwipeEnd = useCallback(
+        (translationX: number) => {
+            if (Math.abs(translationX) > 50 && Math.abs(translationX) < 300) {
                 setTooltip(null);
                 // let newDate: string | undefined;
                 let newStart = currentStart;
@@ -157,6 +154,14 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
         [activeTab, currentStart, currentEnd, onDateChange, currentDate]
     );
 
+    // gesture-handler 3: hook-based API (usePanGesture) replaces the deprecated
+    // PanGestureHandler / Gesture.Pan() builder. runOnJS keeps the swipe handler on
+    // the JS thread (it calls setState / date logic).
+    const panGesture = usePanGesture({
+        runOnJS: true,
+        onDeactivate: event => onSwipeEnd(event.translationX),
+    });
+
     const handleTabChange = useCallback(
         (tab: MeasurementTab) => {
             setTooltip(null);
@@ -195,7 +200,7 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
         [restData, activeTab, isBloodPressure, currentDate]
     );
     return (
-        <PanGestureHandler onHandlerStateChange={onPanGesture}>
+        <GestureDetector gesture={panGesture}>
             <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
                 <Text style={[styles.title, { color: theme.colors.textSecondary }]}>{filters.humanize(measurementType)}</Text>
                 <DateTabs
@@ -229,7 +234,7 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
                 />
                 <ShowAllDataButton onPress={onShowAllData} />
             </View>
-        </PanGestureHandler>
+        </GestureDetector>
     );
 };
 

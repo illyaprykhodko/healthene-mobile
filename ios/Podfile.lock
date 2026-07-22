@@ -2407,7 +2407,7 @@ PODS:
     - ReactNativeDependencies
     - RNFBApp
     - Yoga
-  - RNGestureHandler (2.31.2):
+  - RNGestureHandler (3.1.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -3405,7 +3405,7 @@ SPEC CHECKSUMS:
   RNDeviceInfo: d79872e11c8e9c4de0d65b0ee6e0cee719f37fea
   RNFBApp: 36eb434d58b125bdc63797c78ca67d2648f9cdb2
   RNFBMessaging: 0b04592f48e374bb77b9b7ca965ddc2711c76409
-  RNGestureHandler: bd2518f9ea3458cb42cc677bdcbc3fb1ea520bd5
+  RNGestureHandler: 8b74b172712b841c9fe2e59090302ac945f53c1c
   RNImageCropPicker: 0a8538990beab4109b7068b871ae4b625440c08e
   RNKeychain: 91be81cd32b30c7d4c2569dcad29b472d9b93982
   RNNotifee: 4a6ee5c7deaf00e005050052d73ee6315dff7ec9
