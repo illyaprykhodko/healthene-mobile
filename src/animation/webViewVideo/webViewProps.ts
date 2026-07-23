@@ -1,4 +1,4 @@
-import type { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
+import type { WebViewMessageEvent } from 'react-native-webview';
 
 export function createWebViewVideoCommonProps (onMessage: (event: WebViewMessageEvent) => void) {
     return {
