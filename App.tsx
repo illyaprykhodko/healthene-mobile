@@ -11,6 +11,7 @@ import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import { Platform, StyleSheet } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets, EdgeInsets } from 'react-native-safe-area-context';
 // local dependencies
@@ -124,11 +125,13 @@ function App (): React.JSX.Element {
         <Provider store={store}>
             <SafeAreaProvider>
                 <GestureHandlerRootView style={styles.flex}>
-                    <BottomSheetModalProvider>
-                        <ThemeProvider>
-                            <AppContent />
-                        </ThemeProvider>
-                    </BottomSheetModalProvider>
+                    <KeyboardProvider>
+                        <BottomSheetModalProvider>
+                            <ThemeProvider>
+                                <AppContent />
+                            </ThemeProvider>
+                        </BottomSheetModalProvider>
+                    </KeyboardProvider>
                 </GestureHandlerRootView>
             </SafeAreaProvider>
             <Toast />

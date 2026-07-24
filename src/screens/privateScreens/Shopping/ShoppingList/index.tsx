@@ -1,11 +1,11 @@
 // outsource dependencies
 import moment from 'moment';
 import Icon from '@react-native-vector-icons/feather';
-import { KeyboardAwareSectionList } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal, RefreshControl } from 'react-native';
 import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { useNavigation, useRoute, useIsFocused, StackActions } from '@react-navigation/native';
+import { StyleSheet, View, TouchableOpacity, Modal, RefreshControl, SectionList } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text';
@@ -607,48 +607,48 @@ const ShoppingList: React.FC = () => {
                     subtitle="Items you add will show up here, grouped by aisle."
                 />
             ) : (
-                <KeyboardAwareSectionList
-                    enableOnAndroid
-                    ref={sectionListRef}
-                    sections={groupedList}
-                    extraScrollHeight={120}
-                    keyboardOpeningTime={0}
-                    stickySectionHeadersEnabled
-                    keyboardShouldPersistTaps="handled"
-                    renderSectionHeader={renderSectionHeader}
-                    keyExtractor={(item, index) => `${item.id}_${index}`}
-                    contentContainerStyle={{ paddingBottom: bottomBarHeight }}
-                    renderItem={({ item, index }) => (
-                        <Animated.View
-                            exiting={FadeOut.duration(220)}
-                            layout={LinearTransition.springify().damping(20)}
-                            entering={FadeInDown.delay(Math.min(index, 10) * 80).springify().mass(1.2).damping(30)}
-                        >
-                            <ShoppingItem
-                                item={item}
-                                status={status}
-                                disabled={isLoading}
-                                isConfirmed={isConfirmed}
-                                onUpdate={handleUpdateItem}
-                                onAmountFocus={handleAmountFocus}
-                            />
-                        </Animated.View>
-                    )}
-                    onEndReached={() => {
-                        if (listData && !isFetching && page + 1 < listData.totalPages) {
-                            setPage(p => p + 1);
-                        }
-                    }}
-                    onEndReachedThreshold={0.25}
-                    refreshControl={
-                        <RefreshControl
+                <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+                    <SectionList
+                        ref={sectionListRef}
+                        sections={groupedList}
+
+                        stickySectionHeadersEnabled
+                        onEndReachedThreshold={0.25}
+                        keyboardShouldPersistTaps="handled"
+                        renderSectionHeader={renderSectionHeader}
+                        keyExtractor={(item, index) => `${item.id}_${index}`}
+                        contentContainerStyle={{ paddingBottom: bottomBarHeight }}
+                        renderItem={({ item, index }) => (
+                            <Animated.View
+                                exiting={FadeOut.duration(220)}
+                                layout={LinearTransition.springify().damping(20)}
+                                entering={FadeInDown.delay(Math.min(index, 10) * 80).springify().mass(1.2).damping(30)}
+                            >
+                                <ShoppingItem
+                                    item={item}
+                                    status={status}
+                                    disabled={isLoading}
+                                    isConfirmed={isConfirmed}
+                                    onUpdate={handleUpdateItem}
+                                    onAmountFocus={handleAmountFocus}
+                                />
+                            </Animated.View>
+                        )}
+                        onEndReached={() => {
+                            if (listData && !isFetching && page + 1 < listData.totalPages) {
+                                setPage(p => p + 1);
+                            }
+                        }}
+                        refreshControl={
+                            <RefreshControl
                             // isFetching is true on initial load AND on refetch — gating on !isLoading
                             // hides the spinner during first mount (we already show the skeleton screen there).
-                            refreshing={isFetching && !isLoading}
-                            onRefresh={refetch}
-                        />
-                    }
-                />
+                                refreshing={isFetching && !isLoading}
+                                onRefresh={refetch}
+                            />
+                        }
+                    />
+                </KeyboardAvoidingView>
             )}
             <GlassSurface
                 intensity={5}

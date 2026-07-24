@@ -4,8 +4,8 @@ import { Formik, FormikHelpers } from 'formik';
 import React, { memo, useCallback } from 'react';
 import Icon from '@react-native-vector-icons/fontisto';
 import { useNavigation } from '@react-navigation/native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // local dependencies
 import Text from 'components/Text';

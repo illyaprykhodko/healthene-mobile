@@ -3,8 +3,8 @@ import moment from 'moment';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { Pressable, StyleSheet, View, Alert } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // local dependencies
 import Text from 'components/Text';
