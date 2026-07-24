@@ -3,7 +3,7 @@
  */
 // outsource dependencies
 import { AppRegistry } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
+import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 
 // local dependencies
 import App from './App';
@@ -14,7 +14,7 @@ import notificationService from './src/services/notifications/notification.servi
 // — the handler MUST live in `index.js` (registered before AppRegistry) to
 // silence the "No background message handler" RNFirebase warning and to make
 // sure Android still shows a heads-up notification when the app is killed.
-messaging().setBackgroundMessageHandler(async remoteMessage => {
+setBackgroundMessageHandler(getMessaging(), async remoteMessage => {
     await notificationService.handleBackgroundMessage(remoteMessage);
 });
 
