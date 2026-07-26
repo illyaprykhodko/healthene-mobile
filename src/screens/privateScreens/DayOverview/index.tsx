@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import moment from 'moment';
+import dayjs from 'services/date';
 import { useNavigation } from '@react-navigation/native';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -63,12 +63,12 @@ const DayOverviewStack: React.FC = () => {
 
     const dispatch = useAppDispatch();
     const { date, expectAnswer } = useAppSelector(selectDayOverview);
-    const currentDate = date || moment().format('YYYY-MM-DD');
+    const currentDate = date || dayjs().format('YYYY-MM-DD');
 
     const handleDateChange = (nextDate: string) => {
-        const isCurrent = moment(nextDate).isSame(moment(), 'day');
-        const isFuture = moment(nextDate).isAfter(moment(), 'day');
-        const isPast = moment(nextDate).isBefore(moment(), 'day');
+        const isCurrent = dayjs(nextDate).isSame(dayjs(), 'day');
+        const isFuture = dayjs(nextDate).isAfter(dayjs(), 'day');
+        const isPast = dayjs(nextDate).isBefore(dayjs(), 'day');
         dispatch(
             meta({
                 date: nextDate,

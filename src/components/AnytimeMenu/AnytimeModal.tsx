@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
@@ -89,7 +89,7 @@ export const AnytimeModal: React.FC<AnytimeModalProps> = ({
                 onClose();
                 navigation.navigate(ROUTES.WEIGHT_MEASUREMENT, {
                     measurementPhaseItem: item,
-                    date: date || moment().format('YYYY-MM-DD'),
+                    date: date || dayjs().format('YYYY-MM-DD'),
                 });
                 return;
             }

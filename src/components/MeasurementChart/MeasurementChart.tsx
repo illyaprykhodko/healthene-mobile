@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import { View, StyleSheet } from 'react-native';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { usePanGesture, GestureDetector } from 'react-native-gesture-handler';
@@ -55,7 +55,7 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
     startingValue = 0,
     showSummary = true,
     isBloodPressure = false,
-    currentDate = moment().format('YYYY-MM-DD'),
+    currentDate = dayjs().format('YYYY-MM-DD'),
     // BP-specific
     startingSystolic,
     startingDiastolic,
@@ -84,29 +84,29 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
                     // Swipe right - go back in time
                     switch (activeTab.name) {
                         case DATE_PERIOD.DAY:
-                            newDate = moment(currentDate).subtract(1, 'day').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).subtract(1, 'day').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).subtract(1, 'day').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).subtract(1, 'day').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).subtract(1, 'day').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).subtract(1, 'day').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.WEEK:
-                            newDate = moment(currentDate).subtract(1, 'week').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).subtract(1, 'week').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).subtract(1, 'week').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).subtract(1, 'week').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).subtract(1, 'week').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).subtract(1, 'week').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.MONTH:
-                            newDate = moment(currentDate).subtract(1, 'month').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).subtract(1, 'month').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).subtract(1, 'month').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).subtract(1, 'month').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).subtract(1, 'month').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).subtract(1, 'month').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.SIX_MONTH:
-                            newDate = moment(currentDate).subtract(6, 'months').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).subtract(6, 'months').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).subtract(6, 'months').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).subtract(6, 'months').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).subtract(6, 'months').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).subtract(6, 'months').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.YEAR:
-                            newDate = moment(currentDate).subtract(1, 'year').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).subtract(1, 'year').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).subtract(1, 'year').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).subtract(1, 'year').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).subtract(1, 'year').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).subtract(1, 'year').format('YYYY-MM-DD');
                             break;
                         default:
                             console.error(`Unknown tab: ${activeTab.name}`);
@@ -116,29 +116,29 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
                     // Swipe left - go forward in time
                     switch (activeTab.name) {
                         case DATE_PERIOD.DAY:
-                            newDate = moment(currentDate).add(1, 'day').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).add(1, 'day').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).add(1, 'day').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).add(1, 'day').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).add(1, 'day').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).add(1, 'day').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.WEEK:
-                            newDate = moment(currentDate).add(1, 'week').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).add(1, 'week').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).add(1, 'week').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).add(1, 'week').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).add(1, 'week').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).add(1, 'week').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.MONTH:
-                            newDate = moment(currentDate).add(1, 'month').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).add(1, 'month').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).add(1, 'month').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).add(1, 'month').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).add(1, 'month').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).add(1, 'month').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.SIX_MONTH:
-                            newDate = moment(currentDate).add(6, 'months').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).add(6, 'months').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).add(6, 'months').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).add(6, 'months').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).add(6, 'months').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).add(6, 'months').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.YEAR:
-                            newDate = moment(currentDate).add(1, 'year').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).add(1, 'year').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).add(1, 'year').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).add(1, 'year').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).add(1, 'year').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).add(1, 'year').format('YYYY-MM-DD');
                             break;
                         default:
                             console.error(`Unknown tab: ${activeTab.name}`);

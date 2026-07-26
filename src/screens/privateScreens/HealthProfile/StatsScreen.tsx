@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { Pressable, StyleSheet, View, Alert } from 'react-native';
@@ -121,10 +121,10 @@ const validateForm = (values: FormData): FormErrors => {
     if (!values.birthday) {
         errors.birthday = 'Date of birth is required';
     } else {
-        const parsed = moment(values.birthday, DATE_FORMAT, true);
+        const parsed = dayjs(values.birthday, DATE_FORMAT, true);
         if (!parsed.isValid()) {
             errors.birthday = 'Date of birth is invalid';
-        } else if (parsed.isAfter(moment(), 'day')) {
+        } else if (parsed.isAfter(dayjs(), 'day')) {
             errors.birthday = 'Date of birth can\'t be in the future';
         }
     }
@@ -164,7 +164,7 @@ const StatsScreen: React.FC = () => {
     useEffect(() => {
         if (user) {
             const userData = user as any;
-            const birthdayMoment = userData.birthday ? moment(userData.birthday) : null;
+            const birthdayMoment = userData.birthday ? dayjs(userData.birthday) : null;
             setFormData({
                 gender: userData.gender ?? '',
                 heightFt: userData.heightFt?.toString() ?? '',
@@ -303,7 +303,7 @@ const StatsScreen: React.FC = () => {
                             >
                                 <Text color={formData.birthday ? theme.colors.text : theme.colors.grey}>
                                     {formData.birthday
-                                        ? moment(formData.birthday, DATE_FORMAT).format(DATE_DISPLAY_FORMAT)
+                                        ? dayjs(formData.birthday, DATE_FORMAT).format(DATE_DISPLAY_FORMAT)
                                         : 'Select date of birth'}
                                 </Text>
                             </Pressable>

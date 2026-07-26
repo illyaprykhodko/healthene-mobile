@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import { useNavigation } from '@react-navigation/native';
 import React, { useMemo, useCallback, memo } from 'react';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -70,7 +70,7 @@ const MyResultsScreen: React.FC = () => {
 
     // Query params for measurement types
     const queryArgs = useMemo(() => ({
-        dateTime: moment().format(),
+        dateTime: dayjs().format(),
         period: '1-year',
     }), []);
 

@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import Icon from '@react-native-vector-icons/feather';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -182,8 +182,8 @@ const ShoppingList: React.FC = () => {
     useEffect(() => {
         if (datesData && isFocused) {
             dispatch(setShoppingListDates({
-                from: moment(datesData.startDate).format('MMM DD'),
-                to: moment(datesData.endDate).format('DD'),
+                from: dayjs(datesData.startDate).format('MMM DD'),
+                to: dayjs(datesData.endDate).format('DD'),
             }));
         }
     }, [datesData, isFocused, dispatch]);
@@ -409,8 +409,8 @@ const ShoppingList: React.FC = () => {
     }, [shoppingListId, separateRescueItems, buildShopOnMyOwnPayload, updateShoppingListStatus, dispatch, navigation]);
 
     const handlePrint = useCallback(() => {
-        const endDate = moment().endOf('week').format('YYYY-MM-DD');
-        const startDate = moment().startOf('week').format('YYYY-MM-DD');
+        const endDate = dayjs().endOf('week').format('YYYY-MM-DD');
+        const startDate = dayjs().startOf('week').format('YYYY-MM-DD');
         navigation.navigate(ROUTES.SHOPPING_PDF, { date: { endDate, startDate } });
     }, [navigation]);
 

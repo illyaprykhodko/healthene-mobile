@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import React, { useState, useCallback, useEffect } from 'react';
 import {
     View,
@@ -54,7 +54,7 @@ const AllRecordedData: React.FC<AllRecordedDataProps> = ({
                 const newRecords = (response?.content || []).map((item: any) => ({
                     id: String(item?.id),
                     value: `${(item?.values?.[0]?.value || 0).toFixed(0)} ${item?.values?.[0]?.measurementUnit?.name || ''}`,
-                    date: moment(item?.timestamp).format('MMM DD, YYYY [at] h:mm A'),
+                    date: dayjs(item?.timestamp).format('MMM DD, YYYY [at] h:mm A'),
                 }));
 
                 if (pageNumber === 0) {

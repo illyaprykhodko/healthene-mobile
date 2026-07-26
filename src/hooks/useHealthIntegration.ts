@@ -3,7 +3,7 @@
  * Platform-aware hook for Apple Health / Google Fit integration
  */
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import { Platform } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 // local dependencies
@@ -95,7 +95,7 @@ export const useHealthIntegration = (): UseHealthIntegrationReturn => {
             setError(null);
 
             try {
-                const today = moment();
+                const today = dayjs();
                 const dateRange: DateRange = {
                     startDate: today.startOf('day').toISOString(),
                     endDate: today.endOf('day').toISOString(),
@@ -134,7 +134,7 @@ export const useHealthIntegration = (): UseHealthIntegrationReturn => {
             setError(null);
 
             try {
-                const today = moment();
+                const today = dayjs();
                 const dateRange: DateRange = {
                     startDate: today.startOf('day').toISOString(),
                     endDate: today.endOf('day').toISOString(),

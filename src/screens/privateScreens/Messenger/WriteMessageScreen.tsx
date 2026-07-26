@@ -1,7 +1,7 @@
 // outsource dependencies
 import * as yup from 'yup';
-import moment from 'moment';
 import { Formik } from 'formik';
+import dayjs from 'services/date';
 import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import { useDispatch, useSelector } from 'react-redux';
@@ -182,7 +182,7 @@ const WriteMessageScreen = () => {
                 type: file.type ?? 'application/octet-stream',
             });
             formData.append('title', file.name);
-            formData.append('description', moment().format());
+            formData.append('description', dayjs().format());
             const attachment = await uploadFile({ body: formData }).unwrap();
             dispatch(setAttachment(attachment));
             Toast.show({

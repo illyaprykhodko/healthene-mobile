@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 // local dependencies
 import type {
     HealthSample,
@@ -20,7 +20,7 @@ export const buildManualPayload = (
     values: Record<string, any>,
     unitIds?: UnitIds,
 ): MeasurementPayload => {
-    const now = moment().format();
+    const now = dayjs().format();
     if (type === 'BLOOD_PRESSURE') {
         const systolicUnitId = unitIds?.systolicUnitId || MEASUREMENT_UNIT_IDS.SYSTOLIC_MMHG;
         const diastolicUnitId = unitIds?.diastolicUnitId || MEASUREMENT_UNIT_IDS.DIASTOLIC_MMHG;

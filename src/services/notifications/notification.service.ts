@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import { Platform, Linking } from 'react-native';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 import {
@@ -185,7 +185,7 @@ class NotificationService {
         }
 
         if (isWeightDeepLink(deepLink)) {
-            const date = moment().format('YYYY-MM-DD');
+            const date = dayjs().format('YYYY-MM-DD');
             navigationRef.navigate(ROUTES.WEIGHT_MEASUREMENT, { date });
             return;
         }
