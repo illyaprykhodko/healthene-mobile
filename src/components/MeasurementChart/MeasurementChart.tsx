@@ -6,9 +6,9 @@ import { usePanGesture, GestureDetector } from 'react-native-gesture-handler';
 // local dependencies
 import DateTabs from './DateTabs';
 import Text from 'components/Text';
+import SkiaChart from './SkiaChart';
 import { useTheme } from 'hooks/useTheme';
 import { filters } from 'services/filter';
-import ChartRenderer from './ChartRenderer';
 import { prepareChartData } from './chart-helpers';
 import ShowAllDataButton from './ShowAllDataButton';
 import MeasurementSummary from './MeasurementSummary';
@@ -223,7 +223,7 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
                         unit={currentValue?.unit || ''}
                     />
                 )}
-                <ChartRenderer
+                <SkiaChart
                     tooltip={tooltip}
                     points={chartPoints}
                     activeTab={activeTab}
