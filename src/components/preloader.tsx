@@ -1,7 +1,7 @@
 // outsource dependencies
 import React, { PureComponent } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { SkypeIndicator, MaterialIndicator } from 'react-native-indicators';
+import { SkypeIndicator, MaterialIndicator } from 'components/Indicators';
 // local dependencies
 import Text from './Text';
 import { useTheme } from '../hooks/useTheme';

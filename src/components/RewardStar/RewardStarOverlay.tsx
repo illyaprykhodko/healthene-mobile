@@ -541,7 +541,7 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({
 
 const styles = StyleSheet.create({
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         zIndex: 50,
     },
     starWrap: {

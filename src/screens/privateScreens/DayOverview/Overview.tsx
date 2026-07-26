@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
         minHeight: 0,
     },
     birdOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         zIndex: 2,
     },
     calendarBtn: {
@@ -972,10 +972,10 @@ export const Overview: React.FC = () => {
             }
             if (phase.status === PHASE_ITEM_STATUS.DONE) {
                 (navigation as any).navigate('SaveValue', {
+                    date: currentDate,
                     measurementType: measurement?.type,
                     measurementName: measurement?.name,
                     measurementPhaseItem: { ...phase, measurement },
-                    date: currentDate,
                 });
                 return;
             }

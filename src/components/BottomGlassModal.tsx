@@ -87,7 +87,7 @@ export const BottomGlassModal: React.FC<BottomGlassModalProps> = ({
 
 const styles = StyleSheet.create({
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         zIndex: 999,
     },
     modal: {

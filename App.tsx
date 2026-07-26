@@ -77,7 +77,8 @@ function AppContent (): React.JSX.Element {
         });
     }, [dispatch]);
     // const { isInitializing, isHealthy, isHealthLoading } = useAppInitialization();
-    const { isInitializing } = useAppInitialization();
+    const { isInitializing, isHealthy } = useAppInitialization();
+    
     const {
         softPolicy,
         openStore,
@@ -101,7 +102,7 @@ function AppContent (): React.JSX.Element {
     }, []);
     // if (isHealthLoading) { return <BoxHolder active />; }
     if (isInitializing) { return <BoxHolder active />; }
-    // if (!isHealthy) { return <MaintenanceHolder active />; }
+    if (!isHealthy) { return <MaintenanceHolder active />; }
     if (forcePolicy) { return <ForceUpdateScreen policy={forcePolicy} onUpdate={openStore} />; }
     return (
         <SafeAreaView style={[styles.safeArea, styles.flex, { backgroundColor: theme.colors.background }]}>
