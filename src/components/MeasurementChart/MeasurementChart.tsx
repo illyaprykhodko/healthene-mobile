@@ -1,31 +1,42 @@
 // outsource dependencies
-import dayjs from 'services/date';
 import { View, StyleSheet } from 'react-native';
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { usePanGesture, GestureDetector } from 'react-native-gesture-handler';
+import React, { useCallback, useMemo } from 'react';
 // local dependencies
 import DateTabs from './DateTabs';
 import Text from 'components/Text';
-import SkiaChart from './SkiaChart';
 import { useTheme } from 'hooks/useTheme';
 import { filters } from 'services/filter';
+import ChartCarousel from './ChartCarousel';
 import { prepareChartData } from './chart-helpers';
 import ShowAllDataButton from './ShowAllDataButton';
 import MeasurementSummary from './MeasurementSummary';
 import BloodPressureSummary from './BloodPressureSummary';
-import { DATE_PERIOD, type MeasurementTab } from 'constants/measurement-chart';
+import { type MeasurementTab, type DatePeriod } from 'constants/measurement-chart';
+
+// One loaded period page in the virtualized window (raw, pre-coordinate-mapping).
+interface RawPage {
+    k: number;
+    date: string;
+    restData: any[];
+    chartData: any[];
+    tab: MeasurementTab;
+    isLoading?: boolean;
+}
 
 interface MeasurementChartProps {
-    data: any[];
-    restData?: any[]; // For blood pressure diastolic
+    maxK: number;
+    anchorK: number;
+    pages: RawPage[];
+    period: DatePeriod;
+    currentDate: string;
     totalChange?: number;
-    currentDate?: string; // Date from parent component
     showSummary?: boolean;
     startingValue?: number;
     measurementType: string;
-    isBloodPressure?: boolean;
     activeTab: MeasurementTab;
+    isBloodPressure?: boolean;
     onShowAllData: () => void;
+    onAnchorChange: (k: number) => void;
     onTabChange: (tab: MeasurementTab) => void;
     currentValue?: {
         unit: string;
@@ -34,8 +45,7 @@ interface MeasurementChartProps {
         diastolic?: number;
         isBloodPressure?: boolean;
     };
-    onDateChange: (date: string, period: MeasurementTab['name']) => void;
-    // BP-specific props
+    // BP-specific
     startingSystolic?: number;
     startingDiastolic?: number;
     totalChangeSystolic?: number;
@@ -43,198 +53,71 @@ interface MeasurementChartProps {
 }
 
 const MeasurementChart: React.FC<MeasurementChartProps> = ({
-    data,
+    maxK,
+    pages,
+    period,
+    anchorK,
     activeTab,
     onTabChange,
+    currentDate,
     currentValue,
-    onDateChange,
-    restData = [],
+    onAnchorChange,
     onShowAllData,
     totalChange = 0,
     measurementType,
     startingValue = 0,
-    showSummary = true,
     isBloodPressure = false,
-    currentDate = dayjs().format('YYYY-MM-DD'),
-    // BP-specific
     startingSystolic,
     startingDiastolic,
     totalChangeSystolic,
     totalChangeDiastolic,
 }) => {
     const theme = useTheme();
-    const [tooltip, setTooltip] = useState<any | null>(null);
-    const currentStart = activeTab.options.startDate;
-    const currentEnd = activeTab.options.endDate;
-    // Sync internal date state with prop
-    // useEffect(() => {
-    //     setDate(initialDate);
-    // }, [initialDate]);
 
-    // Handle swipe gesture
-    const onSwipeEnd = useCallback(
-        (translationX: number) => {
-            if (Math.abs(translationX) > 50 && Math.abs(translationX) < 300) {
-                setTooltip(null);
-                // let newDate: string | undefined;
-                let newStart = currentStart;
-                let newEnd = currentEnd;
-                let newDate = currentDate;
-                if (translationX > 0) {
-                    // Swipe right - go back in time
-                    switch (activeTab.name) {
-                        case DATE_PERIOD.DAY:
-                            newDate = dayjs(currentDate).subtract(1, 'day').format('YYYY-MM-DD');
-                            newStart = dayjs(currentStart).subtract(1, 'day').format('YYYY-MM-DD');
-                            newEnd = dayjs(currentEnd).subtract(1, 'day').format('YYYY-MM-DD');
-                            break;
-                        case DATE_PERIOD.WEEK:
-                            newDate = dayjs(currentDate).subtract(1, 'week').format('YYYY-MM-DD');
-                            newStart = dayjs(currentStart).subtract(1, 'week').format('YYYY-MM-DD');
-                            newEnd = dayjs(currentEnd).subtract(1, 'week').format('YYYY-MM-DD');
-                            break;
-                        case DATE_PERIOD.MONTH:
-                            newDate = dayjs(currentDate).subtract(1, 'month').format('YYYY-MM-DD');
-                            newStart = dayjs(currentStart).subtract(1, 'month').format('YYYY-MM-DD');
-                            newEnd = dayjs(currentEnd).subtract(1, 'month').format('YYYY-MM-DD');
-                            break;
-                        case DATE_PERIOD.SIX_MONTH:
-                            newDate = dayjs(currentDate).subtract(6, 'months').format('YYYY-MM-DD');
-                            newStart = dayjs(currentStart).subtract(6, 'months').format('YYYY-MM-DD');
-                            newEnd = dayjs(currentEnd).subtract(6, 'months').format('YYYY-MM-DD');
-                            break;
-                        case DATE_PERIOD.YEAR:
-                            newDate = dayjs(currentDate).subtract(1, 'year').format('YYYY-MM-DD');
-                            newStart = dayjs(currentStart).subtract(1, 'year').format('YYYY-MM-DD');
-                            newEnd = dayjs(currentEnd).subtract(1, 'year').format('YYYY-MM-DD');
-                            break;
-                        default:
-                            console.error(`Unknown tab: ${activeTab.name}`);
-                            break;
-                    }
-                } else if (translationX < 0) {
-                    // Swipe left - go forward in time
-                    switch (activeTab.name) {
-                        case DATE_PERIOD.DAY:
-                            newDate = dayjs(currentDate).add(1, 'day').format('YYYY-MM-DD');
-                            newStart = dayjs(currentStart).add(1, 'day').format('YYYY-MM-DD');
-                            newEnd = dayjs(currentEnd).add(1, 'day').format('YYYY-MM-DD');
-                            break;
-                        case DATE_PERIOD.WEEK:
-                            newDate = dayjs(currentDate).add(1, 'week').format('YYYY-MM-DD');
-                            newStart = dayjs(currentStart).add(1, 'week').format('YYYY-MM-DD');
-                            newEnd = dayjs(currentEnd).add(1, 'week').format('YYYY-MM-DD');
-                            break;
-                        case DATE_PERIOD.MONTH:
-                            newDate = dayjs(currentDate).add(1, 'month').format('YYYY-MM-DD');
-                            newStart = dayjs(currentStart).add(1, 'month').format('YYYY-MM-DD');
-                            newEnd = dayjs(currentEnd).add(1, 'month').format('YYYY-MM-DD');
-                            break;
-                        case DATE_PERIOD.SIX_MONTH:
-                            newDate = dayjs(currentDate).add(6, 'months').format('YYYY-MM-DD');
-                            newStart = dayjs(currentStart).add(6, 'months').format('YYYY-MM-DD');
-                            newEnd = dayjs(currentEnd).add(6, 'months').format('YYYY-MM-DD');
-                            break;
-                        case DATE_PERIOD.YEAR:
-                            newDate = dayjs(currentDate).add(1, 'year').format('YYYY-MM-DD');
-                            newStart = dayjs(currentStart).add(1, 'year').format('YYYY-MM-DD');
-                            newEnd = dayjs(currentEnd).add(1, 'year').format('YYYY-MM-DD');
-                            break;
-                        default:
-                            console.error(`Unknown tab: ${activeTab.name}`);
-                            break;
-                    }
-                }
+    const handleTabChange = useCallback((tab: MeasurementTab) => onTabChange(tab), [onTabChange]);
 
-                if (newStart && newStart !== currentStart) {
-                    onDateChange(newDate, activeTab.name);
-                }
-            }
-        },
-        [activeTab, currentStart, currentEnd, onDateChange, currentDate]
-    );
-
-    // gesture-handler 3: hook-based API (usePanGesture) replaces the deprecated
-    // PanGestureHandler / Gesture.Pan() builder. runOnJS keeps the swipe handler on
-    // the JS thread (it calls setState / date logic).
-    const panGesture = usePanGesture({
-        runOnJS: true,
-        onDeactivate: event => onSwipeEnd(event.translationX),
-    });
-
-    const handleTabChange = useCallback(
-        (tab: MeasurementTab) => {
-            setTooltip(null);
-            onTabChange(tab);
-        },
-        [onTabChange]
-    );
-
-    // Prepare chart points with coordinates
-    const chartPoints = useMemo(
-        () => {
-            const points = prepareChartData(
-                data,
-                activeTab.name,
-                currentDate,
-                activeTab.count,
-                isBloodPressure,
-                restData
-            );
-            return points;
-        },
-        [data, activeTab, isBloodPressure, restData, currentDate]
-    );
-
-    const chartRestPoints = useMemo(
+    // Map each raw page to chart coordinates using its own tab + date.
+    const chartPages = useMemo(
         () =>
-            (isBloodPressure && restData.length > 0
-                ? prepareChartData(
-                    restData,
-                    activeTab.name,
-                    currentDate,
-                    activeTab.count,
-                    false
-                )
-                : []),
-        [restData, activeTab, isBloodPressure, currentDate]
+            pages.map(p => ({
+                k: p.k,
+                tab: p.tab,
+                isLoading: p.isLoading,
+                chartData: prepareChartData(p.chartData, p.tab.name, p.date, p.tab.count, isBloodPressure, p.restData),
+                restData:
+                    isBloodPressure && p.restData.length > 0
+                        ? prepareChartData(p.restData, p.tab.name, p.date, p.tab.count, false)
+                        : [],
+            })),
+        [pages, isBloodPressure]
     );
+
     return (
-        <GestureDetector gesture={panGesture}>
-            <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-                <Text style={[styles.title, { color: theme.colors.textSecondary }]}>{filters.humanize(measurementType)}</Text>
-                <DateTabs
-                    date={currentDate}
-                    activeTab={activeTab}
-                    onTabChange={handleTabChange}
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <Text style={[styles.title, { color: theme.colors.textSecondary }]}>{filters.humanize(measurementType)}</Text>
+            <DateTabs date={currentDate} activeTab={activeTab} onTabChange={handleTabChange} />
+            {isBloodPressure && startingSystolic !== undefined && startingDiastolic !== undefined ? (
+                <BloodPressureSummary
+                    unit={currentValue?.unit || 'mmHg'}
+                    startingSystolic={startingSystolic}
+                    startingDiastolic={startingDiastolic}
+                    totalChangeSystolic={totalChangeSystolic || 0}
+                    totalChangeDiastolic={totalChangeDiastolic || 0}
                 />
-                {isBloodPressure && startingSystolic !== undefined && startingDiastolic !== undefined ? (
-                    <BloodPressureSummary
-                        startingSystolic={startingSystolic}
-                        unit={currentValue?.unit || 'mmHg'}
-                        startingDiastolic={startingDiastolic}
-                        totalChangeSystolic={totalChangeSystolic || 0}
-                        totalChangeDiastolic={totalChangeDiastolic || 0}
-                    />
-                ) : (
-                    <MeasurementSummary
-                        totalChange={totalChange}
-                        startingValue={startingValue}
-                        unit={currentValue?.unit || ''}
-                    />
-                )}
-                <SkiaChart
-                    tooltip={tooltip}
-                    points={chartPoints}
-                    activeTab={activeTab}
-                    currentValue={currentValue}
-                    restPoints={chartRestPoints}
-                    isBloodPressure={isBloodPressure}
-                    onPointPress={point => setTooltip(point)}
-                />
-                <ShowAllDataButton onPress={onShowAllData} />
-            </View>
-        </GestureDetector>
+            ) : (
+                <MeasurementSummary totalChange={totalChange} startingValue={startingValue} unit={currentValue?.unit || ''} />
+            )}
+            <ChartCarousel
+                maxK={maxK}
+                period={period}
+                anchorK={anchorK}
+                pages={chartPages}
+                currentValue={currentValue}
+                onAnchorChange={onAnchorChange}
+                isBloodPressure={isBloodPressure}
+            />
+            <ShowAllDataButton onPress={onShowAllData} />
+        </View>
     );
 };
 
@@ -246,8 +129,8 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontWeight: '400',
         marginVertical: 5,
+        fontWeight: '400',
         alignSelf: 'center',
     },
 });

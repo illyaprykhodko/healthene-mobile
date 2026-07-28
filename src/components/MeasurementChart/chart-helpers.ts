@@ -40,14 +40,14 @@ export const getHorizontalLabels = (
         }
 
         case DATE_PERIOD.SIX_MONTH:
-            for (let i = count; i > 0; i--) {
-                labels.push(dayjs().month(dayjs(date).month() - i + 1).format('MMM'));
+            for (let i = count - 1; i >= 0; i--) {
+                labels.push(dayjs(date).subtract(i, 'month').format('MMM'));
             }
             break;
 
         case DATE_PERIOD.YEAR:
-            for (let i = count; i > 0; i--) {
-                labels.push(dayjs().month(dayjs(date).month() - i + 1).format('MMM'));
+            for (let i = count - 1; i >= 0; i--) {
+                labels.push(dayjs(date).subtract(i, 'month').format('MMM'));
             }
             break;
     }
@@ -107,11 +107,15 @@ export const calculateXCoordinate = (
     }
 
     switch (period) {
-        case DATE_PERIOD.DAY:
-            return (
-                Number(dayjs.utc(item?.fromDate).local().format('H'))
-                + Number(dayjs.utc(item?.fromDate).local().format('m')) / 60
-            );
+        case DATE_PERIOD.DAY: {
+            const local = dayjs.utc(item?.fromDate).local();
+            // Drop points that do not belong to this day (X is hour-only, so a foreign-day point would
+            // otherwise be pinned to its hour in the wrong column). NaN is filtered by the renderer.
+            if (local.format('YYYY-MM-DD') !== dayjs(date).format('YYYY-MM-DD')) {
+                return NaN;
+            }
+            return Number(local.format('H')) + Number(local.format('m')) / 60;
+        }
 
         case DATE_PERIOD.WEEK: {
             const labels = [];
@@ -129,7 +133,9 @@ export const calculateXCoordinate = (
             //     });
             // }
             
-            return labelIndex !== -1 ? labelIndex + 0.5 : 0;
+            // NaN when the point's date is not in this period → dropped by the renderer's finite check
+            // (prevents a foreign/boundary point from being pinned to slot 0 of the wrong period).
+            return labelIndex !== -1 ? labelIndex + 0.5 : NaN;
         }
 
         case DATE_PERIOD.MONTH: {
@@ -147,27 +153,21 @@ export const calculateXCoordinate = (
             //     });
             // }
             
-            return labelIndex !== -1 ? labelIndex : 0;
+            return labelIndex !== -1 ? labelIndex : NaN;
         }
 
         case DATE_PERIOD.SIX_MONTH:
         case DATE_PERIOD.YEAR: {
+            // Match by YEAR+MONTH relative to THIS column's date (not month-name off `dayjs()`), so the
+            // same month in two different years can't collapse onto one slot, and out-of-window months
+            // are dropped (NaN). Window = the `count` months ending at `date`.
             const labels = [];
-            for (let i = count; i > 0; i--) {
-                labels.push(dayjs().month(dayjs(date).month() - i + 1).format('MMMM'));
+            for (let i = count - 1; i >= 0; i--) {
+                labels.push(dayjs(date).subtract(i, 'month').format('YYYY-MM'));
             }
-            const itemMonth = item?.averageDate?.format('MMMM');
+            const itemMonth = item?.averageDate?.format('YYYY-MM');
             const labelIndex = labels.findIndex(label => label === itemMonth);
-            
-            // if (labelIndex === -1) {
-            //     console.warn('[calculateXCoordinate] SIX_MONTH/YEAR: Item not found in labels:', {
-            //         itemMonth,
-            //         labels,
-            //         averageDate: item?.averageDate?.format(),
-            //     });
-            // }
-            
-            return labelIndex !== -1 ? labelIndex + 0.5 : 0;
+            return labelIndex !== -1 ? labelIndex + 0.5 : NaN;
         }
 
         default:

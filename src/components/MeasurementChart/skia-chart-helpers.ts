@@ -9,6 +9,13 @@
 
 export type ScreenPoint = { x: number; y: number };
 
+/** A scrubbed point surfaced to the fixed chart header while dragging along the line. */
+export interface ScrubInfo {
+    date: string;
+    value: number;
+    value2?: number;
+}
+
 /**
  * Control points for Bezier smoothing between p1 → p2 (Catmull-Rom to Bezier, tension factor).
  */

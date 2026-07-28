@@ -60,7 +60,9 @@ export const getMeasurementTabs = (date: string = dayjs().format('YYYY-MM-DD')):
         },
     },
     {
-        count: dayjs(date).daysInMonth(),
+        // Number of day-slots covering the actual [date - 1 month … date] window (NOT daysInMonth of
+        // `date`), so the X-axis labels match the query range and no trailing-edge day is dropped.
+        count: dayjs(date).diff(dayjs(date).subtract(1, 'month'), 'day') + 1,
         short: 'M',
         name: DATE_PERIOD.MONTH,
         request: '1-month',
@@ -90,6 +92,30 @@ export const getMeasurementTabs = (date: string = dayjs().format('YYYY-MM-DD')):
         },
     },
 ];
+
+// Per-period step used to move to the previous/next period (carousel navigation).
+const PERIOD_STEP: Record<DatePeriod, { amount: number; unit: dayjs.ManipulateType }> = {
+    [DATE_PERIOD.DAY]: { amount: 1, unit: 'day' },
+    [DATE_PERIOD.WEEK]: { amount: 1, unit: 'week' },
+    [DATE_PERIOD.MONTH]: { amount: 1, unit: 'month' },
+    [DATE_PERIOD.SIX_MONTH]: { amount: 6, unit: 'month' },
+    [DATE_PERIOD.YEAR]: { amount: 1, unit: 'year' },
+};
+
+/**
+ * Shift a `YYYY-MM-DD` date by `n` periods (n may be negative = into the past, positive = future).
+ * Used to build the virtualized window of carousel pages around an anchor.
+ */
+export const shiftPeriodN = (date: string, period: DatePeriod, n: number): string => {
+    const { amount, unit } = PERIOD_STEP[period];
+    return dayjs(date).add(amount * n, unit).format('YYYY-MM-DD');
+};
+
+/**
+ * Shift a `YYYY-MM-DD` date by one period in the given direction (+1 = next / forward,
+ * -1 = previous / back).
+ */
+export const shiftPeriod = (date: string, period: DatePeriod, dir: 1 | -1): string => shiftPeriodN(date, period, dir);
 
 // Measurement source types
 export const MEASUREMENT_SOURCE = {
