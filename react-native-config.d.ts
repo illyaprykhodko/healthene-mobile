@@ -7,6 +7,7 @@ declare module 'react-native-config' {
         ENVIRONMENT: string;
         WEBSITE_URL: string;
         SERVICE_URL: string;
+        PUBLIC_SITE_URL: string;
         APP_DISPLAY_NAME: string;
         SENDER_FIREBASE_ID: number;
         GOOGLE_FIT_DATA_URL: string;

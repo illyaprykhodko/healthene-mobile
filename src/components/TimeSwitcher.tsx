@@ -48,9 +48,9 @@ const TimeSwitcherComponent: React.FC<TimeSwitcherProps> = ({
         <View style={styles.header}>
             <TouchableOpacity
                 onPress={handleLeftBtn}
+                disabled={disabled || isHideLeftBtn}
+                style={isHideLeftBtn && styles.invisibleBtn}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                disabled={disabled || isHideLeftBtn || disabledLeftBtn}
-                style={(isHideLeftBtn || disabledLeftBtn) && styles.invisibleBtn}
             >
                 <Icon
                     size={18}
@@ -67,9 +67,9 @@ const TimeSwitcherComponent: React.FC<TimeSwitcherProps> = ({
             </Text>
             <TouchableOpacity
                 onPress={handleRightBtn}
+                disabled={disabled || isHideRightBtn}
+                style={isHideRightBtn && styles.invisibleBtn}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                disabled={disabled || isHideRightBtn || disabledRightBtn}
-                style={(isHideRightBtn || disabledRightBtn) && styles.invisibleBtn}
             >
                 <Icon
                     size={18}

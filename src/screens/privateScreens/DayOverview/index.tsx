@@ -94,7 +94,7 @@ const DayOverviewStack: React.FC = () => {
             }
         ]}>
             <View style={[styles.headerSide, styles.headerSideLeft]}>
-                <BackBtn onPress={() => headerProps.navigation.goBack()} color={theme.colors.headerText}/>
+                <BackBtn onPress={(headerProps.options as any)?.onBackPress || (() => headerProps.navigation.goBack())} color={theme.colors.headerText}/>
             </View>
             {options?.title
                 ? <View style={styles.headerCenter}>
