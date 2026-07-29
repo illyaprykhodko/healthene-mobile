@@ -85,3 +85,5 @@ yarn-error.log
 # Claude Code — shared AI stack is committed (CLAUDE.md, .claude/ skills/agents/hooks/settings.json).
 # Only per-developer local files are ignored.
 .claude/settings.local.json
+
+.native-backups/
