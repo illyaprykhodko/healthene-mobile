@@ -9,13 +9,13 @@ export const feedbackApi = createApi({
     baseQuery,
     reducerPath: 'feedbackApi',
     endpoints: builder => ({
-        // TODO: confirm endpoint path and request/response contract with the backend team.
-        // Guarded by FEEDBACK_ENDPOINT_ENABLED (constants/feedback.ts) until the API is live.
+        // Patient Feedback API — createFeedback. The patient is resolved server-side from the
+        // auth token, hence the `me` path segment and no id in the payload.
         submitFeedback: builder.mutation<SubmitFeedbackResponse, SubmitFeedbackRequest>({
             query: body => ({
                 body,
                 method: 'POST',
-                url: '/patient-service/feedback',
+                url: '/patient-service/patients/me/feedback',
             }),
         }),
     }),

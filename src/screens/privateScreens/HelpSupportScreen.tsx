@@ -18,7 +18,7 @@ import { MessageService } from 'services/messages';
 import { MAX_FONT_SCALE } from 'constants/typography';
 import { IconLogo, TextLogo } from 'components/TextLogo';
 import { useSubmitFeedback } from 'hooks/useSubmitFeedback';
-import { FeedbackAttachmentRef, FeedbackMediaType, FeedbackType } from 'types/feedback';
+import { FeedbackMediaType, FeedbackType } from 'types/feedback';
 import { useDeleteFileMutation, useUploadAttachmentMutation } from 'store/api/s3ServiceApi';
 import {
     FEEDBACK_TYPES,
@@ -27,8 +27,15 @@ import {
     FEEDBACK_MAX_ATTACHMENTS,
 } from 'constants/feedback';
 
-interface FeedbackAttachmentItem extends FeedbackAttachmentRef {
+/**
+ * A file already uploaded to S3. Only `id` goes to the feedback API; `url` is kept because
+ * deleteFile addresses files by url, and `fileName`/`mediaType` drive the attachment row.
+ */
+interface FeedbackAttachmentItem {
     id: number;
+    url: string;
+    fileName?: string;
+    mediaType: FeedbackMediaType;
 }
 
 const isCancellation = (error: any): boolean =>
@@ -99,12 +106,12 @@ export const HelpSupportScreen: React.FC = () => {
     );
 
     const handleSubmit = useCallback(() => {
-        const refs: FeedbackAttachmentRef[] = attachments.map(({ url, mediaType, fileName }) => ({
-            url,
-            fileName,
-            mediaType,
-        }));
-        submit({ type, message, attachments: refs }, { onSuccess: () => navigation.goBack() });
+        // The API references attachments by their uploaded id, not by url.
+        const attachmentIds = attachments.map(({ id }) => ({ id }));
+        submit(
+            { type, text: message, attachments: attachmentIds },
+            { onSuccess: () => navigation.goBack() },
+        );
     }, [attachments, message, type, submit, navigation]);
 
     return (
