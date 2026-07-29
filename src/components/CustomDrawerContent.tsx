@@ -40,13 +40,15 @@ type DrawerIconName =
     | 'file'
     | 'book'
     | 'award'
+    | 'headset'
     | 'comments'
     | 'utensils'
     | 'chart-bar'
     | 'clipboard'
     | 'heartbeat'
     | 'info-circle'
-    | 'shopping-cart';
+    | 'shopping-cart'
+    | 'question-circle';
 
 interface DrawerItemProps {
     title: string;
@@ -331,6 +333,12 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                     title="Library"
                     onPress={() => navigate(ROUTES.LIBRARY)}
                     focused={getFocusedRoute() === ROUTES.LIBRARY}
+                />
+                <DrawerItem
+                    icon="headset"
+                    title="Help & Support"
+                    onPress={() => navigate(ROUTES.HELP_SUPPORT)}
+                    focused={getFocusedRoute() === ROUTES.HELP_SUPPORT}
                 />
                 <DrawerItem
                     title="Info"

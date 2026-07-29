@@ -1,7 +1,7 @@
 // outsource dependencies
 import { Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
-import ImagePicker, { Image as PickerImage, CropRect } from 'react-native-image-crop-picker';
+import ImagePicker, { Image as PickerImage, ImageOrVideo, CropRect } from 'react-native-image-crop-picker';
 import { check, PERMISSIONS, request, RESULTS, openSettings, type Permission } from 'react-native-permissions';
 
 // local dependencies
@@ -120,6 +120,79 @@ export const getPicture = async () => {
             mediaType: 'photo',
         })
     );
+};
+
+export type PickedMediaKind = 'photo' | 'video';
+
+/**
+ * A media file the user picked, shaped for a multipart upload. Unlike `getPicture`/`takePicture`
+ * (avatar flow — square crop, uploaded via `uploadImage`, returns a URL), these helpers only
+ * select the file and leave uploading to the caller, so it can go through `uploadAttachment`
+ * and get the numeric attachment id that other APIs reference.
+ */
+export interface PickedMedia {
+    uri: string;
+    name: string;
+    mimeType: string;
+    kind: PickedMediaKind;
+}
+
+const FALLBACK_MIME = 'application/octet-stream';
+
+const toPickedMedia = (asset: ImageOrVideo): PickedMedia => {
+    const mimeType = asset.mime || FALLBACK_MIME;
+    const kind: PickedMediaKind = mimeType.startsWith('video') ? 'video' : 'photo';
+    // `filename` is absent for camera captures and for some library videos — synthesize one so
+    // the upload still carries a sensible name and extension.
+    const extension = mimeType.split('/')[1] || 'bin';
+    const name = asset.filename || `${kind}-${Date.now()}.${extension}`;
+
+    return { name, mimeType, kind, uri: asset.path };
+};
+
+/** Opens the system photo library for a single photo *or* video. No cropping. */
+export const pickMediaFromLibrary = async (): Promise<PickedMedia | undefined> => {
+    const isPermissionGranted = Platform.OS === 'android' ? true : await checkPermission(PERMISSIONS_ITEM.MEDIA);
+    if (!isPermissionGranted) {
+        return;
+    }
+    try {
+        const asset = await ImagePicker.openPicker({
+            multiple: false,
+            cropping: false,
+            mediaType: 'any',
+        });
+        return toPickedMedia(asset);
+    } catch (error) {
+        if (isCancellation(error)) {
+            return;
+        }
+        throw error;
+    }
+};
+
+/**
+ * Opens the system camera to take a single photo. Photo only: the native camera UI is opened in
+ * one mode, so offering video here would need a second prompt — the library covers video instead.
+ */
+export const captureMedia = async (): Promise<PickedMedia | undefined> => {
+    const isPermissionGranted = await checkPermission(PERMISSIONS_ITEM.CAMERA);
+    if (!isPermissionGranted) {
+        return;
+    }
+    try {
+        const asset = await ImagePicker.openCamera({
+            multiple: false,
+            cropping: false,
+            mediaType: 'photo',
+        });
+        return toPickedMedia(asset);
+    } catch (error) {
+        if (isCancellation(error)) {
+            return;
+        }
+        throw error;
+    }
 };
 
 const uploadPicture = async (original: PickerImage, cropRect: CropRect) => {

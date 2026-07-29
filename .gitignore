@@ -86,4 +86,5 @@ yarn-error.log
 # Only per-developer local files are ignored.
 .claude/settings.local.json
 
+.cursor/hooks/hooks.log
 .native-backups/
