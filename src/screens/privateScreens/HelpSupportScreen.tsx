@@ -1,10 +1,10 @@
 // outsource dependencies
+import * as Sentry from '@sentry/react-native';
 import React, { useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
-import { pick, types } from '@react-native-documents/picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { ActivityIndicator, Pressable, StyleSheet, TextInput as RNTextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, TextInput as RNTextInput, View } from 'react-native';
 
 // local dependencies
 import { config } from 'constants';
@@ -19,6 +19,8 @@ import { MAX_FONT_SCALE } from 'constants/typography';
 import { IconLogo, TextLogo } from 'components/TextLogo';
 import { useSubmitFeedback } from 'hooks/useSubmitFeedback';
 import { FeedbackMediaType, FeedbackType } from 'types/feedback';
+import { buildAttachmentFormData } from 'utils/attachment/attachmentFormData';
+import { captureMedia, pickMediaFromLibrary, PickedMedia } from 'services/image-picker';
 import { useDeleteFileMutation, useUploadAttachmentMutation } from 'store/api/s3ServiceApi';
 import {
     FEEDBACK_TYPES,
@@ -38,8 +40,30 @@ interface FeedbackAttachmentItem {
     mediaType: FeedbackMediaType;
 }
 
-const isCancellation = (error: any): boolean =>
-    error?.code === 'OPERATION_CANCELED' || /cancel/i.test(error?.message ?? '');
+/**
+ * Turn an RTK Query rejection (or a thrown picker error) into something diagnosable. Shown to the
+ * user only in DEBUG builds — a raw HTTP status is noise for a patient, but guessing blind at an
+ * upload failure is worse. Production keeps the generic copy and reports to Sentry instead.
+ */
+const describeAttachError = (error: unknown): string => {
+    const errObj = error as {
+        message?: string;
+        status?: number | string;
+        data?: { errorMessage?: string; message?: string };
+    };
+    const detail = errObj?.data?.errorMessage || errObj?.data?.message || errObj?.message;
+
+    return [errObj?.status && `HTTP ${errObj.status}`, detail].filter(Boolean).join(' — ') || 'unknown error';
+};
+
+const reportAttachFailure = (error: unknown, stage: 'pick' | 'upload') => {
+    Sentry.captureException(error, { tags: { feature: 'feedback-attachment', stage } });
+    MessageService.toastWarning(
+        config.DEBUG
+            ? `Attach failed (${stage}): ${describeAttachError(error)}`
+            : 'Could not attach the file. Please try again.',
+    );
+};
 
 export const HelpSupportScreen: React.FC = () => {
     const theme = useTheme();
@@ -57,38 +81,70 @@ export const HelpSupportScreen: React.FC = () => {
     const atLimit = message.length >= FEEDBACK_MESSAGE_MAX;
     const canSubmit = !!message.trim() && !isSubmitting && !isBusy;
 
-    const handleAttach = useCallback(async () => {
+    const uploadPicked = useCallback(
+        async (picked: PickedMedia) => {
+            setIsBusy(true);
+            try {
+                const body = buildAttachmentFormData(picked, {
+                    title: picked.name,
+                    description: `Feedback attachment (${picked.kind})`,
+                });
+                const uploaded = await uploadAttachment({ body }).unwrap();
+                const fallbackUrl = `${config.serviceUrl}/${config.apiPath}/s3-service/attachment/${uploaded.id}`;
+                const url = uploaded.url || fallbackUrl;
+                const mediaType: FeedbackMediaType = (uploaded.mimeType || picked.mimeType).startsWith('video')
+                    ? 'video'
+                    : 'photo';
+                setAttachments(current => [
+                    ...current,
+                    { id: uploaded.id, url, mediaType, fileName: uploaded.fileName || picked.name },
+                ]);
+            } catch (error) {
+                reportAttachFailure(error, 'upload');
+            } finally {
+                setIsBusy(false);
+            }
+        },
+        [uploadAttachment],
+    );
+
+    const handleAttach = useCallback(() => {
         if (attachments.length >= FEEDBACK_MAX_ATTACHMENTS) {
             MessageService.toastWarning(`You can attach up to ${FEEDBACK_MAX_ATTACHMENTS} files.`);
             return;
         }
-        try {
-            const [file] = await pick({ type: [types.images, types.video] });
-            setIsBusy(true);
-            const formData = new FormData();
-            formData.append('file', {
-                uri: file.uri,
-                name: file.name,
-                type: file.type ?? 'application/octet-stream',
-            });
-            formData.append('title', file.name ?? 'feedback-attachment');
-            const uploaded = await uploadAttachment({ body: formData }).unwrap();
-            const url = uploaded.url || `${config.serviceUrl}/${config.apiPath}/s3-service/attachment/${uploaded.id}`;
-            const mediaType: FeedbackMediaType = (uploaded.mimeType || file.type || '').startsWith('video')
-                ? 'video'
-                : 'photo';
-            setAttachments(current => [
-                ...current,
-                { id: uploaded.id, url, mediaType, fileName: uploaded.fileName || file.name || undefined },
-            ]);
-        } catch (error) {
-            if (!isCancellation(error)) {
-                MessageService.toastWarning('Could not attach the file. Please try again.');
+        // The pickers resolve to `undefined` when the user backs out or denies permission (they
+        // surface that themselves), so only a real failure reaches the catch.
+        const runPicker = async (picker: () => Promise<PickedMedia | undefined>) => {
+            try {
+                const picked = await picker();
+                if (picked) {
+                    await uploadPicked(picked);
+                }
+            } catch (error) {
+                reportAttachFailure(error, 'pick');
             }
-        } finally {
-            setIsBusy(false);
-        }
-    }, [attachments.length, uploadAttachment]);
+        };
+
+        Alert.alert('Attach photo or video', 'Choose where to take it from', [
+            {
+                text: 'Photo Library',
+                onPress: () => {
+                    void runPicker(pickMediaFromLibrary);
+                },
+            },
+            {
+                text: 'Take a Photo',
+                onPress: () => {
+                    void runPicker(captureMedia);
+                },
+            },
+            {
+                text: 'Cancel',
+                style: 'cancel',
+            },
+        ]);
+    }, [attachments.length, uploadPicked]);
 
     const handleRemove = useCallback(
         async (item: FeedbackAttachmentItem) => {
