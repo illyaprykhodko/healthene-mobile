@@ -160,7 +160,7 @@ export const PrivateDrawer: React.FC = () => {
                     headerShown: false,
                     title: 'Help & Support',
                     drawerIcon: ({ color }) => (
-                        <Icon iconStyle="solid" name="question-circle" size={24} color={color} />
+                        <Icon iconStyle="solid" name="headset" size={24} color={color} />
                     ),
                 }}
             />
