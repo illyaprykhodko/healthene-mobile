@@ -2,7 +2,7 @@
 import * as yup from 'yup';
 import { Formik } from 'formik';
 import { RootState } from 'store';
-import moment from 'moment/moment';
+import dayjs from 'services/date';
 import Toast from 'react-native-toast-message';
 import React, { useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -199,7 +199,7 @@ export const PersonalInformationScreen = () => {
                                                 <Text
                                                     color={values.birthday ? theme.colors.text : theme.colors.textSecondary}
                                                 >
-                                                    {values.birthday ? moment(values.birthday).format('YYYY-MM-DD') : 'Select birthday'}
+                                                    {values.birthday ? dayjs(values.birthday).format('YYYY-MM-DD') : 'Select birthday'}
                                                 </Text>
                                             </Pressable>
                                         </View>

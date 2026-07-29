@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import React, { useState, useCallback, useMemo } from 'react';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -27,7 +27,7 @@ const MeasurementChartScreen: React.FC = () => {
     const measurementType = (route.params as any)?.measurementType || 'WEIGHT';
     const measurementName = (route.params as any)?.measurementName || measurementType;
     
-    const [currentDate, setCurrentDate] = useState(() => moment().format('YYYY-MM-DD'));
+    const [currentDate, setCurrentDate] = useState(() => dayjs().format('YYYY-MM-DD'));
     const [selectedPeriod, setSelectedPeriod] = useState<MeasurementTab['name']>(() => {
         const tabs = getMeasurementTabs();
         return tabs[1]?.name ?? tabs[0].name;
@@ -47,18 +47,18 @@ const MeasurementChartScreen: React.FC = () => {
         date: currentDate,
         type: measurementType,
         period: activeTab.request,
-        offset: moment().utcOffset() / 60,
+        offset: dayjs().utcOffset() / 60,
     });
 
     const { data: lastMeasurement } = useGetLastMeasurementQuery(measurementType);
 
     const queryArgs = React.useMemo(() => ({
-        dateTime: moment().startOf('day').toISOString(),
+        dateTime: dayjs().startOf('day').toISOString(),
         period: '1-year',
     }), []);
       
     const { data: measurementTypes } = useGetMeasurementTypesQuery(queryArgs);
-    const offset = moment().utcOffset() / 60;
+    const offset = dayjs().utcOffset() / 60;
     
     // Separate blood pressure data into systolic and diastolic
     const prepareBloodPressureData = (data: any[]) => {
@@ -83,18 +83,18 @@ const MeasurementChartScreen: React.FC = () => {
     const processData = (data: any[]) => {
         const processed = data
             .map(item => {
-                const fromDate = moment(item?.fromDate);
-                const toDate = moment(item?.toDate);
+                const fromDate = dayjs(item?.fromDate);
+                const toDate = dayjs(item?.toDate);
                 if (!fromDate.isValid() || !toDate.isValid()) {
                     return null;
                 }
                 const diff = toDate.diff(fromDate) / 2;
                 return {
                     ...item,
-                    displayFromDate: fromDate.clone().utcOffset(offset).format('MMM DD, h:mm A'),
-                    displayToDate: toDate.clone().utcOffset(offset).format('MMM DD, h:mm A'),
+                    displayFromDate: fromDate.utcOffset(offset * 60).format('MMM DD, h:mm A'),
+                    displayToDate: toDate.utcOffset(offset * 60).format('MMM DD, h:mm A'),
                     // Keep averageDate as Moment object for calculateXCoordinate
-                    averageDate: moment(fromDate).add(diff, 'ms'),
+                    averageDate: dayjs(fromDate).add(diff, 'ms'),
                     units: isBloodPressure ? [{ ...item?.units?.[0], name: 'mmHg' }] : item?.units,
                 };
             })

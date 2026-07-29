@@ -3,7 +3,7 @@ import React from 'react';
 import Toast from 'react-native-toast-message';
 import RNBlobUtil from 'react-native-blob-util';
 import Icon from '@react-native-vector-icons/fontawesome5';
-import { MaterialIndicator } from 'react-native-indicators';
+import { MaterialIndicator } from 'components/Indicators';
 import { viewDocument } from '@react-native-documents/viewer';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 

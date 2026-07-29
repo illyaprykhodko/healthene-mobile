@@ -1,6 +1,6 @@
 // outsource dependencies
 import _ from 'lodash';
-import moment from 'moment';
+import dayjs from 'services/date';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Icon from '@react-native-vector-icons/fontawesome5';
@@ -121,7 +121,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     const user = useSelector((state: RootState) => state.app.user);
 
     // Fetch badge data
-    const currentDate = useMemo(() => moment().format('YYYY-MM-DD'), []);
+    const currentDate = useMemo(() => dayjs().format('YYYY-MM-DD'), []);
     const { data: dailyPlanCounter } = useGetIncompleteQuestionsVideosQuery(currentDate);
     const { data: untrackedMeasurementsCounter } = useGetUntrackedMeasurementsQuery(currentDate);
     const { data: libraryItemsTree } = useGetLibraryItemsTotalTreeQuery();

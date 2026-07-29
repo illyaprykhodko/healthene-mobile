@@ -3,7 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { pick, types } from '@react-native-documents/picker';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput as RNTextInput, View } from 'react-native';
 
 // local dependencies
@@ -122,9 +122,8 @@ export const HelpSupportScreen: React.FC = () => {
                 onOpenDrawer={() => navigation.openDrawer?.()}
             />
             <KeyboardAwareScrollView
-                enableOnAndroid
+                bottomOffset={20}
                 style={styles.scroll}
-                extraScrollHeight={20}
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={styles.content}
             >

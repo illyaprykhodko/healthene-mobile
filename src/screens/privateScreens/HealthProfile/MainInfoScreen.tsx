@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import React, { memo, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View, ScrollView } from 'react-native';
@@ -73,13 +73,13 @@ const MainInfoScreen: React.FC = () => {
     const gender = (user as any)?.gender;
     const bmi = (user as any)?.bmi;
     const preferredGender = (user as any)?.patientPreferredGender;
-    const birthday = moment((user as any)?.birthday, timeFormatInput);
+    const birthday = dayjs((user as any)?.birthday, timeFormatInput);
 
     const formatHeight = (): string => `${heightFt} ft  ${heightInches} in`;
     const formatWeight = (): string => (weightLb ? `${roundDigits(weightLb, 1)} lb` : '-');
     const formatGender = (): string => humanize(gender);
     const formatBmi = (): string => (bmi ? roundDigits(bmi, 0) : '-');
-    const formatDOB = (): string => `${birthday.format(timeFormatOutput)} (age ${moment().diff(birthday, 'years')})`;
+    const formatDOB = (): string => `${birthday.format(timeFormatOutput)} (age ${dayjs().diff(birthday, 'years')})`;
 
     const formatPreferredGender = (): string => {
         if (!preferredGender?.preferredGender) { return '-'; }

@@ -3,7 +3,7 @@
  * Constants for measurement chart periods, dates and data visualization
  */
 
-import moment from 'moment';
+import dayjs from 'services/date';
 
 // Date period types
 export const DATE_PERIOD = {
@@ -38,15 +38,15 @@ export interface MeasurementTab {
 /**
  * Generate measurement chart tabs based on date
  */
-export const getMeasurementTabs = (date: string = moment().format('YYYY-MM-DD')): MeasurementTab[] => [
+export const getMeasurementTabs = (date: string = dayjs().format('YYYY-MM-DD')): MeasurementTab[] => [
     {
         count: 24,
         short: 'D',
         name: DATE_PERIOD.DAY,
         request: '1-day',
         options: {
-            endDate: moment(date).toISOString(),
-            startDate: moment(date).startOf('day').toISOString(),
+            endDate: dayjs(date).toISOString(),
+            startDate: dayjs(date).startOf('day').toISOString(),
         },
     },
     {
@@ -55,18 +55,18 @@ export const getMeasurementTabs = (date: string = moment().format('YYYY-MM-DD'))
         name: DATE_PERIOD.WEEK,
         request: '1-week',
         options: {
-            endDate: moment(date).toISOString(),
-            startDate: moment(date).subtract(6, 'days').toISOString(),
+            endDate: dayjs(date).toISOString(),
+            startDate: dayjs(date).subtract(6, 'days').toISOString(),
         },
     },
     {
-        count: moment(date).daysInMonth(),
+        count: dayjs(date).daysInMonth(),
         short: 'M',
         name: DATE_PERIOD.MONTH,
         request: '1-month',
         options: {
-            endDate: moment(date).toISOString(),
-            startDate: moment(date).subtract(1, 'month').toISOString(),
+            endDate: dayjs(date).toISOString(),
+            startDate: dayjs(date).subtract(1, 'month').toISOString(),
         },
     },
     {
@@ -75,8 +75,8 @@ export const getMeasurementTabs = (date: string = moment().format('YYYY-MM-DD'))
         name: DATE_PERIOD.SIX_MONTH,
         request: '6-month',
         options: {
-            endDate: moment(date).toISOString(),
-            startDate: moment(date).subtract(5, 'months').toISOString(),
+            endDate: dayjs(date).toISOString(),
+            startDate: dayjs(date).subtract(5, 'months').toISOString(),
         },
     },
     {
@@ -85,8 +85,8 @@ export const getMeasurementTabs = (date: string = moment().format('YYYY-MM-DD'))
         name: DATE_PERIOD.YEAR,
         request: '1-year',
         options: {
-            endDate: moment(date).toISOString(),
-            startDate: moment(date).subtract(1, 'year').toISOString(),
+            endDate: dayjs(date).toISOString(),
+            startDate: dayjs(date).subtract(1, 'year').toISOString(),
         },
     },
 ];

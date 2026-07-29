@@ -1,6 +1,6 @@
 
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useRef, useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image } from 'react-native';
@@ -44,7 +44,7 @@ export default function ExerciseDetails () {
     const [showGoodWork, setShowGoodWork] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const title = exercise?.title || 'Exercise';
-    const isFutureDay = moment(date).isAfter(moment(), 'day');
+    const isFutureDay = dayjs(date).isAfter(dayjs(), 'day');
 
     // Load exercise data based on type
     const { data: stretchingData, isLoading: stretchingLoading } = useGetStretchingExerciseQuery(exercise?.id?.toString() || '', {

@@ -1,0 +1,57 @@
+---
+description: Staircase formatting for imports and multiline structures
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Code Style: Staircase Formatting
+
+- Follow existing repository formatting first. If there is no clear local precedent, use rules below.
+- Prefer multiline "staircase" layout for long imports, object literals, arrays, function params, and JSX props.
+- In multiline structures, keep one item/property per line.
+- Keep trailing commas in multiline lists and objects.
+- Use consistent indentation and avoid mixing compact and expanded styles in one block.
+
+## Imports
+
+Use multiline grouped imports when there are many symbols or lines become hard to scan.
+
+```typescript
+import {
+    BottomSheetView,
+    BottomSheetModal,
+    BottomSheetBackdrop,
+    BottomSheetBackdropProps,
+} from '@gorhom/bottom-sheet';
+```
+
+## Objects and arrays
+
+Prefer expanded layout for nested or medium/large structures.
+
+```typescript
+const payload = {
+    email: values.email,
+    profile: {
+        lastName: user.lastName,
+        firstName: user.firstName,
+    },
+    tags: [
+        'account',
+        'settings',
+    ],
+};
+```
+
+## JSX props
+
+When there are multiple props, put each prop on its own line.
+
+```tsx
+<Button
+    disabled={!dirty}
+    variant="outline"
+    title="CHANGE EMAIL"
+    onPress={handleSubmit}
+/>
+```

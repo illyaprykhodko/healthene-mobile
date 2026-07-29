@@ -1,6 +1,6 @@
 
 // outsource dependencies
-import moment from 'moment/moment';
+import dayjs from 'services/date';
 import Toast from 'react-native-toast-message';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -52,7 +52,7 @@ const Item: React.FC = () => {
     const params = route.params as RouteParams | undefined;
     const itemId = params?.id;
     const date = params?.date;
-    const isFutureDay = moment(date).isAfter(moment(), 'day');
+    const isFutureDay = dayjs(date).isAfter(dayjs(), 'day');
     const initialTab = params?.activeTab || ITEM_TABS.OVERVIEW;
     
     const [activeTab, setActiveTab] = useState(initialTab);
@@ -246,7 +246,7 @@ const Item: React.FC = () => {
                                 styles.tabButton,
                                 isActive && styles.activeTabButton,
                                 { borderRightWidth: tabs.length === index + 1 ? 0 : 2 },
-                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceAlt },
+                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceSecond },
                             ]}
                             onPress={() => setActiveTab(tab.value)}
                         >

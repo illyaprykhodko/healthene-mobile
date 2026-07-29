@@ -1,6 +1,6 @@
 
 // outsource dependencies
-import moment from 'moment/moment';
+import dayjs from 'services/date';
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 
@@ -40,7 +40,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
     const { data: dayOverviewData } = useGetDayOverviewQuery(date || new Date().toISOString().split('T')[0]);
     const [activeModal, setActiveModal] = useState<AnytimeItemType | null>(null);
     const [showExercisesModal, setShowExercisesModal] = useState(false);
-    const isFutureDay = moment(date).isAfter(moment(), 'day');
+    const isFutureDay = dayjs(date).isAfter(dayjs(), 'day');
 
     const handleIconPress = (type: AnytimeItemType) => {
         if (disabled || isLoading) { return; }

@@ -1,8 +1,8 @@
 // outsource dependencies
 import React from 'react';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Modal, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
@@ -65,11 +65,7 @@ export const BottomGlassModal: React.FC<BottomGlassModalProps> = ({
 
     return (
         <Modal transparent visible statusBarTranslucent animationType="none" onRequestClose={onClose}>
-            <Animated.View
-                entering={FadeIn.duration(900)}
-                exiting={FadeOut.duration(180)}
-                style={[styles.overlay, { top: insets.top + topOffset }]}
-            >
+            <Animated.View style={[styles.overlay, { top: insets.top + topOffset }]} >
                 <GlassSurface
                     tint="dark"
                     intensity={18}
@@ -81,11 +77,7 @@ export const BottomGlassModal: React.FC<BottomGlassModalProps> = ({
                     style={StyleSheet.absoluteFill}
                 />
 
-                <Animated.View
-                    style={modalStyle}
-                    exiting={SlideOutDown.duration(220)}
-                    entering={SlideInDown.springify().mass(1).damping(30)}
-                >
+                <Animated.View style={modalStyle} >
                     {children}
                 </Animated.View>
             </Animated.View>
@@ -95,7 +87,7 @@ export const BottomGlassModal: React.FC<BottomGlassModalProps> = ({
 
 const styles = StyleSheet.create({
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         zIndex: 999,
     },
     modal: {

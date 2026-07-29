@@ -1,0 +1,18 @@
+---
+description: API/service layer standards and error handling
+globs: src/services/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Services and API Layer
+
+- Keep HTTP/client logic in services; avoid direct network calls in screens/components.
+- Use typed request and response contracts for service methods.
+- Normalize API errors into predictable, UI-safe objects/messages.
+- Keep URL and header construction centralized; avoid repeating endpoint fragments.
+
+## Reliability
+
+- Handle timeout/network failures explicitly.
+- Keep retry logic deliberate and bounded; avoid infinite retries.
+- Do not swallow errors silently; propagate meaningful context to state layer.

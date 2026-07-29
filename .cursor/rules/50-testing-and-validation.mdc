@@ -1,0 +1,17 @@
+---
+description: Test and validation expectations for changed code
+globs: **/*.{test,spec}.{ts,tsx,js,jsx}
+alwaysApply: false
+---
+
+# Testing and Validation
+
+- Prefer deterministic tests; mock unstable platform/network dependencies.
+- Cover core logic branches and failure states for reducers, helpers, and services.
+- Keep assertions behavior-focused rather than implementation-detail-focused.
+
+## For feature work
+
+- Add or update tests when changing business logic.
+- If tests are not added, explain why and provide a manual validation checklist.
+- Run targeted tests first, then broader `npm test` when feasible.

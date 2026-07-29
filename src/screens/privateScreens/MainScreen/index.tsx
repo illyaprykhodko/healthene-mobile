@@ -1,6 +1,6 @@
 // outsource dependencies
-import moment from 'moment';
 import React from 'react';
+import dayjs from 'services/date';
 import { useNavigation } from '@react-navigation/native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { View, StyleSheet, Image, Platform } from 'react-native';
@@ -44,7 +44,7 @@ export const MainScreen: React.FC = () => {
 
     const { data: welcomeData, isLoading } = useGetWelcomeQuery();
     const welcomeImageUrl = welcomeData?.image?.url;
-    const adherence = useDayAdherence(moment().format('YYYY-MM-DD'));
+    const adherence = useDayAdherence(dayjs().format('YYYY-MM-DD'));
 
     const timeGreeting = () => {
         const hour = new Date().getHours();
@@ -77,7 +77,7 @@ export const MainScreen: React.FC = () => {
             <View style={styles.content}>
                 {/* {adherence.hasData && (
                     <View style={styles.ringsWrapper}>
-                        <DayAdherenceCard date={moment().format('YYYY-MM-DD')} />
+                        <DayAdherenceCard date={dayjs().format('YYYY-MM-DD')} />
                         <ActivityRings
                             gap={4}
                             size={104}
@@ -94,7 +94,7 @@ export const MainScreen: React.FC = () => {
                 </View>
                 {/*{ theme.dark*/}
                 {/*    ? <View style={styles.altWrapper}>*/}
-                {/*        /!* <DayAdherenceCard date={moment().format('YYYY-MM-DD')} /> *!/*/}
+                {/*        /!* <DayAdherenceCard date={dayjs().format('YYYY-MM-DD')} /> *!/*/}
                 {/*        {adherence.hasData && (*/}
                 {/*            <ActivityRings*/}
                 {/*                gap={4}*/}

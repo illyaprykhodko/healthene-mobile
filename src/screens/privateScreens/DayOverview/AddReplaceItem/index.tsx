@@ -194,7 +194,7 @@ export const AddReplaceItem: React.FC = () => {
                                 styles.tabButton,
                                 isActive && styles.activeTabButton,
                                 { borderRightWidth: tabs.length === index + 1 ? 0 : 2 },
-                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceAlt },
+                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceSecond },
                             ]}
                             onPress={() => handleTabPress(tab.value)}
                         >
@@ -241,7 +241,6 @@ export const AddReplaceItem: React.FC = () => {
                     autoCorrect={false}
                     autoCapitalize="none"
                     returnKeyType="search"
-                    placeholder="Search..."
                     onChangeText={setSearchQuery}
                     maxFontSizeMultiplier={MAX_FONT_SCALE}
                     placeholderTextColor={theme.colors.textSecondary}
@@ -275,7 +274,7 @@ export const AddReplaceItem: React.FC = () => {
                 keyExtractor={item => String(item.id)}
                 ListEmptyComponent={
                     <Text style={styles.emptyScreen}>
-                        {searchQuery.trim().length > 0 ? 'No items found' : 'Enter a search term'}
+                        {searchQuery.trim().length > 0 && 'No items found'}
                     </Text>
                 }
                 ListFooterComponent={

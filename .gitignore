@@ -80,10 +80,11 @@ yarn-error.log
 
 # Cursor IDE (local debug instrumentation)
 .cursor/*.log
+.cursor/**/*.log
 
-# Claude Code (local agent instructions / notes)
-CLAUDE.md
-.claude/
+# Claude Code — shared AI stack is committed (CLAUDE.md, .claude/ skills/agents/hooks/settings.json).
+# Only per-developer local files are ignored.
+.claude/settings.local.json
 
 .cursor/hooks/hooks.log
 .native-backups/

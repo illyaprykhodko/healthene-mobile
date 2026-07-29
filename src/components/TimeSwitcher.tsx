@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import Icon from '@react-native-vector-icons/feather';
 import React, { memo, useCallback, useMemo } from 'react';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
@@ -23,23 +23,23 @@ const TimeSwitcherComponent: React.FC<TimeSwitcherProps> = ({
     isHideRightBtn = false,
 }) => {
     const handleRightBtn = useCallback(() => {
-        init({ date: moment(date).add(1, 'day').format('YYYY-MM-DD') });
+        init({ date: dayjs(date).add(1, 'day').format('YYYY-MM-DD') });
     }, [date, init]);
 
     const handleLeftBtn = useCallback(() => {
-        init({ date: moment(date).subtract(1, 'day').format('YYYY-MM-DD') });
+        init({ date: dayjs(date).subtract(1, 'day').format('YYYY-MM-DD') });
     }, [date, init]);
 
-    const endOfWeek = moment().endOf('week');
-    const startOfWeek = moment().startOf('week');
+    const endOfWeek = dayjs().endOf('week');
+    const startOfWeek = dayjs().startOf('week');
 
     const disabledRightBtn = useMemo(() => {
-        const d = moment(date, 'YYYY-MM-DD');
+        const d = dayjs(date, 'YYYY-MM-DD');
         return !endOfWeek.isAfter(d, 'day') || endOfWeek.isSame(d, 'day');
     }, [date]);
 
     const disabledLeftBtn = useMemo(() => {
-        const d = moment(date, 'YYYY-MM-DD');
+        const d = dayjs(date, 'YYYY-MM-DD');
         return startOfWeek.isSame(d, 'day');
     }, [date]);
 
@@ -63,7 +63,7 @@ const TimeSwitcherComponent: React.FC<TimeSwitcherProps> = ({
                 color={theme.colors.white}
                 style={styles.headerTitle}
             >
-                {moment(date).format('ddd, MMM D')}
+                {dayjs(date).format('ddd, MMM D')}
             </Text>
             <TouchableOpacity
                 onPress={handleRightBtn}

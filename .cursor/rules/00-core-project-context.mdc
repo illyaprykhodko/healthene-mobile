@@ -1,0 +1,24 @@
+---
+description: Core project context for RN PatientApp
+alwaysApply: true
+---
+
+# Intelliceed PatientApp Mobile v2 Context
+
+- This repository is a React Native app (`react-native@0.84`, `react@19`, TypeScript).
+- Main application code lives in `src/`.
+- Prefer TypeScript-first changes in `src/**/*.ts` and `src/**/*.tsx`.
+- Keep existing project conventions and naming unless there is clear value in changing them.
+
+## Execution and verification defaults
+
+- Use `npm` scripts from `package.json` (not ad-hoc commands).
+- For code quality, run `npm run lint` after substantial edits.
+- For tests, run `npm test` or targeted Jest tests for changed logic.
+- Avoid changing native iOS/Android files unless task explicitly requires native work.
+
+## Change behavior
+
+- Keep changes focused and minimal for the requested task.
+- Do not refactor unrelated modules while implementing feature work.
+- Preserve backward compatibility for navigation routes, store contracts, and API payloads.

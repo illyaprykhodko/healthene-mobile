@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
@@ -82,7 +82,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     });
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
     const birdSoundEnabled = useAppSelector(selectBirdSoundEnabled);
-    const targetDate = date || currentDate || moment().format('YYYY-MM-DD');
+    const targetDate = date || currentDate || dayjs().format('YYYY-MM-DD');
     const initialPhaseId = phaseId || route.params?.phaseId;
 
     // Phase ids are date-specific (Breakfast on May 27 != Breakfast on May 28). The header
@@ -186,7 +186,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
             }))
             .sort((a, b) => (a.order || 0) - (b.order || 0));
     }, [phaseItems]);
-    // Drop the previous day's items the moment the phase context changes, so they don't
+    // Drop the previous day's items the dayjs the phase context changes, so they don't
     // linger while the new day's items load (or stay empty if nothing is planned).
     useEffect(() => {
         setLocalItems([]);
@@ -468,8 +468,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         const isNowDone = item.status === PHASE_ITEM_STATUS.DONE;
         const isMealLikePhase = currentPhase?.type === OVERVIEW_TYPE.MEAL
             || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT;
-        const mealDatePast = moment(targetDate).isBefore(moment(), 'day');
-        const mealDateFuture = moment(targetDate).isAfter(moment(), 'day');
+        const mealDatePast = dayjs(targetDate).isBefore(dayjs(), 'day');
+        const mealDateFuture = dayjs(targetDate).isAfter(dayjs(), 'day');
 
         setLocalItems(prevItems => {
             const nextItems = prevItems.map(prevItem =>
@@ -732,10 +732,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                   || (currentPhase?.type === 'QUESTION' ? 'Health Question'
                       : currentPhase?.type === 'ANYTIME' ? 'Anytime'
                           : convertTypeToTitle(currentPhase?.type || phaseIdentityRef.current?.type || '', true));
-    const isPastDate = moment(targetDate).isBefore(moment(), 'day');
-    const isFutureDate = moment(targetDate).isAfter(moment(), 'day');
+    const isPastDate = dayjs(targetDate).isBefore(dayjs(), 'day');
+    const isFutureDate = dayjs(targetDate).isAfter(dayjs(), 'day');
 
-    const today = moment().format('YYYY-MM-DD');
+    const today = dayjs().format('YYYY-MM-DD');
     const { currentData: todayDayOverviewData } = useGetDayOverviewQuery(today, {
         skip: !isFutureDate,
     });

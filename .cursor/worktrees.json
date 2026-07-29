@@ -1,0 +1,9 @@
+{
+  "setup-worktree": [
+    "npm install",
+    "[ -d ios ] && (cd ios && pod install) || true"
+  ],
+  "post-checkout": [
+    "git status --short"
+  ]
+}

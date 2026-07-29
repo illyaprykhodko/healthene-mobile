@@ -3,7 +3,7 @@
  * Modern functional wrapper around react-native-google-fit
  */
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import RNGoogleFit, { Scopes } from 'react-native-google-fit';
 // local dependencies
 import type {
@@ -99,8 +99,8 @@ const fetchBloodPressureSamples = async (options: {
                 diastolic: item.diastolic,
             } as BloodPressureValue,
             source: 'GOOGLE_FIT' as const,
-            endDate: item.endDate || moment().format(),
-            startDate: item.startDate || moment().format(),
+            endDate: item.endDate || dayjs().format(),
+            startDate: item.startDate || dayjs().format(),
         }));
 
         return samples;
@@ -123,8 +123,8 @@ const fetchBloodGlucoseSamples = async (options: {
 
         const samples: HealthSample[] = (results || []).map((item: any) => ({
             value: filters.convertBloodGlucose(item.value), // Convert mg/dL → mmol/L
-            startDate: item.startDate || moment().format(),
-            endDate: item.endDate || moment().format(),
+            startDate: item.startDate || dayjs().format(),
+            endDate: item.endDate || dayjs().format(),
             source: 'GOOGLE_FIT' as const,
         }));
 
