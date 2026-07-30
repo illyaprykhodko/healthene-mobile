@@ -103,7 +103,10 @@ function AppContent (): React.JSX.Element {
     }, []);
     // if (isHealthLoading) { return <BoxHolder active />; }
     if (isInitializing) { return <BoxHolder active />; }
-    if (!isHealthy) { return <MaintenanceHolder active />; }
+    // Only an explicit `false` means "backend is down". `null` means "not known yet" — treating
+    // it as maintenance used to trap the user on the maintenance screen right after logout,
+    // since `resetStore` puts the health flag back to its initial value.
+    if (isHealthy === false) { return <MaintenanceHolder active />; }
     if (forcePolicy) { return <ForceUpdateScreen policy={forcePolicy} onUpdate={openStore} />; }
     return (
         <SafeAreaView style={[styles.safeArea, styles.flex, { backgroundColor: theme.colors.background }]}>
