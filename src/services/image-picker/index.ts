@@ -172,10 +172,10 @@ export const pickMediaFromLibrary = async (): Promise<PickedMedia | undefined> =
 };
 
 /**
- * Opens the system camera to take a single photo. Photo only: the native camera UI is opened in
- * one mode, so offering video here would need a second prompt — the library covers video instead.
+ * Opens the system camera. The native camera opens in one mode, so the caller states which —
+ * there is no combined photo/video capture screen to hand out.
  */
-export const captureMedia = async (): Promise<PickedMedia | undefined> => {
+export const captureMedia = async (kind: PickedMediaKind = 'photo'): Promise<PickedMedia | undefined> => {
     const isPermissionGranted = await checkPermission(PERMISSIONS_ITEM.CAMERA);
     if (!isPermissionGranted) {
         return;
@@ -184,7 +184,7 @@ export const captureMedia = async (): Promise<PickedMedia | undefined> => {
         const asset = await ImagePicker.openCamera({
             multiple: false,
             cropping: false,
-            mediaType: 'photo',
+            mediaType: kind === 'video' ? 'video' : 'photo',
         });
         return toPickedMedia(asset);
     } catch (error) {
