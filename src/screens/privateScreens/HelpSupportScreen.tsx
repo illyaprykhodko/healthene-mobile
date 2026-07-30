@@ -136,7 +136,13 @@ export const HelpSupportScreen: React.FC = () => {
             {
                 text: 'Take a Photo',
                 onPress: () => {
-                    void runPicker(captureMedia);
+                    void runPicker(() => captureMedia('photo'));
+                },
+            },
+            {
+                text: 'Record a Video',
+                onPress: () => {
+                    void runPicker(() => captureMedia('video'));
                 },
             },
             {
