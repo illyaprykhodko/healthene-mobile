@@ -5,11 +5,11 @@ import { AppState } from '../types';
 import { UserSession, User } from 'types';
 // import { User, Session } from 'store/api/types';
 
-const initialState: AppState = {
+export const appInitialState: AppState = {
     user: null,
     auth: false,
+    health: null,
     wakeup: false,
-    health: false,
     keyboard: false,
     accessToken: null,
     refreshToken: null,
@@ -20,12 +20,12 @@ const initialState: AppState = {
 
 export const appSlice = createSlice({
     name: 'app',
-    initialState,
+    initialState: appInitialState,
     reducers: {
         setInitialized: (state, action: PayloadAction<boolean>) => {
             state.initialized = action.payload;
         },
-        setHealth: (state, action: PayloadAction<boolean>) => {
+        setHealth: (state, action: PayloadAction<boolean | null>) => {
             state.health = action.payload;
         },
         setAuth: (state, action: PayloadAction<boolean>) => {
