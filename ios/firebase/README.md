@@ -10,11 +10,21 @@ live at a fixed path. The `Bundle the Firebase config for the active bundle id`
 build phase copies `ios/firebase/$(PRODUCT_BUNDLE_IDENTIFIER)/GoogleService-Info.plist`
 into the bundle and fails the build when that file is missing.
 
-| build configuration | bundle id | where it goes |
-|---|---|---|
-| `Debug` | `development.healthene.v2.app` | local builds only, never uploaded |
-| `Release` | `com.healthene.app` | Healthene Patient Portal (staging / TestFlight) |
-| `Release-Production` | `com.healthene.production.app` | Healthene (App Store) |
+| build configuration | bundle id | build number | where it goes |
+|---|---|---|---|
+| `Debug` | `development.healthene.v2.app` | follows staging | local builds only, never uploaded |
+| `Release` | `com.healthene.app` | 106+ | Healthene Patient Portal (staging / TestFlight) |
+| `Release-Production` | `com.healthene.production.app` | 20+ | Healthene (App Store) |
+
+`CURRENT_PROJECT_VERSION` is per configuration: each record keeps its own counter, so
+a build number is never ambiguous between staging and the App Store. Production starts
+at 20 because 19 belongs to 1.0.13 in that record. Bump the counter of the record you
+are shipping — App Store Connect only requires the number to climb within its own
+record, so the two never have to agree.
+
+Because one commit produces two differently numbered builds, tag the commit you
+archive per record, e.g. `staging/2.0.0-106` and `production/2.0.0-20` on the same
+commit. A single tag naming one number cannot describe both.
 
 Schemes: `healthene_staging` archives `Release`, `healthene_production` archives
 `Release-Production`. Both bake `.env.production` — staging and production share one
