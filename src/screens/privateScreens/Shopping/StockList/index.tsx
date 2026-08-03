@@ -421,7 +421,6 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        // marginTop: OFFSET.VERTICAL,
     },
     emptyText: {
         marginTop: OFFSET.VERTICAL * 2,
