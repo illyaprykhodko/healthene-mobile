@@ -6,6 +6,10 @@
 
 export const DEEP_LINK_PATH = {
     WEIGHT: '/public/app-redirect/measurements/weight',
+    // NOTE No id segment — the API scopes the shopping list to the current
+    // patient (`shoppingApi` has no fetch-by-id endpoint), so there is nothing
+    // to address in the URL.
+    SHOPPING_LIST: '/public/app-redirect/shopping/list',
     // NOTE Prefix for message threads; the actual path also carries a
     // trailing `:id` segment (e.g. `/public/app-redirect/messages/thread/42`).
     MESSAGE_THREAD_PREFIX: '/public/app-redirect/messages/thread',
@@ -23,6 +27,10 @@ export const normalizeDeepLinkPath = (deepLink?: string | null): string => Strin
 
 export const isWeightDeepLink = (deepLink?: string | null): boolean => (
     Boolean(deepLink) && normalizeDeepLinkPath(deepLink) === DEEP_LINK_PATH.WEIGHT
+);
+
+export const isShoppingListDeepLink = (deepLink?: string | null): boolean => (
+    Boolean(deepLink) && normalizeDeepLinkPath(deepLink) === DEEP_LINK_PATH.SHOPPING_LIST
 );
 
 /**

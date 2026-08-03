@@ -1,7 +1,7 @@
 // outsource dependencies
 import dayjs from 'services/date';
 import { Platform, Linking } from 'react-native';
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import notifee, { EventType, AndroidImportance, type Event as NotifeeEvent } from '@notifee/react-native';
 import {
     getToken,
     onMessage,
@@ -32,6 +32,7 @@ import {
     isWeightDeepLink,
     getNotificationDeepLink,
     isMessageThreadDeepLink,
+    isShoppingListDeepLink,
     getMessageThreadIdFromDeepLink,
 } from 'services/deepLink';
 
@@ -41,6 +42,10 @@ const DEFAULT_CHANNEL_ID = 'default-channel-id';
 // v1 saga (`waitForPrivateNavigationReady`).
 const NAVIGATION_READY_MAX_ATTEMPTS = 80;
 const NAVIGATION_READY_POLL_MS = 250;
+// NOTE A single tap can reach us twice (e.g. notifee `onBackgroundEvent` fires
+// for a quit-state press and `getInitialNotification` then reports the same
+// press once the app mounts). Collapse identical links seen within this window.
+const DEEP_LINK_DEDUPE_MS = 5000;
 
 class NotificationService {
     private initialized = false;
@@ -52,6 +57,12 @@ class NotificationService {
     private unsubscribeOpenedApp: (() => void) | null = null;
 
     private unsubscribeTokenRefresh: (() => void) | null = null;
+
+    private unsubscribeNotifeeForeground: (() => void) | null = null;
+
+    private lastDeepLink: string | null = null;
+
+    private lastDeepLinkAt = 0;
 
     private readonly logPrefix = '[NotificationService]';
 
@@ -168,9 +179,10 @@ class NotificationService {
     }
 
     /**
-     * Translate a parsed deep link into an in-app navigation. Handles the two
+     * Translate a parsed deep link into an in-app navigation. Handles the
      * shapes we currently emit from the backend:
      *  - weight reminder: `/public/app-redirect/measurements/weight`
+     *  - shopping list:   `/public/app-redirect/shopping/list`
      *  - message thread:  `/public/app-redirect/messages/thread/:id`
      *
      * Falls back to `Linking.openURL` for anything we don't know about — this
@@ -187,6 +199,15 @@ class NotificationService {
         if (isWeightDeepLink(deepLink)) {
             const date = dayjs().format('YYYY-MM-DD');
             navigationRef.navigate(ROUTES.WEIGHT_MEASUREMENT, { date });
+            return;
+        }
+
+        // NOTE Navigate to the drawer-level `Shopping` screen, not to `ShoppingList`
+        // directly — the inner stack resolves its `initialRouteName` from the
+        // shopping status query and renders nothing while that is loading, so a
+        // direct child navigation would be a no-op.
+        if (isShoppingListDeepLink(deepLink)) {
+            navigationRef.navigate(ROUTES.SHOPPING);
             return;
         }
 
@@ -209,12 +230,35 @@ class NotificationService {
         }
     }
 
-    private handleNotificationOpen (remoteMessage: FirebaseMessagingTypes.RemoteMessage | null): void {
-        if (!remoteMessage) { return; }
-        const deepLink = getNotificationDeepLink(remoteMessage);
+    /**
+     * Single funnel for every "the user tapped a notification" source (FCM and
+     * notifee alike). Extracts the deep link, drops duplicates of the same tap
+     * and hands off to the navigation logic.
+     */
+    private handleNotificationOpen (notification: unknown): void {
+        if (!notification) { return; }
+        const deepLink = getNotificationDeepLink(notification);
         if (!deepLink) { return; }
+
+        const now = Date.now();
+        const isDuplicate = this.lastDeepLink === deepLink && now - this.lastDeepLinkAt < DEEP_LINK_DEDUPE_MS;
+        if (isDuplicate) { return; }
+        this.lastDeepLink = deepLink;
+        this.lastDeepLinkAt = now;
+
         void this.navigateFromDeepLink(deepLink);
     }
+
+    /**
+     * Handle a notifee notification press. Notifications rendered by notifee
+     * (foreground on both platforms, and data-only messages on Android) never
+     * reach RNFirebase's `onNotificationOpenedApp`, so without this the tap
+     * would be silently dropped.
+     */
+    public handleNotifeeEvent = ({ type, detail }: NotifeeEvent): void => {
+        if (type !== EventType.PRESS) { return; }
+        this.handleNotificationOpen(detail.notification);
+    };
 
     public async initialize (): Promise<void> {
         if (this.initialized) { return; }
@@ -231,6 +275,8 @@ class NotificationService {
             this.handleNotificationOpen(remoteMessage);
         });
 
+        this.unsubscribeNotifeeForeground = notifee.onForegroundEvent(this.handleNotifeeEvent);
+
         this.unsubscribeTokenRefresh = onTokenRefresh(this.messaging, () => {
             // NOTE intentionally a no-op for now — backend re-registration of the
             // refreshed token lives elsewhere (auth flow); keep the subscription
@@ -239,6 +285,11 @@ class NotificationService {
 
         const initialMessage = await getInitialNotification(this.messaging);
         this.handleNotificationOpen(initialMessage);
+
+        // NOTE Cold start from a tap on a notifee-rendered notification — RNFirebase
+        // knows nothing about those, so ask notifee separately.
+        const initialNotifeeEvent = await notifee.getInitialNotification();
+        this.handleNotificationOpen(initialNotifeeEvent?.notification);
     }
 
     public async getDeviceToken (): Promise<string | null> {
@@ -267,6 +318,9 @@ class NotificationService {
             messageId: remoteMessage.messageId,
             notification: remoteMessage.notification,
         });
+        // NOTE When the payload carries a `notification` block the OS already rendered
+        // a notification for it — displaying our own would show a duplicate on Android.
+        if (remoteMessage.notification) { return; }
         await this.createDefaultChannel();
         await this.displayForegroundNotification(remoteMessage);
     }
@@ -278,6 +332,8 @@ class NotificationService {
         this.unsubscribeOpenedApp = null;
         this.unsubscribeTokenRefresh?.();
         this.unsubscribeTokenRefresh = null;
+        this.unsubscribeNotifeeForeground?.();
+        this.unsubscribeNotifeeForeground = null;
         this.initialized = false;
     }
 }

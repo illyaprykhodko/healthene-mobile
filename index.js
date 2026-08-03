@@ -2,6 +2,7 @@
  * @format
  */
 // outsource dependencies
+import notifee from '@notifee/react-native';
 import { AppRegistry } from 'react-native';
 import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 
@@ -16,6 +17,13 @@ import notificationService from './src/services/notifications/notification.servi
 // sure Android still shows a heads-up notification when the app is killed.
 setBackgroundMessageHandler(getMessaging(), async remoteMessage => {
     await notificationService.handleBackgroundMessage(remoteMessage);
+});
+
+// NOTE Taps on notifee-rendered notifications while the app is backgrounded/quit
+// arrive here — without this registration notifee warns at runtime and the deep
+// link attached to the notification is dropped.
+notifee.onBackgroundEvent(async event => {
+    notificationService.handleNotifeeEvent(event);
 });
 
 AppRegistry.registerComponent(appName, () => App);
