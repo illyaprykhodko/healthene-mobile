@@ -11,6 +11,8 @@
 <dict>
 	<key>aps-environment</key>
 	<string>development</string>
+	<key>com.apple.developer.healthkit</key>
+	<true/>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:app.healthene.com</string>
@@ -19,8 +21,6 @@
 		<string>applinks:clinic-healthene.intelliceed.com</string>
 		<string>applinks:clinic-dev-healthene.intelliceed.com</string>
 		<string>applinks:clinic-staging-healthene.intelliceed.com</string>
-		<string>applinks:clinic-dev-healthene.intelliceed.com?mode=developer</string>
-		<string>applinks:clinic-staging-healthene.intelliceed.com?mode=developer</string>
 	</array>
 </dict>
 </plist>

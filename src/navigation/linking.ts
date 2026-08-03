@@ -15,7 +15,7 @@ export const linking: LinkingOptions<any> = {
         screens: {
             [PRIVATE]: {
                 screens: {
-                    Drawer: {
+                    [ROUTES.DRAWER]: {
                         screens: {
                             [ROUTES.DAILY_PLAN]: {
                                 screens: {
