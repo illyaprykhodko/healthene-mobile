@@ -1,8 +1,9 @@
+
 // outsource dependencies
-import { StyleSheet, View, SectionList, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigation, StackActions } from '@react-navigation/native';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
+import { StyleSheet, View, SectionList, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text';
@@ -100,13 +101,6 @@ const StockList: React.FC = () => {
 
     // Filter and group by category
     const groupedList: GroupedSection[] = useMemo(() => {
-        // let filtered = stockList;
-        // if (activeCategory.id) {
-        //     filtered = stockList.filter(
-        //         (item: StockItem) => item.food?.shoppingCartCategory?.id === activeCategory.id
-        //     );
-        // }
-
         const grouped: Record<string, StockItem[]> = {};
         stockList.forEach((item: StockItem) => {
             const categoryName = item.food?.shoppingCartCategory?.name
@@ -327,12 +321,6 @@ const StockList: React.FC = () => {
         </View>
     ), [theme.colors]);
 
-    const renderListHeader = useCallback(() => (
-        <View style={[styles.section, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
-            <Text variant="h4" style={styles.sectionTitle} color={theme.colors.primary}>Select all the {activeCategory.name} You Need</Text>
-        </View>
-    ), [theme.colors, activeCategory]);
-
     return (
         <Screen initialized={!isLoading} style={styles.container}>
             <StackHeader
@@ -353,13 +341,13 @@ const StockList: React.FC = () => {
                             activeItem={activeCategory}
                             handleItem={handleCategoryChange}
                         />
-                        {/*{renderListHeader()}*/}
                         <SectionList<StockItem, GroupedSection>
                             onScroll={onScroll}
                             ref={sectionListRef}
                             sections={groupedList}
                             renderItem={renderItem}
                             scrollEventThrottle={50}
+                            initialNumToRender={100}
                             stickySectionHeadersEnabled
                             onScrollBeginDrag={onScrollBeginDrag}
                             renderSectionHeader={renderSectionHeader}
