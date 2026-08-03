@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import Animated, {
     runOnJS,
     Easing,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
         minHeight: 0,
     },
     birdOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         zIndex: 2,
     },
     calendarBtn: {
@@ -655,7 +655,7 @@ export const Overview: React.FC = () => {
     const dispatch = useAppDispatch();
     const bottomSheetRef = useRef<BottomSheet>(null);
     const { date, isFutureDate, showCalendar, calendarDays, recentlyCompletedPhases, pendingOpenPhaseId } = useAppSelector(selectDayOverview);
-    const currentDate = date || moment().format('YYYY-MM-DD');
+    const currentDate = date || dayjs().format('YYYY-MM-DD');
     const isFocused = useIsFocused();
     const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
 
@@ -686,9 +686,9 @@ export const Overview: React.FC = () => {
     const handleDayPress = useCallback((day: { dateString: string }) => {
         haptics.selection();
         const nextDate = day.dateString;
-        const isCurrent = moment(nextDate).isSame(moment(), 'day');
-        const isFuture = moment(nextDate).isAfter(moment(), 'day');
-        const isPast = moment(nextDate).isBefore(moment(), 'day');
+        const isCurrent = dayjs(nextDate).isSame(dayjs(), 'day');
+        const isFuture = dayjs(nextDate).isAfter(dayjs(), 'day');
+        const isPast = dayjs(nextDate).isBefore(dayjs(), 'day');
         dispatch(meta({
             date: nextDate,
             isPastDate: isPast,
@@ -867,7 +867,7 @@ export const Overview: React.FC = () => {
     }, [isFocused, pendingOpenPhaseId, navigation, currentDate, dispatch]);
 
     useEffect(() => {
-        moment.updateLocale('en', { week: { dow: 1 } });
+        dayjs.updateLocale('en', { weekStart: 1 });
     }, []);
 
     useEffect(() => {
@@ -972,10 +972,10 @@ export const Overview: React.FC = () => {
             }
             if (phase.status === PHASE_ITEM_STATUS.DONE) {
                 (navigation as any).navigate('SaveValue', {
+                    date: currentDate,
                     measurementType: measurement?.type,
                     measurementName: measurement?.name,
                     measurementPhaseItem: { ...phase, measurement },
-                    date: currentDate,
                 });
                 return;
             }
@@ -1227,7 +1227,7 @@ export const Overview: React.FC = () => {
                                 textAlign="center"
                                 style={[styles.calendarMonthText, { color: theme.colors.white }]}
                             >
-                                {moment(currentDate).format('MMM')}
+                                {dayjs(currentDate).format('MMM')}
                             </Text>
                         </View>
                         <View style={[styles.calendarDay, { backgroundColor: theme.colors.surface }]}>
@@ -1236,7 +1236,7 @@ export const Overview: React.FC = () => {
                                 textAlign="center"
                                 style={[styles.calendarDayText, { color: theme.colors.text }]}
                             >
-                                {moment(currentDate).format('DD')}
+                                {dayjs(currentDate).format('DD')}
                             </Text>
                         </View>
                     </View>

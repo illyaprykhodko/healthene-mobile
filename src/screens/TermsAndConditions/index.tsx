@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import moment from 'moment';
+import dayjs from 'services/date';
 import WebView from 'react-native-webview';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -40,7 +40,7 @@ export const TermsAndConditions = () => {
             <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.footerText}>
         Healthene® &copy;
                 {' '}
-                {moment().format('MMMM, YYYY')}
+                {dayjs().format('MMMM, YYYY')}
             </Text>
             <Pressable onPress={handleAttach}>
                 <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.link}>www.Healthene.com</Text>

@@ -1,8 +1,7 @@
 // outsource dependencies
-import { WebView } from 'react-native-webview';
 import { StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 
 // local dependencies

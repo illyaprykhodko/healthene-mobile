@@ -32,6 +32,7 @@ Audit progress:
 - [ ] Step 2: Classify each package by jump (major/minor/patch) and risk tier
 - [ ] Step 3: Map code usage for high-impact packages
 - [ ] Step 4: Note native rebuild requirements
+- [ ] Step 4b: Check for DEPRECATED API usage on every major bump (tsc does NOT catch this)
 - [ ] Step 5: Render summary using the template below
 ```
 
@@ -78,6 +79,38 @@ If any updated package is in the `native` list (or has a peer that is, e.g. `rea
 - Reset Metro cache: `npm start -- --reset-cache`
 
 Flag this clearly in the summary; do **not** run these commands as part of the audit.
+
+### Step 4b — Check for DEPRECATED API usage (mandatory on every major bump)
+
+**Critical:** `npx tsc --noEmit` does **NOT** report use of `@deprecated` APIs. Deprecations
+are *suggestion* diagnostics (TypeScript code `ts(6385)`), shown only in the IDE/editor — they
+do not fail a headless compile. A green `tsc` can still hide code that calls a symbol the new
+major version has deprecated (and will remove in the next major). This is real: RN Gesture
+Handler 3 kept `Gesture.Pan()` working (tsc clean) but marked the whole `Gesture` builder
+`@deprecated` in favour of the new hook API (`usePanGesture`). Migrating to a *deprecated*
+path is not a real migration.
+
+So for **every package with a major jump** (and for the symbols you touched during any bump),
+verify none of the exports you use are deprecated:
+
+1. Prefer a real lint pass when available — `@typescript-eslint/no-deprecated` (present since
+   `@typescript-eslint` v8) reports deprecated usage as errors. If the project's eslint config
+   does not enable it, run an ad-hoc check on the changed files rather than editing the shared
+   config.
+2. Otherwise, grep the library's own type declarations for `@deprecated` next to the exact
+   exports you import, e.g.:
+
+   ```bash
+   # for each symbol you import from <pkg>, look for a @deprecated tag on its declaration
+   grep -rn "@deprecated" node_modules/<pkg>/lib/typescript
+   ```
+   Cross-reference the hits against your import list. A `@deprecated` note almost always names
+   the replacement ("Please use `X` instead") — follow it to the current API.
+3. When migrating a major, confirm the target API is itself **not** deprecated before writing
+   code against it (check the replacement symbol's declaration too).
+
+Record in the summary: for each major, which imported symbols are deprecated and the
+maintainer-recommended replacement.
 
 ### Step 5 — Render the summary
 

@@ -11,6 +11,7 @@ import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import { Platform, StyleSheet } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets, EdgeInsets } from 'react-native-safe-area-context';
 // local dependencies
@@ -76,7 +77,8 @@ function AppContent (): React.JSX.Element {
         });
     }, [dispatch]);
     // const { isInitializing, isHealthy, isHealthLoading } = useAppInitialization();
-    const { isInitializing } = useAppInitialization();
+    const { isInitializing, isHealthy } = useAppInitialization();
+    
     const {
         softPolicy,
         openStore,
@@ -100,7 +102,7 @@ function AppContent (): React.JSX.Element {
     }, []);
     // if (isHealthLoading) { return <BoxHolder active />; }
     if (isInitializing) { return <BoxHolder active />; }
-    // if (!isHealthy) { return <MaintenanceHolder active />; }
+    if (!isHealthy) { return <MaintenanceHolder active />; }
     if (forcePolicy) { return <ForceUpdateScreen policy={forcePolicy} onUpdate={openStore} />; }
     return (
         <SafeAreaView style={[styles.safeArea, styles.flex, { backgroundColor: theme.colors.background }]}>
@@ -124,11 +126,13 @@ function App (): React.JSX.Element {
         <Provider store={store}>
             <SafeAreaProvider>
                 <GestureHandlerRootView style={styles.flex}>
-                    <BottomSheetModalProvider>
-                        <ThemeProvider>
-                            <AppContent />
-                        </ThemeProvider>
-                    </BottomSheetModalProvider>
+                    <KeyboardProvider>
+                        <BottomSheetModalProvider>
+                            <ThemeProvider>
+                                <AppContent />
+                            </ThemeProvider>
+                        </BottomSheetModalProvider>
+                    </KeyboardProvider>
                 </GestureHandlerRootView>
             </SafeAreaProvider>
             <Toast />

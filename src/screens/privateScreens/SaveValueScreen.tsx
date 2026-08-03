@@ -6,7 +6,7 @@ import {
     TouchableOpacity,
     ActivityIndicator,
 } from 'react-native';
-import moment from 'moment';
+import dayjs from 'services/date';
 import React, { useCallback, useMemo } from 'react';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -36,16 +36,16 @@ const SaveValueScreen: React.FC = () => {
     const measurementName = params?.measurementName || measurementType;
     const measurementPhaseItem = params?.measurementPhaseItem;
     const savedValue = params?.savedValue;
-    const currentDate = params?.date || moment().format('YYYY-MM-DD');
+    const currentDate = params?.date || dayjs().format('YYYY-MM-DD');
 
-    const isSameDate = moment().isSame(currentDate, 'day');
-    const isFutureDate = moment(currentDate).isAfter(moment(), 'day');
+    const isSameDate = dayjs().isSame(currentDate, 'day');
+    const isFutureDate = dayjs(currentDate).isAfter(dayjs(), 'day');
 
     const { data: aggregateData, isLoading } = useGetAggregateMeasurementDataQuery({
         type: measurementType,
         period: '1-day',
         date: currentDate,
-        offset: moment().utcOffset() / 60,
+        offset: dayjs().utcOffset() / 60,
     }, {
         refetchOnMountOrArgChange: true,
     });
@@ -206,7 +206,7 @@ const SaveValueScreen: React.FC = () => {
             <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
             <Text variant="h1" textAlign="center" style={styles.title}>
-                {!displayValue && !moment().isSame(currentDate)
+                {!displayValue && !dayjs().isSame(currentDate)
                     ? `No ${measurementName}`
                     : `Current ${measurementName}`}
             </Text>

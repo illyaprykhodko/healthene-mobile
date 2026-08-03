@@ -1,14 +1,27 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import { Platform, Linking } from 'react-native';
 import notifee, { AndroidImportance } from '@notifee/react-native';
-import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
+import {
+    getToken,
+    onMessage,
+    deleteToken,
+    getMessaging,
+    getAPNSToken,
+    onTokenRefresh,
+    setAutoInitEnabled,
+    getInitialNotification,
+    onNotificationOpenedApp,
+    type FirebaseMessagingTypes,
+    registerDeviceForRemoteMessages,
+} from '@react-native-firebase/messaging';
 import {
     check,
     request,
     RESULTS,
     Permission,
     PERMISSIONS,
+    requestNotifications,
 } from 'react-native-permissions';
 
 // local dependencies
@@ -31,6 +44,8 @@ const NAVIGATION_READY_POLL_MS = 250;
 
 class NotificationService {
     private initialized = false;
+
+    private readonly messaging = getMessaging();
 
     private unsubscribeOnMessage: (() => void) | null = null;
 
@@ -74,24 +89,26 @@ class NotificationService {
         if (!androidGranted) { return false; }
 
         try {
-            await messaging().setAutoInitEnabled(true);
-            await messaging().registerDeviceForRemoteMessages();
+            await setAutoInitEnabled(this.messaging, true);
+            await registerDeviceForRemoteMessages(this.messaging);
         } catch (error) {
             this.log('registerDeviceForRemoteMessages skipped/failed', error);
         }
 
-        const status = await messaging().requestPermission();
-        const authorized = (
-            status === messaging.AuthorizationStatus.AUTHORIZED
-            || status === messaging.AuthorizationStatus.PROVISIONAL
-        );
+        // iOS notification permission via react-native-permissions (RNFB v25 deprecated
+        // messaging().requestPermission()). NOTE: the react-native-permissions 'Notifications'
+        // handler MUST stay disabled in the Podfile setup_permissions — enabling it conflicts
+        // with Firebase Messaging's APNs handling and breaks push delivery. On Android the
+        // POST_NOTIFICATIONS gate above is authoritative.
+        if (Platform.OS !== 'ios') { return true; }
 
-        if (Platform.OS === 'ios') {
-            try {
-                await messaging().getAPNSToken();
-            } catch (error) {
-                this.log('Failed to get APNS token', error);
-            }
+        const { status } = await requestNotifications(['alert', 'sound', 'badge']);
+        const authorized = status === RESULTS.GRANTED || status === RESULTS.LIMITED;
+
+        try {
+            await getAPNSToken(this.messaging);
+        } catch (error) {
+            this.log('Failed to get APNS token', error);
         }
 
         return authorized;
@@ -168,7 +185,7 @@ class NotificationService {
         }
 
         if (isWeightDeepLink(deepLink)) {
-            const date = moment().format('YYYY-MM-DD');
+            const date = dayjs().format('YYYY-MM-DD');
             navigationRef.navigate(ROUTES.WEIGHT_MEASUREMENT, { date });
             return;
         }
@@ -206,21 +223,21 @@ class NotificationService {
         await this.createDefaultChannel();
         await this.ensureMessagingPermission();
 
-        this.unsubscribeOnMessage = messaging().onMessage(async remoteMessage => {
+        this.unsubscribeOnMessage = onMessage(this.messaging, async remoteMessage => {
             await this.displayForegroundNotification(remoteMessage);
         });
 
-        this.unsubscribeOpenedApp = messaging().onNotificationOpenedApp(remoteMessage => {
+        this.unsubscribeOpenedApp = onNotificationOpenedApp(this.messaging, remoteMessage => {
             this.handleNotificationOpen(remoteMessage);
         });
 
-        this.unsubscribeTokenRefresh = messaging().onTokenRefresh(() => {
+        this.unsubscribeTokenRefresh = onTokenRefresh(this.messaging, () => {
             // NOTE intentionally a no-op for now — backend re-registration of the
             // refreshed token lives elsewhere (auth flow); keep the subscription
             // here only to avoid the listener being garbage-collected.
         });
 
-        const initialMessage = await messaging().getInitialNotification();
+        const initialMessage = await getInitialNotification(this.messaging);
         this.handleNotificationOpen(initialMessage);
     }
 
@@ -228,7 +245,7 @@ class NotificationService {
         try {
             const hasPermission = await this.ensureMessagingPermission();
             if (!hasPermission) { return null; }
-            const token = await messaging().getToken();
+            const token = await getToken(this.messaging);
             return token;
         } catch (error) {
             console.error('[NotificationService] Failed to get FCM token:', error);
@@ -238,7 +255,7 @@ class NotificationService {
 
     public async deleteDeviceToken (): Promise<void> {
         try {
-            await messaging().deleteToken();
+            await deleteToken(this.messaging);
         } catch (error) {
             console.error('[NotificationService] Failed to delete FCM token:', error);
         }

@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     loaderOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         zIndex: 20,
     },
 });

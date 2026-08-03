@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import moment from 'moment/moment';
+import dayjs from 'services/date';
 import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import { ReactNativeBlobUtilStat } from 'react-native-blob-util';
@@ -26,7 +26,7 @@ export const handleCapture = async ({
     setPreloader(true);
 
     const prepareFile = (type: captureType) => {
-        const date = moment().format('YYYY-MM-DD_HH-mm-ss');
+        const date = dayjs().format('YYYY-MM-DD_HH-mm-ss');
         switch (type) {
             default:
                 return {

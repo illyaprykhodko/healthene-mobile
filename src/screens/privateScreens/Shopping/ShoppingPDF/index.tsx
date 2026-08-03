@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import RNBlobUtil from 'react-native-blob-util';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -46,7 +46,7 @@ const ShoppingPDF: React.FC = () => {
 
         try {
             const url = `${config.serviceUrl}/${config.apiPath}/patient-service/patients/shopping-list/print?startDate=${startDate}&endDate=${endDate}`;
-            const fileName = `shopping-list-${moment().format('YYYY-MM-DD-HH-mm-ss')}.pdf`;
+            const fileName = `shopping-list-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}.pdf`;
 
             const { dirs } = RNBlobUtil.fs;
             const downloadDir = Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DCIMDir;
@@ -143,7 +143,7 @@ const ShoppingPDF: React.FC = () => {
                         Author: <Text style={styles.metaInfoDescription}>Healthene®</Text>
                     </Text>
                     <Text style={styles.metaInfoTitle}>
-                        Date: <Text style={styles.metaInfoDescription}>{moment().format('llll')}</Text>
+                        Date: <Text style={styles.metaInfoDescription}>{dayjs().format('llll')}</Text>
                     </Text>
                 </View>
 

@@ -1,7 +1,7 @@
 // outsource dependencies
 import * as yup from 'yup';
-import moment from 'moment';
 import { Formik } from 'formik';
+import dayjs from 'services/date';
 import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,9 +9,9 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { pick, types } from '@react-native-documents/picker';
 import React, { useCallback, useMemo, useState } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // local dependencies
 import { config } from 'constants';
@@ -182,7 +182,7 @@ const WriteMessageScreen = () => {
                 type: file.type ?? 'application/octet-stream',
             });
             formData.append('title', file.name);
-            formData.append('description', moment().format());
+            formData.append('description', dayjs().format());
             const attachment = await uploadFile({ body: formData }).unwrap();
             dispatch(setAttachment(attachment));
             Toast.show({
@@ -305,9 +305,8 @@ const WriteMessageScreen = () => {
         <Screen initialized={true} style={styles.container}>
             <ScrollView>
                 <KeyboardAwareScrollView
-                    enableOnAndroid
+                    bottomOffset={80}
                     style={styles.flex}
-                    extraScrollHeight={80}
                     contentContainerStyle={styles.flexGrow}
                 >
                     <Pressable

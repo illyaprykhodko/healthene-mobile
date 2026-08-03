@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scanOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
         borderColor: COLORS.WHITE,
     },
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#DADADA99',

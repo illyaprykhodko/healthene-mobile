@@ -1,6 +1,5 @@
-import type WebView from 'react-native-webview';
 import { useFocusEffect } from '@react-navigation/native';
-import type { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
+import WebView, { type WebViewMessageEvent } from 'react-native-webview';
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 
 import {

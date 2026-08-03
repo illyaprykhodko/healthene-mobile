@@ -269,17 +269,17 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
     },
     backdrop: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(7, 12, 20, 0.45)',
     },
     initialLoaderOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
     },
     panelContainer: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         justifyContent: 'flex-end',
     },
     handleTouchArea: {
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     topRowBankOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     loaderOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(13, 27, 42, 0.9)',
         alignItems: 'center',
         justifyContent: 'center',
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Outfit-Medium',
     },
     errorOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(13, 27, 42, 0.95)',
         alignItems: 'center',
         justifyContent: 'center',

@@ -8,7 +8,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import * as yup from 'yup';
-import moment from 'moment';
+import dayjs from 'services/date';
 import { Formik, FormikProps } from 'formik';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import React, { useState, useCallback, useRef } from 'react';
@@ -41,15 +41,15 @@ const WeightMeasurementScreen: React.FC = () => {
     const [isPanelOpen, setIsPanelOpen] = useState(false);
 
     const measurementPhaseItem = (route.params as any)?.measurementPhaseItem;
-    const currentDate = (route.params as any)?.date || moment().format('YYYY-MM-DD');
-    const isFutureDay = moment(currentDate).isAfter(moment(), 'day');
+    const currentDate = (route.params as any)?.date || dayjs().format('YYYY-MM-DD');
+    const isFutureDay = dayjs(currentDate).isAfter(dayjs(), 'day');
 
     const item = measurementPhaseItem || {};
     const { data: aggregateData } = useGetAggregateMeasurementDataQuery({
         type: 'WEIGHT',
         period: '1-day',
         date: currentDate,
-        offset: moment().utcOffset() / 60,
+        offset: dayjs().utcOffset() / 60,
     });
     const hasRecentWeight = aggregateData?.data?.length > 0;
     const lastSubmittedValueRef = useRef<string | null>(null);
@@ -205,7 +205,7 @@ const WeightMeasurementScreen: React.FC = () => {
                                         Date
                                 </Text>
                                 <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.itemValue, { color: theme.colors.text }]}>
-                                    {moment().format('MMM Do YY')}
+                                    {dayjs().format('MMM Do YY')}
                                 </Text>
                             </View>
                             <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
@@ -213,7 +213,7 @@ const WeightMeasurementScreen: React.FC = () => {
                                         Time
                                 </Text>
                                 <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.itemValue, { color: theme.colors.text }]}>
-                                    {moment().format('LT')}
+                                    {dayjs().format('LT')}
                                 </Text>
                             </View>
                             <View
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
         paddingTop: 25,
     },
     overlayBackground: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: '#DADADA99',
         zIndex: 1,
     },

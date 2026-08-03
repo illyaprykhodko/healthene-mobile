@@ -5,7 +5,7 @@ import Animated, {
     useDerivedValue,
     useAnimatedStyle
 } from 'react-native-reanimated';
-import moment from 'moment/moment';
+import dayjs from 'services/date';
 import { useSelector } from 'react-redux';
 import React, { memo, useState } from 'react';
 import Icon from '@react-native-vector-icons/fontawesome5';
@@ -62,7 +62,7 @@ const MessageChainItem = memo(({ sender, date, text, attachments, onPreloader }:
                 <Text>{sender?.id === user?.id ? 'You' : sender?.name}</Text>
                 {
                     date
-                        ? <Text color={theme.colors.grey}>{moment(date).fromNow()}</Text>
+                        ? <Text color={theme.colors.grey}>{dayjs(date).fromNow()}</Text>
                         : null
                 }
             </View>

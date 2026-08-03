@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import moment from 'moment';
+import dayjs from 'services/date';
 import { useSelector } from 'react-redux';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Icon from '@react-native-vector-icons/fontawesome5';
@@ -90,7 +90,7 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
             </View>
             <View style={styles.additionalInfoWrapper}>
                 <Text color={theme.colors.grey}>
-                    { moment(date).format('DD MMM') }
+                    { dayjs(date).format('DD MMM') }
                 </Text>
                 { attachmentCount ? <Icon iconStyle="solid" name="paperclip" size={16} color={theme.colors.grey} /> : null }
             </View>
