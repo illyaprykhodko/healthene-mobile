@@ -30,6 +30,7 @@ import { useAppInitialization } from 'hooks/useAppInitialization.ts';
 // import { FeedbackProvider } from 'features/feedback';
 import { WalkingSessionRunner } from 'components/WalkingSessionRunner';
 import { ForceUpdateScreen } from 'components/update/ForceUpdateScreen';
+import { useNotificationTokenSync } from 'hooks/useNotificationTokenSync';
 import notificationService from 'services/notifications/notification.service';
 
 export const navigationIntegration = Sentry.reactNavigationIntegration({
@@ -101,6 +102,9 @@ function AppContent (): React.JSX.Element {
             notificationService.cleanup();
         };
     }, []);
+    // NOTE the FCM token only reaches the backend from here — without it push
+    // notifications cannot be addressed to this installation at all.
+    useNotificationTokenSync();
     // if (isHealthLoading) { return <BoxHolder active />; }
     if (isInitializing) { return <BoxHolder active />; }
     // Only an explicit `false` means "backend is down". `null` means "not known yet" — treating
