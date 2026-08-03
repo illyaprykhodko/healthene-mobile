@@ -29,6 +29,16 @@ import {
     FEEDBACK_MAX_ATTACHMENTS,
 } from 'constants/feedback';
 
+// Height of the free-text box. Also drives the keyboard offset below, so the two cannot drift.
+const MESSAGE_BOX_MIN_HEIGHT = 140;
+
+/**
+ * `bottomOffset` is the gap between the keyboard and the *caret*, not the bottom of the field.
+ * The caret starts on the first line of a tall multiline box, so a small offset leaves most of the
+ * box under the keyboard. Offsetting by the box height lifts the whole field into view.
+ */
+const KEYBOARD_BOTTOM_OFFSET = MESSAGE_BOX_MIN_HEIGHT + OFFSET.HORIZONTAL;
+
 /**
  * A file already uploaded to S3. Only `id` goes to the feedback API; `url` is kept because
  * deleteFile addresses files by url, and `fileName`/`mediaType` drive the attachment row.
@@ -167,14 +177,27 @@ export const HelpSupportScreen: React.FC = () => {
         [deleteFile],
     );
 
+    // This screen is a Drawer.Screen, so navigating away does not unmount it and the local state
+    // survives. Without an explicit reset the next visit still shows the text that was just sent.
+    const resetForm = useCallback(() => {
+        setMessage('');
+        setAttachments([]);
+        setType(DEFAULT_FEEDBACK_TYPE);
+    }, []);
+
     const handleSubmit = useCallback(() => {
         // The API references attachments by their uploaded id, not by url.
         const attachmentIds = attachments.map(({ id }) => ({ id }));
         submit(
             { type, text: message, attachments: attachmentIds },
-            { onSuccess: () => navigation.goBack() },
+            {
+                onSuccess: () => {
+                    resetForm();
+                    navigation.goBack();
+                },
+            },
         );
-    }, [attachments, message, type, submit, navigation]);
+    }, [attachments, message, type, submit, navigation, resetForm]);
 
     return (
         <Screen initialized style={styles.screen}>
@@ -184,9 +207,9 @@ export const HelpSupportScreen: React.FC = () => {
                 onOpenDrawer={() => navigation.openDrawer?.()}
             />
             <KeyboardAwareScrollView
-                bottomOffset={20}
                 style={styles.scroll}
                 keyboardShouldPersistTaps="handled"
+                bottomOffset={KEYBOARD_BOTTOM_OFFSET}
                 contentContainerStyle={styles.content}
             >
                 <View style={styles.brand}>
@@ -368,9 +391,9 @@ const styles = StyleSheet.create({
     },
     messageBox: {
         borderWidth: 1,
-        minHeight: 140,
         padding: OFFSET.POINT * 2,
         borderRadius: OFFSET.POINT * 2,
+        minHeight: MESSAGE_BOX_MIN_HEIGHT,
     },
     messageInput: {
         flex: 1,
