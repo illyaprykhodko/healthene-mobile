@@ -86,6 +86,9 @@ const clampIdx = (i: number, n: number): number => {
 const RIGHT_PAD_SLOTS = 2;
 const slotDivision = (W: number, count: number): number => W / (count + (count > 15 ? RIGHT_PAD_SLOTS : 0));
 
+// Touch radius (px) for scrubbing an ISOLATED point that has no line under it (e.g. a single reading).
+const SCRUB_SNAP_PX = 40;
+
 const shouldShowXLabel = (index: number, total: number, maxLabels: number): boolean => {
     if (total <= maxLabels) { return true; }
     const step = Math.ceil(total / maxLabels);
@@ -176,8 +179,9 @@ const curveYAt = (xs: number[], ys: number[], breaks: boolean[], x: number): num
     'worklet';
     const n = xs.length;
     if (n === 0) { return NaN; }
-    if (n === 1 || x <= xs[0]) { return ys[0]; }
-    if (x >= xs[n - 1]) { return ys[n - 1]; }
+    // Outside the data range → NaN (no dot / no tooltip when scrubbing empty space beyond the data).
+    if (x < xs[0] || x > xs[n - 1]) { return NaN; }
+    if (n === 1) { return ys[0]; }
     let seg = -1;
     for (let i = 0; i < n - 1; i++) {
         if (x >= xs[i] && x <= xs[i + 1]) { seg = i; break; }
@@ -344,6 +348,7 @@ const ChartCarousel: React.FC<ChartCarouselProps> = ({
     // Point arrays live in shared values so the derived SkPaths rebuild on the UI thread.
     const xsP = useSharedValue<number[]>([]);
     const valsP = useSharedValue<number[]>([]);
+    const valsP2 = useSharedValue<number[]>([]); // secondary (diastolic) aligned with xsP; NaN if none
     const breaksP = useSharedValue<boolean[]>([]);
     const xsS = useSharedValue<number[]>([]);
     const valsS = useSharedValue<number[]>([]);
@@ -357,6 +362,7 @@ const ChartCarousel: React.FC<ChartCarouselProps> = ({
         if (W === 0) { return; }
         xsP.value = combined.map(p => p.x);
         valsP.value = combined.map(p => p.value);
+        valsP2.value = combined.map(p => (Number.isFinite(p.value2) ? (p.value2 as number) : NaN));
         breaksP.value = computeBreaks(combined);
         const bp = combined.filter(p => Number.isFinite(p.value2));
         xsS.value = bp.map(p => p.x);
@@ -487,29 +493,55 @@ const ChartCarousel: React.FC<ChartCarouselProps> = ({
         }
         return best;
     });
-    const indTop = useDerivedValue(() => vec(canvasX.value, plotTop));
-    const indBottom = useDerivedValue(() => vec(canvasX.value, plotBottom));
+    // Primary-line y under the finger; NaN when NOT over the line (empty period / gap / outside range).
+    const scrubY = useDerivedValue(() => {
+        const xs = xsP.value;
+        if (!xs.length) { return NaN; }
+        const ys = xs.map((_, i) => cyOf(valsP.value[i], plotTop, innerHeight, [rangeMin.value, rangeMax.value]));
+        return curveYAt(xs, ys, breaksP.value, canvasX.value);
+    });
+    const overLine = useDerivedValue(() => Number.isFinite(scrubY.value));
+    // Nearest data point's canvas x (for scrubbing ISOLATED points that have no line under them).
+    const nearestX = useDerivedValue(() => {
+        const arr = xsP.value;
+        const i = activeIndex.value;
+        return i >= 0 && i < arr.length ? arr[i] : NaN;
+    });
+    const nearPoint = useDerivedValue(() => Number.isFinite(nearestX.value) && Math.abs(nearestX.value - canvasX.value) <= SCRUB_SNAP_PX);
+    // Valid when over the line OR within touch range of a point → never surfaces an off-screen point.
+    const scrubValid = useDerivedValue(() => overLine.value || nearPoint.value);
+    // The indicator follows the finger over a line, but snaps to an isolated point when near one.
+    const indX = useDerivedValue(() => (overLine.value ? canvasX.value : nearestX.value));
+    const indTop = useDerivedValue(() => vec(indX.value, plotTop));
+    const indBottom = useDerivedValue(() => vec(indX.value, plotBottom));
     const indDotTopPath = useDerivedValue(() => {
         const p = Skia.Path.Make();
-        const xs = xsP.value;
-        if (xs.length) {
-            const ys = xs.map((_, i) => cyOf(valsP.value[i], plotTop, innerHeight, [rangeMin.value, rangeMax.value]));
-            const y = curveYAt(xs, ys, breaksP.value, canvasX.value);
-            if (Number.isFinite(y)) { p.addCircle(canvasX.value, y, 5); }
+        const range = [rangeMin.value, rangeMax.value];
+        if (overLine.value) {
+            p.addCircle(canvasX.value, scrubY.value, 5);
+        } else if (nearPoint.value) {
+            p.addCircle(nearestX.value, cyOf(valsP.value[activeIndex.value], plotTop, innerHeight, range), 5);
         }
         return p;
     });
     const indDotBottomPath = useDerivedValue(() => {
         const p = Skia.Path.Make();
-        const xs = xsS.value;
-        if (xs.length) {
-            const ys = xs.map((_, i) => cyOf(valsS.value[i], plotTop, innerHeight, [rangeMin.value, rangeMax.value]));
-            const y = curveYAt(xs, ys, breaksS.value, canvasX.value);
-            if (Number.isFinite(y)) { p.addCircle(canvasX.value, y, 5); }
+        const range = [rangeMin.value, rangeMax.value];
+        if (overLine.value) {
+            const xs = xsS.value;
+            if (xs.length) {
+                const ys = xs.map((_, i) => cyOf(valsS.value[i], plotTop, innerHeight, range));
+                const y = curveYAt(xs, ys, breaksS.value, canvasX.value);
+                if (Number.isFinite(y)) { p.addCircle(canvasX.value, y, 5); }
+            }
+        } else if (nearPoint.value) {
+            const v2 = valsP2.value[activeIndex.value];
+            if (Number.isFinite(v2)) { p.addCircle(nearestX.value, cyOf(v2, plotTop, innerHeight, range), 5); }
         }
         return p;
     });
-    const scrubOpacity = useDerivedValue(() => withTiming(scrubActive.value ? 1 : 0, { duration: 120 }));
+    // Indicator visible only while actively scrubbing AND over the line / near a point.
+    const scrubOpacity = useDerivedValue(() => withTiming(scrubActive.value && scrubValid.value ? 1 : 0, { duration: 120 }));
 
     const emitScrub = (index: number) => {
         const d = combined[index];
@@ -520,18 +552,18 @@ const ChartCarousel: React.FC<ChartCarouselProps> = ({
     const emitScrubEnd = () => setScrubInfo(null);
     const clearScrub = () => setScrubInfo(null);
 
+    // Show the readout only when over the line; hide it (and the indicator) over No Data / gaps.
     useAnimatedReaction(
-        () => ({ i: activeIndex.value, active: scrubActive.value }),
+        () => ({ i: activeIndex.value, show: scrubActive.value && scrubValid.value }),
         (cur, prevR) => {
-            if (cur.active && (!prevR || cur.i !== prevR.i || !prevR.active)) {
-                scheduleOnRN(emitScrub, cur.i);
+            const wasShow = prevR ? prevR.show : false;
+            if (cur.show) {
+                if (!wasShow || (prevR && cur.i !== prevR.i)) {
+                    scheduleOnRN(emitScrub, cur.i);
+                }
+            } else if (wasShow) {
+                scheduleOnRN(emitScrubEnd);
             }
-        }
-    );
-    useAnimatedReaction(
-        () => scrubActive.value,
-        (active, prevR) => {
-            if (prevR && !active) { scheduleOnRN(emitScrubEnd); }
         }
     );
 
