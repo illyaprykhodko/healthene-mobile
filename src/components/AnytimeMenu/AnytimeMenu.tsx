@@ -106,7 +106,7 @@ export const AnytimeMenu: React.FC<AnytimeMenuProps> = ({
         const anytimeItems = anytimePhase?.items || [];
         const exerciseItems = anytimeItems.filter(item =>
             item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY');
-        return exerciseItems.filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
+        return exerciseItems.filter(item => (item.status !== PHASE_ITEM_STATUS.DONE || item.status !== PHASE_ITEM_STATUS.DID_NOT_EAT)).length;
     }, [dayOverviewData]);
 
     // Don't render if there's no anytime phase

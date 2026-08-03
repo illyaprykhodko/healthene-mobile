@@ -15,6 +15,7 @@ export const config = {
     websiteUrl: env.WEBSITE_URL,
     serviceUrl: env.SERVICE_URL,
     environment: env.ENVIRONMENT,
+    publicSiteUrl: env.PUBLIC_SITE_URL,
     updatePolicyMockEnabled: env.UPDATE_POLICY_MOCK_ENABLED !== 'false',
     softUpdateCooldownHours: Number(env.SOFT_UPDATE_COOLDOWN_HOURS || 24),
     softUpdateShowOnLaunch: env.SOFT_UPDATE_SHOW_ON_LAUNCH !== 'false',

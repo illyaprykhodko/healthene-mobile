@@ -959,13 +959,13 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 <Button
                                     title="Meal Done"
                                     variant="secondary"
+                                    disabled={isLoading}
                                     onPress={handlePhaseDone}
-                                    disabled={!allItemsDone || isLoading}
                                     textStyle={styles.textMealDoneButton}
                                     style={{
                                         ...styles.button,
                                         ...styles.mealDoneButton,
-                                        ...((!allItemsDone || isLoading) && styles.mealDoneButtonDisabled),
+                                        ...(isLoading && styles.mealDoneButtonDisabled),
                                     }}
                                 />
                             )}
@@ -988,10 +988,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         />
                         {!isFutureDate && (
                             <Button
+                                // disabled={true}
                                 title="Meal Done"
                                 variant="secondary"
                                 onPress={handlePhaseDone}
-                                disabled={!allItemsDone || isLoading}
+                                // disabled={!allItemsDone || isLoading}
                                 textStyle={styles.textMealDoneButton}
                                 style={{
                                     ...styles.button,
