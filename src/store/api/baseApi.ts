@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootState } from 'store';
 import { config } from 'constants';
 import { UserSession } from 'types';
+import { clearSession } from 'store/slices/appSlice';
 import { addInterceptor, applyInterceptors } from './interceptors';
 
 // add response interceptor
@@ -149,6 +150,10 @@ const handleRefreshToken = async (
                 reject(refreshError)
             );
             await sessionManager.update(null);
+            // NOTE dropping the stored tokens is not enough — without this the Redux `auth` flag
+            // stays `true`, so `RootNavigator` keeps the private stack mounted with a dead
+            // session instead of sending the user back to sign-in.
+            api.dispatch(clearSession());
         } finally {
             stuckRequests = [];
             isRefreshing = false;

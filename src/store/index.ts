@@ -6,7 +6,6 @@ import { combineReducers, configureStore, createAction, Middleware, Reducer } fr
 
 // local dependencies
 import { authApi } from './api/authApi';
-import appReducer from './slices/appSlice';
 import { videoApi } from 'store/api/videoApi';
 import { planApi } from 'store/api/planApi.ts';
 import reactotron from '../../ReactotronConfig';
@@ -26,6 +25,7 @@ import messengerSlice from 'store/slices/messengerSlice.ts';
 import { gamblingPointsApi } from './api/gamblingPointsApi';
 import { dayOverviewReducer } from './slices/dayOverviewSlice';
 import { categoryTreeApi } from 'store/api/categoryTreeApi.ts';
+import appReducer, { appInitialState } from './slices/appSlice';
 import forgotPasswordReducer from './slices/forgotPasswordSlice';
 import { healthProfileApi } from 'store/api/healthProfileApi.ts';
 import walkingActivityReducer from './slices/walkingActivitySlice';
@@ -111,9 +111,27 @@ const combinedReducer = combineReducers({
     [cuisineDistributionApi.reducerPath]: cuisineDistributionApi.reducer,
 });
 
-const rootReducer: Reducer<ReturnType<typeof combinedReducer>> = (state, action) => {
+type CombinedState = ReturnType<typeof combinedReducer>;
+
+const rootReducer: Reducer<CombinedState> = (state, action) => {
     if (resetStore.match(action)) {
-        return combinedReducer(undefined, action);
+        // NOTE `resetStore` exists to drop the *previous user's* data. Backend health and
+        // device-level preferences are not user data, so they must survive the reset:
+        //  - `health`: wiping it back to `null`/`false` used to trip the maintenance gate in
+        //    `App.tsx` right after logout, stranding the user there until an app restart.
+        //  - `birdSoundEnabled`: only re-read from AsyncStorage on cold start, so a reset
+        //    would silently revert it to the default until the app is relaunched.
+        // Passing a state object with only `app` is enough — `combineReducers` hands
+        // `undefined` to every missing slice, so all other slices and every RTK Query
+        // cache still fall back to their initial state.
+        const preserved = state && {
+            app: {
+                ...appInitialState,
+                health: state.app.health,
+                birdSoundEnabled: state.app.birdSoundEnabled,
+            },
+        } as CombinedState;
+        return combinedReducer(preserved || undefined, action);
     }
     return combinedReducer(state, action);
 };

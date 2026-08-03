@@ -1,16 +1,19 @@
-import { SignInState } from './slices/signInSlice';
-import { MessagesState } from '../services/messages/types';
+// import { SignInState } from './slices/signInSlice';
+// import { MessagesState } from '../services/messages/types';
+// local dependencies
 import { User } from 'types';
 // import { User } from './api/types';
 
 // Types
 export interface AppState {
   auth: boolean;
-  health: boolean;
   wakeup: boolean;
   user: User | null;
   keyboard: boolean;
   initialized: boolean;
+  // NOTE tri-state on purpose: `null` means "backend state not known yet", which must not
+  // be confused with `false` ("backend is down") — only the latter shows the maintenance screen.
+  health: boolean | null;
   birdSoundEnabled: boolean;
   accessToken: string | null;
   refreshToken: string | null;
