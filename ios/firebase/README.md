@@ -10,14 +10,24 @@ live at a fixed path. The `Bundle the Firebase config for the active bundle id`
 build phase copies `ios/firebase/$(PRODUCT_BUNDLE_IDENTIFIER)/GoogleService-Info.plist`
 into the bundle and fails the build when that file is missing.
 
-| build configuration | bundle id | App Store Connect record |
+| build configuration | bundle id | where it goes |
 |---|---|---|
-| `Debug`, `Release` | `com.healthene.app` | Healthene Patient Portal (staging / TestFlight) |
+| `Debug` | `development.healthene.v2.app` | local builds only, never uploaded |
+| `Release` | `com.healthene.app` | Healthene Patient Portal (staging / TestFlight) |
 | `Release-Production` | `com.healthene.production.app` | Healthene (App Store) |
 
 Schemes: `healthene_staging` archives `Release`, `healthene_production` archives
 `Release-Production`. Both bake `.env.production` — staging and production share one
-backend.
+backend. Keeping `Debug` on its own identifier means a local build installs beside
+the TestFlight app instead of replacing it, and its FCM tokens land in the separate
+`Healthene PUSH` Firebase app.
+
+Note that the bundle id follows the **build configuration**, not the scheme. Two
+schemes therefore do not line up with their names: `healthene_development` launches
+and archives `Release`, so it builds the staging identifier, and
+`healthene_staging_debug` builds `Debug`, so it gets the development identifier while
+still talking to the `.env.production` backend. Give an environment its own
+configuration if that combination ever needs to be exact.
 
 ## Adding an environment
 
