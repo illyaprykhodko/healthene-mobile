@@ -9,12 +9,15 @@ import { Provider } from 'react-redux';
 import React, { useEffect } from 'react';
 import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
+import { toastConfig } from 'components/Toast';
 import { Platform, StyleSheet } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets, EdgeInsets } from 'react-native-safe-area-context';
 // local dependencies
 import { config } from 'constants';
+import { useTheme } from 'hooks/useTheme';
 import { store, useAppDispatch } from 'store';
 import { useAppUpdateGate } from 'hooks/useAppUpdateGate';
 import { setBirdSoundEnabled } from 'store/slices/appSlice';
@@ -25,7 +28,9 @@ import { BoxHolder, MaintenanceHolder } from 'components/preloader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppInitialization } from 'hooks/useAppInitialization.ts';
 // import { FeedbackProvider } from 'features/feedback';
+import { WalkingSessionRunner } from 'components/WalkingSessionRunner';
 import { ForceUpdateScreen } from 'components/update/ForceUpdateScreen';
+import { useNotificationTokenSync } from 'hooks/useNotificationTokenSync';
 import notificationService from 'services/notifications/notification.service';
 
 export const navigationIntegration = Sentry.reactNavigationIntegration({
@@ -74,7 +79,8 @@ function AppContent (): React.JSX.Element {
         });
     }, [dispatch]);
     // const { isInitializing, isHealthy, isHealthLoading } = useAppInitialization();
-    const { isInitializing } = useAppInitialization();
+    const { isInitializing, isHealthy } = useAppInitialization();
+    
     const {
         softPolicy,
         openStore,
@@ -82,6 +88,7 @@ function AppContent (): React.JSX.Element {
         onSoftCancel,
         isSoftVisible,
     } = useAppUpdateGate();
+    const theme = useTheme();
     const insets = useSafeAreaInsets();
     const styles = createStyles(insets);
 
@@ -95,13 +102,20 @@ function AppContent (): React.JSX.Element {
             notificationService.cleanup();
         };
     }, []);
+    // NOTE the FCM token only reaches the backend from here — without it push
+    // notifications cannot be addressed to this installation at all.
+    useNotificationTokenSync();
     // if (isHealthLoading) { return <BoxHolder active />; }
     if (isInitializing) { return <BoxHolder active />; }
-    // if (!isHealthy) { return <MaintenanceHolder active />; }
+    // Only an explicit `false` means "backend is down". `null` means "not known yet" — treating
+    // it as maintenance used to trap the user on the maintenance screen right after logout,
+    // since `resetStore` puts the health flag back to its initial value.
+    if (isHealthy === false) { return <MaintenanceHolder active />; }
     if (forcePolicy) { return <ForceUpdateScreen policy={forcePolicy} onUpdate={openStore} />; }
     return (
-        <SafeAreaView style={[styles.safeArea, styles.flex]}>
+        <SafeAreaView style={[styles.safeArea, styles.flex, { backgroundColor: theme.colors.background }]}>
             {/* <FeedbackProvider> */}
+            <WalkingSessionRunner />
             <RootNavigator />
             <SoftUpdateModal
                 policy={softPolicy}
@@ -120,14 +134,19 @@ function App (): React.JSX.Element {
         <Provider store={store}>
             <SafeAreaProvider>
                 <GestureHandlerRootView style={styles.flex}>
-                    <BottomSheetModalProvider>
-                        <ThemeProvider>
-                            <AppContent />
-                        </ThemeProvider>
-                    </BottomSheetModalProvider>
+                    <KeyboardProvider>
+                        <BottomSheetModalProvider>
+                            <ThemeProvider>
+                                <AppContent />
+                            </ThemeProvider>
+                        </BottomSheetModalProvider>
+                    </KeyboardProvider>
                 </GestureHandlerRootView>
             </SafeAreaProvider>
-            <Toast />
+            {/* NOTE `config` carries the `warning` type MessageService.toastWarning emits — without
+                it react-native-toast-message throws "Toast type: 'warning' does not exist" and
+                red-screens instead of showing the message. */}
+            <Toast config={toastConfig} />
         </Provider>
     );
 }

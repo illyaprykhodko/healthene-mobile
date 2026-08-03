@@ -25,6 +25,7 @@ import {
 } from 'react-native';
 
 // local dependencies
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { useThemeContext } from 'providers/ThemeProvider';
 import BloodPressureCurrent from './BloodPressureCurrent';
 import {
@@ -339,12 +340,14 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                             <View style={styles.currentInformation}>
                                 <View style={styles.currentValueContainer}>
                                     <Text
+                                        maxFontSizeMultiplier={MAX_FONT_SCALE}
                                         style={[styles.currentLabel, { color: theme.colors.textSecondary },]}
                                     >
                                     Current
                                     </Text>
                                     <View style={styles.currentValueRow}>
                                         <Text
+                                            maxFontSizeMultiplier={MAX_FONT_SCALE}
                                             style={[styles.currentValue, { color: theme.colors.text },]}
                                         >
                                             {currentValue?.value?.toFixed
@@ -352,6 +355,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                                                 : currentValue?.value ?? '--'}
                                         </Text>
                                         <Text
+                                            maxFontSizeMultiplier={MAX_FONT_SCALE}
                                             style={[
                                                 styles.currentUnit,
                                                 {
@@ -365,6 +369,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                                         </Text>
                                     </View>
                                     <Text
+                                        maxFontSizeMultiplier={MAX_FONT_SCALE}
                                         style={[styles.dateText, { color: theme.colors.textSecondary },]}
                                     >
                                         {dateRange}
@@ -385,15 +390,17 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                                 width: TOOLTIP_W,
                                 left: tooltipLeft,
                                 height: TOOLTIP_H,
-                                backgroundColor: '#E5E5E5',
+                                backgroundColor: theme.colors.muted,
                             },
                         ]}
                     >
                         <Text
+                            maxFontSizeMultiplier={MAX_FONT_SCALE}
                             style={[styles.tooltipValue, { color: theme.colors.text },]}
                         >
                             {bpDisplayValue ?? '--'}
                             <Text
+                                maxFontSizeMultiplier={MAX_FONT_SCALE}
                                 style={[
                                     styles.tooltipUnit,
                                     {
@@ -409,6 +416,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                             </Text>
                         </Text>
                         <Text
+                            maxFontSizeMultiplier={MAX_FONT_SCALE}
                             style={[styles.tooltipDate, { color: theme.colors.textSecondary },]}
                             numberOfLines={1}
                         >

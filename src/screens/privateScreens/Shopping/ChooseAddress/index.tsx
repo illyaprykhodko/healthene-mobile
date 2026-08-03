@@ -1,24 +1,27 @@
 // outsource dependencies
 import * as yup from 'yup';
 import { Formik, FormikHelpers } from 'formik';
+import React, { memo, useCallback } from 'react';
 import Icon from '@react-native-vector-icons/fontisto';
 import { useNavigation } from '@react-navigation/native';
-import React, { memo, useCallback, useLayoutEffect } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
-import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import { useTheme } from 'hooks/useTheme';
 import { filters } from 'services/filter';
 import { Button } from 'components/Button';
 import DefImage from 'components/DefImage';
 import TextInput from 'components/TextInput';
-import { useAppDispatch, useAppSelector } from 'store';
+import StackHeader from 'components/StackHeader';
 import { LOCATION_TYPES } from '../ChooseGroceryStore';
+import { useAppDispatch, useAppSelector } from 'store';
+import { useShoppingDrawer } from '../useShoppingDrawer';
 import { selectSelectedStore, setSelectedStore } from 'store/slices/shoppingSlice';
 
 interface Address {
@@ -120,6 +123,7 @@ const AddressItem: React.FC<{
 const ChooseAddress: React.FC = () => {
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
+    const theme = useTheme();
 
     const selectedStore = useAppSelector(selectSelectedStore);
     const addresses = selectedStore?.addresses || [];
@@ -135,17 +139,13 @@ const ChooseAddress: React.FC = () => {
 
     const validationSchema = isOther
         ? yup.object().shape({
-            address: yup.string().required('Please Fill Out'),
             city: yup.string().required('Please Fill Out'),
             state: yup.string().required('Please Fill Out'),
+            address: yup.string().required('Please Fill Out'),
         })
         : null;
 
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerLeft: () => <BackBtn onPress={handleGoBack} />,
-        });
-    }, [navigation]);
+    const openDrawer = useShoppingDrawer();
 
     const handleGoBack = useCallback(() => {
         navigation.goBack();
@@ -180,8 +180,8 @@ const ChooseAddress: React.FC = () => {
 
         const updatedItem = {
             ...selectedStore,
-            storeLocationType: formData.storeLocationType,
             addresses: updatedAddresses,
+            storeLocationType: formData.storeLocationType,
         };
 
         dispatch(setSelectedStore(updatedItem));
@@ -219,14 +219,19 @@ const ChooseAddress: React.FC = () => {
                 setFieldTouched,
             }) => (
                 <Screen initialized style={styles.container}>
-                    <View style={styles.title}>
+                    <StackHeader
+                        title="Shopping List"
+                        onBack={handleGoBack}
+                        onOpenDrawer={openDrawer}
+                    />
+                    <View style={[styles.title, { backgroundColor: theme.colors.muted }]}>
                         <Text variant="h2">Choose Grocery Store</Text>
                     </View>
                     <View style={styles.storeHeader}>
                         {selectedStore?.groceryStore?.image?.url && (
                             <DefImage
-                                src={selectedStore.groceryStore.image.url}
                                 style={styles.storeImage}
+                                src={selectedStore.groceryStore.image.url}
                             />
                         )}
                         <Text variant="h3" style={styles.storeName}>
@@ -293,7 +298,6 @@ const styles = StyleSheet.create({
     },
     title: {
         padding: 20,
-        backgroundColor: '#D9D9D9',
     },
     storeHeader: {
         flexDirection: 'row',

@@ -3,21 +3,33 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, ImageBackground, Platform, StyleProp, TextStyle, ViewStyle } from 'react-native';
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { useFontScale } from 'hooks/useFontScale';
+import { MAX_FONT_SCALE } from 'constants/typography';
+import { useBoldTextEnabled } from 'hooks/useBoldTextEnabled';
 
 interface TextLogoProps {
+    size?: number;
     color?: string;
     style?: StyleProp<TextStyle>;
 }
 
-export const TextLogo: React.FC<TextLogoProps> = ({ style, color }) => {
+export const TextLogo: React.FC<TextLogoProps> = ({ style, color, size }) => {
     const theme = useTheme();
+    const fontScale = useFontScale();
+    const boldText = useBoldTextEnabled();
     const resolved = color || theme.colors.white;
     return (
+        // Re-key on scale/bold change so the single-line logo re-measures instead of staying
+        // truncated ("Health…") after a live OS text-size change. See note in components/Text.
         <Text
+            key={`${boldText ? 'b' : 'n'}-${fontScale}`}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
             style={StyleSheet.flatten([
-                styles.textLogo,
-                resolved ? { color: resolved } : {},
                 style,
+                styles.textLogo,
+                // `size` (when provided) overrides the default 26; existing callers are unaffected.
+                size ? { fontSize: size } : {},
+                resolved ? { color: resolved } : {},
             ])}
             numberOfLines={1}
         >

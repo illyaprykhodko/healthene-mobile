@@ -3,6 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 // local dependencies
 import { useTheme } from '../hooks/useTheme';
+import { MAX_FONT_SCALE } from '../constants/typography';
 
 const styles = StyleSheet.create({
     container: {
@@ -52,8 +53,8 @@ const ToastContent: React.FC<{
 
     return (
         <View style={[styles.container, { backgroundColor: getBackgroundColor() }]}>
-            {text1 && <Text style={[styles.title, { color: getTextColor() }]}>{text1}</Text>}
-            {text2 && <Text style={[styles.message, { color: getTextColor() }]}>{text2}</Text>}
+            {text1 && <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.title, { color: getTextColor() }]}>{text1}</Text>}
+            {text2 && <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.message, { color: getTextColor() }]}>{text2}</Text>}
         </View>
     );
 };

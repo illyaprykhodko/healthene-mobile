@@ -46,7 +46,7 @@ const Overview: React.FC<OverviewProps> = ({
         switch (type) {
             case ENTITY_TYPE.FOOD: {
                 return (
-                    <View style={styles.offset}>
+                    <View style={[styles.offset && disabled && styles.disabledOpacity]}>
                         <Text textAlign="center" variant="h1" style={styles.title}>
                             {food?.name}
                         </Text>
@@ -86,7 +86,7 @@ const Overview: React.FC<OverviewProps> = ({
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const recipeData = recipe;
                 return (
-                    <View style={styles.offset}>
+                    <View style={[styles.offset, disabled && styles.disabledOpacity]}>
                         <View style={styles.titleWrapper}>
                             <Text variant="h1" textAlign="center" style={styles.title}>
                                 {recipeData?.name}
@@ -136,7 +136,7 @@ const Overview: React.FC<OverviewProps> = ({
             }
             case OVERVIEW_TYPE.PHYSICAL_ACTIVITY:
                 return (
-                    <View style={styles.offset}>
+                    <View style={[styles.offset, disabled && styles.disabledOpacity]}>
                         <Text textAlign="center" variant="h1" style={styles.title}>
                             {physicalActivity?.name}
                         </Text>
@@ -159,7 +159,7 @@ const Overview: React.FC<OverviewProps> = ({
                 );
             case OVERVIEW_TYPE.MEDICATION:
                 return (
-                    <View style={styles.offset}>
+                    <View style={[styles.offset, disabled && styles.disabledOpacity]}>
                         <Text textAlign="center" variant="h1" style={styles.title}>
                             {medication?.name}
                         </Text>
@@ -176,7 +176,7 @@ const Overview: React.FC<OverviewProps> = ({
                 );
             case OVERVIEW_TYPE.SUPPLEMENT:
                 return (
-                    <View style={styles.offset}>
+                    <View style={[styles.offset, disabled && styles.disabledOpacity]}>
                         <Text textAlign="center" variant="h1" style={styles.title}>
                             {supplement?.name}
                         </Text>
@@ -252,5 +252,8 @@ const styles = StyleSheet.create({
     scroller: {
         flexGrow: 1,
         paddingVertical: OFFSET.VERTICAL * 2,
+    },
+    disabledOpacity: {
+        opacity: 0.4,
     },
 });

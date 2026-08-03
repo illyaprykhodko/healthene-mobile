@@ -3,7 +3,6 @@ import {
     View,
     FlatList,
     Keyboard,
-    Platform,
     TextInput,
     StyleSheet,
     TouchableOpacity,
@@ -11,8 +10,8 @@ import {
 } from 'react-native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 
 // local dependencies
 import {
@@ -30,6 +29,9 @@ import { OFFSET } from 'constants/offset';
 import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
 import DefImage from 'components/DefImage';
+import { AnytimeMenu } from 'components/AnytimeMenu';
+import { GlassSurface } from 'components/GlassSurface';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { RootStackParamList } from 'services/navigation';
 import { ENTITY_TYPE, SEARCH_TYPE, SUBSTANCE_TYPE, TAG_TYPE } from 'constants/spec';
 
@@ -74,6 +76,10 @@ const TreeAddReplaceItem: React.FC = () => {
     const [isAiItemLoading, setIsAiItemLoading] = useState(false);
     const [aiFoods, setAiFoods] = useState<any[]>([]);
     const [isAiFoodsAdded, setIsAiFoodsAdded] = useState(false);
+    // Count of distinct committed (debounced) searches in the current session. HS-3130: the
+    // GPT "Show More" must NOT appear during the first search, only from the second onward.
+    const [searchRound, setSearchRound] = useState(0);
+    const lastCountedQuery = useRef('');
     const isRecipesTab = selectedTab === TAG_TYPE.PATIENT_RECIPES;
     const isRestaurantTab = selectedTab === TAG_TYPE.RESTAURANT;
     const hasSearch = debouncedSearchQuery.trim().length > 0;
@@ -87,14 +93,36 @@ const TreeAddReplaceItem: React.FC = () => {
         return () => clearTimeout(handler);
     }, [searchQuery]);
 
+    // Reset paginated state whenever the (debounced) search term changes. Without this,
+    // editing the query while results are paginated would leave `page` at e.g. 2, so the
+    // next query fires with { nameFragment: <new>, page: 2 } and the items effect takes
+    // the append branch — new results would concat onto the previous ones.
+    // The clear-to-empty case on the RESTAURANT tab is preserved as a no-op so the tree
+    // browsing state isn't wiped when the user just clears the search there.
     useEffect(() => {
-        if (debouncedSearchQuery.trim().length === 0 && selectedTab !== TAG_TYPE.RESTAURANT) {
-            setPage(0);
-            setAllItems([]);
-            setAiFoods([]);
-            setIsAiFoodsAdded(false);
+        if (debouncedSearchQuery.trim().length === 0 && selectedTab === TAG_TYPE.RESTAURANT) {
+            return;
         }
+        setPage(0);
+        setAiFoods([]);
+        setAllItems([]);
+        setIsAiFoodsAdded(false);
     }, [debouncedSearchQuery, selectedTab]);
+
+    // Track distinct searches so GPT "Show More" stays hidden on the first one (HS-3130).
+    // Resets to 0 when the query is cleared (incl. tab change, which empties the query).
+    useEffect(() => {
+        const query = debouncedSearchQuery.trim();
+        if (query.length === 0) {
+            lastCountedQuery.current = '';
+            setSearchRound(0);
+            return;
+        }
+        if (query !== lastCountedQuery.current) {
+            lastCountedQuery.current = query;
+            setSearchRound(round => round + 1);
+        }
+    }, [debouncedSearchQuery]);
     const { data: categoryTreeData, isLoading: isCategoryTreeLoading } = useGetCategoryTreeNodesQuery(
         {
             filter: {
@@ -452,6 +480,7 @@ const TreeAddReplaceItem: React.FC = () => {
                                 styles.tabButton,
                                 isActive && styles.activeTabButton,
                                 { borderRightWidth: tabs.length === index + 1 ? 0 : 2 },
+                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceSecond },
                             ]}
                             onPress={() => handleTabPress(tab.value)}
                         >
@@ -516,7 +545,7 @@ const TreeAddReplaceItem: React.FC = () => {
                             </Text> */}
                         </View>
                     </View>
-                    <Icon iconStyle="solid" name="chevron-right" size={16} color={COLORS.BLACK} />
+                    <Icon iconStyle="solid" name="chevron-right" size={16} color={theme.colors.text} />
                 </TouchableOpacity>
             );
         },
@@ -525,21 +554,21 @@ const TreeAddReplaceItem: React.FC = () => {
 
     const renderSearchInput = () => (
         <View style={styles.searchContainer}>
-            <View style={styles.searchInputWrapper}>
-                <Icon iconStyle="solid" name="search" size={14} color={COLORS.GREY} style={styles.searchIcon} />
+            <View style={[styles.searchInputWrapper, { backgroundColor: theme.colors.surface, borderColor: theme.colors.blue }]}>
+                <Icon iconStyle="solid" name="search" size={14} color={theme.colors.blue} style={styles.searchIcon} />
                 <TextInput
                     value={searchQuery}
                     autoCorrect={false}
                     autoCapitalize="none"
                     returnKeyType="search"
-                    placeholder="Search..."
-                    style={styles.searchInput}
                     onChangeText={(value: string) => {
                         setSearchQuery(value);
                         setAiFoods([]);
                         setIsAiFoodsAdded(false);
                     }}
-                    placeholderTextColor={COLORS.GREY}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    style={[styles.searchInput, { color: theme.colors.text }]}
                 />
                 {searchQuery.length > 0 && (
                     <TouchableOpacity
@@ -562,7 +591,7 @@ const TreeAddReplaceItem: React.FC = () => {
         navigation.setOptions({
             headerLeft: () => (
                 <TouchableOpacity onPress={handleGoBack} style={{ paddingLeft: 16 }}>
-                    <Icon iconStyle="solid" name="arrow-left" size={20} color={COLORS.WHITE} />
+                    <Icon iconStyle="solid" name="arrow-left" size={20} color={theme.colors.headerText} />
                 </TouchableOpacity>
             ),
         });
@@ -595,8 +624,9 @@ const TreeAddReplaceItem: React.FC = () => {
         () => selectedTab === TAG_TYPE.PATIENT_FOOD
             && searchType === SEARCH_TYPE.ITEM
             && debouncedSearchQuery.trim().length > 3
+            && searchRound > 1
             && !isAiFoodsAdded,
-        [selectedTab, searchType, debouncedSearchQuery, isAiFoodsAdded]
+        [selectedTab, searchType, debouncedSearchQuery, searchRound, isAiFoodsAdded]
     );
 
     // if (isLoading && page === 0 && allItems.length === 0) {
@@ -608,51 +638,59 @@ const TreeAddReplaceItem: React.FC = () => {
     // }
     return (
         <Screen initialized style={styles.container}>
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt }]}>
                 <Text style={styles.headerTitle}>Add item</Text>
             </View>
             {renderTabs()}
             {renderSearchInput()}
-            {isShowMoreVisible && (
-                <TouchableOpacity
-                    disabled={isLoading || isAiLoading}
-                    onPress={handleShowMore}
-                    style={styles.showMoreContainer}
-                >
-                    {isAiLoading ? (
-                        <ActivityIndicator size="small" color={theme.colors.primary} />
-                    ) : (
-                        <Text style={styles.showMoreText}>✨  Show More...</Text>
-                    )}
-                </TouchableOpacity>
-            )}
             <FlatList
                 data={displayedItems}
                 renderItem={renderItem}
+                onEndReachedThreshold={0.1}
                 onEndReached={handleLoadMore}
                 keyboardDismissMode="on-drag"
+                keyboardShouldPersistTaps="handled"
+                keyExtractor={({ id }) => String(id)}
+                contentContainerStyle={styles.listContent}
                 onScrollBeginDrag={() => {
                     if (isKeyboardVisible) { Keyboard.dismiss(); }
                 }}
-                onEndReachedThreshold={0.1}
-                keyExtractor={({ id }) => String(id)}
-                keyboardShouldPersistTaps="handled"
                 ListEmptyComponent={
-                    !isLoading && !isAiLoading ? (
+                    isLoading || isAiLoading ? (
+                        <View style={styles.loadingMore}>
+                            <ActivityIndicator size="small" color={theme.colors.primary} />
+                        </View>
+                    ) : (
                         <Text style={styles.emptyScreen}>
-                            {searchQuery.trim().length > 0 ? 'No items found' : 'Enter a search term'}
+                            {searchQuery.trim().length > 0 && 'No items found'}
                         </Text>
-                    ) : null
+                    )
                 }
                 ListFooterComponent={
                     isLoading && page > 0 ? (
                         <View style={styles.loadingMore}>
                             <ActivityIndicator size="small" color={theme.colors.primary} />
                         </View>
+                    ) : isShowMoreVisible ? (
+                        <TouchableOpacity
+                            onPress={handleShowMore}
+                            style={styles.showMoreContainer}
+                            disabled={isLoading || isAiLoading}
+                        >
+                            {isAiLoading ? (
+                                <ActivityIndicator size="small" color={theme.colors.primary} />
+                            ) : (
+                                <Text style={styles.showMoreText}>✨  Show More...</Text>
+                            )}
+                        </TouchableOpacity>
                     ) : null
                 }
             />
-            {Platform.OS === 'ios' && (
+            <GlassSurface
+                intensity={5}
+                style={styles.glassBar}
+                tint={theme.dark ? 'dark' : 'light'}
+            >
                 <View style={styles.upcBtnContainer}>
                     <TouchableOpacity
                         style={styles.upcBtn}
@@ -666,12 +704,13 @@ const TreeAddReplaceItem: React.FC = () => {
                         <Text style={styles.upcBtnText}>SCAN UPC CODE</Text>
                     </TouchableOpacity>
                 </View>
-            )}
+            </GlassSurface>
             {isAiItemLoading && (
                 <View style={styles.overlay}>
                     <ActivityIndicator size="large" color={theme.colors.primary} />
                 </View>
             )}
+            <AnytimeMenu date={date} />
         </Screen>
     );
 };
@@ -683,13 +722,11 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingLeft: 0,
         paddingRight: 0,
-        backgroundColor: COLORS.WHITE,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: COLORS.WHITE,
     },
     header: {
         backgroundColor: '#E0EBF7',
@@ -700,7 +737,6 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: '400',
-        color: '#181818',
     },
     tabsRow: {
         flexDirection: 'row',
@@ -727,7 +763,6 @@ const styles = StyleSheet.create({
     tabText: {
         fontWeight: '500',
         fontSize: 14,
-        color: COLORS.BLACK,
     },
     activeTabText: {
         color: COLORS.WHITE,
@@ -788,7 +823,6 @@ const styles = StyleSheet.create({
     itemName: {
         fontSize: 16,
         fontWeight: '500',
-        color: COLORS.BLACK,
         marginBottom: 4,
     },
     additionalTitle: {
@@ -828,7 +862,7 @@ const styles = StyleSheet.create({
         fontWeight: '300',
     },
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#DADADA99',
@@ -836,6 +870,7 @@ const styles = StyleSheet.create({
     upcBtnContainer: {
         paddingHorizontal: OFFSET.HORIZONTAL,
         paddingVertical: OFFSET.VERTICAL,
+        // marginBottom: OFFSET.VERTICAL
     },
     upcBtn: {
         backgroundColor: '#CAE1F9',
@@ -848,5 +883,16 @@ const styles = StyleSheet.create({
         color: '#567697',
         fontSize: 14,
         fontWeight: '500',
+    },
+    glassBar: {
+        // left: 0,
+        // right: 0,
+        // bottom: 0,
+        paddingTop: 6,
+        // position: 'absolute',
+    },
+    listContent: {
+        // Room so the last items scroll up above the floating glass SCAN bar.
+        paddingBottom: 88,
     },
 });

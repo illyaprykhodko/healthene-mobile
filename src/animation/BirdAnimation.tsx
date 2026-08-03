@@ -1,26 +1,21 @@
 // outsource dependencies
-import { WebView } from 'react-native-webview';
-import RNBlobUtil from 'react-native-blob-util';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { WebViewMessageEvent } from 'react-native-webview/src/WebViewTypes.ts';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 
 // local dependencies
-
-// ============================================================================
-// PLATFORM ASSET RESOLUTION
-// ============================================================================
-// iOS ships .mov in the app bundle (Xcode Resources phase); Android ships .webm
-// inside android/app/src/main/assets/videos/ which Gradle auto-bundles into the APK.
-const VIDEO_EXT = Platform.OS === 'ios' ? 'mov' : 'webm';
-const VIDEO_MIME = Platform.OS === 'ios' ? 'video/quicktime' : 'video/webm';
-
-function getVideoAssetPath (name: string): string {
-    return Platform.OS === 'ios'
-        ? `${RNBlobUtil.fs.dirs.MainBundleDir}/${name}.${VIDEO_EXT}`
-        : `bundle-assets://videos/${name}.${VIDEO_EXT}`;
-}
+import {
+    injectSwapClip,
+    preloadVideoAssets,
+    buildSetMutedScript,
+    buildResumeActiveScript,
+    buildBirdCheckClipStyleJs,
+    buildBirdNormalClipStyleJs,
+    createDualVideoWebViewHtml,
+    buildSeekActiveToStartScript,
+    createWebViewVideoCommonProps,
+} from './webViewVideo';
 
 // ============================================================================
 // CONFIGURABLE CONSTANTS
@@ -39,11 +34,6 @@ export const BIRD_ANIMATION_CONFIG = {
     },
 };
 
-/**
- * One entry per check clip: logical name (no extension) + on-screen layout box and container position.
- * Real file is resolved per-platform via {@link getVideoAssetPath}.
- * width/height are the visible footprint; the WebView always draws at VIDEO_SIZE and scales up (iOS-friendly).
- */
 export type BirdCheckClipConfig = {
     name: string;
     width: number;
@@ -64,8 +54,8 @@ export const BIRD_CHECK_VIDEO_CLIPS: BirdCheckClipConfig[] = [
         name: 'check2',
         width: VIDEO_SIZE,
         height: VIDEO_SIZE,
-        containerTop: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top,
         right: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.right,
+        containerTop: BIRD_ANIMATION_CONFIG.INITIAL_POSITION.top,
     },
     {
         name: 'check3',
@@ -90,15 +80,8 @@ export const BIRD_CHECK_VIDEO_CLIPS: BirdCheckClipConfig[] = [
     },
 ];
 
-function getCheckClipLayout (name: string | null): BirdCheckClipConfig | null {
-    if (!name) {
-        return null;
-    }
-    return BIRD_CHECK_VIDEO_CLIPS.find(c => c.name === name) ?? null;
-}
-
 // ============================================================================
-// ANIMATION PHASES: appearing → sitting (loop) → action (single clip) → finished
+// ANIMATION PHASES
 // ============================================================================
 export const BirdAnimationPhase = {
     APPEARING: 'APPEARING',
@@ -114,7 +97,7 @@ export const VIDEO_SIZE_CONFIG: Record<BirdAnimationPhase, { width: number; heig
     [BirdAnimationPhase.APPEARING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
     [BirdAnimationPhase.SITTING]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
     [BirdAnimationPhase.CHECK]: { width: VIDEO_SIZE, height: VIDEO_SIZE },
-    [BirdAnimationPhase.ACTION]: { width: 200, height: 400, },
+    [BirdAnimationPhase.ACTION]: { width: 200, height: 400 },
     [BirdAnimationPhase.FINISHED]: { width: 0, height: 0 },
 };
 
@@ -142,75 +125,18 @@ const PHASE_VIDEO_MAP: Record<BirdAnimationPhase, string | null> = {
     [BirdAnimationPhase.FINISHED]: null,
 };
 
-/** Phases whose WebView `VIDEO_ENDED` is handled in the "looped" branch (seek+replay) instead of the phase switch. */
 const LOOPED_PHASES: BirdAnimationPhase[] = [BirdAnimationPhase.SITTING];
 
 export const WEBVIEW_MESSAGES = {
-    VIDEO_LOADED: 'VIDEO_LOADED',
-    VIDEO_FAILED: 'VIDEO_FAILED',
     VIDEO_ENDED: 'VIDEO_ENDED',
     DOM_READY_MAIN: 'BIRD_DOM_READY_MAIN',
     DOM_READY_ACTION: 'BIRD_DOM_READY_ACTION',
+    ACTION_FIRST_FRAME: 'BIRD_ACTION_FIRST_FRAME',
 };
-
-function createBirdWebViewHtml (domReadyMessage: string): string {
-    return `
-                            <html>
-                                <head>
-                                    <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
-                                    <style>
-                                        * {
-                                            margin: 0;
-                                            padding: 0;
-                                            box-sizing: border-box;
-                                        }
-                                        html, body {
-                                            width: 100%;
-                                            height: 100%;
-                                            background: transparent;
-                                            overflow: visible;
-                                        }
-                                        #videoContainer {
-                                            width: 100%;
-                                            height: 100%;
-                                            display: flex;
-                                            align-items: center;
-                                            justify-content: center;
-                                            overflow: visible;
-                                        }
-                                        video {
-                                            width: 100%;
-                                            height: 100%;
-                                            object-fit: contain;
-                                        }
-                                    </style>
-                                    <script>
-                                        document.addEventListener("DOMContentLoaded", function() {
-                                            window.ReactNativeWebView.postMessage("${domReadyMessage}");
-                                        });
-                                    </script>
-                                </head>
-                                <body>
-                                    <div id="videoContainer">
-                                        <video
-                                            autoplay
-                                            id="video"
-                                            playsinline
-                                            onerror="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_FAILED}' }))"
-                                            onloadeddata="window.ReactNativeWebView.postMessage(JSON.stringify({ type: '${WEBVIEW_MESSAGES.VIDEO_LOADED}' }))"
-                                        >
-                                            <source id="source" type="${VIDEO_MIME}" />
-                                        </video>
-                                    </div>
-                                </body>
-                            </html>
-                        `;
-}
 
 interface BirdAnimationProps {
     muted?: boolean;
     allChecked: boolean;
-    /** Increment when the user marks an item done while some items remain incomplete (Edit meal list). */
     checkTrigger?: number;
     checkboxAreaX?: number;
 }
@@ -230,119 +156,120 @@ export const BirdAnimation = ({
     muted = false,
     allChecked = false,
     checkTrigger = 0,
-    checkboxAreaX = 0,
 }: BirdAnimationProps) => {
     const mainWebViewRef = useRef<WebView>(null);
     const actionWebViewRef = useRef<WebView>(null);
     const [phase, setPhase] = useState<BirdAnimationPhase>(BirdAnimationPhase.APPEARING);
     const [activeCheckClipName, setActiveCheckClipName] = useState<string | null>(null);
-    const [mainDOMReady, setMainDOMReady] = useState<boolean>(false);
-    const [actionDOMReady, setActionDOMReady] = useState<boolean>(false);
-    const [videosLoaded, setVideosLoaded] = useState<boolean>(false);
+    const [mainDOMReady, setMainDOMReady] = useState(false);
+    const [actionDOMReady, setActionDOMReady] = useState(false);
+    const [mainWebViewGeneration, setMainWebViewGeneration] = useState(0);
+    const [actionWebViewGeneration, setActionWebViewGeneration] = useState(0);
+    const [videosLoaded, setVideosLoaded] = useState(false);
+    const [actionFirstFrameRendered, setActionFirstFrameRendered] = useState(false);
     const [videoCache, setVideoCache] = useState<Map<BirdAnimationPhase, string>>(new Map());
     const [checkVideoCache, setCheckVideoCache] = useState<Map<string, string>>(new Map());
-    const isAnimationComplete = useRef<boolean>(false);
+
+    const isAnimationComplete = useRef(false);
     const allCheckedRef = useRef(allChecked);
     const phaseRef = useRef(phase);
-    /** `checkTrigger` values already applied to CHECK (stops the check effect from firing twice for the same bump). */
     const lastCheckTriggerConsumed = useRef(0);
-    /** Max `checkTrigger` observed during APPEARING; CHECK is deferred until the first SITTING clip has played once. */
     const deferredCheckTriggerWhileAppearingRef = useRef(0);
-    /** True while we wait for that first SITTING `onended` → RN `VIDEO_ENDED` before playing deferred CHECK. */
     const playDeferredCheckAfterFirstSittingLoopRef = useRef(false);
-    /** Mirrors inject: normal SITTING loops in the WebView; deferred first SITTING posts `VIDEO_ENDED` to RN for deferred CHECK. */
     const sittingLoopRestartInWebViewRef = useRef(true);
+    const screenFocusedRef = useRef(true);
+    const videosLoadedRef = useRef(false);
+    const activeCheckClipNameRef = useRef<string | null>(null);
+    const lastMainSwapKeyRef = useRef('');
+    const lastActionSwapKeyRef = useRef('');
+    const lastCheckSwapKeyRef = useRef('');
+
+    const mainHtml = useMemo(
+        () => createDualVideoWebViewHtml({
+            domReadyMessage: WEBVIEW_MESSAGES.DOM_READY_MAIN,
+            width: VIDEO_SIZE,
+            height: VIDEO_SIZE,
+        }),
+        [],
+    );
+
+    const actionHtml = useMemo(
+        () => createDualVideoWebViewHtml({
+            domReadyMessage: WEBVIEW_MESSAGES.DOM_READY_ACTION,
+            width: VIDEO_SIZE_CONFIG[BirdAnimationPhase.ACTION].width,
+            height: VIDEO_SIZE_CONFIG[BirdAnimationPhase.ACTION].height,
+        }),
+        [],
+    );
 
     useEffect(() => {
         allCheckedRef.current = allChecked;
     }, [allChecked]);
 
-    // Keep `phaseRef` aligned before paint so native `onMessage` handlers never read a stale phase (guardDrop / transitions).
     useLayoutEffect(() => {
         phaseRef.current = phase;
+        lastMainSwapKeyRef.current = '';
+        lastActionSwapKeyRef.current = '';
     }, [phase]);
 
-    /** Read inside `onMessage` when merging deferred and latest `checkTrigger` — hooks cannot run there. */
-    const checkTriggerPropRef = useRef(checkTrigger);
+    useLayoutEffect(() => {
+        lastCheckSwapKeyRef.current = '';
+    }, [activeCheckClipName]);
+
     useEffect(() => {
         checkTriggerPropRef.current = checkTrigger;
     }, [checkTrigger]);
 
+    const checkTriggerPropRef = useRef(checkTrigger);
+
     const mutedRef = useRef(muted);
     useEffect(() => { mutedRef.current = muted; }, [muted]);
 
+    useEffect(() => { videosLoadedRef.current = videosLoaded; }, [videosLoaded]);
+    useEffect(() => { activeCheckClipNameRef.current = activeCheckClipName; }, [activeCheckClipName]);
+
     useEffect(() => {
-        const js = `(function(){ if(window.__VIDEO__) { window.__VIDEO__.muted = ${muted ? 'true' : 'false'}; } true; })();`;
-        mainWebViewRef.current?.injectJavaScript(js);
-        actionWebViewRef.current?.injectJavaScript(js);
+        if (!screenFocusedRef.current) {
+            return;
+        }
+        mainWebViewRef.current?.injectJavaScript(buildSetMutedScript(muted));
+        actionWebViewRef.current?.injectJavaScript(buildSetMutedScript(muted));
     }, [muted]);
 
-    useFocusEffect(
-        useCallback(() => {
-            const js = `(function(){
-                if(window.__VIDEO__) {
-                    window.__VIDEO__.muted = ${mutedRef.current ? 'true' : 'false'};
-                    if(window.__VIDEO__.paused) { window.__VIDEO__.play(); }
-                }
-                true;
-            })();`;
-            mainWebViewRef.current?.injectJavaScript(js);
-            actionWebViewRef.current?.injectJavaScript(js);
-        }, [])
-    );
-
     useEffect(() => {
-        const preloadAllVideos = async () => {
+        const phaseClipNames = Object.values(BirdAnimationPhase)
+            .filter(p => p !== BirdAnimationPhase.FINISHED && p !== BirdAnimationPhase.CHECK)
+            .map(p => PHASE_VIDEO_MAP[p as BirdAnimationPhase])
+            .filter((name): name is string => name !== null);
+        const checkClipNames = BIRD_CHECK_VIDEO_CLIPS.map(c => c.name);
+        const allNames = [...new Set([...phaseClipNames, ...checkClipNames])];
+
+        (async () => {
+            const loaded = await preloadVideoAssets(allNames);
             const cache = new Map<BirdAnimationPhase, string>();
+            for (const [p, clipName] of Object.entries(PHASE_VIDEO_MAP) as [BirdAnimationPhase, string | null][]) {
+                if (clipName && loaded.has(clipName)) {
+                    cache.set(p, loaded.get(clipName)!);
+                }
+            }
             const checkCache = new Map<string, string>();
-            const phases = Object.values(BirdAnimationPhase).filter(
-                p => p !== BirdAnimationPhase.FINISHED && p !== BirdAnimationPhase.CHECK
-            ) as BirdAnimationPhase[];
-
-            for (const p of phases) {
-                const clipName = PHASE_VIDEO_MAP[p];
-                if (clipName) {
-                    try {
-                        const base64 = await RNBlobUtil.fs.readFile(
-                            getVideoAssetPath(clipName),
-                            'base64'
-                        );
-                        cache.set(p, base64);
-                    } catch (error) {
-                        console.error(`Error loading video for phase ${p}:`, error);
-                    }
-                }
-            }
-
             for (const clip of BIRD_CHECK_VIDEO_CLIPS) {
-                try {
-                    const base64 = await RNBlobUtil.fs.readFile(
-                        getVideoAssetPath(clip.name),
-                        'base64'
-                    );
-                    checkCache.set(clip.name, base64);
-                } catch (error) {
-                    console.error(`Error loading check clip ${clip.name}:`, error);
+                const b64 = loaded.get(clip.name);
+                if (b64) {
+                    checkCache.set(clip.name, b64);
                 }
             }
-
             setVideoCache(cache);
             setCheckVideoCache(checkCache);
             setVideosLoaded(true);
-        };
-
-        preloadAllVideos();
+        })();
     }, []);
 
-    /**
-     * Loads a phase clip into the WebView. For SITTING, `resumeSittingInsideWebview` false = single play + `postBirdEnded`
-     * (deferred-check path); true = in-page loop (seek 0 on `ended`, no RN message per lap).
-     */
-    const injectVideo = useCallback(
+    const swapPhaseClip = useCallback(
         (
             targetPhase: BirdAnimationPhase,
             ref: RefObject<WebView | null>,
-            resumeSittingInsideWebview: boolean = true
+            resumeSittingInsideWebview: boolean = true,
         ) => {
             const base64 = videoCache.get(targetPhase);
             if (!base64 || !ref.current) {
@@ -351,102 +278,67 @@ export const BirdAnimation = ({
 
             const resumeLoopInPage
                 = targetPhase === BirdAnimationPhase.SITTING && resumeSittingInsideWebview;
+            const isMainWebView = targetPhase !== BirdAnimationPhase.ACTION;
+            const clipStyleJs = isMainWebView ? buildBirdNormalClipStyleJs() : '';
+            const afterSwapPlainMessage = targetPhase === BirdAnimationPhase.ACTION
+                ? WEBVIEW_MESSAGES.ACTION_FIRST_FRAME
+                : undefined;
 
-            ref.current.injectJavaScript(`
-            (function() {
-                try {
-                    if (!window.__VIDEO__) window.__VIDEO__ = document.getElementById("video");
-                    if (!window.__SOURCE__) window.__SOURCE__ = document.getElementById("source");
-                    var v = window.__VIDEO__;
-                    if (window.__birdSitNearEnd) {
-                        v.removeEventListener("timeupdate", window.__birdSitNearEnd);
-                        v.removeEventListener("seeked", window.__birdSitSeeked);
-                        window.__birdSitNearEnd = null;
-                        window.__birdSitSeeked = null;
-                    }
-                    v.pause();
-                    window.__SOURCE__.src = "data:${VIDEO_MIME};base64,${base64}";
-                    var phaseTag = "${targetPhase}";
-                    var resumeLoopInPage = ${resumeLoopInPage ? 'true' : 'false'};
-                    var isSitting = phaseTag === "${BirdAnimationPhase.SITTING}";
-                    function postBirdEnded() {
-                        window.ReactNativeWebView.postMessage(JSON.stringify({
-                            type: "${WEBVIEW_MESSAGES.VIDEO_ENDED}",
-                            phase: phaseTag
-                        }));
-                    }
-                    // WKWebView often ignores HTML5 loop; loop sitting via onended seek+play instead.
-                    v.loop = false;
-                    v.removeAttribute("loop");
-                    if (isSitting && resumeLoopInPage) {
-                        v.onended = function() {
-                            try {
-                                v.currentTime = 0;
-                                v.play();
-                            } catch (e) {}
-                        };
-                    } else {
-                        v.onended = function() {
-                            postBirdEnded();
-                        };
-                    }
-                    v.load();
-                    v.play();
-                    v.muted = ${mutedRef.current ? 'true' : 'false'};
+            const swapKey = `${targetPhase}-${resumeSittingInsideWebview}`;
+            const lastKeyRef = ref === actionWebViewRef ? lastActionSwapKeyRef : lastMainSwapKeyRef;
+            if (lastKeyRef.current === swapKey) {
+                return;
+            }
+            lastKeyRef.current = swapKey;
 
-                    v.style.transform = "none";
-                    v.style.transformOrigin = "center";
-                    v.style.objectFit = "contain";
-                } catch (e) {
-                    console.log("Inject error", e);
-                }
-                true;
-            })();
-        `);
+            injectSwapClip(ref, {
+                base64,
+                clipStyleJs,
+                afterSwapPlainMessage,
+                phaseTag: targetPhase,
+                muted: mutedRef.current,
+                loopInPage: resumeLoopInPage,
+                postEnded: !resumeLoopInPage,
+                endedMessageType: WEBVIEW_MESSAGES.VIDEO_ENDED,
+            });
         },
-        [videoCache]
+        [videoCache],
     );
 
-    const injectCheckClip = useCallback(
+    const swapCheckClip = useCallback(
         (clipName: string, ref: RefObject<WebView | null>) => {
             const base64 = checkVideoCache.get(clipName);
             if (!base64 || !ref.current) {
                 return;
             }
 
-            const phaseTag = BirdAnimationPhase.CHECK;
-            ref.current.injectJavaScript(`
-            (function() {
-                try {
-                    if (!window.__VIDEO__) window.__VIDEO__ = document.getElementById("video");
-                    if (!window.__SOURCE__) window.__SOURCE__ = document.getElementById("source");
-                    
-                    window.__VIDEO__.pause();
-                    window.__VIDEO__.loop = false;
-                    window.__VIDEO__.removeAttribute("loop");
-                    window.__SOURCE__.src = "data:${VIDEO_MIME};base64,${base64}";
-                    var phaseTag = "${phaseTag}";
-                    window.__VIDEO__.onended = function() {
-                        window.ReactNativeWebView.postMessage(JSON.stringify({
-                            type: "${WEBVIEW_MESSAGES.VIDEO_ENDED}",
-                            phase: phaseTag
-                        }));
-                    };
-                    window.__VIDEO__.load();
-                    window.__VIDEO__.play();
-                    window.__VIDEO__.muted = ${mutedRef.current ? 'true' : 'false'};
+            const swapKey = clipName;
+            if (lastCheckSwapKeyRef.current === swapKey) {
+                return;
+            }
+            lastCheckSwapKeyRef.current = swapKey;
 
-                    window.__VIDEO__.style.transform = "none";
-                    window.__VIDEO__.style.transformOrigin = "center";
-                    window.__VIDEO__.style.objectFit = "contain";
-                } catch (e) {
-                    console.log("Inject check error", e);
-                }
-                true;
-            })();
-        `);
+            injectSwapClip(ref, {
+                base64,
+                postEnded: true,
+                muted: mutedRef.current,
+                phaseTag: BirdAnimationPhase.CHECK,
+                endedMessageType: WEBVIEW_MESSAGES.VIDEO_ENDED,
+                clipStyleJs: buildBirdCheckClipStyleJs(clipName),
+            });
         },
-        [checkVideoCache]
+        [checkVideoCache],
+    );
+
+    useFocusEffect(
+        useCallback(() => {
+            screenFocusedRef.current = true;
+            mainWebViewRef.current?.injectJavaScript(buildSetMutedScript(mutedRef.current));
+            actionWebViewRef.current?.injectJavaScript(buildSetMutedScript(mutedRef.current));
+            mainWebViewRef.current?.injectJavaScript(buildResumeActiveScript());
+            actionWebViewRef.current?.injectJavaScript(buildResumeActiveScript());
+            return () => { screenFocusedRef.current = false; };
+        }, []),
     );
 
     useEffect(() => {
@@ -454,22 +346,21 @@ export const BirdAnimation = ({
             return;
         }
         if (phase === BirdAnimationPhase.ACTION) {
+            setActionFirstFrameRendered(false);
             if (actionDOMReady) {
-                injectVideo(BirdAnimationPhase.ACTION, actionWebViewRef);
+                swapPhaseClip(BirdAnimationPhase.ACTION, actionWebViewRef);
             }
         } else if (phase === BirdAnimationPhase.CHECK) {
             if (mainDOMReady && activeCheckClipName) {
-                injectCheckClip(activeCheckClipName, mainWebViewRef);
+                swapCheckClip(activeCheckClipName, mainWebViewRef);
             }
         } else if (mainDOMReady) {
-            // If deferred state was partially cleared, do not leave `playDeferred` stuck true (would block the check-trigger effect forever).
             if (
                 playDeferredCheckAfterFirstSittingLoopRef.current
                 && deferredCheckTriggerWhileAppearingRef.current <= 0
             ) {
                 playDeferredCheckAfterFirstSittingLoopRef.current = false;
             }
-            // First SITTING after a deferred APPEARING tick: one full play without in-page loop (`false`); later SITTING: loop (`true`).
             const sittingReloopInWebView
                 = phase !== BirdAnimationPhase.SITTING
                 || !(
@@ -477,26 +368,26 @@ export const BirdAnimation = ({
                     && deferredCheckTriggerWhileAppearingRef.current > 0
                 );
             sittingLoopRestartInWebViewRef.current = sittingReloopInWebView;
-            injectVideo(phase, mainWebViewRef, sittingReloopInWebView);
+            swapPhaseClip(phase, mainWebViewRef, sittingReloopInWebView);
         }
     }, [
         phase,
         mainDOMReady,
-        actionDOMReady,
         videosLoaded,
-        injectVideo,
-        injectCheckClip,
+        swapPhaseClip,
+        swapCheckClip,
+        actionDOMReady,
         activeCheckClipName,
+        mainWebViewGeneration,
+        actionWebViewGeneration,
     ]);
 
-    // Parent bumps `checkTrigger` when a meal item is marked done while the list is still incomplete → CHECK clip.
     useEffect(() => {
         if (checkTrigger <= 0 || !videosLoaded || allChecked) {
             return;
         }
         const current = phaseRef.current;
-        const alreadyConsumed = checkTrigger === lastCheckTriggerConsumed.current;
-        if (alreadyConsumed) {
+        if (checkTrigger === lastCheckTriggerConsumed.current) {
             return;
         }
         if (
@@ -504,8 +395,6 @@ export const BirdAnimation = ({
             && deferredCheckTriggerWhileAppearingRef.current > 0
             && current === BirdAnimationPhase.SITTING
         ) {
-            // Still waiting the first SITTING `ended` for the deferred APPEARING tick — block only while trigger ≤ deferred.
-            // Newer list checkboxes bump `checkTrigger` higher; allow CHECK immediately instead of starving until that first end.
             if (checkTrigger <= deferredCheckTriggerWhileAppearingRef.current) {
                 return;
             }
@@ -513,15 +402,13 @@ export const BirdAnimation = ({
             deferredCheckTriggerWhileAppearingRef.current = 0;
         }
         if (current === BirdAnimationPhase.APPEARING) {
-            // Remember the request; CHECK runs after APPEARING → SITTING and the deferred first `ended` (or via branch above).
             deferredCheckTriggerWhileAppearingRef.current = Math.max(
                 deferredCheckTriggerWhileAppearingRef.current,
-                checkTrigger
+                checkTrigger,
             );
             return;
         }
         if (current !== BirdAnimationPhase.SITTING && current !== BirdAnimationPhase.CHECK) {
-            // e.g. ACTION — consume so the same trigger does not fire later from a stale queue.
             lastCheckTriggerConsumed.current = checkTrigger;
             return;
         }
@@ -533,7 +420,6 @@ export const BirdAnimation = ({
         setPhase(BirdAnimationPhase.CHECK);
     }, [checkTrigger, videosLoaded, allChecked]);
 
-    // When every item is done, jump to ACTION as soon as we are in a "main bird" phase (including mid-CHECK).
     useEffect(() => {
         if (
             !allChecked
@@ -562,15 +448,12 @@ export const BirdAnimation = ({
             if (data.type === WEBVIEW_MESSAGES.VIDEO_ENDED) {
                 const currentPhase = phaseRef.current;
                 const endedPhase = data.phase as BirdAnimationPhase | undefined;
-                // Drop stale messages (e.g. CHECK ended after we already moved to SITTING — same webview, queued events).
-                const guardDrop = endedPhase !== undefined && endedPhase !== currentPhase;
-                if (guardDrop) {
+                if (endedPhase !== undefined && endedPhase !== currentPhase) {
                     return;
                 }
                 const isLoopedPhase = LOOPED_PHASES.includes(currentPhase);
 
                 if (isLoopedPhase) {
-                    // Deferred first SITTING: one `ended` → play CHECK and consume triggers up to max(deferred, latest).
                     if (
                         currentPhase === BirdAnimationPhase.SITTING
                         && playDeferredCheckAfterFirstSittingLoopRef.current
@@ -580,27 +463,15 @@ export const BirdAnimation = ({
                         deferredCheckTriggerWhileAppearingRef.current = 0;
                         if (dTrigger > 0) {
                             const latestTrigger = checkTriggerPropRef.current;
-                            const consumeThrough = Math.max(dTrigger, latestTrigger);
-                            lastCheckTriggerConsumed.current = consumeThrough;
+                            lastCheckTriggerConsumed.current = Math.max(dTrigger, latestTrigger);
                             setActiveCheckClipName(pickRandomCheckClipName());
                             phaseRef.current = BirdAnimationPhase.CHECK;
                             setPhase(BirdAnimationPhase.CHECK);
                             return;
                         }
-                        // `dTrigger === 0`: fall through — RN seek+play restarts SITTING so the WebView never freezes.
                     }
-                    // Non-deferred SITTING should not reach here (in-page loop). Path kept for any stray `VIDEO_ENDED`.
-                    mainWebViewRef.current?.injectJavaScript(`
-                        (function() {
-                            if (window.__VIDEO__) {
-                                window.__VIDEO__.currentTime = 0;
-                                window.__VIDEO__.play();
-                            }
-                            true;
-                        })();
-                    `);
+                    mainWebViewRef.current?.injectJavaScript(buildSeekActiveToStartScript());
                 } else {
-                    // Non-looped phases: use `endedPhase` from the webview when present so CHECK/APPEARING transitions stay correct.
                     const phaseForTransition = endedPhase ?? currentPhase;
                     switch (phaseForTransition) {
                         case BirdAnimationPhase.APPEARING: {
@@ -613,7 +484,6 @@ export const BirdAnimation = ({
                                 deferredCheckTriggerWhileAppearingRef.current = 0;
                                 playDeferredCheckAfterFirstSittingLoopRef.current = false;
                             } else if (deferredCheckTriggerWhileAppearingRef.current > 0) {
-                                // Next inject will use single-play SITTING so we get one `ended` for deferred CHECK.
                                 playDeferredCheckAfterFirstSittingLoopRef.current = true;
                             } else {
                                 playDeferredCheckAfterFirstSittingLoopRef.current = false;
@@ -634,7 +504,7 @@ export const BirdAnimation = ({
                             setPhase(
                                 allCheckedRef.current
                                     ? BirdAnimationPhase.ACTION
-                                    : BirdAnimationPhase.SITTING
+                                    : BirdAnimationPhase.SITTING,
                             );
                             break;
                         case BirdAnimationPhase.ACTION:
@@ -647,11 +517,16 @@ export const BirdAnimation = ({
                 }
             }
         } catch {
-            // DOM ready pings are plain strings, not JSON — ignore other parse failures silently.
             if (message === WEBVIEW_MESSAGES.DOM_READY_MAIN) {
+                lastMainSwapKeyRef.current = '';
+                setMainWebViewGeneration(g => g + 1);
                 setMainDOMReady(true);
             } else if (message === WEBVIEW_MESSAGES.DOM_READY_ACTION) {
+                lastActionSwapKeyRef.current = '';
+                setActionWebViewGeneration(g => g + 1);
                 setActionDOMReady(true);
+            } else if (message === WEBVIEW_MESSAGES.ACTION_FIRST_FRAME) {
+                setActionFirstFrameRendered(true);
             }
         }
     }, []);
@@ -663,81 +538,23 @@ export const BirdAnimation = ({
     const showMain
         = phase === BirdAnimationPhase.APPEARING
         || phase === BirdAnimationPhase.SITTING
-        || phase === BirdAnimationPhase.CHECK;
+        || phase === BirdAnimationPhase.CHECK
+        || (phase === BirdAnimationPhase.ACTION && !actionFirstFrameRendered);
     const showActionLayer = videosLoaded;
-    const actionVisible = phase === BirdAnimationPhase.ACTION;
+    const actionVisible = phase === BirdAnimationPhase.ACTION && actionFirstFrameRendered;
 
-    const webViewCommonProps = {
-        incognito: true,
-        cacheEnabled: false,
-        onMessage: handleMessage,
-        cacheMode: 'LOAD_NO_CACHE' as const,
-        onError: (_e: unknown) => {},
-        allowsInlineMediaPlayback: true,
-        mediaPlaybackRequiresUserAction: false,
-        javaScriptEnabled: true,
-        originWhitelist: ['*'],
-    };
+    const webViewCommonProps = createWebViewVideoCommonProps(handleMessage);
 
-    const checkLayout = phase === BirdAnimationPhase.CHECK
-        ? getCheckClipLayout(activeCheckClipName)
-        : null;
-    /** Layout box on screen (can be larger than the WebView render size below). */
-    const mainLayoutWidth = checkLayout?.width ?? VIDEO_SIZE_CONFIG[phase].width;
-    const mainLayoutHeight = checkLayout?.height ?? VIDEO_SIZE_CONFIG[phase].height;
-    const mainContainerTop = checkLayout?.containerTop ?? CONTAINER_TOP_CONFIG[phase];
-    const mainViewRight = checkLayout?.right ?? ANIMATED_VIEW_RIGHT_CONFIG[phase];
-    /**
-     * WKWebView is unreliable at very large explicit sizes; CHECK clips always render at VIDEO_SIZE
-     * and scale up so width/height in BIRD_CHECK_VIDEO_CLIPS remain the on-screen footprint.
-     */
-    const checkPhaseUsesScaledWebView = phase === BirdAnimationPhase.CHECK && Boolean(checkLayout);
-    const webViewRenderW = checkPhaseUsesScaledWebView ? VIDEO_SIZE : mainLayoutWidth;
-    const webViewRenderH = checkPhaseUsesScaledWebView ? VIDEO_SIZE : mainLayoutHeight;
-    const checkScaleX = checkLayout ? checkLayout.width / VIDEO_SIZE : 1;
-    const checkScaleY = checkLayout ? checkLayout.height / VIDEO_SIZE : 1;
-
-    const mainBirdOuterWrapStyle = checkPhaseUsesScaledWebView && checkLayout
-        ? {
-            width: mainLayoutWidth,
-            height: mainLayoutHeight,
-            overflow: 'visible' as const,
-        }
-        : {};
-    /**
-     * Only CHECK uses bottom-right anchoring + scale (transform origin). APPEARING/SITTING must
-     * stay top-aligned inside the top+bottom-stretched parent — a blanket `bottom: 0` lifted them.
-     */
-    const mainBirdInnerWrapStyle = checkPhaseUsesScaledWebView && checkLayout
-        ? {
-            position: 'absolute' as const,
-            right: 0,
-            bottom: 0,
-            width: VIDEO_SIZE,
-            height: VIDEO_SIZE,
-            transformOrigin: '100% 100%' as const,
-            transform: [
-                { scaleX: checkScaleX },
-                { scaleY: checkScaleY },
-            ],
-        }
-        : {
-            width: webViewRenderW,
-            height: webViewRenderH,
-        };
-
-    const mainWebView = (
-        <WebView
-            ref={mainWebViewRef}
-            {...webViewCommonProps}
-            source={{ html: createBirdWebViewHtml(WEBVIEW_MESSAGES.DOM_READY_MAIN) }}
-            style={{
-                backgroundColor: 'transparent',
-                width: webViewRenderW,
-                height: webViewRenderH,
-            }}
-        />
-    );
+    // Keep RN container at SITTING position during CHECK/ACTION handoff — tall-clip crop is WebView-only.
+    const holdMainAtSittingLayout
+        = (phase === BirdAnimationPhase.ACTION && !actionFirstFrameRendered)
+        || phase === BirdAnimationPhase.CHECK;
+    const mainContainerTop = holdMainAtSittingLayout
+        ? CONTAINER_TOP_CONFIG[BirdAnimationPhase.SITTING]
+        : CONTAINER_TOP_CONFIG[phase];
+    const mainViewRight = holdMainAtSittingLayout
+        ? ANIMATED_VIEW_RIGHT_CONFIG[BirdAnimationPhase.SITTING]
+        : ANIMATED_VIEW_RIGHT_CONFIG[phase];
 
     return (
         <View style={styles.birdRoot} key="bird-animation">
@@ -751,13 +568,17 @@ export const BirdAnimation = ({
                     ]}
                 >
                     <View style={{ position: 'absolute', right: mainViewRight }}>
-                        {/*
-                         * Stable parent chain so CHECK↔SITTING does not remount the native WebView.
-                         */}
-                        <View style={mainBirdOuterWrapStyle}>
-                            <View style={mainBirdInnerWrapStyle}>
-                                {mainWebView}
-                            </View>
+                        <View style={{ width: VIDEO_SIZE, height: VIDEO_SIZE }}>
+                            <WebView
+                                ref={mainWebViewRef}
+                                {...webViewCommonProps}
+                                source={{ html: mainHtml }}
+                                style={{
+                                    backgroundColor: 'transparent',
+                                    width: VIDEO_SIZE,
+                                    height: VIDEO_SIZE,
+                                }}
+                            />
                         </View>
                     </View>
                 </View>
@@ -769,10 +590,7 @@ export const BirdAnimation = ({
                         styles.container,
                         styles.containerGrounded,
                         styles.layerAction,
-                        {
-                            top: CONTAINER_TOP_CONFIG[BirdAnimationPhase.ACTION],
-                            right: -1,
-                        },
+                        { top: CONTAINER_TOP_CONFIG[BirdAnimationPhase.ACTION], right: -1 },
                     ]}
                 >
                     <View
@@ -784,7 +602,7 @@ export const BirdAnimation = ({
                         <WebView
                             ref={actionWebViewRef}
                             {...webViewCommonProps}
-                            source={{ html: createBirdWebViewHtml(WEBVIEW_MESSAGES.DOM_READY_ACTION) }}
+                            source={{ html: actionHtml }}
                             style={{
                                 backgroundColor: 'transparent',
                                 width: VIDEO_SIZE_CONFIG[BirdAnimationPhase.ACTION].width,
@@ -813,7 +631,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         pointerEvents: 'none',
     },
-    // Together with `top` on the layer, this stretches the overlay vertically; do not bottom-anchor the WebView itself (see mainBirdInnerWrapStyle).
     containerGrounded: {
         bottom: 0,
         left: 0,

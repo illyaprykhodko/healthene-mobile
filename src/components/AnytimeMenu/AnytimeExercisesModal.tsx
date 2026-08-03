@@ -1,7 +1,8 @@
 // outsource dependencies
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useMemo, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
+
 // local dependencies
 import { Badge } from './Badge';
 import Text from 'components/Text';
@@ -10,94 +11,39 @@ import Checkbox from 'components/Checkbox';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { ActivityIcon, CloseIcon } from './AnytimeIcons';
 import { useGetDayOverviewQuery, useUpdatePhaseMutation } from 'store/api/dayOverviewApi';
+import {
+    extractExercise,
+    getCategoryStatus,
+    getPhaseNewStatus,
+    areAllItemsFullyDone,
+    isAnytimeExerciseItem,
+} from 'utils/exercise';
 
-function isItemFullyDone (item: any): boolean {
-    if (![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.DID_NOT_EAT].includes(item.status)) { return false; }
-    if (Array.isArray(item.list) && item.list.length) { return item.list.every(isItemFullyDone); }
-    return true;
-}
-
-function areAllItemsFullyDone (items: any[] = []) { return items.every(isItemFullyDone); }
-
-function getPhaseNewStatus (exercises: any[] = [], isToday: boolean) {
-    if (areAllItemsFullyDone(exercises)) {
-        return PHASE_ITEM_STATUS.DONE;
-    }
-    return isToday ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.INCOMPLETE;
-}
-
-function getCategoryStatus (items: any[]) {
-    if (!items.length) {
-        return null;
-    }
-
-    const allDone = items.every(item => item.status === PHASE_ITEM_STATUS.DONE);
-    if (allDone) {
-        return PHASE_ITEM_STATUS.DONE;
-    }
-
-    const hasDone = items.some(item => item.status === PHASE_ITEM_STATUS.INCOMPLETE || item.status === PHASE_ITEM_STATUS.DONE);
-    if (hasDone) {
-        return PHASE_ITEM_STATUS.INCOMPLETE;
-    }
-
-    return null;
-}
-
-function extractExercise (item: any): any {
-
-    if (!item) {
-        return null;
-    }
-
-    // If item has a list, it's a category - return the item with processed list
-    if (Array.isArray(item.list) && item.list.length > 0) {
-        return {
-            ...item,
-            id: item.id,
-            type: item.type,
-            title: item.title || item.name,
-            status: item.status || PHASE_ITEM_STATUS.PENDING,
-            list: item.list.map(extractExercise).filter(Boolean) // Recursively process nested items
-        };
-    }
-
-    if (item.physicalActivity) {
-        const result = {
-            ...item.physicalActivity,
-            id: item.id,
-            type: item.type,
-            status: item.status,
-            title: item.title || item.physicalActivity?.title,
-        };
-        return result;
-    }
-
-    const result = {
-        ...item?.exercise,
-        id: item.id,
-        type: item?.type,
-        status: item?.status,
-        title: item.title || item?.exercise?.title,
-    };
-    return result;
-}
 
 interface AnytimeExercisesModalProps {
     date?: string;
-    onClose: () => void;
     visible: boolean;
     disabled?: boolean;
+    onClose: () => void;
+    fullScreen: boolean;
+    maxHeight: number | undefined;
 }
 
 export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
     date,
     onClose,
     visible,
+    maxHeight,
+    fullScreen,
     disabled = false,
 }) => {
     const theme = useTheme();
     const navigation = useNavigation();
+
+    useLayoutEffect(() => {
+        navigation.setOptions({ onBackPress: visible ? onClose : undefined } as any);
+    }, [visible, onClose, navigation]);
+
     const { data: dayOverviewData, refetch } = useGetDayOverviewQuery(date || new Date().toISOString().split('T')[0]);
     const [updatePhase] = useUpdatePhaseMutation();
     const exerciseCategories = useMemo(() => {
@@ -106,10 +52,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
         
         if (!anytimeItems.length) { return []; }
         
-        // Filter only exercise items (EXERCISE_AEROBIC, EXERCISE_RESISTANCE, etc.)
-        const exerciseItems = anytimeItems.filter(item =>
-            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
-        );
+        const exerciseItems = anytimeItems.filter(isAnytimeExerciseItem);
 
         // Group exercises by type
         const groups = exerciseItems.reduce((acc: any, item: any) => {
@@ -149,10 +92,9 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
     const activeExercisesCount = useMemo(() => {
         const anytimePhase = dayOverviewData?.phases?.find(phase => phase.type === 'ANYTIME');
         const anytimeItems = anytimePhase?.items || [];
-        const exerciseItems = anytimeItems.filter(item =>
-            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
-        );
-        return exerciseItems.filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
+        return anytimeItems
+            .filter(isAnytimeExerciseItem)
+            .filter(item => (item.status !== PHASE_ITEM_STATUS.DONE || item.status !== PHASE_ITEM_STATUS.DID_NOT_EAT)).length;
     }, [dayOverviewData]);
     const listIsDone = useMemo(() => areAllItemsFullyDone(exerciseCategories), [exerciseCategories]);
     const isSingleExerciseCategoryDone = useMemo(
@@ -175,30 +117,36 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
     const anytimePhaseId = anytimePhase?.id;
 
     // Calculate new phase status based on all anytime exercises
-    const allAnytimeExercises = useMemo(() => {
-        if (!anytimePhase?.items) { return []; }
-        return anytimePhase.items.filter(item =>
-            item.type?.startsWith('EXERCISE_') || item.type === 'PHYSICAL_ACTIVITY'
-        );
-    }, [anytimePhase]);
+    const allAnytimeExercises = useMemo(
+        () => (anytimePhase?.items || []).filter(isAnytimeExerciseItem),
+        [anytimePhase]
+    );
 
     const newAnytimePhaseStatus = useMemo(() => {
         return getPhaseNewStatus(allAnytimeExercises, isToday);
     }, [allAnytimeExercises, isToday]);
 
-    // Update anytime phase status when exercises change
+    // Update anytime phase status when exercises change.
+    const inFlightStatusRef = useRef<string | null>(null);
     useEffect(() => {
-        if (anytimePhaseStatus && anytimePhaseId && anytimePhaseStatus !== newAnytimePhaseStatus) {
-            try {
-                updatePhase({
-                    id: anytimePhaseId,
-                    data: { status: newAnytimePhaseStatus }
-                });
-            } catch (error) {
-                console.error('Failed to update anytime phase status:', error);
-            }
+        if (!anytimePhaseStatus || !anytimePhaseId || !anytimePhase) { return; }
+        if (anytimePhaseStatus === newAnytimePhaseStatus) {
+            inFlightStatusRef.current = null;
+            return;
         }
-    }, [anytimePhaseStatus, newAnytimePhaseStatus, anytimePhaseId, updatePhase]);
+        if (inFlightStatusRef.current === newAnytimePhaseStatus) { return; }
+        inFlightStatusRef.current = newAnytimePhaseStatus;
+        const { items: _items, ...phaseWithoutItems } = anytimePhase as any;
+        updatePhase({
+            id: anytimePhaseId,
+            data: { ...phaseWithoutItems, status: newAnytimePhaseStatus },
+        })
+            .unwrap()
+            .catch(error => {
+                inFlightStatusRef.current = null;
+                console.error('Failed to update anytime phase status:', error);
+            });
+    }, [anytimePhase, anytimePhaseStatus, newAnytimePhaseStatus, anytimePhaseId, updatePhase]);
 
     // Function to refresh anytime exercises when status changes
     const refreshAnytimeExercises = useCallback(() => {
@@ -228,102 +176,91 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
 
     if (!visible) { return null; }
 
-    return (
-        <View style={styles.overlay}>
+    return <View style={[styles.modal, { backgroundColor: theme.colors.surface }]}>
+        <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
+            <View style={styles.headerLeft}>
+                <Badge count={activeExercisesCount} bgColor={theme.colors.aqua}>
+                    <ActivityIcon size={24} />
+                </Badge>
+                <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+                    Exercise
+                </Text>
+            </View>
+
             <TouchableOpacity
                 onPress={onClose}
-                activeOpacity={1}
-                style={StyleSheet.absoluteFill}
-            />
-      
-            <View style={[styles.modal, { backgroundColor: theme.colors.surface }]}>
-                <View style={[styles.header, { backgroundColor: '#E0EBF7', borderBottomColor: theme.colors.border }]}>
-                    <View style={styles.headerLeft}>
-                        <Badge count={activeExercisesCount} bgColor={theme.colors.aqua} showZero>
-                            <ActivityIcon size={24} />
-                        </Badge>
-                        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-                            Exercise
-                        </Text>
-                    </View>
-          
-                    <TouchableOpacity
-                        onPress={onClose}
-                        disabled={disabled}
-                        style={styles.closeButton}
-                    >
-                        <CloseIcon size={24} color="#181818" />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.content}>
-                    {exerciseCategories.length === 0 ? (
-                        <View style={styles.emptyState}>
-                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                                No exercises found
-                            </Text>
-                        </View>
-                    ) : (
-                        <ScrollView style={styles.scrollView}>
-                            {exerciseCategories.map((item: any) =>
-                                <TouchableOpacity
-                                    disabled={disabled}
-                                    key={String(item.id)}
-                                    onPress={() => handleItemPress(item)}
-                                    style={[styles.exerciseItem, { borderBottomColor: theme.colors.border }]}
-                                >
-                                    <View style={styles.exerciseContent}>
-                                        <Text style={[styles.exerciseName, { color: theme.colors.text }]}>
-                                            {item.title}
-                                        </Text>
-                                    </View>
-                                        
-                                    {item?.status === PHASE_ITEM_STATUS.DONE && (
-                                        <Checkbox
-                                            value
-                                            size={15}
-                                            editable={false}
-                                            onChange={() => {}}
-                                        />
-                                    )}
-                                        
-                                    {item?.status === PHASE_ITEM_STATUS.INCOMPLETE && (
-                                        <View style={[styles.finishBadge, { backgroundColor: theme.colors.warning }]}>
-                                            <Text style={styles.finishText}>Finish</Text>
-                                        </View>
-                                    )}
-                                        
-                                    {![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.INCOMPLETE].includes(item?.status) && (
-                                        <Text style={[styles.chevron, { color: theme.colors.textSecondary }]}>›</Text>
-                                    )}
-                                </TouchableOpacity>
-                            )}
-                        </ScrollView>
-                    )}
-                </View>
-                {listIsDone && (
-                    <View style={styles.completionContainer}>
-                        <Text style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>
-                            Keep It Up!
-                        </Text>
-                        <TouchableOpacity
-                            style={[styles.nextActivityButton, { backgroundColor: theme.colors.successAlt }]}
-                            onPress={onClose}
-                        >
-                            <Text style={[styles.nextActivityText, { color: theme.colors.white }]}>
-                                {isSingleExerciseCategoryDone ? 'DONE' : 'NEXT ACTIVITY'}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-            </View>
+                disabled={disabled}
+                style={styles.closeButton}
+            >
+                <CloseIcon size={24} color={theme.colors.text} />
+            </TouchableOpacity>
         </View>
-    );
+
+        <View style={styles.content}>
+            {exerciseCategories.length === 0 ? (
+                <View style={styles.emptyState}>
+                    <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                        No exercises found
+                    </Text>
+                </View>
+            ) : (
+                <ScrollView style={styles.scrollView}>
+                    {exerciseCategories.map((item: any) =>
+                        <TouchableOpacity
+                            disabled={disabled}
+                            key={String(item.id)}
+                            onPress={() => handleItemPress(item)}
+                            style={[styles.exerciseItem, { borderBottomColor: theme.colors.border }]}
+                        >
+                            <View style={styles.exerciseContent}>
+                                <Text style={[styles.exerciseName, { color: theme.colors.text }]}>
+                                    {item.title}
+                                </Text>
+                            </View>
+
+                            {item?.status === PHASE_ITEM_STATUS.DONE && (
+                                <Checkbox
+                                    value
+                                    size={15}
+                                    editable={false}
+                                    onChange={() => {}}
+                                />
+                            )}
+
+                            {item?.status === PHASE_ITEM_STATUS.INCOMPLETE && (
+                                <View style={[styles.finishBadge, { backgroundColor: theme.colors.warning }]}>
+                                    <Text style={styles.finishText}>Finish</Text>
+                                </View>
+                            )}
+
+                            {![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.INCOMPLETE].includes(item?.status) && (
+                                <Text style={[styles.chevron, { color: theme.colors.textSecondary }]}>›</Text>
+                            )}
+                        </TouchableOpacity>)}
+                </ScrollView>
+            )}
+        </View>
+        {(listIsDone && exerciseCategories.length > 0)
+            && <View style={styles.completionContainer}>
+                <Text style={[styles.goodWorkText, { backgroundColor: theme.colors.surface, color: theme.colors.text }]}>
+                    Keep It Up!
+                </Text>
+                <TouchableOpacity
+                    style={[styles.nextActivityButton, { backgroundColor: theme.colors.successAlt }]}
+                    onPress={onClose}
+                >
+                    <Text style={[styles.nextActivityText, { color: theme.colors.white }]}>
+                        {isSingleExerciseCategoryDone ? 'DONE' : 'NEXT ACTIVITY'}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        }
+    </View>;
 };
 
 const styles = StyleSheet.create({
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         zIndex: 999,
     },
@@ -333,7 +270,6 @@ const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
-        backgroundColor: '#FFFFFF',
         elevation: 7,
         shadowColor: '#000000',
         shadowOffset: {
@@ -349,9 +285,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 24,
         paddingVertical: 20,
-        backgroundColor: '#E0EBF7',
         borderBottomWidth: 1,
-        borderBottomColor: '#CCDCE4',
     },
     headerLeft: {
         flexDirection: 'row',
@@ -362,16 +296,9 @@ const styles = StyleSheet.create({
         marginLeft: 16,
         fontSize: 20,
         fontWeight: '700',
-        color: '#181818',
     },
     closeButton: {
-        // padding: 8,
         borderRadius: 20,
-    },
-    closeText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#181818',
     },
     content: {
         flex: 1,
@@ -380,13 +307,12 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     exerciseItem: {
+        paddingVertical: 35,
+        borderBottomWidth: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 20,
         paddingHorizontal: 24,
-        borderBottomWidth: 1,
-        borderBottomColor: '#E1E1E1',
+        justifyContent: 'space-between',
     },
     exerciseContent: {
         flex: 1,
@@ -395,30 +321,11 @@ const styles = StyleSheet.create({
     exerciseName: {
         fontSize: 18,
         fontWeight: '500',
-        color: '#181818',
         marginBottom: 4,
-    },
-    exerciseType: {
-        fontSize: 14,
-        color: '#666666',
-    },
-    completedBadge: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: '#96E072',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    completedText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
     },
     finishBadge: {
         paddingHorizontal: 12,
         paddingVertical: 6,
-        backgroundColor: '#FFE17A',
         borderRadius: 5,
     },
     finishText: {
@@ -427,18 +334,16 @@ const styles = StyleSheet.create({
         color: '#181818',
     },
     chevron: {
-        fontSize: 20,
-        color: '#666666',
+        fontSize: 28,
     },
     emptyState: {
         flex: 1,
+        paddingVertical: 40,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 40,
     },
     emptyText: {
         fontSize: 16,
-        color: '#808080',
         textAlign: 'center',
     },
     completionContainer: {
@@ -449,8 +354,6 @@ const styles = StyleSheet.create({
     goodWorkText: {
         fontSize: 32,
         fontWeight: '500',
-        color: '#181818',
-        backgroundColor: 'white',
         borderRadius: 12,
         padding: 16,
         elevation: 2,
@@ -460,7 +363,6 @@ const styles = StyleSheet.create({
         width: '90%',
         borderRadius: 30,
         alignSelf: 'center',
-        backgroundColor: '#96E072',
         borderColor: 'transparent',
         paddingVertical: 15,
         alignItems: 'center',
@@ -469,6 +371,5 @@ const styles = StyleSheet.create({
     nextActivityText: {
         fontSize: 20,
         fontWeight: '500',
-        color: '#FFFFFF',
     },
 });

@@ -25,6 +25,7 @@ import { COLORS } from 'constants/colors';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import { useAppState } from 'hooks/useAppState';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { uploadImageInitiate } from 'store/api/s3ServiceApi';
 import ConfirmationAlert from 'components/ConfirmationAlert';
 import {
@@ -406,6 +407,7 @@ const UPCScan: React.FC = () => {
                             onChangeText={setManualUpc}
                             placeholder="Enter UPC code"
                             placeholderTextColor={COLORS.GREY}
+                            maxFontSizeMultiplier={MAX_FONT_SCALE}
                         />
                         <View style={styles.manualButtons}>
                             <Button
@@ -525,7 +527,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scanOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -559,7 +561,7 @@ const styles = StyleSheet.create({
         borderColor: COLORS.WHITE,
     },
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#DADADA99',

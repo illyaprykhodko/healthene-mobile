@@ -11,6 +11,7 @@ import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
+import StackHeader from 'components/StackHeader';
 import {
     VIDEO_LIBRARY,
     type VideoItem,
@@ -212,7 +213,14 @@ const VideoCategoryScreen: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            {renderContent()}
+            <StackHeader
+                title="Videos"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => navigation.openDrawer?.()}
+            />
+            <View style={styles.content}>
+                {renderContent()}
+            </View>
         </Screen>
     );
 };
@@ -221,6 +229,9 @@ export default memo(VideoCategoryScreen);
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
+    },
+    content: {
         flex: 1,
         paddingTop: OFFSET.VERTICAL,
         paddingHorizontal: OFFSET.HORIZONTAL,

@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import moment from 'moment';
+import dayjs from 'services/date';
 import { useNavigation } from '@react-navigation/native';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -40,7 +40,7 @@ import MeasurementChartScreen from '../MeasurementChartScreen';
 import WeightMeasurementScreen from '../WeightMeasurementScreen';
 import { ReplacementScreen, ReplaceItemsScreen } from './Replacement';
 import { selectDayOverview, meta } from 'store/slices/dayOverviewSlice';
-import { ExerciseCategories, ExerciseDetails, ExerciseEdit } from './Exercise';
+import { ExerciseCategories, ExerciseDetails, ExerciseEdit, WalkingActivity } from './Exercise';
 import {
     GamblingGiftCardDenominationsScreen,
     GamblingGiftCardConfirmationScreen,
@@ -63,12 +63,12 @@ const DayOverviewStack: React.FC = () => {
 
     const dispatch = useAppDispatch();
     const { date, expectAnswer } = useAppSelector(selectDayOverview);
-    const currentDate = date || moment().format('YYYY-MM-DD');
+    const currentDate = date || dayjs().format('YYYY-MM-DD');
 
     const handleDateChange = (nextDate: string) => {
-        const isCurrent = moment(nextDate).isSame(moment(), 'day');
-        const isFuture = moment(nextDate).isAfter(moment(), 'day');
-        const isPast = moment(nextDate).isBefore(moment(), 'day');
+        const isCurrent = dayjs(nextDate).isSame(dayjs(), 'day');
+        const isFuture = dayjs(nextDate).isAfter(dayjs(), 'day');
+        const isPast = dayjs(nextDate).isBefore(dayjs(), 'day');
         dispatch(
             meta({
                 date: nextDate,
@@ -89,16 +89,16 @@ const DayOverviewStack: React.FC = () => {
         <View style={[
             styles.customHeader,
             {
-                backgroundColor: theme.colors.primary,
+                backgroundColor: theme.colors.headerBg,
                 paddingTop: Platform.OS === 'android' ? insets.top + OFFSET.VERTICAL : insets.top
             }
         ]}>
             <View style={[styles.headerSide, styles.headerSideLeft]}>
-                <BackBtn onPress={() => headerProps.navigation.goBack()} color={theme.colors.white}/>
+                <BackBtn onPress={(headerProps.options as any)?.onBackPress || (() => headerProps.navigation.goBack())} color={theme.colors.headerText}/>
             </View>
             {options?.title
                 ? <View style={styles.headerCenter}>
-                    <Text variant="h3" style={{ color: theme.colors.white }}>
+                    <Text variant="h3" style={{ color: theme.colors.headerText }}>
                         {options.title}
                     </Text>
                 </View>
@@ -198,6 +198,11 @@ const DayOverviewStack: React.FC = () => {
                 name="EditExercise"
                 component={ExerciseEdit}
                 options={{ title: 'Edit Exercise', header: renderCustomHeader() }}
+            />
+            <Stack.Screen
+                name="WalkingActivity"
+                component={WalkingActivity}
+                options={{ headerShown: false }}
             />
 
             <Stack.Screen

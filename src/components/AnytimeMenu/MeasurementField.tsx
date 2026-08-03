@@ -4,6 +4,7 @@ import { View, TextInput, StyleSheet, Platform } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import type { MeasurementFieldConfig } from 'types/health';
 
 interface MeasurementFieldProps {
@@ -45,13 +46,23 @@ export const MeasurementField: React.FC<MeasurementFieldProps> = ({
 
     return (
         <View style={styles.container}>
-            <View style={[styles.inputContainer, error && { borderColor: theme.colors.error }]}>
+            <View style={[
+                styles.inputContainer,
+                {
+                    backgroundColor: theme.colors.surfaceAlt,
+                    borderColor: error
+                        ? theme.colors.error
+                        : theme.colors.cerulean300
+
+                },
+            ]}>
                 <TextInput
                     value={value}
                     onBlur={onBlur}
                     editable={!disabled}
                     placeholder={field.placeholder}
                     onChangeText={handleChangeText}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                     maxLength={field.type === 'number' ? 3 : 5}
                     placeholderTextColor={theme.colors.textSecondary}
                     keyboardType={field.type === 'decimal' ? 'decimal-pad' : 'number-pad'}
@@ -87,9 +98,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 3,
-        borderColor: '#6A92BB',
         borderRadius: 10,
-        backgroundColor: '#E0EBF7',
         paddingHorizontal: 16,
     },
     input: {

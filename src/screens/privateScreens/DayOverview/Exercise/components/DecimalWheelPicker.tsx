@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 // local dependencies
 import { ITEM_HEIGHT, WheelPicker } from './WheelPicker';
+import { MAX_FONT_SCALE } from '../../../../../constants/typography';
 // ---- Types
 type Field = {
   label: string;
@@ -47,7 +48,11 @@ const DecimalWheelPicker: React.FC<DecimalWheelPickerProps> = ({ field, onApply 
     const wasBumped = useRef(Math.round(initialValue * 10) < MIN_TENTHS).current;
     useEffect(() => {
         if (wasBumped) {
-            onApply({ [field.key]: MIN_TENTHS / 10 });
+            // Defer: emitting synchronously inside the commit phase fans out a redux
+            // notify that reaches ExerciseDetails (parent in the nav stack), tripping
+            // React 19's "setState while rendering" warning. Promise microtask defers
+            // the dispatch until after the wheel-picker tree has fully committed.
+            Promise.resolve().then(() => onApply({ [field.key]: MIN_TENTHS / 10 }));
         }
     }, []);
 
@@ -85,7 +90,7 @@ const DecimalWheelPicker: React.FC<DecimalWheelPickerProps> = ({ field, onApply 
     return (
         <View style={styles.container}>
             <View style={styles.pickerColumn}>
-                <Text style={styles.title}>{field.label}</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.title}>{field.label}</Text>
                 <View style={styles.background}>
                     <WheelPicker
                         data={wholeData}
@@ -96,10 +101,10 @@ const DecimalWheelPicker: React.FC<DecimalWheelPickerProps> = ({ field, onApply 
                 </View>
             </View>
 
-            <Text style={styles.decimalPoint}>.</Text>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.decimalPoint}>.</Text>
 
             <View style={styles.pickerColumn}>
-                <Text style={styles.title}>Decimal</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.title}>Decimal</Text>
                 <View style={styles.background}>
                     <WheelPicker
                         data={decimalData}
@@ -113,7 +118,7 @@ const DecimalWheelPicker: React.FC<DecimalWheelPickerProps> = ({ field, onApply 
     );
 };
 
-export default DecimalWheelPicker;
+export default React.memo(DecimalWheelPicker);
 
 const styles = StyleSheet.create({
     container: {

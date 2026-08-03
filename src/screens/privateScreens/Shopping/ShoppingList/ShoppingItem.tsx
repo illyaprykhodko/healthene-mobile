@@ -1,14 +1,18 @@
 
 // outsource dependencies
 import Icon from '@react-native-vector-icons/feather';
-import { StyleSheet, View, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, View, TextInput } from 'react-native';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 // local dependencies
 import Text from 'components/Text';
 import { useAppSelector } from 'store';
 import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
+import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
+import { MAX_FONT_SCALE } from 'constants/typography';
+import { PressableScale } from 'components/PressableScale';
 import { selectCurrentStep } from 'store/slices/shoppingSlice';
 import { SHOPPING_STATUS, SHOPPING_STEP } from 'constants/spec';
 
@@ -29,6 +33,7 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
     isConfirmed,
     onAmountFocus,
 }) => {
+    const theme = useTheme();
     const ref = useRef<TextInput>(null);
     const [editable, setEditable] = useState(false);
     const [amount, setAmount] = useState(String(item?.amount || 1));
@@ -112,8 +117,10 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
         });
     }, [item, isPurchased, disabled, isConfirmed, onUpdate]);
 
-    const showExcludeButton = (currentStep === SHOPPING_STEP.MAIN
-        || currentStep === SHOPPING_STEP.CHECK)
+    // HS-3113: Final Check step removed. Was:
+    //   (currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.CHECK)
+    // CHECK is now unreachable, so the clause was dropped.
+    const showExcludeButton = currentStep === SHOPPING_STEP.MAIN
         && status !== SHOPPING_STATUS.CONFIRMED
         && status !== SHOPPING_STATUS.SHOP_ON_MY_OWN
     ;
@@ -121,7 +128,11 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
     const showSelectButton = (currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.MEAL) && !isConfirmed;
 
     return (
-        <View style={[styles.container, isExcluded && styles.excluded]}>
+        <View style={[
+            styles.container,
+            { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border },
+            isExcluded && styles.excluded,
+        ]}>
             <DefImage
                 src={item?.coverImage?.url}
                 style={isExcluded ? { ...styles.image, ...styles.excludedImage } : styles.image}
@@ -129,6 +140,7 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
             <View style={styles.textContainer}>
                 <Text
                     variant="h5"
+                    color={theme.colors.text}
                     style={[styles.name, isExcluded && styles.excludedText]}
                 >
                     {item.name || item.food?.name}
@@ -136,7 +148,9 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                 <View style={styles.itemInfo}>
                     {showSelectButton ? (
                         <View style={styles.controlsContainer}>
-                            <TouchableOpacity
+                            <PressableScale
+                                // haptic="light"
+                                haptic="medium"
                                 onPress={handleAmount}
                                 disabled={isItemDisabled}
                                 style={[styles.selectBtn, isItemDisabled && styles.selectBtnDisabled]}
@@ -149,35 +163,42 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                                     keyboardType="numeric"
                                     onChangeText={setAmount}
                                     value={cleanedStr(amount)}
+                                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                                     onFocus={() => onAmountFocus?.(item?.id)}
                                     style={[
                                         styles.selectInput,
                                         {
-                                            color: editable ? COLORS.BLACK : COLORS.DARK_GREY,
-                                            borderColor: isItemDisabled ? COLORS.GREY : COLORS.DARK_BLUE,
+                                            backgroundColor: theme.colors.surface,
+                                            color: editable ? theme.colors.text : theme.colors.textSecondary,
+                                            borderColor: isItemDisabled ? theme.colors.border : theme.colors.primary,
                                         }
                                     ]}
                                 />
                                 <Text style={[styles.selectBtnText, isItemDisabled && styles.selectBtnTextDisabled]}>
                                     select
                                 </Text>
-                            </TouchableOpacity>
+                            </PressableScale>
                         </View>
                     ) : (
-                        <View style={[styles.amountContainer, isExcluded && styles.amountContainerExcluded]}>
-                            <Text style={[styles.amount, isExcluded && styles.excludedText]}>
+                        <View style={[
+                            styles.amountContainer,
+                            { borderColor: theme.colors.border },
+                            isExcluded && styles.amountContainerExcluded,
+                        ]}>
+                            <Text color={theme.colors.text} style={[styles.amount, isExcluded && styles.excludedText]}>
                                 {item.amount}
                             </Text>
                         </View>
                     )}
-                    <Text color={COLORS.GREY} style={styles.unit}>
+                    <Text color={theme.colors.textSecondary} style={styles.unit}>
                         {item?.unitOfMeasure}
                     </Text>
                 </View>
             </View>
 
             {showExcludeButton && (
-                <TouchableOpacity
+                <PressableScale
+                    haptic="light"
                     disabled={disabled}
                     onPress={handleExclude}
                     style={styles.actionBtn}
@@ -185,9 +206,9 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
                     <Icon
                         size={24}
                         name={isExcluded ? 'plus-square' : 'trash-2'}
-                        color={isExcluded ? COLORS.BLACK : COLORS.GREY}
+                        color={isExcluded ? theme.colors.text : theme.colors.textSecondary}
                     />
-                </TouchableOpacity>
+                </PressableScale>
             )}
             {/*{isConfirmed && (*/}
             {/*    <TouchableOpacity*/}
@@ -200,21 +221,12 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
             {/*)}*/}
 
             {showShoppingCheckbox && (
-                <TouchableOpacity
-                    disabled={disabled}
+                <Checkbox
+                    value={isPurchased}
+                    editable={!disabled}
                     style={styles.checkbox}
-                    onPress={handlePurchase}
-                    hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-                >
-                    <View style={[
-                        styles.checkboxInner,
-                        isPurchased && styles.checkboxChecked
-                    ]}>
-                        {isPurchased && (
-                            <Icon name="check" size={16} color={COLORS.WHITE} />
-                        )}
-                    </View>
-                </TouchableOpacity>
+                    onChange={handlePurchase}
+                />
             )}
         </View>
     );
@@ -310,7 +322,7 @@ const styles = StyleSheet.create({
     },
     selectInput: {
         width: 67,
-        height: 48,
+        minHeight: 48,
         padding: 10,
         maxWidth: 67,
         fontSize: 20,
@@ -321,7 +333,7 @@ const styles = StyleSheet.create({
     },
     amountContainer: {
         width: 60,
-        height: 40,
+        minHeight: 40,
         marginRight: 5,
         paddingVertical: 8,
         paddingHorizontal: 12,

@@ -5,10 +5,14 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ActivityIndicator, Alert, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
+import { useAppSelector } from 'store';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
+import { BranchBird } from 'animation/BranchBird';
 import { RootStackParamList } from 'services/navigation';
+import { selectBirdSoundEnabled } from 'store/slices/appSlice';
 import { useLazyCheckGiftCardHealthQuery } from 'store/api/giftCardApi';
 import { useGetPatientGamblingPointsQuery } from 'store/api/gamblingPointsApi';
 
@@ -24,6 +28,8 @@ const FALLBACK_UNAVAILABILITY_MESSAGE = 'We\'re sorry, but the Gift Card service
 
 const CashOut: React.FC = () => {
     const navigation = useNavigation<Navigation>();
+    const theme = useTheme();
+    const birdSoundEnabled = useAppSelector(selectBirdSoundEnabled);
     const { data: points = 0 } = useGetPatientGamblingPointsQuery();
     const [checkHealth, { isLoading: isCheckingHealth }] = useLazyCheckGiftCardHealthQuery();
 
@@ -51,10 +57,10 @@ const CashOut: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            {/* <View style={styles.content}> */}
-            <View style={styles.sectionContainer}>
-                <Text variant="h3" style={styles.sectionLabel}>Available Funds</Text>
-                <Text variant="h4" style={styles.fundsText}>
+            <BranchBird muted={!birdSoundEnabled} />
+            <View style={[styles.sectionContainer, { backgroundColor: theme.colors.muted, borderBottomColor: theme.colors.border }]}>
+                <Text variant="h3" style={[styles.sectionLabel, { color: theme.colors.text }]}>Available Funds</Text>
+                <Text variant="h4" style={[styles.fundsText, { color: theme.colors.text }]}>
                     {points.toLocaleString()} points — ${dollars}
                 </Text>
             </View>
@@ -84,7 +90,6 @@ const CashOut: React.FC = () => {
                 >
                     <Text variant="h3" style={styles.actionButtonText}>My{'\n'}Gift Cards</Text>
                 </TouchableOpacity>
-                {/* </View> */}
             </View>
             <View style={styles.footer}>
                 <TouchableOpacity
@@ -103,26 +108,20 @@ export default CashOut;
 
 const styles = StyleSheet.create({
     container: {
-        // backgroundColor: '#F5F5F5',
-        // justifyContent: 'center',
         justifyContent: 'space-between',
-        // padding: 16,
     },
     content: {
-        // marginTop: 18,
         gap: 20,
     },
     sectionLabel: {
         fontWeight: '400',
         fontFamily: 'Open Sans',
         fontSize: 30,
-        color: '#111111',
     },
     fundsText: {
         fontWeight: '600',
         fontFamily: 'Open Sans',
         fontSize: 20,
-        color: '#333333',
     },
     actionsContainer: {
         marginTop: 8,
@@ -156,9 +155,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     footer: {
-        // flexDirection: 'row',
-        // alignItems: 'center',
-        // justifyContent: 'space-between',
         marginBottom: OFFSET.VERTICAL + 16,
         paddingHorizontal: OFFSET.HORIZONTAL * 1.5,
     },
@@ -196,9 +192,7 @@ const styles = StyleSheet.create({
     sectionContainer: {
         gap: 8,
         borderBottomWidth: 1,
-        borderBottomColor: '#000',
         paddingVertical: OFFSET.VERTICAL * 1.5,
         paddingHorizontal: OFFSET.HORIZONTAL * 1.5,
-        backgroundColor: '#F4F4F4',
     },
 });

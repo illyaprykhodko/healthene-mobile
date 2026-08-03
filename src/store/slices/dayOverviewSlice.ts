@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 // local dependencies
 import { RootState } from '..';
@@ -35,7 +35,7 @@ export interface DayOverviewState {
   recentlyCompletedPhases: (number | string)[];
 }
 
-const TODAY = moment().format('YYYY-MM-DD');
+const TODAY = dayjs().format('YYYY-MM-DD');
 
 const initialState: DayOverviewState = {
     date: TODAY,

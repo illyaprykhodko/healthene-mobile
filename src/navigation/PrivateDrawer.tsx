@@ -20,6 +20,7 @@ import HealthProfileStack from 'navigation/HealthProfileStack';
 import MealPreferencesStack from 'navigation/MealPreferencesStack';
 import { CustomDrawerContent } from 'components/CustomDrawerContent';
 import CuisineDistributionStack from 'navigation/CuisineDistributionStack';
+import { HelpSupportScreen } from 'screens/privateScreens/HelpSupportScreen';
 
 
 const Drawer = createDrawerNavigator();
@@ -30,7 +31,8 @@ export const PrivateDrawer: React.FC = () => {
 
     return (
         <Drawer.Navigator
-            backBehavior="initialRoute"
+            backBehavior="history"
+            // backBehavior="initialRoute"
             initialRouteName={ROUTES.MAIN}
             drawerContent={props => <CustomDrawerContent {...props} />}
             screenOptions={({ navigation }) => ({
@@ -41,9 +43,9 @@ export const PrivateDrawer: React.FC = () => {
                     <BackButton navigation={navigation} theme={theme} />
                 ),
                 headerStyle: {
-                    backgroundColor: theme.colors.primary,
+                    backgroundColor: theme.colors.headerBg,
                 },
-                headerTintColor: theme.colors.white,
+                headerTintColor: theme.colors.headerText,
                 headerTitleStyle: {
                     fontWeight: '600'
                 },
@@ -147,6 +149,18 @@ export const PrivateDrawer: React.FC = () => {
                     title: 'Library',
                     drawerIcon: ({ color }) => (
                         <Icon iconStyle="solid" name="book" size={24} color={color} />
+                    ),
+                }}
+            />
+
+            <Drawer.Screen
+                name={ROUTES.HELP_SUPPORT}
+                component={HelpSupportScreen}
+                options={{
+                    headerShown: false,
+                    title: 'Help & Support',
+                    drawerIcon: ({ color }) => (
+                        <Icon iconStyle="solid" name="headset" size={24} color={color} />
                     ),
                 }}
             />

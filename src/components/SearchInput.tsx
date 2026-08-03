@@ -10,6 +10,7 @@ import {
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 
 interface SearchInputProps {
     value: string;
@@ -43,12 +44,12 @@ const SearchInputComponent: React.FC<SearchInputProps> = ({
         onClear?.();
     }, [onChange, onClear]);
 
-    const borderColor = focused ? '#2978A0' : '#A3C3D3';
+    const borderColor = focused ? theme.colors.primary : theme.colors.border;
 
     return (
         <TouchableWithoutFeedback onPress={handlePress}>
-            <View style={[styles.container, { borderColor, backgroundColor: theme.colors.white }]}>
-                <Icon iconStyle="solid" name="search" size={14} color="#2978A0" style={styles.iconSearch} />
+            <View style={[styles.container, { borderColor, backgroundColor: theme.colors.surface }]}>
+                <Icon iconStyle="solid" name="search" size={14} color={theme.colors.primary} style={styles.iconSearch} />
                 <RNTextInput
                     value={value}
                     maxLength={40}
@@ -58,7 +59,8 @@ const SearchInputComponent: React.FC<SearchInputProps> = ({
                     onFocus={handleFocus}
                     onChangeText={onChange}
                     placeholder={placeholder}
-                    placeholderTextColor="#999"
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    placeholderTextColor={theme.colors.textSecondary}
                     style={[styles.text, { color: theme.colors.text }]}
                 />
                 {value ? (
@@ -80,7 +82,7 @@ const styles = StyleSheet.create({
     container: {
         width: '100%',
         display: 'flex',
-        height: 45,
+        minHeight: 45,
         borderWidth: 1,
         borderRadius: 25,
         flexDirection: 'row',
@@ -104,7 +106,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
     },
     text: {
-        height: 30,
+        minHeight: 30,
         padding: 0,
         fontSize: 16,
         width: '100%',

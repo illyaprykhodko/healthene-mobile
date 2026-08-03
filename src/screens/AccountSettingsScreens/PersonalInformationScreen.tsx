@@ -2,7 +2,7 @@
 import * as yup from 'yup';
 import { Formik } from 'formik';
 import { RootState } from 'store';
-import moment from 'moment/moment';
+import dayjs from 'services/date';
 import Toast from 'react-native-toast-message';
 import React, { useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -77,7 +77,7 @@ export const PersonalInformationScreen = () => {
 
     return (
         <>
-            <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
+            <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
                 <Formik
                     onSubmit={handleSubmit}
                     validationSchema={validationSchema}
@@ -96,20 +96,26 @@ export const PersonalInformationScreen = () => {
                         const uploadImage = async () => {
                             userImgSheetRef.current?.close();
                             setIsLoading(true);
-                            const url = await getPicture();
-                            if (url) {
-                                handleChange('coverImage.url')(url);
+                            try {
+                                const url = await getPicture();
+                                if (url) {
+                                    handleChange('coverImage.url')(url);
+                                }
+                            } finally {
+                                setIsLoading(false);
                             }
-                            setIsLoading(false);
                         };
                         const uploadCameraImage = async () => {
                             userImgSheetRef.current?.close();
                             setIsLoading(true);
-                            const url = await takePicture();
-                            if (url) {
-                                handleChange('coverImage.url')(url);
+                            try {
+                                const url = await takePicture();
+                                if (url) {
+                                    handleChange('coverImage.url')(url);
+                                }
+                            } finally {
+                                setIsLoading(false);
                             }
-                            setIsLoading(false);
                         };
                         return (
                             <>
@@ -138,7 +144,7 @@ export const PersonalInformationScreen = () => {
                                             touched={touched}
                                             label="First Name"
                                             value={values.firstName}
-                                            color={theme.colors.black}
+                                            color={theme.colors.text}
                                             onChangeText={handleChange('firstName')}
                                             error={touched.firstName && errors.firstName ? { firstName: errors.firstName } : undefined}
                                         />
@@ -148,7 +154,7 @@ export const PersonalInformationScreen = () => {
                                             textAlign="left"
                                             label="Middle Name"
                                             value={values.middleName}
-                                            color={theme.colors.black}
+                                            color={theme.colors.text}
                                             onChangeText={handleChange('middleName')}
                                         />
                                         <TextInput
@@ -158,7 +164,7 @@ export const PersonalInformationScreen = () => {
                                             label="Last Name"
                                             touched={touched}
                                             value={values.lastName}
-                                            color={theme.colors.black}
+                                            color={theme.colors.text}
                                             onChangeText={handleChange('lastName')}
                                             error={touched.lastName && errors.lastName ? { lastName: errors.lastName } : undefined}
                                         />
@@ -179,7 +185,7 @@ export const PersonalInformationScreen = () => {
                                         <View style={styles.paddingVertical}>
                                             <Text
                                                 variant="caption"
-                                                color={touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.black}
+                                                color={touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.text}
                                             >
                                             Date of Birth
                                             </Text>
@@ -187,13 +193,13 @@ export const PersonalInformationScreen = () => {
                                                 onPress={() => setDateModalOpen(true)}
                                                 style={[
                                                     styles.currentItem,
-                                                    { borderBottomColor: touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.grey }
+                                                    { borderBottomColor: touched?.birthday && errors?.birthday ? theme.colors.error : theme.colors.border }
                                                 ]}
                                             >
                                                 <Text
-                                                    color={values.birthday ? theme.colors.black : theme.colors.grey}
+                                                    color={values.birthday ? theme.colors.text : theme.colors.textSecondary}
                                                 >
-                                                    {values.birthday ? moment(values.birthday).format('YYYY-MM-DD') : 'Select birthday'}
+                                                    {values.birthday ? dayjs(values.birthday).format('YYYY-MM-DD') : 'Select birthday'}
                                                 </Text>
                                             </Pressable>
                                         </View>
@@ -225,6 +231,8 @@ export const PersonalInformationScreen = () => {
                                     enablePanDownToClose
                                     snapPoints={['25%']}
                                     enableDynamicSizing={false}
+                                    backgroundStyle={{ backgroundColor: theme.colors.surface }}
+                                    handleIndicatorStyle={{ backgroundColor: theme.colors.border }}
                                     backdropComponent={backdropProps => (
                                         // show overlay
                                         (<BottomSheetBackdrop
@@ -236,12 +244,12 @@ export const PersonalInformationScreen = () => {
                                     )}>
                                     <View style={styles.userImgModal}>
                                         <Pressable onPress={() => uploadCameraImage()} style={styles.userImgOption}>
-                                            <EntypoIcon style={styles.marginRight} size={20} name="camera" />
-                                            <Text>Take a Photo</Text>
+                                            <EntypoIcon style={styles.marginRight} size={20} name="camera" color={theme.colors.text} />
+                                            <Text color={theme.colors.text}>Take a Photo</Text>
                                         </Pressable>
                                         <Pressable onPress={() => uploadImage()} style={styles.userImgOption}>
-                                            <EntypoIcon style={styles.marginRight} size={20} name="image-inverted" />
-                                            <Text>Choose Photo</Text>
+                                            <EntypoIcon style={styles.marginRight} size={20} name="image-inverted" color={theme.colors.text} />
+                                            <Text color={theme.colors.text}>Choose Photo</Text>
                                         </Pressable>
                                     </View>
                                 </BottomSheetModal>

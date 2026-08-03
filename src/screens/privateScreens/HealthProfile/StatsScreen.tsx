@@ -1,10 +1,10 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { Pressable, StyleSheet, View, Alert } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // local dependencies
 import Text from 'components/Text';
@@ -14,6 +14,7 @@ import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
 import TextInput from 'components/TextInput';
 import { Skeleton } from 'components/Skeleton';
+import StackHeader from 'components/StackHeader';
 import DatePickerSelector from 'components/DatePicker';
 import OptionSelector from 'components/Selector/OptionSelector';
 
@@ -120,10 +121,10 @@ const validateForm = (values: FormData): FormErrors => {
     if (!values.birthday) {
         errors.birthday = 'Date of birth is required';
     } else {
-        const parsed = moment(values.birthday, DATE_FORMAT, true);
+        const parsed = dayjs(values.birthday, DATE_FORMAT, true);
         if (!parsed.isValid()) {
             errors.birthday = 'Date of birth is invalid';
-        } else if (parsed.isAfter(moment(), 'day')) {
+        } else if (parsed.isAfter(dayjs(), 'day')) {
             errors.birthday = 'Date of birth can\'t be in the future';
         }
     }
@@ -163,7 +164,7 @@ const StatsScreen: React.FC = () => {
     useEffect(() => {
         if (user) {
             const userData = user as any;
-            const birthdayMoment = userData.birthday ? moment(userData.birthday) : null;
+            const birthdayMoment = userData.birthday ? dayjs(userData.birthday) : null;
             setFormData({
                 gender: userData.gender ?? '',
                 heightFt: userData.heightFt?.toString() ?? '',
@@ -260,6 +261,11 @@ const StatsScreen: React.FC = () => {
     if (!initialized) {
         return (
             <Screen initialized style={styles.container}>
+                <StackHeader
+                    title="My Stats"
+                    onBack={() => navigation.goBack()}
+                    onOpenDrawer={() => (navigation as any).openDrawer?.()}
+                />
                 <View style={styles.scrollContent}>
                     <StatsSkeleton borderColor={theme.colors.border} />
                 </View>
@@ -272,6 +278,11 @@ const StatsScreen: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
+            <StackHeader
+                title="My Stats"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => (navigation as any).openDrawer?.()}
+            />
             <View style={styles.scrollContent}>
                 <KeyboardAwareScrollView contentContainerStyle={styles.wrapper}>
                     <View style={styles.offset}>
@@ -292,7 +303,7 @@ const StatsScreen: React.FC = () => {
                             >
                                 <Text color={formData.birthday ? theme.colors.text : theme.colors.grey}>
                                     {formData.birthday
-                                        ? moment(formData.birthday, DATE_FORMAT).format(DATE_DISPLAY_FORMAT)
+                                        ? dayjs(formData.birthday, DATE_FORMAT).format(DATE_DISPLAY_FORMAT)
                                         : 'Select date of birth'}
                                 </Text>
                             </Pressable>
@@ -403,9 +414,9 @@ const StatsScreen: React.FC = () => {
             <View style={[styles.submitBtnContainer, { backgroundColor: theme.colors.background }]}>
                 <Button
                     variant="success"
+                    disabled={!isValid}
                     onPress={handleSubmit}
                     title="SAVE INFORMATION"
-                    disabled={isSubmitting || !isValid}
                 />
             </View>
             <DatePickerSelector
@@ -423,7 +434,6 @@ export default memo(StatsScreen);
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 30,
         paddingLeft: 0,
         paddingRight: 0,
     },

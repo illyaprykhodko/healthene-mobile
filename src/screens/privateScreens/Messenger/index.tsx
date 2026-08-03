@@ -7,6 +7,7 @@ import { SwipeListView } from 'react-native-swipe-list-view';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View, RefreshControl } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Animated, { FadeOut, LinearTransition, SlideInLeft } from 'react-native-reanimated';
 
 // local dependencies
 import Text from 'components/Text.tsx';
@@ -17,6 +18,7 @@ import { ROUTES } from 'constants/routes.ts';
 import { Button } from 'components/Button.tsx';
 import { MessageItem } from 'types/messenger.ts';
 import { MessageService } from 'services/messages';
+import { EmptyState } from 'components/EmptyState.tsx';
 import { RootStackParamList } from 'services/navigation';
 import { clearReplyMessage, setReplyMessage } from 'store/slices/messengerSlice.ts';
 import { Message } from 'screens/privateScreens/Messenger/components/MessageItem.tsx';
@@ -58,7 +60,7 @@ const MessengerList = () => {
 
     // Handle delete chain messages
     const [deleteChain] = useDeleteChainsMutation();
-    const handleDelete = async (item: [{id: number}]) => {
+    const handleDelete = async (item: [{ id: number }]) => {
         const { value } = await MessageService.confirmation({
             uid: 'Address',
             title: 'Delete address',
@@ -146,11 +148,35 @@ const MessengerList = () => {
                 onEndReachedThreshold={0.6}
                 rightOpenValue={-ITEM_HIDDEN_SIZE}
                 renderHiddenItem={renderHiddenItem}
+                keyExtractor={({ id }) => String(id)}
                 contentContainerStyle={styles.flexGrow}
-                keyExtractor={({ id }, index) => `${id}-${index}`}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefreshControl} />}
                 ItemSeparatorComponent={() => <View style={[styles.separator, { borderColor: theme.colors.grey }]} />}
-                renderItem={({ item }) => <Message key={item.id} {...item } goToReadMessage={() => goToReadMessage(item)} />}
+                ListEmptyComponent={
+                    <EmptyState
+                        title="No Messages Yet!"
+                        iconNode={
+                            <Icon
+                                size={120}
+                                name="comments"
+                                style={styles.emptyIcon}
+                                color={theme.colors.grey}
+                            />
+                        }
+                    />
+                }
+                renderItem={({ item, index }) => (
+                    <Animated.View
+                        // SlideInLeft keeps opacity at 1 throughout. FadeIn would let the SwipeListView's
+                        // hidden red delete button bleed through during 0→1 opacity ramp on insert.
+                        // First-batch stagger (cap at 10) gives a visible wave on initial render.
+                        exiting={FadeOut.duration(220)}
+                        layout={LinearTransition.springify().damping(20)}
+                        entering={SlideInLeft.delay(Math.min(index, 10) * 100).springify().mass(1.5).damping(55)}
+                    >
+                        <Message key={item.id} {...item} goToReadMessage={() => goToReadMessage(item)} />
+                    </Animated.View>
+                )}
             />
             <Button
                 variant="outline"
@@ -190,5 +216,8 @@ const styles = StyleSheet.create({
     },
     flexGrow: {
         flexGrow: 1
-    }
+    },
+    emptyIcon: {
+        marginBottom: OFFSET.VERTICAL,
+    },
 });

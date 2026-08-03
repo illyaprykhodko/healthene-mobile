@@ -92,7 +92,8 @@ export const NotificationsScreen: React.FC = () => {
                         disabled={disabled}
                         onValueChange={handleToggleAll}
                         thumbColor={theme.colors.white}
-                        ios_backgroundColor={theme.colors.white}
+                        accessibilityLabel="Allow All Notifications"
+                        ios_backgroundColor={theme.colors.darkerGrey}
                         trackColor={{ false: '#B2B2B2', true: '#4CDA64' }}
                     />
                 </View>
@@ -114,9 +115,10 @@ export const NotificationsScreen: React.FC = () => {
                                 disabled={disabled}
                                 value={item.enabled}
                                 thumbColor={theme.colors.white}
-                                ios_backgroundColor={theme.colors.white}
+                                ios_backgroundColor={theme.colors.darkerGrey}
                                 onValueChange={() => handleToggleItem(item.id)}
                                 trackColor={{ false: '#B2B2B2', true: '#4CDA64' }}
+                                accessibilityLabel={humanizeNotificationType(item.notificationType)}
                             />
                         </View>
                     )}

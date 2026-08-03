@@ -60,7 +60,9 @@ export const AnimatedDropdown: React.FC<AnimatedDropdownProps> = ({
         overflow: 'hidden',
     }));
     const mergedTriggerTextStyle = useMemo(
-        () => StyleSheet.flatten([styles.triggerText, { color: theme.colors.blue }, triggerTextStyle]) || {},
+        () => StyleSheet.flatten([styles.triggerText, {
+            color: theme.colors.text // color.blue - check theme
+        }, triggerTextStyle]) || {},
         [theme.colors.blue, triggerTextStyle]
     );
     const mergedOptionTextStyle = useMemo(
@@ -71,14 +73,14 @@ export const AnimatedDropdown: React.FC<AnimatedDropdownProps> = ({
     return (
         <View style={[styles.container, containerStyle]}>
             <TouchableOpacity
-                activeOpacity={hasManyOptions ? 0.75 : 1}
                 disabled={!hasManyOptions}
+                activeOpacity={hasManyOptions ? 0.75 : 1}
                 onPress={() => setIsOpen(prev => !prev)}
                 style={[
                     styles.trigger,
                     {
                         borderColor: theme.colors.border,
-                        backgroundColor: '#F7FAFD',
+                        backgroundColor: theme.colors.surfaceAlt,
                     },
                     triggerStyle
                 ]}
@@ -90,14 +92,15 @@ export const AnimatedDropdown: React.FC<AnimatedDropdownProps> = ({
                     <Icon
                         size={16}
                         iconStyle="solid"
-                        color={theme.colors.blue}
+                        color={theme.colors.text}
+                        // color={theme.colors.blue}
                         name={isOpen ? 'chevron-up' : 'chevron-down'}
                     />
                 )}
             </TouchableOpacity>
 
             <Animated.View
-                style={[styles.dropdown, { borderColor: theme.colors.border }, animatedStyle]}
+                style={[styles.dropdown, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }, animatedStyle]}
                 pointerEvents={isOpen ? 'auto' : 'none'}
             >
                 <ScrollView nestedScrollEnabled style={styles.dropdownScroll}>
@@ -116,7 +119,7 @@ export const AnimatedDropdown: React.FC<AnimatedDropdownProps> = ({
                                     isLast && styles.optionLast,
                                     {
                                         borderBottomColor: theme.colors.border,
-                                        backgroundColor: isSelected ? '#E9EDF4' : '#F4F6FA',
+                                        backgroundColor: isSelected ? theme.colors.surfaceAlt : theme.colors.surface,
                                     }
                                 ]}
                             >
@@ -161,7 +164,6 @@ const styles = StyleSheet.create({
         marginTop: 0,
         borderWidth: 0,
         borderRadius: 0,
-        backgroundColor: '#FFFFFF',
         position: 'absolute',
     },
     dropdownScroll: {

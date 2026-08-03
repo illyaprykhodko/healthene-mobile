@@ -1,17 +1,19 @@
 // outsource dependencies
 import { StyleSheet, View } from 'react-native';
+import React, { memo, useCallback, useMemo } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React, { memo, useCallback, useLayoutEffect, useMemo } from 'react';
+
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
-import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import DefImage from 'components/DefImage';
+import StackHeader from 'components/StackHeader';
 import { useAppDispatch, useAppSelector } from 'store';
+import { useShoppingDrawer } from '../useShoppingDrawer';
 import { SHOPPING_STEP, SHOPPING_STATUS, SHOPPING_CONFIRMED_ITEM_TYPE } from 'constants/spec';
 import { setCurrentStep, selectShopping, setShoppingStatus } from 'store/slices/shoppingSlice';
 import {
@@ -23,6 +25,7 @@ const ConfirmShopping: React.FC = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const dispatch = useAppDispatch();
+    const openDrawer = useShoppingDrawer();
 
     const selectedItem = route.params?.selectedItem;
     const {
@@ -47,12 +50,6 @@ const ConfirmShopping: React.FC = () => {
         if (!store) { return null; }
         return `${store.address}, ${store.city}, ${store.state}`;
     }, [selectedItem]);
-
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerLeft: () => <BackBtn onPress={handleGoBack} />,
-        });
-    }, [navigation]);
 
     const handleGoBack = useCallback(() => {
         dispatch(setCurrentStep(SHOPPING_STEP.STORE));
@@ -102,6 +99,11 @@ const ConfirmShopping: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
+            <StackHeader
+                title="Shopping List"
+                onBack={handleGoBack}
+                onOpenDrawer={openDrawer}
+            />
             <View style={styles.content}>
                 <View style={styles.title}>
                     <Text textAlign="center" variant="h1" style={styles.titleText}>
@@ -111,8 +113,8 @@ const ConfirmShopping: React.FC = () => {
 
                 {selectedItem?.groceryStore?.image?.url && (
                     <DefImage
-                        src={selectedItem.groceryStore.image.url}
                         style={styles.storeImage}
+                        src={selectedItem.groceryStore.image.url}
                     />
                 )}
 

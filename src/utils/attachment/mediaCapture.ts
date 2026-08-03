@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import moment from 'moment/moment';
+import dayjs from 'services/date';
 import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import { ReactNativeBlobUtilStat } from 'react-native-blob-util';
@@ -9,7 +9,7 @@ import { ReactNativeBlobUtilStat } from 'react-native-blob-util';
 import { store } from 'store';
 import { CapturedMedia } from 'components/RecordPreview.tsx';
 import { uploadAttachmentInitiate } from 'store/api/s3ServiceApi.ts';
-import { Platform } from 'react-native';
+import { buildAttachmentFormData } from 'utils/attachment/attachmentFormData';
 
 type captureType = 'video' | 'image' | 'audio'
 interface CaptureProps {
@@ -26,7 +26,7 @@ export const handleCapture = async ({
     setPreloader(true);
 
     const prepareFile = (type: captureType) => {
-        const date = moment().format('YYYY-MM-DD_HH-mm-ss');
+        const date = dayjs().format('YYYY-MM-DD_HH-mm-ss');
         switch (type) {
             default:
                 return {
@@ -55,18 +55,11 @@ export const handleCapture = async ({
 
     const { mimeType, fileTitle, fileName, fileDescription } = prepareFile(captureType);
     try {
-        const formData = new FormData();
-        const fileUri = normalizeUri(file?.path);
-        formData.append('file', {
-            name: fileName,
-            type: mimeType,
-            uri: fileUri,
-        } as any);
-        formData.append('title', fileTitle);
-        formData.append('description', fileDescription);
-        return await store.dispatch(uploadAttachmentInitiate({
-            body: formData
-        })).unwrap();
+        const body = buildAttachmentFormData(
+            { mimeType, name: fileName, uri: file?.path },
+            { title: fileTitle, description: fileDescription },
+        );
+        return await store.dispatch(uploadAttachmentInitiate({ body })).unwrap();
     } catch (error) {
         Sentry.captureException(error);
         Toast.show({
@@ -79,19 +72,3 @@ export const handleCapture = async ({
     }
 };
 
-const normalizeUri = (path?: string) => {
-    if (!path) { return ''; }
-
-    // content:// => Android SAF
-    if (path.startsWith('content://')) { return path; }
-
-    // file://
-    if (path.startsWith('file://')) { return path; }
-
-    // Only android
-    if (Platform.OS === 'android') {
-        return `file://${path}`;
-    }
-
-    return path;
-};

@@ -5,6 +5,7 @@ import { View, TextInput, StyleSheet, Platform } from 'react-native';
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
 import { COLORS } from 'constants/colors';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import type { MeasurementFieldConfig } from 'types/health';
 
 interface BloodPressureFieldsProps {
@@ -56,13 +57,22 @@ export const BloodPressureFields: React.FC<BloodPressureFieldsProps> = ({
         <View style={styles.container}>
             {/* Systolic */}
             <View style={styles.fieldWrapper}>
-                <View style={[styles.inputContainer, systolicError && { borderColor: theme.colors.error }]}>
+                <View style={[
+                    styles.inputContainer,
+                    {
+                        backgroundColor: theme.colors.surfaceAlt,
+                        borderColor: systolicError
+                            ? theme.colors.error
+                            : theme.colors.cerulean300,
+                    }
+                ]}>
                     <TextInput
                         maxLength={3}
                         editable={!disabled}
                         value={systolicValue}
                         onBlur={onSystolicBlur}
                         keyboardType="number-pad"
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
                         // placeholder={systolicField.placeholder}
                         placeholderTextColor={theme.colors.textSecondary}
                         onChangeText={text => handleTextChange(onSystolicChange, text)}
@@ -88,13 +98,22 @@ export const BloodPressureFields: React.FC<BloodPressureFieldsProps> = ({
 
             {/* Diastolic */}
             <View style={styles.fieldWrapper}>
-                <View style={[styles.inputContainer, diastolicError && { borderColor: theme.colors.error }]}>
+                <View style={[
+                    styles.inputContainer,
+                    {
+                        backgroundColor: theme.colors.surfaceAlt,
+                        borderColor: diastolicError
+                            ? theme.colors.error
+                            : theme.colors.cerulean300,
+                    },
+                ]}>
                     <TextInput
                         maxLength={3}
                         editable={!disabled}
                         value={diastolicValue}
                         onBlur={onDiastolicBlur}
                         keyboardType="number-pad"
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
                         onChangeText={text => handleTextChange(onDiastolicChange, text)}
                         // placeholder={diastolicField.placeholder}
                         style={[
@@ -128,11 +147,8 @@ const styles = StyleSheet.create({
     inputContainer: {
         width: '50%',
         borderWidth: 3,
-        borderColor: '#6A92BB',
         borderRadius: 10,
-        backgroundColor: '#E0EBF7',
         paddingHorizontal: 16,
-        // marginBottom: 8,
     },
     input: {
         height: 100,

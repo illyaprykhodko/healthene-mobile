@@ -3,15 +3,14 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // local dependencies
-import { useTheme } from 'hooks/useTheme.ts';
-import { OFFSET } from 'constants/offset.ts';
 import { ROUTES } from 'constants/routes.ts';
-import BackButton from 'components/BackButton.tsx';
+import StackHeader from 'components/StackHeader';
 import FoodAllergies from 'screens/AccountSettingsScreens/FoodAllergies';
 import { AddressScreen } from 'screens/AccountSettingsScreens/AddressScreen';
 import FoodPreferences from 'screens/AccountSettingsScreens/FoodPreferences';
 import AccountSettings from 'screens/AccountSettingsScreens/AccountSettings';
 import SettingsScreen from 'screens/AccountSettingsScreens/SettingsScreen.tsx';
+import AppearanceScreen from 'screens/AccountSettingsScreens/AppearanceScreen';
 import NotificationsScreen from 'screens/AccountSettingsScreens/NotificationsScreen';
 import AnimationSettingsScreen from 'screens/AccountSettingsScreens/AnimationSettings';
 import ChangePasswordScreen from 'screens/AccountSettingsScreens/ChangePasswordScreen.tsx';
@@ -20,28 +19,21 @@ import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/Person
 
 const Stack = createStackNavigator();
 
-export const AccountSettingsStack = () => {
-    const theme = useTheme();
+const renderHeader = (headerProps: any) => (
+    <StackHeader
+        showBack={!!headerProps.back}
+        title={headerProps.options.title}
+        onBack={() => headerProps.navigation.goBack()}
+    />
+);
 
+export const AccountSettingsStack = () => {
     return (
         <Stack.Navigator
-            screenOptions={({ navigation }) => ({
+            screenOptions={{
                 headerShown: true,
-                headerLeft: () => (
-                    <BackButton navigation={navigation} theme={theme} />
-                ),
-                headerTintColor: theme.colors.white,
-                headerStyle: {
-                    backgroundColor: theme.colors.primary,
-                },
-                headerTitleStyle: {
-                    fontWeight: '600'
-                },
-                headerTitleAlign: 'center',
-                headerLeftContainerStyle: {
-                    paddingLeft: OFFSET.HORIZONTAL,
-                },
-            })}
+                header: renderHeader,
+            }}
         >
             <Stack.Screen
                 name={ROUTES.SETTINGS}
@@ -92,6 +84,11 @@ export const AccountSettingsStack = () => {
                 name={ROUTES.ANIMATION_SETTINGS}
                 component={AnimationSettingsScreen}
                 options={{ title: 'Animation Settings' }}
+            />
+            <Stack.Screen
+                name={ROUTES.APPEARANCE_SETTINGS}
+                component={AppearanceScreen}
+                options={{ title: 'Appearance' }}
             />
         </Stack.Navigator>
     );

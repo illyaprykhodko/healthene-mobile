@@ -3,7 +3,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ViewStyle } from 'react-native';
 
 // local dependencies
+import { useTheme } from 'hooks/useTheme';
 import { isDecimalField } from '../decimal-utils';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import DecimalWheelPicker from './DecimalWheelPicker';
 import { ITEM_HEIGHT, WheelPicker } from './WheelPicker';
 
@@ -59,6 +61,13 @@ const valueToIndex = (data: number[] | undefined, value: number) => {
 };
 
 const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApply }) => {
+    const theme = useTheme();
+    // Two-tone barrel bands (cyan / aqua to match the brand) — tinted-dark in dark theme.
+    const isDark = theme.dark;
+    const bandSelFirst = isDark ? 'rgba(79, 195, 232, 0.30)' : '#CAE1F9';
+    const bandSelSecond = isDark ? 'rgba(142, 249, 243, 0.24)' : '#E8EDD1';
+    const bandBgFirst = isDark ? 'rgba(79, 195, 232, 0.10)' : 'rgba(224, 235, 247, 0.5)';
+    const bandBgSecond = isDark ? 'rgba(142, 249, 243, 0.08)' : 'rgba(238, 241, 227, 0.5)';
     const [mode, setMode] = useState<'wheel' | 'input'>('wheel');
 
     // NOTE: `values` keeps SELECTED INDEXES for regular wheels (not the values from data[])
@@ -89,7 +98,11 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
         });
 
         if (Object.keys(bumps).length > 0) {
-            onApply({ ...step, ...bumps });
+            // Defer the dispatch: emitting synchronously here notifies parent screens
+            // (ExerciseDetails) that subscribe to the same redux slice during the wheel
+            // picker's commit phase, which trips React 19's "setState while rendering"
+            // warning. Promise microtask runs after the current commit but before paint.
+            Promise.resolve().then(() => onApply({ ...step, ...bumps }));
         }
     }, [fields, onApply, step]);
 
@@ -97,25 +110,30 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
     const regularFields = useMemo(() => fields.filter(f => !isDecimalField(f.key)), [fields]);
     const decimalFields = useMemo(() => fields.filter(f => isDecimalField(f.key)), [fields]);
 
-    // Update handler for regular (index-based) wheels
+    // Update handler for regular (index-based) wheels.
+    //
+    // CRITICAL: onApply must NOT run inside the setValues updater. Updater functions
+    // must be pure — calling onApply there fires a redux dispatch in the middle of
+    // React's setState reducer phase, which then notifies ExerciseDetails (subscribed
+    // to the same slice) and trips React 19's "Cannot update a component while
+    // rendering a different component" warning. This is exactly what was happening
+    // on mount, where WheelPicker's scrollToIndex animation synthesises a momentum
+    // scroll-end event that bounces through onSelect → handleChange.
     const handleChange = useCallback(
         (fieldIdx: number, newIdx: number) => {
-            setValues(prev => {
-                const newValues = [...prev];
-                newValues[fieldIdx] = newIdx;
+            const next = [...values];
+            next[fieldIdx] = newIdx;
+            setValues(next);
 
-                const result: Record<string, unknown> = {};
-                fields.forEach((f, i) => {
-                    if (!isDecimalField(f.key)) {
-                        result[f.key] = f.data?.[newValues[i]];
-                    }
-                });
-
-                onApply({ ...step, ...result });
-                return newValues;
+            const result: Record<string, unknown> = {};
+            fields.forEach((f, i) => {
+                if (!isDecimalField(f.key)) {
+                    result[f.key] = f.data?.[next[i]];
+                }
             });
+            onApply({ ...step, ...result });
         },
-        [fields, onApply, step]
+        [fields, onApply, step, values]
     );
 
     const handleDecimalChange = useCallback(
@@ -254,22 +272,24 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
         const error = errors[field.key];
         return (
             <View key={field.key} style={isDecimal ? styles.inputFull : styles.pickerColumn}>
-                <Text style={styles.title}>{field.label}</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.title, { color: theme.colors.text }]}>{field.label}</Text>
                 <View style={[
                     styles.inputBox,
-                    isEven ? styles.backgroundFirst : styles.backgroundSecond,
+                    { backgroundColor: isEven ? bandBgFirst : bandBgSecond },
                 ]}>
                     <TextInput
                         selectTextOnFocus
-                        style={styles.inputText}
                         maxLength={isDecimal ? 7 : 6}
                         value={inputs[field.key] ?? ''}
                         onBlur={() => handleInputBlur(field)}
-                        keyboardType={isDecimal ? 'decimal-pad' : 'number-pad'}
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
+                        placeholderTextColor={theme.colors.textSecondary}
                         onChangeText={text => handleInputChange(field, text)}
+                        keyboardType={isDecimal ? 'decimal-pad' : 'number-pad'}
+                        style={[styles.inputText, { color: theme.colors.text }]}
                     />
                 </View>
-                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                {error ? <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.errorText}>{error}</Text> : null}
             </View>
         );
     };
@@ -277,8 +297,8 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
     return (
         <View style={styles.wrapper}>
             <View style={styles.toggleRow}>
-                <TouchableOpacity onPress={toggleMode} style={styles.toggleBtn} accessibilityRole="button">
-                    <Text style={styles.toggleText}>
+                <TouchableOpacity onPress={toggleMode} style={[styles.toggleBtn, { borderColor: theme.colors.border }]} accessibilityRole="button">
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.toggleText, { color: theme.colors.text }]}>
                         {mode === 'wheel' ? 'Type values' : 'Use wheels'}
                     </Text>
                 </TouchableOpacity>
@@ -293,15 +313,15 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
 
                             return (
                                 <View key={field.key} style={styles.pickerColumn}>
-                                    <Text style={styles.title}>{field.label}</Text>
-                                    <View style={isEven ? styles.backgroundFirst : styles.backgroundSecond}>
+                                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.title, { color: theme.colors.text }]}>{field.label}</Text>
+                                    <View style={{ backgroundColor: isEven ? bandBgFirst : bandBgSecond }}>
                                         <WheelPicker
                                             data={field.data ?? []}
                                             selectedIndex={values[fieldIdx] ?? 0}
                                             onSelect={(newIdx: number) => handleChange(fieldIdx, newIdx)}
-                                            selectedItemStyle={(isEven
-                                                ? styles.selectedItemFirst
-                                                : styles.selectedItemSecond) as ViewStyle}
+                                            selectedItemStyle={({
+                                                backgroundColor: isEven ? bandSelFirst : bandSelSecond,
+                                            }) as ViewStyle}
                                         />
                                     </View>
                                 </View>
@@ -325,7 +345,9 @@ const MultiWheelPicker: React.FC<MultiWheelPickerProps> = ({ step, fields, onApp
     );
 };
 
-export default MultiWheelPicker;
+// Memoised so ExerciseEdit re-renders (e.g. from redux exerciseSlice updates
+// that don't change the current step) don't replay the wheel barrel state.
+export default React.memo(MultiWheelPicker);
 
 
 const styles = StyleSheet.create({
@@ -340,11 +362,12 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     toggleBtn: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
+        minWidth: 108,
         borderWidth: 1,
-        borderColor: '#8E8E8E',
+        borderRadius: 16,
+        paddingVertical: 6,
+        alignItems: 'center',
+        paddingHorizontal: 12,
     },
     toggleText: {
         fontSize: 13,

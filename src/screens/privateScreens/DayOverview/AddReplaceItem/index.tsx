@@ -15,11 +15,14 @@ import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
 import DefImage from 'components/DefImage';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import { CATALOG_TAG_TYPE, SEARCH_TYPE } from 'constants/spec';
 
 export const AddReplaceItem: React.FC = () => {
+    const theme = useTheme();
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
 
@@ -191,6 +194,7 @@ export const AddReplaceItem: React.FC = () => {
                                 styles.tabButton,
                                 isActive && styles.activeTabButton,
                                 { borderRightWidth: tabs.length === index + 1 ? 0 : 2 },
+                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceSecond },
                             ]}
                             onPress={() => handleTabPress(tab.value)}
                         >
@@ -223,28 +227,28 @@ export const AddReplaceItem: React.FC = () => {
                         </Text>
                     </View>
                 </View>
-                <Icon iconStyle="solid" name="chevron-right" size={16} color={COLORS.BLACK} />
+                <Icon iconStyle="solid" name="chevron-right" size={16} color={theme.colors.text} />
             </TouchableOpacity>
         );
     };
 
     const renderSearchInput = () => (
         <View style={styles.searchContainer}>
-            <View style={styles.searchInputWrapper}>
-                <Icon iconStyle="solid" name="search" size={14} color={COLORS.GREY} style={styles.searchIcon} />
+            <View style={[styles.searchInputWrapper, { backgroundColor: theme.colors.surfaceAlt, borderColor: theme.colors.border }]}>
+                <Icon iconStyle="solid" name="search" size={14} color={theme.colors.textSecondary} style={styles.searchIcon} />
                 <TextInput
                     value={searchQuery}
                     autoCorrect={false}
                     autoCapitalize="none"
                     returnKeyType="search"
-                    placeholder="Search..."
-                    style={styles.searchInput}
                     onChangeText={setSearchQuery}
-                    placeholderTextColor={COLORS.GREY}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
+                    placeholderTextColor={theme.colors.textSecondary}
+                    style={[styles.searchInput, { color: theme.colors.text }]}
                 />
                 {searchQuery.length > 0 && (
                     <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
-                        <Icon iconStyle="solid" name="times" size={14} color={COLORS.GREY} />
+                        <Icon iconStyle="solid" name="times" size={14} color={theme.colors.textSecondary} />
                     </TouchableOpacity>
                 )}
             </View>
@@ -253,7 +257,7 @@ export const AddReplaceItem: React.FC = () => {
 
     return (
         <Screen initialized={true} style={styles.container}>
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt }]}>
                 <Text style={styles.headerTitle}>Add item</Text>
             </View>
 
@@ -270,7 +274,7 @@ export const AddReplaceItem: React.FC = () => {
                 keyExtractor={item => String(item.id)}
                 ListEmptyComponent={
                     <Text style={styles.emptyScreen}>
-                        {searchQuery.trim().length > 0 ? 'No items found' : 'Enter a search term'}
+                        {searchQuery.trim().length > 0 && 'No items found'}
                     </Text>
                 }
                 ListFooterComponent={
@@ -292,7 +296,6 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingLeft: 0,
         paddingRight: 0,
-        backgroundColor: COLORS.WHITE,
     },
     header: {
         backgroundColor: '#E0EBF7',
@@ -303,7 +306,6 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: '400',
-        color: '#181818',
     },
     tabsRow: {
         flexDirection: 'row',
@@ -328,7 +330,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#2978A0',
     },
     tabText: {
-        color: COLORS.BLACK,
         fontWeight: '500',
         fontSize: 14,
     },
@@ -394,7 +395,6 @@ const styles = StyleSheet.create({
     itemName: {
         fontSize: 16,
         fontWeight: '500',
-        color: COLORS.BLACK,
         marginBottom: 4,
     },
     itemType: {

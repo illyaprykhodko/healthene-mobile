@@ -2,6 +2,10 @@
 import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
+// local dependencies
+import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
+
 interface BloodPressureCurrentProps {
     unit: string;
     systolic: number;
@@ -15,33 +19,35 @@ const BloodPressureCurrent: React.FC<BloodPressureCurrentProps> = ({
     diastolic,
     dateRange,
 }) => {
+    const theme = useTheme();
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
             <View style={styles.content}>
                 <View style={styles.valuesContainer}>
-                    <Text style={styles.label}>Current</Text>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.label, { color: theme.colors.textSecondary }]}>Current</Text>
                     <View style={styles.valuesRow}>
                         <View style={styles.valueGroup}>
                             <View style={styles.labelRow}>
                                 <View style={[styles.dot, styles.systolicDot]} />
-                                <Text style={styles.valueLabel}>SYSTOLIC</Text>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.valueLabel, { color: theme.colors.textMuted }]}>SYSTOLIC</Text>
                             </View>
-                            <Text style={styles.value}>{Math.round(systolic)} <Text style={styles.separator}>/</Text> </Text>
+                            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.value, { color: theme.colors.text }]}>
+                                {Math.round(systolic)} <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.separator, { color: theme.colors.textSecondary }]}>/</Text>{' '}
+                            </Text>
                         </View>
-                        {/* <Text style={styles.separator}>/</Text> */}
                         <View style={styles.valueGroup}>
                             <View style={styles.labelRow}>
                                 <View style={[styles.dot, styles.diastolicDot]} />
-                                <Text style={styles.valueLabel}>DIASTOLIC</Text>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.valueLabel, { color: theme.colors.textMuted }]}>DIASTOLIC</Text>
                             </View>
                             <View style={styles.diastolicValueRow}>
-                                <Text style={styles.value}>{Math.round(diastolic)}</Text>
-                                <Text style={styles.unit}> {unit}</Text>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.value, { color: theme.colors.text }]}>{Math.round(diastolic)}</Text>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.unit, { color: theme.colors.secondary }]}> {unit}</Text>
                             </View>
                         </View>
                     </View>
                 </View>
-                <Text style={styles.dateText}>{dateRange}</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.dateText, { color: theme.colors.textSecondary }]}>{dateRange}</Text>
             </View>
         </View>
     );
@@ -54,7 +60,6 @@ const styles = StyleSheet.create({
         width: '100%',
         paddingVertical: 15,
         paddingHorizontal: 20,
-        backgroundColor: '#FFFFFF',
     },
     content: {
         alignItems: 'flex-start',
@@ -62,7 +67,6 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        color: '#777777',
         marginBottom: 8,
         fontWeight: '500',
     },
@@ -93,21 +97,16 @@ const styles = StyleSheet.create({
     },
     valueLabel: {
         fontSize: 10,
-        color: '#999999',
         fontWeight: '600',
         letterSpacing: 0.5,
     },
     value: {
         fontSize: 26,
         fontWeight: 'bold',
-        color: '#000000',
     },
     separator: {
         fontSize: 26,
         fontWeight: 'bold',
-        color: '#7B7B7B', // Gray
-        // marginHorizontal: 12,
-        // alignSelf: 'flex-start',
     },
     diastolicValueRow: {
         flexDirection: 'row',
@@ -115,19 +114,15 @@ const styles = StyleSheet.create({
     },
     unit: {
         fontSize: 16,
-        color: '#567697',
         fontWeight: '600',
     },
     dateText: {
         fontSize: 14,
-        color: '#777777',
         marginTop: 4,
-        // marginLeft: 0
         left: -30,
         top: 10,
     },
     valuesContainer: {
-        // flexDirection: 'row',
         alignItems: 'flex-start',
         justifyContent: 'flex-start',
     },

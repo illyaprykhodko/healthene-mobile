@@ -9,9 +9,13 @@ import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
+import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
+import StackHeader from 'components/StackHeader';
+import { RootStackParamList } from 'services/navigation';
 import ConfirmationAlert from 'components/ConfirmationAlert';
+import { useReviewAlert } from 'components/ReviewAlertContext';
 import {
     MealPreferenceType,
     MealTemplatePreference,
@@ -20,10 +24,8 @@ import {
     useGetMealPreferencesQuery,
     useGetNewMealTemplatesQuery,
     useSaveMealPreferencesMutation,
-    useDeleteMealPreferencesMutation,
+    useResetMealPreferencesToDefaultMutation,
 } from 'store/api/mealPreferencesApi';
-import { ROUTES } from 'constants/routes';
-import { RootStackParamList } from 'services/navigation';
 
 type PreferencesListScreenProps = NativeStackScreenProps<
   RootStackParamList,
@@ -44,7 +46,7 @@ const ListItem: React.FC<ListItemProps> = ({ item, isSelected, onPress }) => {
     }, [onPress, item]);
 
     return (
-        <View style={[styles.itemWrapper, { backgroundColor: theme.colors.white }]}>
+        <View style={[styles.itemWrapper, { backgroundColor: theme.colors.surface }]}>
             <TouchableOpacity
                 onPress={handlePress}
                 style={[styles.itemContainer, { borderBottomColor: theme.colors.border }]}
@@ -63,12 +65,22 @@ const ListItem: React.FC<ListItemProps> = ({ item, isSelected, onPress }) => {
 const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigation, route }) => {
     const theme = useTheme();
     const mealName = route.params?.item?.name;
+    const mealId = route.params?.item?.id;
 
+    const { hasShown, markShown, sessionId } = useReviewAlert();
+    const [trackedSessionId, setTrackedSessionId] = useState(sessionId);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
-    const [hasReviewBeenShown, setHasReviewBeenShown] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
     const [initialFavoriteIds, setInitialFavoriteIds] = useState<number[]>([]);
     const [localFavorites, setLocalFavorites] = useState<MealTemplatePreference[]>([]);
+
+    if (trackedSessionId !== sessionId) {
+        setTrackedSessionId(sessionId);
+        setIsReviewOpen(false);
+        setIsHydrated(false);
+        setInitialFavoriteIds([]);
+        setLocalFavorites([]);
+    }
 
     const { data: favoriteList, isLoading: isLoadingFavorites } = useGetMealPreferencesQuery({
         type: MealPreferenceType.PREFERENCE,
@@ -81,19 +93,18 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
     });
 
     const [savePreferences, { isLoading: isSaving }] = useSaveMealPreferencesMutation();
-    const [deletePreferences, { isLoading: isDeleting }] = useDeleteMealPreferencesMutation();
+    const [resetPreferences, { isLoading: isResetting }] = useResetMealPreferencesToDefaultMutation();
 
     useEffect(() => {
-        if (favoriteList !== undefined) {
-            setLocalFavorites(favoriteList);
-            setInitialFavoriteIds(
-                favoriteList
-                    .map(item => item.mealTemplate?.id)
-                    .filter((id): id is number => typeof id === 'number')
-            );
-            setIsHydrated(true);
-        }
-    }, [favoriteList]);
+        if (isHydrated || favoriteList === undefined) { return; }
+        setLocalFavorites(favoriteList);
+        setInitialFavoriteIds(
+            favoriteList
+                .map(item => item.mealTemplate?.id)
+                .filter((id): id is number => typeof id === 'number')
+        );
+        setIsHydrated(true);
+    }, [isHydrated, favoriteList]);
 
     const selectedFavoriteIds = useMemo(
         () => localFavorites
@@ -115,11 +126,11 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
     }, [isHydrated, selectedFavoriteIds, initialFavoriteIdsSorted]);
 
     useEffect(() => {
-        if (hasUnsavedChanges && !hasReviewBeenShown) {
+        if (hasUnsavedChanges && !hasShown()) {
             setIsReviewOpen(true);
-            setHasReviewBeenShown(true);
+            markShown();
         }
-    }, [hasUnsavedChanges, hasReviewBeenShown]);
+    }, [hasUnsavedChanges, hasShown, markShown]);
 
     const allItems = useMemo(() => {
         const combined = [...(favoriteList || []), ...(newTemplates || [])];
@@ -155,11 +166,8 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
                         : item)
                 );
                 await savePreferences(preparedList).unwrap();
-            } else {
-                await deletePreferences({
-                    type: MealPreferenceType.PREFERENCE,
-                    meal: mealName,
-                }).unwrap();
+            } else if (typeof mealId === 'number') {
+                await resetPreferences({ mealId }).unwrap();
             }
             const savedIds = localFavorites
                 .map(item => item.mealTemplate?.id)
@@ -169,7 +177,7 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
         } catch (error) {
             console.error('Failed to save preferences:', error);
         }
-    }, [localFavorites, savePreferences, deletePreferences, mealName, navigation]);
+    }, [localFavorites, savePreferences, resetPreferences, mealId, navigation]);
 
     const handleContinueReview = useCallback(() => {
         setIsReviewOpen(false);
@@ -195,9 +203,17 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
 
     return (
         <Screen
-            style={styles.container}
             initialized={!isLoading}
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.background }
+            ]}
         >
+            <StackHeader
+                onBack={() => navigation.goBack()}
+                title={mealName || 'Meal Preferences'}
+                onOpenDrawer={() => (navigation as any).openDrawer?.()}
+            />
             <View style={styles.content}>
                 <View style={styles.sectionHeader}>
                     <Text variant="h5" color={theme.colors.textSecondary}>
@@ -225,12 +241,14 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
                 title="SAVE"
                 variant="success"
                 onPress={handleSave}
-                disabled={!hasUnsavedChanges || isSaving || isDeleting}
+                textStyle={styles.submitBtnText}
+                disabled={!hasUnsavedChanges || isSaving || isResetting}
                 style={[
                     styles.submitBtn,
-                    hasUnsavedChanges ? styles.submitBtnActive : styles.submitBtnInactive,
+                    hasUnsavedChanges
+                        ? styles.submitBtnActive
+                        : styles.submitBtnInactive,
                 ]}
-                textStyle={styles.submitBtnText}
             />
             <ConfirmationAlert
                 cancelTxt="Go Back"
@@ -248,7 +266,6 @@ const PreferencesListScreen: React.FC<PreferencesListScreenProps> = ({ navigatio
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
     },
     content: {
         flex: 1,

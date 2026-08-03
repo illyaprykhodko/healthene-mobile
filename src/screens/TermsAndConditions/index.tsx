@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import moment from 'moment';
+import dayjs from 'services/date';
 import WebView from 'react-native-webview';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -8,6 +8,7 @@ import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { config } from 'constants';
 import { BUSINESS_PROPERTIES } from 'types';
 import Screen from 'components/Screen.tsx';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { useGetTermsQuery } from 'store/api/publicApi.ts';
 
 export const TermsAndConditions = () => {
@@ -36,13 +37,13 @@ export const TermsAndConditions = () => {
             : null
         }
         <View style={styles.footer}>
-            <Text>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.footerText}>
         Healthene® &copy;
                 {' '}
-                {moment().format('MMMM, YYYY')}
+                {dayjs().format('MMMM, YYYY')}
             </Text>
             <Pressable onPress={handleAttach}>
-                <Text style={styles.link}>www.Healthene.com</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.link}>www.Healthene.com</Text>
             </Pressable>
         </View>
     </Screen>;
@@ -63,6 +64,9 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#F3F3F3',
         textDecorationLine: 'underline',
+    },
+    footerText: {
+        color: '#F3F3F3',
     },
 });
 

@@ -1,21 +1,27 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import Animated, {
+    runOnJS,
     Easing,
     withDelay,
     withTiming,
+    interpolate,
     withSequence,
+    Extrapolation,
     useSharedValue,
     useAnimatedStyle,
+    useAnimatedReaction,
 } from 'react-native-reanimated';
 import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
+import { GlassSurface } from 'components/GlassSurface';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import FeatherIcon from '@react-native-vector-icons/feather';
+import { DayAdherenceCard } from 'components/DayAdherenceCard';
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { View, FlatList, StyleSheet, TouchableOpacity, Dimensions, Platform, ScrollView } from 'react-native';
 
 // local dependencies
@@ -41,6 +47,7 @@ import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { COLORS } from 'constants/colors';
 import { filters } from 'services/filter';
+import { useHaptic } from 'hooks/useHaptic';
 import { Highlight } from 'components/Highlight';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import { useAppDispatch, useAppSelector } from 'store';
@@ -61,6 +68,45 @@ const ICON_MARGIN = 10;
 const TIMELINE_WIDTH = 50;
 const CONNECTOR_WIDTH = 1;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Custom backdrop for the calendar BottomSheet. Replaces gorhom's hardcoded black
+// fade with a frosted-glass overlay that animates in lockstep with the sheet's index.
+const GlassBackdrop: React.FC<{ animatedIndex: { value: number }; onClose: () => void }> = ({
+    animatedIndex,
+    onClose,
+}) => {
+    const animatedStyle = useAnimatedStyle(() => ({
+        opacity: interpolate(animatedIndex.value, [-1, 0], [0, 1], Extrapolation.CLAMP),
+    }));
+    // Mirror the sheet's open/closed state into React so we can toggle pointerEvents.
+    // Without this the fullscreen backdrop keeps eating taps on Android while the sheet
+    // is at index -1 (iOS happened to pass them through, hence the platform asymmetry).
+    const [interactive, setInteractive] = useState(false);
+    useAnimatedReaction(
+        () => animatedIndex.value > -1,
+        (open, prev) => {
+            if (open !== prev) { runOnJS(setInteractive)(open); }
+        },
+    );
+    return (
+        <Animated.View
+            pointerEvents={interactive ? 'auto' : 'none'}
+            style={[StyleSheet.absoluteFill, animatedStyle]}
+        >
+            <GlassSurface
+                tint="dark"
+                intensity={5}
+                pointerEvents="none"
+                style={StyleSheet.absoluteFill}
+            />
+            <TouchableOpacity
+                onPress={onClose}
+                activeOpacity={1}
+                style={StyleSheet.absoluteFill}
+            />
+        </Animated.View>
+    );
+};
 
 const TimelineSVG: React.FC<{ phases: PhaseItem[]; incompleteDay?: boolean }> = ({ phases, incompleteDay = false }) => {
     const theme = useTheme();
@@ -417,11 +463,6 @@ const AnimatedCheckmark: React.FC<AnimatedCheckmarkProps> = ({
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    header: {
-        paddingHorizontal: OFFSET.HORIZONTAL,
-        paddingVertical: OFFSET.POINT * 3,
-        backgroundColor: '#156F93',
-    },
     content: {
         flex: 1,
         paddingBottom: OFFSET.VERTICAL,
@@ -454,7 +495,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#7B7B7B',
         marginVertical: OFFSET.VERTICAL,
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
@@ -463,7 +503,7 @@ const styles = StyleSheet.create({
         minHeight: 0,
     },
     birdOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         zIndex: 2,
     },
     calendarBtn: {
@@ -475,7 +515,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 20,
         bottom: 90,
-        backgroundColor: '#2978A0',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -483,18 +522,13 @@ const styles = StyleSheet.create({
         position: 'absolute',
         right: 20,
         bottom: 170,
-        backgroundColor: '#4CAF50',
         alignItems: 'center',
         justifyContent: 'center',
     },
     addBtnText: {
-        color: '#FFFFFF',
         fontWeight: 'bold',
         textTransform: 'uppercase',
         fontSize: 12,
-    },
-    disabledBtn: {
-        backgroundColor: '#CCCCCC',
     },
     shadowBtn: {
         shadowColor: '#000000',
@@ -515,16 +549,13 @@ const styles = StyleSheet.create({
         borderRadius: 30,
     },
     calendarMonth: {
-        backgroundColor: '#F55454',
         flex: 1,
         width: '100%',
     },
     calendarMonthText: {
         fontWeight: 'bold',
-        color: '#FFFFFF',
     },
     calendarDay: {
-        backgroundColor: '#FFFFFF',
         flex: 2,
         width: '100%',
         justifyContent: 'center',
@@ -532,11 +563,7 @@ const styles = StyleSheet.create({
     calendarDayText: {
         fontWeight: 'bold',
     },
-    bottomSheetBg: {
-        backgroundColor: '#FFFFFF',
-    },
     bottomSheetIndicator: {
-        backgroundColor: '#DADADA',
         width: 40,
     },
     calendarContainer: {
@@ -558,9 +585,10 @@ const styles = StyleSheet.create({
     },
     incompleteLabelContainer: {
         position: 'absolute',
+        marginRight: -10,
         bottom: 100,
+        zIndex: 0,
         right: 0,
-        marginRight: Platform.OS === 'ios' ? -10 : -20,
     },
     statusIndicator: {
         position: 'absolute',
@@ -584,37 +612,50 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#4A4A4A',
     },
+    opacityFuture: {
+        opacity: 0.4,
+    },
+    glassBar: {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        position: 'absolute',
+    },
 });
 
-const getIconColorByType = (type: AddPhaseItemData['type']) => {
+const getIconColorByType = (
+    type: AddPhaseItemData['type'],
+    colors: ReturnType<typeof useTheme>['colors'],
+) => {
     switch (type) {
         case 'MEAL':
-            return { bg: '#FFD9B3', fg: '#C56A00', name: 'utensils' as const };
+            return { bg: colors.anytimeFoodBg, fg: colors.anytimeFoodFg, name: 'utensils' as const };
         case 'ADDED_BY_PATIENT':
-            return { bg: '#D4E09B', fg: '#647C2E', name: 'utensils' as const };
+            return { bg: colors.anytimeMeasurementBg, fg: colors.anytimeMeasurementFg, name: 'utensils' as const };
         case 'MEASUREMENT':
-            return { bg: '#F3F3F3', fg: '#000000', name: 'ruler' as const };
+            return { bg: colors.muted, fg: colors.text, name: 'ruler' as const };
         case 'SUPPLEMENT':
         case 'MEDICATION':
-            return { bg: '#F3F3F3', fg: '#000000', name: 'capsules' as const };
+            return { bg: colors.muted, fg: colors.text, name: 'capsules' as const };
         case 'PHYSICAL_ACTIVITY':
-            return { bg: '#F9C1C3', fg: '#000000', name: 'running' as const };
+            return { bg: colors.anytimeActivityBg, fg: colors.anytimeActivityFg, name: 'running' as const };
         case 'QUESTION':
-            return { bg: '#E3F2FD', fg: '#1976D2', name: 'question' as const };
+            return { bg: colors.anytimeDrinkBg, fg: colors.anytimeDrinkFg, name: 'question' as const };
         case 'ANYTIME':
-            return { bg: '#FFF3E0', fg: '#E65100', name: 'clock' as const };
+            return { bg: colors.anytimeMonoBg, fg: colors.anytimeMonoFg, name: 'clock' as const };
         default:
-            return { bg: '#DADADA', fg: '#7B7B7B', name: 'dot-circle' as const };
+            return { bg: colors.border, fg: colors.textSecondary, name: 'dot-circle' as const };
     }
 };
 
 export const Overview: React.FC = () => {
     const theme = useTheme();
+    const haptics = useHaptic();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const dispatch = useAppDispatch();
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const { date, showCalendar, calendarDays, recentlyCompletedPhases, pendingOpenPhaseId } = useAppSelector(selectDayOverview);
-    const currentDate = date || moment().format('YYYY-MM-DD');
+    const { date, isFutureDate, showCalendar, calendarDays, recentlyCompletedPhases, pendingOpenPhaseId } = useAppSelector(selectDayOverview);
+    const currentDate = date || dayjs().format('YYYY-MM-DD');
     const isFocused = useIsFocused();
     const [selectedMeasurement, setSelectedMeasurement] = useState<AnytimeMeasurementItem | null>(null);
 
@@ -627,8 +668,6 @@ export const Overview: React.FC = () => {
     const [createPatientPhaseWithCustomRecipe] = useCreatePatientPhaseWithCustomRecipeMutation();
     const [updatePatientPhase] = useUpdatePatientPhaseMutation();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
-
-    const isFutureDateCheck = moment(currentDate).isAfter(moment(), 'day');
 
     const incompleteDay = useMemo(() => {
         const incompleteDays = data?.currentWeekIncompleteDays || [];
@@ -645,10 +684,11 @@ export const Overview: React.FC = () => {
     }, [dispatch]);
 
     const handleDayPress = useCallback((day: { dateString: string }) => {
+        haptics.selection();
         const nextDate = day.dateString;
-        const isCurrent = moment(nextDate).isSame(moment(), 'day');
-        const isFuture = moment(nextDate).isAfter(moment(), 'day');
-        const isPast = moment(nextDate).isBefore(moment(), 'day');
+        const isCurrent = dayjs(nextDate).isSame(dayjs(), 'day');
+        const isFuture = dayjs(nextDate).isAfter(dayjs(), 'day');
+        const isPast = dayjs(nextDate).isBefore(dayjs(), 'day');
         dispatch(meta({
             date: nextDate,
             isPastDate: isPast,
@@ -658,15 +698,13 @@ export const Overview: React.FC = () => {
             calendarDays: { ...calendarDays, [nextDate]: { selected: true } },
         }));
         bottomSheetRef.current?.close();
-    }, [dispatch, calendarDays]);
+    }, [dispatch, calendarDays, haptics]);
 
     const renderBackdrop = useCallback(
         (props: any) => (
-            <BottomSheetBackdrop
-                {...props}
-                disappearsOnIndex={-1}
-                appearsOnIndex={0}
-                opacity={0.5}
+            <GlassBackdrop
+                animatedIndex={props.animatedIndex}
+                onClose={() => bottomSheetRef.current?.close()}
             />
         ),
         []
@@ -795,6 +833,27 @@ export const Overview: React.FC = () => {
         (navigation as any).navigate(ROUTES.GAMBLING_HOME);
     }, [navigation]);
 
+    const calendarTheme = useMemo(() => ({
+        textDayFontSize: 16,
+        textMonthFontSize: 18,
+        textDayHeaderFontSize: 14,
+        dotColor: theme.colors.info,
+        arrowColor: theme.colors.info,
+        dayTextColor: theme.colors.text,
+        textDayFontWeight: '400' as const,
+        monthTextColor: theme.colors.text,
+        todayTextColor: theme.colors.info,
+        textMonthFontWeight: '600' as const,
+        selectedDotColor: theme.colors.white,
+        backgroundColor: theme.colors.surface,
+        textDayHeaderFontWeight: '500' as const,
+        calendarBackground: theme.colors.surface,
+        textDisabledColor: theme.colors.skeleton,
+        selectedDayTextColor: theme.colors.white,
+        selectedDayBackgroundColor: theme.colors.info,
+        textSectionTitleColor: theme.colors.textSecondary,
+    }), [theme]);
+
     useEffect(() => {
         if (!isFocused || !pendingOpenPhaseId) {
             return;
@@ -808,16 +867,15 @@ export const Overview: React.FC = () => {
     }, [isFocused, pendingOpenPhaseId, navigation, currentDate, dispatch]);
 
     useEffect(() => {
-        moment.updateLocale('en', { week: { dow: 1 } });
+        dayjs.updateLocale('en', { weekStart: 1 });
     }, []);
-
 
     useEffect(() => {
         if (!data) { return; }
         const calendarDays: Record<string, any> = { [currentDate]: { selected: true } };
         (data.currentWeekIncompleteDays || []).forEach(d => {
             if (d?.date) {
-                calendarDays[d.date] = { selected: true, selectedColor: '#dc73de' };
+                calendarDays[d.date] = { selected: true, selectedColor: theme.colors.darkerPink };
             }
         });
         dispatch(meta({ calendarDays }));
@@ -905,19 +963,19 @@ export const Overview: React.FC = () => {
                 return;
             }
             const measurementType = measurement?.type;
-            if (measurementType === 'WEIGHT' && phase.status !== 'DONE') {
-                (navigation as any).navigate('WeightMeasurement', {
+            if (measurementType === 'WEIGHT' && phase.status !== PHASE_ITEM_STATUS.DONE) {
+                (navigation as any).navigate(ROUTES.WEIGHT_MEASUREMENT, {
                     measurementPhaseItem: { ...phase, measurement },
                     date: currentDate,
                 });
                 return;
             }
-            if (phase.status === 'DONE') {
+            if (phase.status === PHASE_ITEM_STATUS.DONE) {
                 (navigation as any).navigate('SaveValue', {
+                    date: currentDate,
                     measurementType: measurement?.type,
                     measurementName: measurement?.name,
                     measurementPhaseItem: { ...phase, measurement },
-                    date: currentDate,
                 });
                 return;
             }
@@ -967,168 +1025,187 @@ export const Overview: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <View style={styles.content}>
-                    {/* Health Question Section */}
-                    <HealthQuestion date={currentDate} isFutureDate={isFutureDateCheck} />
+            <View style={styles.container}>
+                <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                    <View style={[styles.content, isFutureDate && styles.opacityFuture]}>
+                        {/* Health Question Section */}
+                        <HealthQuestion date={currentDate} isFutureDate={Boolean(isFutureDate)} />
 
-                    <Text style={styles.title}>My Daily Plan</Text>
+                        <Text style={[styles.title, { color: theme.colors.textSecondary }]}>My Daily Plan</Text>
 
-                    <View style={styles.timelineContainer}>
-                        <TimelineSVG phases={phases} incompleteDay={incompleteDay} />
-                        <FlatList
-                            data={phases}
-                            scrollEnabled={false}
-                            style={{ marginBottom: 35 }}
-                            keyExtractor={item => String(item.id)}
-                            renderItem={({ item }) => {
-                                const { bg, fg, name } = getIconColorByType(item.type);
-                                const isMeal = isMealPhase(item.type);
-                                const iconMarginLeft = isMeal
-                                    ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
-                                    : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
+                        <View style={styles.timelineContainer}>
+                            <TimelineSVG phases={phases} incompleteDay={incompleteDay} />
+                            <FlatList
+                                data={phases}
+                                scrollEnabled={false}
+                                style={{ marginBottom: 35 }}
+                                keyExtractor={item => String(item.id)}
+                                renderItem={({ item }) => {
+                                    const { bg, fg, name } = getIconColorByType(item.type, theme.colors);
+                                    const isMeal = isMealPhase(item.type);
+                                    const iconMarginLeft = isMeal
+                                        ? TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN
+                                        : TIMELINE_WIDTH + GAP_SIZE + ICON_MARGIN + ICON_SIZE + GAP_SIZE + ICON_MARGIN;
 
-                                const isIncomplete = item.status === PHASE_ITEM_STATUS.INCOMPLETE;
-                                const isDone = item.status === PHASE_ITEM_STATUS.DONE;
-                                const shouldHighlight = incompleteDay && isIncomplete;
-                                const showArrowIcon = shouldHighlight && (item.type === 'MEAL' || item.type === 'ADDED_BY_PATIENT');
+                                    const isIncomplete = item.status === PHASE_ITEM_STATUS.INCOMPLETE;
+                                    const isDone = item.status === PHASE_ITEM_STATUS.DONE;
+                                    const shouldHighlight = incompleteDay && isIncomplete;
+                                    const showArrowIcon = shouldHighlight && (item.type === 'MEAL' || item.type === 'ADDED_BY_PATIENT');
 
-                                const displayTitle = item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title);
+                                    const displayTitle = item.title === 'added_by_patient' ? 'Added Foods' : filters.humanize(item.title);
 
-                                const renderStatusIndicator = () => {
-                                    if (isDone) {
+                                    const renderStatusIndicator = () => {
+                                        if (isDone) {
+                                            return (
+                                                <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
+                                            );
+                                        }
+                                        if (incompleteDay && isIncomplete) {
+                                            return (
+                                                <FeatherIcon name="info" size={18} color={COLORS.BROWN} />
+                                            );
+                                        }
+                                        return null;
+                                    };
+
+                                    // Status indicator left position - exactly where the dot would be
+                                    // TIMELINE_WIDTH/2 = 25 for MEAL, offsetLineX = 105 for non-MEAL
+                                    // Subtract half of icon size (18/2 = 9) to center it
+                                    const statusLeftPosition = isMeal ? 16 : 96;
+
+                                    if (shouldHighlight) {
                                         return (
-                                            <Icon iconStyle="solid" name="check-circle" color={COLORS.GREEN} size={18} />
+                                            <TouchableOpacity
+                                                key={String(item.id)}
+                                                style={styles.row}
+                                                onPress={() => handlePhasePress(item)}
+                                            >
+                                                <View style={[styles.statusIndicator, { left: statusLeftPosition }]}>
+                                                    {renderStatusIndicator()}
+                                                </View>
+                                                <View style={{ marginLeft: iconMarginLeft }}>
+                                                    <Highlight color={COLORS.LIGHT_PINK}>
+                                                        {showArrowIcon ? (
+                                                            <Ionicons
+                                                                name="chevron-forward-circle-outline"
+                                                                color={COLORS.DARK_GREY}
+                                                                size={38}
+                                                            />
+                                                        ) : (
+                                                            <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: 0 }]}>
+                                                                <Icon iconStyle="solid" name={name} color={fg} size={18} />
+                                                            </View>
+                                                        )}
+                                                        <Text variant="h4" style={styles.highlightText}>
+                                                            {displayTitle}
+                                                        </Text>
+                                                    </Highlight>
+                                                </View>
+                                            </TouchableOpacity>
                                         );
                                     }
-                                    if (incompleteDay && isIncomplete) {
-                                        return (
-                                            <FeatherIcon name="info" size={18} color={COLORS.BROWN} />
-                                        );
-                                    }
-                                    return null;
-                                };
 
-                                // Status indicator left position - exactly where the dot would be
-                                // TIMELINE_WIDTH/2 = 25 for MEAL, offsetLineX = 105 for non-MEAL
-                                // Subtract half of icon size (18/2 = 9) to center it
-                                const statusLeftPosition = isMeal ? 16 : 96;
-
-                                if (shouldHighlight) {
+                                    // Normal item (non-highlighted)
                                     return (
                                         <TouchableOpacity
                                             key={String(item.id)}
                                             style={styles.row}
                                             onPress={() => handlePhasePress(item)}
                                         >
-                                            <View style={[styles.statusIndicator, { left: statusLeftPosition }]}>
-                                                {renderStatusIndicator()}
+                                            {isDone && (
+                                                <View style={[styles.doneStatusIndicator, { left: isMeal ? 16 : 86 }]}>
+                                                    <AnimatedCheckmark
+                                                        isDone={isDone}
+                                                        phaseId={item.id}
+                                                        isFocused={isFocused}
+                                                        isRecentlyCompleted={recentlyCompletedPhases.includes(item.id)}
+                                                        onAnimationComplete={() => dispatch(removeRecentlyCompletedPhase(item.id))}
+                                                    />
+                                                </View>
+                                            )}
+                                            <View style={[
+                                                styles.iconWrapper,
+                                                { backgroundColor: bg, marginLeft: iconMarginLeft },
+                                                isDone && styles.donePhaseContent
+                                            ]}>
+                                                <Icon iconStyle="solid" name={name} color={fg} size={18} />
                                             </View>
-                                            <View style={{ marginLeft: iconMarginLeft }}>
-                                                <Highlight color={COLORS.LIGHT_PINK}>
-                                                    {showArrowIcon ? (
-                                                        <Ionicons
-                                                            name="chevron-forward-circle-outline"
-                                                            color={COLORS.DARK_GREY}
-                                                            size={38}
-                                                        />
-                                                    ) : (
-                                                        <View style={[styles.iconWrapper, { backgroundColor: bg, marginLeft: 0 }]}>
-                                                            <Icon iconStyle="solid" name={name} color={fg} size={18} />
-                                                        </View>
-                                                    )}
-                                                    <Text variant="h4" style={styles.highlightText}>
-                                                        {displayTitle}
-                                                    </Text>
-                                                </Highlight>
+                                            <View style={[styles.rightContent, isDone && styles.donePhaseContent]}>
+                                                <Text variant="h4" style={{ color: isDone ? theme.colors.grey : theme.colors.text }}>
+                                                    {displayTitle}
+                                                </Text>
                                             </View>
                                         </TouchableOpacity>
                                     );
-                                }
-
-                                // Normal item (non-highlighted)
-                                return (
-                                    <TouchableOpacity
-                                        key={String(item.id)}
-                                        style={styles.row}
-                                        onPress={() => handlePhasePress(item)}
-                                    >
-                                        {isDone && (
-                                            <View style={[styles.doneStatusIndicator, { left: isMeal ? 16 : 96 }]}>
-                                                <AnimatedCheckmark
-                                                    isDone={isDone}
-                                                    phaseId={item.id}
-                                                    isFocused={isFocused}
-                                                    isRecentlyCompleted={recentlyCompletedPhases.includes(item.id)}
-                                                    onAnimationComplete={() => dispatch(removeRecentlyCompletedPhase(item.id))}
-                                                />
-                                            </View>
-                                        )}
-                                        <View style={[
-                                            styles.iconWrapper,
-                                            { backgroundColor: bg, marginLeft: iconMarginLeft },
-                                            isDone && styles.donePhaseContent
-                                        ]}>
-                                            <Icon iconStyle="solid" name={name} color={fg} size={18} />
-                                        </View>
-                                        <View style={[styles.rightContent, isDone && styles.donePhaseContent]}>
-                                            <Text variant="h4" style={{ color: isDone ? theme.colors.grey : theme.colors.text }}>
-                                                {displayTitle}
-                                            </Text>
-                                        </View>
-                                    </TouchableOpacity>
-                                );
-                            }}
-                        />
-                    </View>
-                </View>
-            </ScrollView>
-
-            <AnytimeMenu
-                date={currentDate}
-                disabled={isFetching || isLoading}
-            />
-
-            {!showCalendar && data?.id && !isFutureDateCheck && (
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={handleAddButtonPress}
-                    disabled={isFetching || isLoading}
-                    style={[
-                        styles.addBtn,
-                        styles.roundBtn,
-                        styles.shadowBtn,
-                        (isFetching || isLoading) && styles.disabledBtn,
-                    ]}
-                >
-                    <FeatherIcon name="plus" color="#FFFFFF" size={22} />
-                    <Text style={styles.addBtnText}>Add</Text>
-                </TouchableOpacity>
-            )}
-
-            {/* Incomplete Day Label */}
-            {Boolean(incompleteDay) && (
-                <View style={styles.incompleteLabelContainer}>
-                    <Highlight color={COLORS.DARKER_PINK}>
-                        <View style={styles.incompleteLabel}>
-                            <Text
-                                style={styles.incompleteText}
-                                color={COLORS.DARKENED_GRAY}
-                                textAlign="left"
-                            >
-                                Please
-                            </Text>
-                            <Text
-                                textAlign="left"
-                                color={COLORS.DARKENED_GRAY}
-                                style={[styles.incompleteText, { marginTop: Platform.OS === 'ios' ? -5 : 0 }]}
-                            >
-                                complete
-                            </Text>
+                                }}
+                            />
                         </View>
-                    </Highlight>
-                </View>
-            )}
+                    </View>
+                </ScrollView>
+
+                <AnytimeMenu
+                    date={currentDate}
+                    disabled={isFetching || isLoading}
+                />
+
+                {!showCalendar && data?.id && !isFutureDate && (
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={handleAddButtonPress}
+                        disabled={isFetching || isLoading}
+                        style={[
+                            styles.addBtn,
+                            styles.roundBtn,
+                            styles.shadowBtn,
+                            { backgroundColor: (isFetching || isLoading) ? theme.colors.skeleton : theme.colors.success },
+                        ]}
+                    >
+                        <FeatherIcon name="plus" color={theme.colors.white} size={22} />
+                        <Text style={[styles.addBtnText, { color: theme.colors.white }]}>Add</Text>
+                    </TouchableOpacity>
+                )}
+
+                {/* Incomplete Day Label */}
+                {Boolean(incompleteDay) && (
+                    <View style={styles.incompleteLabelContainer}>
+                        <Highlight color={COLORS.DARKER_PINK}>
+                            <View style={styles.incompleteLabel}>
+                                <Text
+                                    textAlign="left"
+                                    color={COLORS.DARKENED_GRAY}
+                                    style={styles.incompleteText}
+                                >
+                                Please
+                                </Text>
+                                <Text
+                                    textAlign="left"
+                                    color={COLORS.DARKENED_GRAY}
+                                    style={[styles.incompleteText, { marginTop: Platform.OS === 'ios' ? -5 : 0 }]}
+                                >
+                                complete
+                                </Text>
+                            </View>
+                        </Highlight>
+                    </View>
+                )}
+
+                {config.features.gamblingEnabled && !showCalendar && (
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={handleGamblingPress}
+                        style={[
+                            styles.roundBtn,
+                            styles.shadowBtn,
+                            styles.gamblingBtn,
+                            { backgroundColor: theme.colors.info },
+                        ]}
+                    >
+                        <Text variant="h2" style={{ color: theme.colors.white, fontFamily: 'Outfit-Bold' }}>
+                            $
+                        </Text>
+                    </TouchableOpacity>
+                )}
+            </View>
 
             {/* Floating Calendar Button */}
             {!showCalendar && (
@@ -1143,42 +1220,26 @@ export const Overview: React.FC = () => {
                 >
                     <View style={[
                         styles.roundBtn,
-                        { backgroundColor: incompleteDay ? '#dc73de' : '#2978A0', overflow: 'hidden' }
+                        { backgroundColor: incompleteDay ? theme.colors.darkerPink : theme.colors.info, overflow: 'hidden' }
                     ]}>
-                        <View style={styles.calendarMonth}>
+                        <View style={[styles.calendarMonth, { backgroundColor: theme.colors.error }]}>
                             <Text
                                 textAlign="center"
-                                style={styles.calendarMonthText}
+                                style={[styles.calendarMonthText, { color: theme.colors.white }]}
                             >
-                                {moment(currentDate).format('MMM')}
+                                {dayjs(currentDate).format('MMM')}
                             </Text>
                         </View>
-                        <View style={styles.calendarDay}>
+                        <View style={[styles.calendarDay, { backgroundColor: theme.colors.surface }]}>
                             <Text
                                 variant="h3"
                                 textAlign="center"
-                                style={styles.calendarDayText}
+                                style={[styles.calendarDayText, { color: theme.colors.text }]}
                             >
-                                {moment(currentDate).format('DD')}
+                                {dayjs(currentDate).format('DD')}
                             </Text>
                         </View>
                     </View>
-                </TouchableOpacity>
-            )}
-
-            {config.features.gamblingEnabled && !showCalendar && (
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={handleGamblingPress}
-                    style={[
-                        styles.gamblingBtn,
-                        styles.shadowBtn,
-                        styles.roundBtn,
-                    ]}
-                >
-                    <Text variant="h2" style={{ color: '#FFFFFF', fontFamily: 'Outfit-Bold' }}>
-                        $
-                    </Text>
                 </TouchableOpacity>
             )}
 
@@ -1190,43 +1251,24 @@ export const Overview: React.FC = () => {
                 snapPoints={['60%']}
                 onChange={handleSheetChanges}
                 backdropComponent={renderBackdrop}
-                backgroundStyle={styles.bottomSheetBg}
-                handleIndicatorStyle={styles.bottomSheetIndicator}
+                backgroundStyle={{ backgroundColor: theme.colors.surface }}
+                handleIndicatorStyle={[styles.bottomSheetIndicator, { backgroundColor: theme.colors.border }]}
             >
                 <BottomSheetView style={styles.calendarContainer}>
                     <Calendar
                         current={currentDate}
                         markedDates={calendarDays}
                         onDayPress={handleDayPress}
-                        theme={{
-                            dotColor: '#2978A0',
-                            textDayFontSize: 16,
-                            textMonthFontSize: 18,
-                            arrowColor: '#2978A0',
-                            dayTextColor: '#2d4150',
-                            textDayFontWeight: '400',
-                            textDayHeaderFontSize: 14,
-                            monthTextColor: '#2d4150',
-                            todayTextColor: '#2978A0',
-                            backgroundColor: '#ffffff',
-                            textMonthFontWeight: '600',
-                            selectedDotColor: '#ffffff',
-                            textDisabledColor: '#d9e1e8',
-                            calendarBackground: '#ffffff',
-                            textDayHeaderFontWeight: '500',
-                            selectedDayTextColor: '#ffffff',
-                            textSectionTitleColor: '#7B7B7B',
-                            selectedDayBackgroundColor: '#2978A0',
-                        }}
+                        theme={calendarTheme}
                     />
                 </BottomSheetView>
             </BottomSheet>
 
             {selectedMeasurement && (
                 <MeasurementInputModal
-                    disabled={isFetching}
                     item={selectedMeasurement}
                     visible={!!selectedMeasurement}
+                    disabled={isFetching || !!isFutureDate}
                     onClose={() => setSelectedMeasurement(null)}
                 />
             )}

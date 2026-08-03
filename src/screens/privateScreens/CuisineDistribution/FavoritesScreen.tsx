@@ -10,8 +10,10 @@ import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
+import StackHeader from 'components/StackHeader';
 import { RangeSlider } from 'components/RangeSlider';
 import ConfirmationAlert from 'components/ConfirmationAlert';
+import { useReviewAlert } from 'components/ReviewAlertContext';
 import { TagType, CuisineFrequency } from 'types/cuisineDistribution';
 import {
     useGetCuisineFrequencyQuery,
@@ -24,29 +26,47 @@ interface FavoritesScreenProps {
 
 const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
     const theme = useTheme();
+    const { hasShown, markShown, sessionId } = useReviewAlert();
+    const [trackedSessionId, setTrackedSessionId] = useState(sessionId);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
-    const [hasReviewBeenShown, setHasReviewBeenShown] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
     const [initialFrequencies, setInitialFrequencies] = useState<Record<number, number>>({});
     const [localFavoriteList, setLocalFavoriteList] = useState<CuisineFrequency[]>([]);
+
+    if (trackedSessionId !== sessionId) {
+        setTrackedSessionId(sessionId);
+        setIsReviewOpen(false);
+        setIsHydrated(false);
+        setInitialFrequencies({});
+        setLocalFavoriteList([]);
+    }
 
     const { data: favoriteList, isLoading, isFetching } = useGetCuisineFrequencyQuery(TagType.CUISINE);
     const [updateFrequency, { isLoading: isUpdating }] = useUpdateCuisineFrequencyMutation();
 
     useEffect(() => {
-        if (favoriteList !== undefined) {
-            setLocalFavoriteList(favoriteList);
-            const initial = (favoriteList || []).reduce<Record<number, number>>((acc, item) => {
+        if (favoriteList === undefined) { return; }
+
+        setLocalFavoriteList(prev => favoriteList.map(freshItem => {
+            const freshTagId = freshItem?.tag?.id || freshItem?.id;
+            const prevItem = prev.find(p => (p?.tag?.id || p?.id) === freshTagId);
+            return prevItem
+                ? { ...freshItem, relativeFrequency: prevItem.relativeFrequency }
+                : freshItem;
+        }));
+
+        setInitialFrequencies(prev => {
+            const next: Record<number, number> = {};
+            favoriteList.forEach(item => {
                 const tagId = item?.tag?.id || item?.id;
-                if (typeof tagId === 'number') {
-                    acc[tagId] = item?.relativeFrequency || 1;
-                }
-                return acc;
-            }, {});
-            setInitialFrequencies(initial);
-            setIsHydrated(true);
-        }
-    }, [favoriteList]);
+                if (typeof tagId !== 'number') { return; }
+                next[tagId] = prev[tagId] ?? (item?.relativeFrequency || 1);
+            });
+            return next;
+        });
+
+        if (!isHydrated) { setIsHydrated(true); }
+    }, [isHydrated, favoriteList]);
 
     const currentFrequencies = React.useMemo(
         () => localFavoriteList.reduce<Record<number, number>>((acc, item) => {
@@ -69,11 +89,11 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
     }, [isHydrated, initialFrequencies, currentFrequencies]);
 
     useEffect(() => {
-        if (hasUnsavedChanges && !hasReviewBeenShown) {
+        if (hasUnsavedChanges && !hasShown()) {
             setIsReviewOpen(true);
-            setHasReviewBeenShown(true);
+            markShown();
         }
-    }, [hasUnsavedChanges, hasReviewBeenShown]);
+    }, [hasUnsavedChanges, hasShown, markShown]);
 
     const navigateToList = useCallback(() => {
         navigation.navigate(ROUTES.CUISINE_DISTRIBUTION_LIST);
@@ -129,12 +149,20 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
 
     return (
         <Screen
-            style={styles.container}
             initialized={!isLoading && !isFetching}
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.background }
+            ]}
         >
+            <StackHeader
+                title="International Cuisine"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => navigation.openDrawer?.()}
+            />
             <View style={styles.content}>
                 <View style={[styles.titleButtons,
-                    { backgroundColor: theme.colors.white }
+                    { backgroundColor: theme.colors.surface }
                 ]}>
                     <TouchableOpacity
                         onPress={navigateToList}
@@ -178,12 +206,14 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
                 title="SAVE"
                 variant="success"
                 onPress={handleSave}
+                textStyle={styles.submitBtnText}
                 disabled={!localFavoriteList.length || !hasUnsavedChanges || isUpdating}
                 style={[
                     styles.submitBtn,
-                    hasUnsavedChanges ? styles.submitBtnActive : styles.submitBtnInactive,
+                    hasUnsavedChanges
+                        ? styles.submitBtnActive
+                        : styles.submitBtnInactive,
                 ]}
-                textStyle={styles.submitBtnText}
             />
             <ConfirmationAlert
                 cancelTxt="Go Back"
@@ -201,7 +231,6 @@ const FavoritesScreen: React.FC<FavoritesScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
     },
     content: {
         flex: 1,
@@ -222,8 +251,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     sectionHeader: {
-        marginTop: OFFSET.VERTICAL * 2,
-        marginBottom: OFFSET.VERTICAL,
+        marginVertical: OFFSET.VERTICAL,
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     listContent: {

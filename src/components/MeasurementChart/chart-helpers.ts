@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import { DATE_PERIOD, type DatePeriod } from 'constants/measurement-chart';
 
 /**
@@ -23,7 +23,7 @@ export const getHorizontalLabels = (
 
         case DATE_PERIOD.WEEK:
             for (let i = count - 1; i >= 0; i--) {
-                labels.push(moment(date).subtract(i, 'days').format('ddd'));
+                labels.push(dayjs(date).subtract(i, 'days').format('ddd'));
             }
             break;
 
@@ -36,18 +36,18 @@ export const getHorizontalLabels = (
                 step * 3,
                 count - 1,
             ];
-            return indices.map(i => moment(date).subtract(count - 1 - i, 'days').format('D'));
+            return indices.map(i => dayjs(date).subtract(count - 1 - i, 'days').format('D'));
         }
 
         case DATE_PERIOD.SIX_MONTH:
             for (let i = count; i > 0; i--) {
-                labels.push(moment().month(moment(date).month() - i + 1).format('MMM'));
+                labels.push(dayjs().month(dayjs(date).month() - i + 1).format('MMM'));
             }
             break;
 
         case DATE_PERIOD.YEAR:
             for (let i = count; i > 0; i--) {
-                labels.push(moment().month(moment(date).month() - i + 1).format('MMM'));
+                labels.push(dayjs().month(dayjs(date).month() - i + 1).format('MMM'));
             }
             break;
     }
@@ -109,14 +109,14 @@ export const calculateXCoordinate = (
     switch (period) {
         case DATE_PERIOD.DAY:
             return (
-                Number(moment.utc(item?.fromDate).local().format('H'))
-                + Number(moment.utc(item?.fromDate).local().format('m')) / 60
+                Number(dayjs.utc(item?.fromDate).local().format('H'))
+                + Number(dayjs.utc(item?.fromDate).local().format('m')) / 60
             );
 
         case DATE_PERIOD.WEEK: {
             const labels = [];
             for (let i = count - 1; i >= 0; i--) {
-                labels.push(moment(date).subtract(i, 'days').format('MMMM-D'));
+                labels.push(dayjs(date).subtract(i, 'days').format('MMMM-D'));
             }
             const itemDay = item?.averageDate?.format('MMMM-D');
             const labelIndex = labels.findIndex(label => label === itemDay);
@@ -135,7 +135,7 @@ export const calculateXCoordinate = (
         case DATE_PERIOD.MONTH: {
             const labels = [];
             for (let i = count - 1; i >= 0; i--) {
-                labels.push(moment(date).subtract(i, 'days').format('MMMM-D'));
+                labels.push(dayjs(date).subtract(i, 'days').format('MMMM-D'));
             }
             const itemDay = item?.averageDate?.format('MMMM-D');
             const labelIndex = labels.findIndex(label => label === itemDay);
@@ -154,7 +154,7 @@ export const calculateXCoordinate = (
         case DATE_PERIOD.YEAR: {
             const labels = [];
             for (let i = count; i > 0; i--) {
-                labels.push(moment().month(moment(date).month() - i + 1).format('MMMM'));
+                labels.push(dayjs().month(dayjs(date).month() - i + 1).format('MMMM'));
             }
             const itemMonth = item?.averageDate?.format('MMMM');
             const labelIndex = labels.findIndex(label => label === itemMonth);
@@ -245,19 +245,19 @@ export const formatTooltipTime = (
     period: DatePeriod,
     fromDate: string,
     toDate: string,
-    averageDate?: moment.Moment
+    averageDate?: dayjs.Dayjs
 ): string => {
     switch (period) {
         case DATE_PERIOD.DAY:
-            return `${moment(fromDate).format('H A')} - ${moment(toDate).format('H A')}`;
+            return `${dayjs(fromDate).format('H A')} - ${dayjs(toDate).format('H A')}`;
         case DATE_PERIOD.WEEK:
-            return moment(fromDate).format('MMM DD, h:mm A');
+            return dayjs(fromDate).format('MMM DD, h:mm A');
         case DATE_PERIOD.MONTH:
-            return averageDate ? moment(averageDate).format('MMM DD') : '';
+            return averageDate ? dayjs(averageDate).format('MMM DD') : '';
         case DATE_PERIOD.SIX_MONTH:
-            return averageDate ? moment(averageDate).format('MMM') : '';
+            return averageDate ? dayjs(averageDate).format('MMM') : '';
         case DATE_PERIOD.YEAR:
-            return averageDate ? moment(averageDate).format('MMM') : '';
+            return averageDate ? dayjs(averageDate).format('MMM') : '';
         default:
             return '';
     }
@@ -269,16 +269,16 @@ export const formatTooltipTime = (
 export const getDateRangeText = (period: DatePeriod, startDate: string, endDate: string): string => {
     switch (period) {
         case DATE_PERIOD.DAY:
-            return moment(startDate).format('ll');
+            return dayjs(startDate).format('ll');
         case DATE_PERIOD.WEEK:
-            return `${moment(startDate).format('ddd M/D')} to ${moment(endDate).format('M/D')}`;
+            return `${dayjs(startDate).format('ddd M/D')} to ${dayjs(endDate).format('M/D')}`;
         case DATE_PERIOD.MONTH:
-            return `${moment(startDate).format('MMM')} - ${moment(endDate).format('MMM')}`;
+            return `${dayjs(startDate).format('MMM')} - ${dayjs(endDate).format('MMM')}`;
         case DATE_PERIOD.SIX_MONTH:
-            return `${moment(startDate).format('MMM')}-${moment(endDate).format('MMM')}`;
+            return `${dayjs(startDate).format('MMM')}-${dayjs(endDate).format('MMM')}`;
         case DATE_PERIOD.YEAR:
-            return `${moment(startDate).format('YYYY')}-${moment(endDate).format('YYYY')}`;
+            return `${dayjs(startDate).format('YYYY')}-${dayjs(endDate).format('YYYY')}`;
         default:
-            return moment(startDate).format('dddd, MMM DD, YYYY');
+            return dayjs(startDate).format('dddd, MMM DD, YYYY');
     }
 };

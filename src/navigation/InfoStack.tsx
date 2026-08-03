@@ -1,13 +1,9 @@
 // outsource dependencies
 import React from 'react';
-import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // local dependencies
-import BackBtn from 'components/BackBtn';
 import { ROUTES } from 'constants/routes';
-import { useTheme } from 'hooks/useTheme';
-import { Hamburger } from 'components/Hamburger';
 import InfoScreen from 'screens/privateScreens/InfoScreen';
 import { VideoScreen } from 'screens/privateScreens/Library';
 import {
@@ -19,25 +15,10 @@ import {
 const Stack = createNativeStackNavigator();
 
 const InfoStack: React.FC = () => {
-    const theme = useTheme();
-    const drawerNavigation = useNavigation<any>();
-
     return (
         <Stack.Navigator
             initialRouteName={ROUTES.INFO}
-            screenOptions={({ navigation }) => ({
-                headerStyle: {
-                    backgroundColor: theme.colors.primary,
-                },
-                headerTintColor: theme.colors.white,
-                headerTitleStyle: {
-                    fontSize: 18,
-                    fontWeight: '600',
-                },
-                headerTitleAlign: 'center',
-                headerLeft: () => <BackBtn onPress={() => navigation.goBack()} color={theme.colors.white} />,
-                headerRight: () => <Hamburger onPress={() => drawerNavigation.openDrawer?.()} />,
-            })}
+            screenOptions={{ headerShown: false }}
         >
             <Stack.Screen
                 name={ROUTES.INFO}

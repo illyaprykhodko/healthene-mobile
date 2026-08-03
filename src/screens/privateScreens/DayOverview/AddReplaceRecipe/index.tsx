@@ -1,7 +1,7 @@
 // outsource dependencies
 import _ from 'lodash';
-import React, { useCallback, useState } from 'react';
 import Icon from '@react-native-vector-icons/ionicons';
+import React, { useCallback, useState, useMemo } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { StyleSheet, FlatList, View, TouchableOpacity, ActivityIndicator } from 'react-native';
@@ -42,29 +42,30 @@ const AddReplaceRecipe: React.FC = () => {
     const [selected, setSelected] = useState<RecipeItem | null>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-    const isShowingCategories = !categoryId;
+    const isRootScreen = !categoryId && !categoryList;
+    const isShowingLeaves = !!categoryId && !categoryList;
 
     const { data: categoryTree, isLoading: isLoadingTree } = useGetRecipeCategoryTreeQuery(
         prevItem?.recipe?.id,
-        { skip: !prevItem?.recipe?.id || !isShowingCategories }
+        { skip: !prevItem?.recipe?.id || !isRootScreen }
     );
 
     const { data: categoryItems, isLoading: isLoadingItems } = useGetRecipeCategoryItemsQuery(
         { recipeId: prevItem?.recipe?.id, categoryId },
-        { skip: !prevItem?.recipe?.id || !categoryId }
+        { skip: !prevItem?.recipe?.id || !categoryId || !!categoryList }
     );
 
     const [replaceRecipe, { isLoading: isReplacing }] = useReplaceRecipeItemMutation();
 
     const isLoading = isLoadingTree || isLoadingItems;
 
-    const list = React.useMemo(() => {
-        if (categoryItems) {
-            return Array.isArray(categoryItems) ? categoryItems : [];
-        }
-
+    const list = useMemo(() => {
         if (categoryList) {
             return categoryList;
+        }
+
+        if (Array.isArray(categoryItems)) {
+            return categoryItems;
         }
 
         if (!categoryTree) { return []; }
@@ -113,25 +114,30 @@ const AddReplaceRecipe: React.FC = () => {
                 },
             }).unwrap();
 
-            navigation.navigate(ROUTES.EDIT, {
+            // popTo (not navigate): return to the existing Edit screen and drop every
+            // replacement screen left above it in the stack, so Back from Edit goes to
+            // Day Overview instead of back into the replacement catalog.
+            navigation.popTo(ROUTES.EDIT, {
                 phaseId: route.params?.phaseId || prevItem.phaseId,
                 isToast: true,
-            });
+            }, { merge: true });
         } catch (error) {
             console.error('Error replacing recipe:', error);
         }
     }, [replaceRecipe, navigation, date, route.params]);
 
     const handleNavigateToCategory = useCallback((item: RecipeItem) => {
+        const hasSubList = Array.isArray(item.list) && item.list.length > 0;
         navigation.push(ROUTES.ADD_REPLACE_RECIPE, {
             date,
             title,
             prevItem,
             entityType,
-            categoryId: item.id,
             categoryName: item.name,
             phaseId: route.params?.phaseId,
-            categoryList: item.list || undefined, // Pass list if available (optional)
+            ...(hasSubList
+                ? { categoryList: item.list }
+                : { categoryId: item.id }),
         });
     }, [navigation, date, title, entityType, prevItem, route.params]);
 
@@ -139,18 +145,18 @@ const AddReplaceRecipe: React.FC = () => {
         const isSelected = selected?.id === item.id;
         const anySelected = !!selected;
         const isInactive = anySelected && !isSelected;
-        const isItemCategory = isShowingCategories;
+        const isItemCategory = !isShowingLeaves;
 
         return (
             <View style={[styles.listItem, isInactive && { opacity: 0.5 }]}>
                 <TouchableOpacity
                     disabled={isInactive}
-                    onPress={() => (isItemCategory ? handleNavigateToCategory(item) : handleSelectItem(item))}
                     style={styles.itemRow}
+                    onPress={() => (isItemCategory ? handleNavigateToCategory(item) : handleSelectItem(item))}
                 >
                     <DefImage
-                        src={item.coverImage?.url}
                         style={styles.image}
+                        src={item.coverImage?.url}
                     />
                     <View style={styles.titleWrapper}>
                         <Text variant="h6" style={[styles.itemName, { color: theme.colors.text }]}>
@@ -160,8 +166,8 @@ const AddReplaceRecipe: React.FC = () => {
                     {isItemCategory ? (
                         <View style={styles.iconContainer}>
                             <Icon
-                                name="chevron-forward-outline"
                                 size={24}
+                                name="chevron-forward-outline"
                                 color={theme.colors.textSecondary}
                             />
                         </View>
@@ -181,7 +187,7 @@ const AddReplaceRecipe: React.FC = () => {
                 )}
             </View>
         );
-    }, [selected, theme, isShowingCategories, handleSelectItem, handleNavigateToCategory]);
+    }, [selected, theme, isShowingLeaves, handleSelectItem, handleNavigateToCategory]);
 
     if (isLoading) {
         return (
@@ -193,9 +199,9 @@ const AddReplaceRecipe: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            <View style={[styles.header, { backgroundColor: '#E0EBF7' }]}>
+            <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt }]}>
                 <Text textAlign="center" style={[styles.headerText, { color: theme.colors.text }]}>
-                    Replacement options
+                    Replacement Options
                 </Text>
             </View>
 
@@ -204,11 +210,11 @@ const AddReplaceRecipe: React.FC = () => {
                     <FlatList
                         data={list}
                         initialNumToRender={10}
+                        renderItem={renderItem}
                         onEndReachedThreshold={0.5}
                         keyExtractor={({ id }) => String(id)}
-                        renderItem={renderItem}
                     />
-                    {!isShowingCategories && (
+                    {isShowingLeaves && (
                         <Button
                             title="REPLACE"
                             onPress={handleReplace}
@@ -235,11 +241,11 @@ const AddReplaceRecipe: React.FC = () => {
             )}
 
             <ConfirmationReplaceModal
-                visible={showConfirmModal}
-                onClose={() => setShowConfirmModal(false)}
-                onApply={handleConfirmReplace}
                 prevItem={prevItem}
                 nextItem={selected}
+                visible={showConfirmModal}
+                onApply={handleConfirmReplace}
+                onClose={() => setShowConfirmModal(false)}
             />
         </Screen>
     );
@@ -260,7 +266,7 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: OFFSET.HORIZONTAL,
-        paddingVertical: OFFSET.VERTICAL * 1.5,
+        paddingVertical: OFFSET.VERTICAL,
         flexDirection: 'row',
         justifyContent: 'center',
     },

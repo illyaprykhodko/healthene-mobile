@@ -1,11 +1,12 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import { View, StyleSheet } from 'react-native';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { usePanGesture, GestureDetector } from 'react-native-gesture-handler';
 // local dependencies
 import DateTabs from './DateTabs';
 import Text from 'components/Text';
+import { useTheme } from 'hooks/useTheme';
 import { filters } from 'services/filter';
 import ChartRenderer from './ChartRenderer';
 import { prepareChartData } from './chart-helpers';
@@ -54,13 +55,14 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
     startingValue = 0,
     showSummary = true,
     isBloodPressure = false,
-    currentDate = moment().format('YYYY-MM-DD'),
+    currentDate = dayjs().format('YYYY-MM-DD'),
     // BP-specific
     startingSystolic,
     startingDiastolic,
     totalChangeSystolic,
     totalChangeDiastolic,
 }) => {
+    const theme = useTheme();
     const [tooltip, setTooltip] = useState<any | null>(null);
     const currentStart = activeTab.options.startDate;
     const currentEnd = activeTab.options.endDate;
@@ -70,12 +72,9 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
     // }, [initialDate]);
 
     // Handle swipe gesture
-    const onPanGesture = useCallback(
-        (event: any) => {
-            if (!event?.nativeEvent) { return; }
-            const { translationX, state } = event.nativeEvent;
-
-            if (Math.abs(translationX) > 50 && Math.abs(translationX) < 300 && state === State.END) {
+    const onSwipeEnd = useCallback(
+        (translationX: number) => {
+            if (Math.abs(translationX) > 50 && Math.abs(translationX) < 300) {
                 setTooltip(null);
                 // let newDate: string | undefined;
                 let newStart = currentStart;
@@ -85,29 +84,29 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
                     // Swipe right - go back in time
                     switch (activeTab.name) {
                         case DATE_PERIOD.DAY:
-                            newDate = moment(currentDate).subtract(1, 'day').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).subtract(1, 'day').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).subtract(1, 'day').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).subtract(1, 'day').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).subtract(1, 'day').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).subtract(1, 'day').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.WEEK:
-                            newDate = moment(currentDate).subtract(1, 'week').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).subtract(1, 'week').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).subtract(1, 'week').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).subtract(1, 'week').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).subtract(1, 'week').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).subtract(1, 'week').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.MONTH:
-                            newDate = moment(currentDate).subtract(1, 'month').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).subtract(1, 'month').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).subtract(1, 'month').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).subtract(1, 'month').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).subtract(1, 'month').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).subtract(1, 'month').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.SIX_MONTH:
-                            newDate = moment(currentDate).subtract(6, 'months').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).subtract(6, 'months').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).subtract(6, 'months').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).subtract(6, 'months').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).subtract(6, 'months').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).subtract(6, 'months').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.YEAR:
-                            newDate = moment(currentDate).subtract(1, 'year').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).subtract(1, 'year').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).subtract(1, 'year').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).subtract(1, 'year').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).subtract(1, 'year').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).subtract(1, 'year').format('YYYY-MM-DD');
                             break;
                         default:
                             console.error(`Unknown tab: ${activeTab.name}`);
@@ -117,29 +116,29 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
                     // Swipe left - go forward in time
                     switch (activeTab.name) {
                         case DATE_PERIOD.DAY:
-                            newDate = moment(currentDate).add(1, 'day').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).add(1, 'day').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).add(1, 'day').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).add(1, 'day').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).add(1, 'day').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).add(1, 'day').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.WEEK:
-                            newDate = moment(currentDate).add(1, 'week').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).add(1, 'week').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).add(1, 'week').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).add(1, 'week').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).add(1, 'week').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).add(1, 'week').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.MONTH:
-                            newDate = moment(currentDate).add(1, 'month').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).add(1, 'month').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).add(1, 'month').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).add(1, 'month').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).add(1, 'month').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).add(1, 'month').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.SIX_MONTH:
-                            newDate = moment(currentDate).add(6, 'months').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).add(6, 'months').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).add(6, 'months').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).add(6, 'months').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).add(6, 'months').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).add(6, 'months').format('YYYY-MM-DD');
                             break;
                         case DATE_PERIOD.YEAR:
-                            newDate = moment(currentDate).add(1, 'year').format('YYYY-MM-DD');
-                            newStart = moment(currentStart).add(1, 'year').format('YYYY-MM-DD');
-                            newEnd = moment(currentEnd).add(1, 'year').format('YYYY-MM-DD');
+                            newDate = dayjs(currentDate).add(1, 'year').format('YYYY-MM-DD');
+                            newStart = dayjs(currentStart).add(1, 'year').format('YYYY-MM-DD');
+                            newEnd = dayjs(currentEnd).add(1, 'year').format('YYYY-MM-DD');
                             break;
                         default:
                             console.error(`Unknown tab: ${activeTab.name}`);
@@ -154,6 +153,14 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
         },
         [activeTab, currentStart, currentEnd, onDateChange, currentDate]
     );
+
+    // gesture-handler 3: hook-based API (usePanGesture) replaces the deprecated
+    // PanGestureHandler / Gesture.Pan() builder. runOnJS keeps the swipe handler on
+    // the JS thread (it calls setState / date logic).
+    const panGesture = usePanGesture({
+        runOnJS: true,
+        onDeactivate: event => onSwipeEnd(event.translationX),
+    });
 
     const handleTabChange = useCallback(
         (tab: MeasurementTab) => {
@@ -193,9 +200,9 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
         [restData, activeTab, isBloodPressure, currentDate]
     );
     return (
-        <PanGestureHandler onHandlerStateChange={onPanGesture}>
-            <View style={styles.container}>
-                <Text style={styles.title}>{filters.humanize(measurementType)}</Text>
+        <GestureDetector gesture={panGesture}>
+            <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+                <Text style={[styles.title, { color: theme.colors.textSecondary }]}>{filters.humanize(measurementType)}</Text>
                 <DateTabs
                     date={currentDate}
                     activeTab={activeTab}
@@ -227,7 +234,7 @@ const MeasurementChart: React.FC<MeasurementChartProps> = ({
                 />
                 <ShowAllDataButton onPress={onShowAllData} />
             </View>
-        </PanGestureHandler>
+        </GestureDetector>
     );
 };
 
@@ -236,13 +243,11 @@ export default MeasurementChart;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
     },
     title: {
         fontSize: 24,
         fontWeight: '400',
         marginVertical: 5,
-        color: '#7B7B7B',
         alignSelf: 'center',
     },
 });

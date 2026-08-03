@@ -1,22 +1,35 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import Icon from '@react-native-vector-icons/feather';
-import { StyleSheet, View, TouchableOpacity, Modal } from 'react-native';
-import { KeyboardAwareSectionList } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { useNavigation, useRoute, useIsFocused, StackActions } from '@react-navigation/native';
-import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View, TouchableOpacity, Modal, RefreshControl, SectionList } from 'react-native';
+
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
-import BackBtn from 'components/BackBtn';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
+import StackHeader from 'components/StackHeader';
+import { EmptyState } from 'components/EmptyState';
 import { useAppDispatch, useAppSelector } from 'store';
+import { useShoppingDrawer } from '../useShoppingDrawer';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
 import { useGetCurrentLibraryElementsQuery } from 'store/api/questionApi';
-import { SHOPPING_STEP, SHOPPING_STATUS, SHOPPING_ITEM_TYPE, SHOPPING_CONFIRMED_ITEM_TYPE, DESTINATIONS, QUESTION_TYPE, VIDEO_LIBRARY_TYPE } from 'constants/spec';
+import {
+    DESTINATIONS,
+    QUESTION_TYPE,
+    SHOPPING_STEP,
+    SHOPPING_STATUS,
+    SHOPPING_ITEM_TYPE,
+    VIDEO_LIBRARY_TYPE,
+    SHOPPING_CONFIRMED_ITEM_TYPE
+} from 'constants/spec';
 import {
     setItemType,
     selectShopping,
@@ -38,12 +51,12 @@ import {
     useUpdateShoppingItemMutation,
     useConfirmShopOnMyOwnMutation,
     useGetShoppingPreferencesQuery,
-    // TEMP: needed while we route "shop on my own" through PUT /shopping-list; revert once backend re-adds /shop-on-my-own
     useUpdateShoppingListStatusMutation,
 } from 'store/api/shoppingApi';
 import ShoppingItem from './ShoppingItem';
 import ListSwitcher from 'components/ListSwitcher';
 import HorizontalMenu from 'components/HorizontalMenu';
+import { GlassSurface } from 'components/GlassSurface';
 import ConfirmationAlert from 'components/ConfirmationAlert';
 import { ShoppingListSkeleton } from 'components/Skeleton/ShoppingListSkeleton';
 
@@ -56,16 +69,20 @@ const ALL_CATEGORY: { name: string; id?: number | null } = { name: 'All' };
 const ADDITIONAL_CATEGORY_NAME = 'Additional';
 
 const ShoppingList: React.FC = () => {
+    const theme = useTheme();
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const dispatch = useAppDispatch();
     const isFocused = useIsFocused();
+    const openDrawer = useShoppingDrawer({ guarded: true });
 
     const {
         status,
         itemType,
         currentStep,
-        isListTouched,
+        // HS-3113: isListTouched gated the (now-removed) CHECK branches in handleNextBtn
+        // and handleBack. Kept commented for easy revert.
+        // isListTouched,
         activeCategory,
         shoppingListDates,
         isCustomAlertOpen,
@@ -84,6 +101,9 @@ const ShoppingList: React.FC = () => {
     const [open, setOpen] = useState(true);
     const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
     const [page, setPage] = useState(0);
+    // Height of the absolutely-positioned bottom button bar, measured so the list can reserve
+    // matching bottom padding — otherwise the last item is hidden under the bar and can't be reached.
+    const [bottomBarHeight, setBottomBarHeight] = useState(0);
     const pendingBackActionRef = useRef<any | null>(null);
     const allowBackRef = useRef(false);
     const sectionListRef = useRef<any>(null);
@@ -91,13 +111,14 @@ const ShoppingList: React.FC = () => {
     // Queries
     const { data: statusData } = useGetShoppingListStatusQuery();
     const { data: datesData } = useGetShoppingListDatesQuery();
-    const { data: stockData } = useGetStockListQuery({
+    const { data: stockData, isLoading: isStockLoading, isFetching: isStockFetching } = useGetStockListQuery({
         shoppingCartCategoryId: undefined,
         page: 0,
         size: 20,
     });
     const stockList = stockData?.content || [];
-    const excluded = currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.CHECK;
+    // HS-3113: Final Check step removed — was: currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.CHECK
+    const excluded = currentStep === SHOPPING_STEP.MAIN;
     const shoppingItemType = separateRescueItems
         ? itemType ? itemType : SHOPPING_ITEM_TYPE.ORIGINAL
         : SHOPPING_ITEM_TYPE.ORIGINAL;
@@ -123,8 +144,8 @@ const ShoppingList: React.FC = () => {
         itemType: separateRescueItems ? itemType : null,
         categories: activeCategoryIds,
         withExcluded: excluded,
-        page,
         size: 20,
+        page,
     });
 
     const [updateItem] = useUpdateShoppingItemMutation();
@@ -142,7 +163,10 @@ const ShoppingList: React.FC = () => {
     const video = patientVideos?.[0]?.libraryItem;
     const question = patientQuestions?.[0];
 
-    const isLoading = isCategoriesLoading || isListLoading;
+    // HS-3113: stock-list query must be settled before Next can branch on stockList.length;
+    // otherwise an unloaded stock query reads as "no stock" and skips StockList review.
+    const isLoading = isCategoriesLoading || isListLoading || isStockLoading;
+    const isStockResolving = isStockLoading || isStockFetching;
 
     useEffect(() => {
         if (statusData && isFocused) {
@@ -158,8 +182,8 @@ const ShoppingList: React.FC = () => {
     useEffect(() => {
         if (datesData && isFocused) {
             dispatch(setShoppingListDates({
-                from: moment(datesData.startDate).format('MMM DD'),
-                to: moment(datesData.endDate).format('DD'),
+                from: dayjs(datesData.startDate).format('MMM DD'),
+                to: dayjs(datesData.endDate).format('DD'),
             }));
         }
     }, [datesData, isFocused, dispatch]);
@@ -233,20 +257,16 @@ const ShoppingList: React.FC = () => {
         || (status === SHOPPING_STATUS.SHOP_ON_MY_OWN && itemType === confirmedItemsType)
     ), [status, itemType, confirmedItemsType]);
 
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerTitle: () => (
-                <View style={styles.headerContainer}>
-                    <Text variant="bold" style={styles.headerTitle}>Shopping list</Text>
-                    {shoppingListDates && (
-                        <Text variant="bold" style={styles.dateText}>
-                            {shoppingListDates.from} - {shoppingListDates.to}
-                        </Text>
-                    )}
-                </View>
-            ),
-        });
-    }, [shoppingListDates, navigation]);
+    const headerCenter = useMemo(() => (
+        <View style={styles.headerContainer}>
+            <Text variant="bold" style={[styles.headerTitle, { color: theme.colors.headerText }]}>Shopping list</Text>
+            {shoppingListDates && (
+                <Text variant="bold" style={[styles.dateText, { color: theme.colors.headerText }]}>
+                    {shoppingListDates.from} - {shoppingListDates.to}
+                </Text>
+            )}
+        </View>
+    ), [shoppingListDates, theme.colors.headerText]);
 
     const handleCategoryChange = useCallback((item: any) => {
         dispatch(setActiveCategory(item.activeItem || item));
@@ -263,31 +283,42 @@ const ShoppingList: React.FC = () => {
     }, [updateItem, dispatch]);
 
     const handleNextBtn = useCallback(() => {
+        // HS-3113: bail out while the stock-list query hasn't resolved — an unloaded
+        // response reads as empty and would incorrectly route to the finalize alert.
+        if (isStockResolving && !stockData) {
+            return;
+        }
         if (currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.MEAL) {
             if (stockList.length > 0) {
                 setOpen(false);
                 dispatch(setCurrentStep(SHOPPING_STEP.STOCK));
                 navigation.navigate(ROUTES.STOCK_LIST);
-            } else if (isListTouched) {
-                dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
-                refetch();
+            // HS-3113: Final Check step removed. Previously, a touched list with no stock
+            // items entered SHOPPING_STEP.CHECK for a third review. Now it falls through
+            // to the finalize alert. Kept commented for easy revert.
+            // } else if (isListTouched) {
+            //     dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
+            //     refetch();
             } else {
                 setIsFinalizeOpen(true);
             }
         } else {
             setIsFinalizeOpen(true);
         }
-    }, [navigation, currentStep, stockList, isListTouched, dispatch, refetch]);
+    }, [navigation, currentStep, stockList, dispatch, isStockResolving, stockData]);
 
     const handleBack = useCallback(() => {
-        if (isListTouched && stockList.length === 0 && currentStep === SHOPPING_STEP.CHECK) {
-            dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
-            return;
-        }
+        // HS-3113: Final Check step removed. Previously this returned to MAIN when
+        // backing out of a touched CHECK review with no stock. Block kept for easy revert.
+        // if (isListTouched && stockList.length === 0 && currentStep === SHOPPING_STEP.CHECK) {
+        //     dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
+        //     return;
+        // }
         if (
             status === SHOPPING_STATUS.PENDING
             && !isFinalizeAlertOpen
-            && currentStep !== SHOPPING_STEP.CHECK
+            // HS-3113: CHECK step unreachable; guard simplified.
+            // && currentStep !== SHOPPING_STEP.CHECK
         ) {
             pendingBackActionRef.current = null;
             dispatch(updateShoppingMeta({ isFinalizeAlertOpen: true, isTryToOpenSideMenu: false }));
@@ -298,13 +329,8 @@ const ShoppingList: React.FC = () => {
             return;
         }
         navigation.goBack();
-    }, [navigation, isListTouched, stockList, currentStep, status, dispatch, isFinalizeAlertOpen]);
+    }, [navigation, status, dispatch, isFinalizeAlertOpen]);
 
-    useEffect(() => {
-        navigation.setOptions({
-            headerLeft: () => <BackBtn onPress={handleBack} />,
-        });
-    }, [navigation, handleBack]);
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('beforeRemove', (event: any) => {
@@ -312,17 +338,17 @@ const ShoppingList: React.FC = () => {
                 allowBackRef.current = false;
                 return;
             }
-            if (
-                status === SHOPPING_STATUS.PENDING
-                && currentStep !== SHOPPING_STEP.CHECK
-            ) {
+            // HS-3113: Final Check step removed. Previously the guard also required
+            // currentStep !== SHOPPING_STEP.CHECK to allow leaving during the third
+            // review. With CHECK unreachable, the PENDING check alone is sufficient.
+            if (status === SHOPPING_STATUS.PENDING) {
                 event.preventDefault();
                 pendingBackActionRef.current = event.data.action;
                 dispatch(updateShoppingMeta({ isFinalizeAlertOpen: true, isTryToOpenSideMenu: false }));
             }
         });
         return unsubscribe;
-    }, [navigation, status, currentStep, dispatch]);
+    }, [navigation, status, dispatch]);
 
     // TEMP: backend /shopping-list/shop-on-my-own returns 404, so we replicate V1 behavior by flipping status via PUT /shopping-list.
     // Revert both handlers to `confirmShopOnMyOwn({}).unwrap()` once backend re-adds the dedicated endpoint.
@@ -383,8 +409,8 @@ const ShoppingList: React.FC = () => {
     }, [shoppingListId, separateRescueItems, buildShopOnMyOwnPayload, updateShoppingListStatus, dispatch, navigation]);
 
     const handlePrint = useCallback(() => {
-        const endDate = moment().endOf('week').format('YYYY-MM-DD');
-        const startDate = moment().startOf('week').format('YYYY-MM-DD');
+        const endDate = dayjs().endOf('week').format('YYYY-MM-DD');
+        const startDate = dayjs().startOf('week').format('YYYY-MM-DD');
         navigation.navigate(ROUTES.SHOPPING_PDF, { date: { endDate, startDate } });
     }, [navigation]);
 
@@ -477,14 +503,16 @@ const ShoppingList: React.FC = () => {
                     : 'Here\'s your shopping list.',
             };
         }
-        if (currentStep === SHOPPING_STEP.CHECK) {
-            return {
-                title: 'Final Check',
-                message: shoppingListDates
-                    ? `Review your ${shoppingListDates.from}-${shoppingListDates.to} list one last time.`
-                    : 'Review your list one last time.',
-            };
-        }
+        // HS-3113: third shopping-list review removed. The "Final Check" popover
+        // is the popover called out in the ticket. Block kept for easy revert.
+        // if (currentStep === SHOPPING_STEP.CHECK) {
+        //     return {
+        //         title: 'Final Check',
+        //         message: shoppingListDates
+        //             ? `Review your ${shoppingListDates.from}-${shoppingListDates.to} list one last time.`
+        //             : 'Review your list one last time.',
+        //     };
+        // }
         if (isShopOnMyOwn && status === SHOPPING_STATUS.SHOP_ON_MY_OWN) {
             return { title: 'Shopping List', message: 'You can now shop on your own.' };
         }
@@ -495,10 +523,10 @@ const ShoppingList: React.FC = () => {
     }, [currentStep, shoppingListDates, status, route.params]);
 
     const renderSectionHeader = useCallback(({ section }: any) => (
-        <View style={styles.section}>
-            <Text variant="h3" style={styles.sectionTitle}>{section?.title}</Text>
+        <View style={[styles.section, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
+            <Text variant="h3" style={styles.sectionTitle} color={theme.colors.primary}>{section?.title}</Text>
         </View>
-    ), []);
+    ), [theme.colors]);
     // const renderSectionHeader = useCallback(({ section: { title } }: { section: GroupedItem }) => (
     //     <View style={styles.section}>
     //         <Text variant="h3" style={styles.sectionTitle}>{title}</Text>
@@ -513,6 +541,11 @@ const ShoppingList: React.FC = () => {
 
     return (
         <Screen initialized={!isLoading} style={styles.container}>
+            <StackHeader
+                onBack={handleBack}
+                onOpenDrawer={openDrawer}
+                centerContent={headerCenter}
+            />
             {includeRescueFoodsInShoppingList && separateRescueItems && (
                 <ListSwitcher
                     itemType={itemType}
@@ -568,68 +601,91 @@ const ShoppingList: React.FC = () => {
                 handleItem={handleCategoryChange}
             />
             {groupedList.length === 0 ? (
-                <Text textAlign="center" color={COLORS.GREY} style={styles.emptyText}>
-                    No shopping list was found
-                </Text>
+                <EmptyState
+                    icon="shopping-cart"
+                    title="Your shopping list is empty"
+                    subtitle="Items you add will show up here, grouped by aisle."
+                />
             ) : (
-                <KeyboardAwareSectionList
-                    enableOnAndroid
-                    ref={sectionListRef}
-                    sections={groupedList}
-                    extraScrollHeight={120}
-                    keyboardOpeningTime={0}
-                    stickySectionHeadersEnabled
-                    keyboardShouldPersistTaps="handled"
-                    renderSectionHeader={renderSectionHeader}
-                    keyExtractor={(item, index) => `${item.id}_${index}`}
-                    renderItem={({ item }) => (
-                        <ShoppingItem
-                            item={item}
-                            status={status}
+                <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+                    <SectionList
+                        ref={sectionListRef}
+                        sections={groupedList}
+
+                        stickySectionHeadersEnabled
+                        onEndReachedThreshold={0.25}
+                        keyboardShouldPersistTaps="handled"
+                        renderSectionHeader={renderSectionHeader}
+                        keyExtractor={(item, index) => `${item.id}_${index}`}
+                        contentContainerStyle={{ paddingBottom: bottomBarHeight }}
+                        renderItem={({ item, index }) => (
+                            <Animated.View
+                                exiting={FadeOut.duration(220)}
+                                layout={LinearTransition.springify().damping(20)}
+                                entering={FadeInDown.delay(Math.min(index, 10) * 80).springify().mass(1.2).damping(30)}
+                            >
+                                <ShoppingItem
+                                    item={item}
+                                    status={status}
+                                    disabled={isLoading}
+                                    isConfirmed={isConfirmed}
+                                    onUpdate={handleUpdateItem}
+                                    onAmountFocus={handleAmountFocus}
+                                />
+                            </Animated.View>
+                        )}
+                        onEndReached={() => {
+                            if (listData && !isFetching && page + 1 < listData.totalPages) {
+                                setPage(p => p + 1);
+                            }
+                        }}
+                        refreshControl={
+                            <RefreshControl
+                            // isFetching is true on initial load AND on refetch — gating on !isLoading
+                            // hides the spinner during first mount (we already show the skeleton screen there).
+                                refreshing={isFetching && !isLoading}
+                                onRefresh={refetch}
+                            />
+                        }
+                    />
+                </KeyboardAvoidingView>
+            )}
+            <GlassSurface
+                intensity={5}
+                style={styles.glassBar}
+                tint={theme.dark ? 'dark' : 'light'}
+                onLayout={e => setBottomBarHeight(e.nativeEvent.layout.height)}
+            >
+                <View style={styles.buttonControl}>
+                    {isOriginalConfirmed && includeRescueFoodsInShoppingList ? (
+                        <View style={styles.buttonsWrapper}>
+                            <Button
+                                title="Back"
+                                variant="secondary"
+                                onPress={handleBack}
+                                style={styles.backBtn}
+                                textStyle={styles.backBtnText}
+                            />
+                            <Button
+                                title="Done"
+                                variant="primary"
+                                onPress={handleDone}
+                                style={styles.doneBtn}
+                                textStyle={styles.doneBtnText}
+                            />
+                        </View>
+                    ) : !isConfirmed && (
+                        <Button
+                            title="Next"
+                            variant="primary"
                             disabled={isLoading}
-                            isConfirmed={isConfirmed}
-                            onUpdate={handleUpdateItem}
-                            onAmountFocus={handleAmountFocus}
+                            style={styles.nextBtn}
+                            onPress={handleNextBtn}
+                            textStyle={styles.nextBtnText}
                         />
                     )}
-                    onEndReached={() => {
-                        if (listData && !isFetching && page + 1 < listData.totalPages) {
-                            setPage(p => p + 1);
-                        }
-                    }}
-                    onEndReachedThreshold={0.25}
-                />
-            )}
-            <View style={styles.buttonControl}>
-                {isOriginalConfirmed && includeRescueFoodsInShoppingList ? (
-                    <View style={styles.buttonsWrapper}>
-                        <Button
-                            title="Back"
-                            variant="secondary"
-                            onPress={handleBack}
-                            style={styles.backBtn}
-                            textStyle={styles.backBtnText}
-                        />
-                        <Button
-                            title="Done"
-                            variant="primary"
-                            onPress={handleDone}
-                            style={styles.doneBtn}
-                            textStyle={styles.doneBtnText}
-                        />
-                    </View>
-                ) : !isConfirmed && (
-                    <Button
-                        title="Next"
-                        variant="primary"
-                        disabled={isLoading}
-                        style={styles.nextBtn}
-                        onPress={handleNextBtn}
-                        textStyle={styles.nextBtnText}
-                    />
-                )}
-            </View>
-
+                </View>
+            </GlassSurface>
             {(status !== SHOPPING_STATUS.SHOP_ON_MY_OWN && isCustomAlertOpen) && (
                 <Modal
                     transparent
@@ -642,21 +698,21 @@ const ShoppingList: React.FC = () => {
                         style={styles.overlay}
                         onPress={handleCloseCustomAlert}
                     >
-                        <View style={styles.alertBox}>
-                            <Text style={styles.alertTitle}>People Eating per Meal</Text>
+                        <View style={[styles.alertBox, { backgroundColor: theme.colors.surface }]}>
+                            <Text style={styles.alertTitle} color={theme.colors.text}>People Eating per Meal</Text>
                             {filteredPreferences.length === 0 ? (
-                                <Text style={styles.alertMessage}>
+                                <Text style={styles.alertMessage} color={theme.colors.textSecondary}>
                                     Do you want to change the number of people eating per meal?
                                 </Text>
                             ) : (
                                 <View>
-                                    <Text style={styles.alertMessagePreference}>You have:</Text>
+                                    <Text style={styles.alertMessagePreference} color={theme.colors.text}>You have:</Text>
                                     {filteredPreferences.map(preference => (
-                                        <Text key={preference.id} style={styles.alertMessagePreference}>
+                                        <Text key={preference.id} style={styles.alertMessagePreference} color={theme.colors.text}>
                                             {`• ${preference.amount} people eating for ${preference.name}`}
                                         </Text>
                                     ))}
-                                    <Text style={styles.alertMessage}>
+                                    <Text style={styles.alertMessage} color={theme.colors.textSecondary}>
                                         Do you want to change your selections?
                                     </Text>
                                 </View>
@@ -690,8 +746,8 @@ const ShoppingList: React.FC = () => {
                 title="Are you sure you want to finalize your shopping list?"
             />
             <ConfirmationAlert
-                variant="legacy"
                 title="Oops!"
+                variant="legacy"
                 cancelTxt="Not Now"
                 applyTxt="Finish Up"
                 onClose={handleNotNowAlert}
@@ -699,8 +755,6 @@ const ShoppingList: React.FC = () => {
                 onSubmit={handleFinishUpAlert}
                 message="Looks like your list isn’t done yet. Finish it before you go?"
             />
-
-
             {popoverText && !isCustomAlertOpen && (
                 <ConfirmationAlert
                     hideCancelBtn
@@ -762,7 +816,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: 16,
         paddingHorizontal: 16,
-        backgroundColor: '#E8F4FC',
         borderBottomWidth: 1,
         borderBottomColor: COLORS.LIGHT_GREY,
     },
@@ -831,7 +884,6 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         marginBottom: 150,
         alignItems: 'center',
-        backgroundColor: '#fff',
     },
     alertTitle: {
         fontSize: 20,
@@ -872,5 +924,12 @@ const styles = StyleSheet.create({
     },
     noBtnBgColor: {
         backgroundColor: '#EBB3D1',
+    },
+    glassBar: {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        // paddingTop: 10,
+        position: 'absolute',
     },
 });

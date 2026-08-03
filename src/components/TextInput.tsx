@@ -7,6 +7,7 @@ import { StyleSheet, View, TextInput as RNInput } from 'react-native';
 import Text from 'components/Text.tsx';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset.ts';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 
 interface TextInputProps {
     name: string;
@@ -37,7 +38,7 @@ const TextInput: React.FC<TextInputProps> = ({
     touched = {},
     onChangeText,
     multiline = false,
-    textAlign = 'right',
+    textAlign = 'left',
     secureTextEntry = false,
     ...input
 }) => {
@@ -46,7 +47,9 @@ const TextInput: React.FC<TextInputProps> = ({
     const touchedField = touched?.[name];
     const [isBlur, setIsBlur] = useState(false);
     const isShowError = touchedField && errorText;
-    const resolvedPrimary = color || theme.colors.primary;
+    // Callers historically pass `theme.colors.black` (invisible on dark). Treat black/none as
+    // the themed text color so typed input is readable in both themes; honor any real custom color.
+    const resolvedPrimary = color && color !== theme.colors.black ? color : theme.colors.text;
     const [isSecureText, setIsSecureText] = useState(secureTextEntry);
     const toggleSecureIcon = () => setIsSecureText(currentValue => !currentValue);
     return (
@@ -54,7 +57,7 @@ const TextInput: React.FC<TextInputProps> = ({
             {label
                 ? <Text
                     variant="caption"
-                    color={isShowError ? theme.colors.error : theme.colors.black}
+                    color={isShowError ? theme.colors.error : theme.colors.text}
                 >
                     {label}
                 </Text>
@@ -74,8 +77,10 @@ const TextInput: React.FC<TextInputProps> = ({
                     secureTextEntry={isSecureText}
                     numberOfLines={multiline ? 6 : 1}
                     selectionColor={theme.colors.info}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                     onBlur={() => value && setIsBlur(true)}
                     textAlignVertical={multiline ? 'top' : 'center'}
+                    placeholderTextColor={theme.colors.textSecondary}
                     style={[
                         styles.inputStyle,
                         {

@@ -4,12 +4,13 @@ import { StyleSheet, View, Modal, TouchableOpacity, Platform } from 'react-nativ
 // local dependencies
 import Text from 'components/Text';
 import { COLORS } from 'constants/colors';
+import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 
 interface ConfirmationAlertProps {
-    isOpen: boolean;
     title: string;
-    message: string;
+    isOpen: boolean;
+    message?: string;
     applyTxt?: string;
     cancelTxt?: string;
     disabled?: boolean;
@@ -31,6 +32,7 @@ const ConfirmationAlert: React.FC<ConfirmationAlertProps> = memo(({
     variant = 'default',
     cancelTxt = 'Cancel',
 }) => {
+    const theme = useTheme();
     if (!isOpen) { return null; }
     const isLegacy = variant === 'legacy';
 
@@ -51,17 +53,22 @@ const ConfirmationAlert: React.FC<ConfirmationAlertProps> = memo(({
                     style={[
                         styles.alertBox,
                         isLegacy && styles.alertBoxLegacy,
+                        { backgroundColor: theme.colors.surface },
                     ]}
                 >
                     <Text
                         variant="h3"
+                        color={theme.colors.text}
                         style={isLegacy ? { ...styles.title, ...styles.titleLegacy } : styles.title}
                     >
                         {title}
                     </Text>
-                    <Text style={isLegacy ? { ...styles.message, ...styles.messageLegacy } : styles.message}>
+                    {message && <Text
+                        color={theme.colors.textSecondary}
+                        style={isLegacy ? { ...styles.message, ...styles.messageLegacy } : styles.message}
+                    >
                         {message}
-                    </Text>
+                    </Text>}
 
                     <View style={[styles.actions, isLegacy && styles.actionsLegacy]}>
                         {!hideCancelBtn && (
@@ -146,13 +153,11 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center',
         marginBottom: 12,
-        color: COLORS.BLACK,
     },
     message: {
         fontSize: 16,
         textAlign: 'center',
         marginBottom: 24,
-        color: COLORS.DARK_GREY,
         lineHeight: 22,
     },
     titleLegacy: {

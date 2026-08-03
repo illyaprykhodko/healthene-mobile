@@ -1,5 +1,5 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import { useNavigation } from '@react-navigation/native';
 import React, { useMemo, useCallback, memo } from 'react';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -35,6 +35,7 @@ interface ListItemProps {
 
 const ListItem = memo<ListItemProps>(({ item, disabled = false }) => {
     const navigation = useNavigation<Navigation>();
+    const theme = useTheme();
 
     const handlePress = useCallback(() => {
         navigation.navigate(ROUTES.MEASUREMENT_CHART, {
@@ -44,7 +45,7 @@ const ListItem = memo<ListItemProps>(({ item, disabled = false }) => {
     }, [navigation, item.type, item.name]);
 
     return (
-        <View style={styles.listItem}>
+        <View style={[styles.listItem, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
             <View style={styles.listItemMain}>
                 <TouchableOpacity
                     disabled={disabled}
@@ -69,7 +70,7 @@ const MyResultsScreen: React.FC = () => {
 
     // Query params for measurement types
     const queryArgs = useMemo(() => ({
-        dateTime: moment().format(),
+        dateTime: dayjs().format(),
         period: '1-year',
     }), []);
 
@@ -91,9 +92,9 @@ const MyResultsScreen: React.FC = () => {
 
     if (isLoading) {
         return (
-            <Screen initialized style={styles.container}>
-                <View style={styles.divider}>
-                    <Text color={theme.colors.grey} variant="h4">Measurements:</Text>
+            <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
+                <View style={[styles.divider, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border }]}>
+                    <Text color={theme.colors.textSecondary} variant="h4">Measurements:</Text>
                 </View>
                 <View style={styles.skeletonContainer}>
                     <ListItemSkeleton />
@@ -107,10 +108,10 @@ const MyResultsScreen: React.FC = () => {
     }
 
     return (
-        <Screen initialized style={styles.container}>
+        <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={styles.content}>
-                <View style={styles.divider}>
-                    <Text color="#979797" variant="h4">Measurements:</Text>
+                <View style={[styles.divider, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border }]}>
+                    <Text color={theme.colors.textSecondary} variant="h4">Measurements:</Text>
                 </View>
                 <FlatList
                     data={measurementsList}
@@ -130,7 +131,6 @@ const styles = StyleSheet.create({
     container: {
         paddingLeft: 0,
         paddingRight: 0,
-        backgroundColor: '#F0F1F5',
     },
     content: {
         flex: 1,
@@ -139,8 +139,6 @@ const styles = StyleSheet.create({
         padding: 10,
         borderTopWidth: 1,
         flexDirection: 'row',
-        borderColor: '#E0E0E0',
-        backgroundColor: '#F0F1F5',
     },
     listContent: {
         paddingBottom: OFFSET.VERTICAL * 2,
@@ -149,9 +147,7 @@ const styles = StyleSheet.create({
         display: 'flex',
         paddingBottom: OFFSET.VERTICAL,
         paddingTop: OFFSET.VERTICAL,
-        backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
-        borderBottomColor: '#E9E9E9',
         marginBottom: OFFSET.VERTICAL / 2,
     },
     listItemMain: {

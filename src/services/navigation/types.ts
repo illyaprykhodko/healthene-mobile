@@ -33,10 +33,10 @@ export type RootStackParamList = {
   [ROUTES.SETTINGS]: undefined;
   [ROUTES.SHOPPING]: undefined;
   [ROUTES.MESSENGER]: undefined;
-  [ROUTES.DAILY_PLAN]: undefined;
   [ROUTES.MY_RESULTS]: undefined;
   [ROUTES.ABOUT_PLAN]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
+  [ROUTES.HELP_SUPPORT]: undefined;
   [ROUTES.MESSAGE_LIST]: undefined;
   [ROUTES.GAMBLING_HOME]: undefined;
   [ROUTES.GAMBLING_BANK]: undefined;
@@ -55,10 +55,12 @@ export type RootStackParamList = {
   [ROUTES.GAMBLING_CASH_OUT]: undefined;
   [ROUTES.ANIMATION_SETTINGS]: undefined;
   [ROUTES.BIOMETRIC_SETTINGS]: undefined;
+  [ROUTES.APPEARANCE_SETTINGS]: undefined;
   [ROUTES.HEALTH_PROFILE_STACK]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
   [ROUTES.MEAL_PREFERENCES_MEALS_LIST]: undefined;
+  [ROUTES.DAILY_PLAN]: { screen?: string } | undefined;
   [ROUTES.MESSENGER_CAMERA]: {
     captureMode?: 'photo' | 'video';
   } | undefined;
@@ -69,7 +71,6 @@ export type RootStackParamList = {
   [ROUTES.SELECT_RECIPIENT]: {
     selectedId?: number;
   } | undefined;
-  
   // Example of a screen that requires params
   [ROUTES.SMART_SCALE]: {
     measurementPhaseItem: object;
@@ -88,9 +89,10 @@ export type RootStackParamList = {
     isToast: boolean;
   };
   [ROUTES.REPLACEMENT]: {
-    list: any[];
+    list?: any[];
     date?: string;
     phaseId: number;
+    title?: string;
     isRestaurantMode: boolean;
   };
   [ROUTES.REPLACE_ITEMS]: {
@@ -133,6 +135,7 @@ export type RootStackParamList = {
   };
   [ROUTES.MEAL_PREFERENCES_LIST]: {
     item: {
+      id: number;
       name: string;
     };
   };

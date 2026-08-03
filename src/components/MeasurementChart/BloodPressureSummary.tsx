@@ -2,6 +2,10 @@
 import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
+// local dependencies
+import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
+
 interface BloodPressureSummaryProps {
     unit: string;
     startingSystolic: number;
@@ -17,9 +21,10 @@ const BloodPressureSummary: React.FC<BloodPressureSummaryProps> = ({
     totalChangeSystolic,
     totalChangeDiastolic,
 }) => {
+    const theme = useTheme();
     const isPositiveSystolic = totalChangeSystolic >= 0;
     const isPositiveDiastolic = totalChangeDiastolic >= 0;
-    
+
     const displayChangeSystolic = isPositiveSystolic
         ? `+${totalChangeSystolic.toFixed(0)}`
         : totalChangeSystolic.toFixed(0);
@@ -28,33 +33,28 @@ const BloodPressureSummary: React.FC<BloodPressureSummaryProps> = ({
         : totalChangeDiastolic.toFixed(0);
 
     return (
-        <View style={styles.container}>
-            {/* Starting Column */}
+        <View style={[styles.container, { backgroundColor: theme.colors.surfaceAlt }]}>
             <View style={styles.column}>
-                <Text style={styles.label}>Starting</Text>
-                <Text style={styles.value}>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.label, { color: theme.colors.secondary }]}>Starting</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.value, { color: theme.colors.text }]}>
                     {Math.round(startingSystolic)}
                     {' / '}
                     {Math.round(startingDiastolic)}
                 </Text>
-                <Text style={styles.unit}>{unit}</Text>
-                {/* <Text style={styles.value}> */}
-                {/* {' '} */}
-                {/* </Text> */}
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.unit, { color: theme.colors.secondary }]}>{unit}</Text>
             </View>
 
-            {/* Total Change Column */}
             <View style={styles.column}>
-                <Text style={styles.label}>Total Change</Text>
-                <Text style={styles.value}>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.label, { color: theme.colors.secondary }]}>Total Change</Text>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.value, { color: theme.colors.text }]}>
                     {displayChangeSystolic}
                     {' / '}
                     {displayChangeDiastolic}
                     {' '}
                 </Text>
-                <Text style={styles.valueDiastolic}>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.valueDiastolic, { color: theme.colors.text }]}>
                     {' '}
-                    <Text style={styles.unit}>{unit}</Text>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.unit, { color: theme.colors.secondary }]}>{unit}</Text>
                 </Text>
             </View>
         </View>
@@ -69,7 +69,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: 15,
         paddingHorizontal: 30,
-        backgroundColor: '#E0EBF7',
     },
     column: {
         alignItems: 'center',
@@ -77,22 +76,18 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         marginBottom: 4,
-        color: '#567697',
         fontWeight: '400',
     },
     value: {
         fontSize: 26,
         fontWeight: 'bold',
-        color: '#000000',
     },
     valueDiastolic: {
         fontSize: 20,
         fontWeight: '600',
-        color: '#000000',
         marginTop: 4,
     },
     unit: {
-        color: '#567697',
         fontSize: 16,
         fontWeight: '600',
         marginTop: 4,

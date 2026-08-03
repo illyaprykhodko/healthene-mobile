@@ -8,6 +8,7 @@ import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { RootStackParamList } from 'services/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useGetPatientGamblingPointsQuery } from 'store/api/gamblingPointsApi';
@@ -16,13 +17,14 @@ type Navigation = NativeStackNavigationProp<RootStackParamList>;
 
 const Lobby: React.FC = () => {
     const navigation = useNavigation<Navigation>();
+    const theme = useTheme();
     const { data: points = 0 } = useGetPatientGamblingPointsQuery();
     return (
-        <Screen initialized style={styles.container}>
+        <Screen initialized style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={styles.content}>
                 <View style={styles.pointsContainer}>
                     <Icon iconStyle="solid" name="coins" size={18} color="#B57B2A" />
-                    <Text variant="h4" style={styles.backButtonText}>{points.toLocaleString()} points</Text>
+                    <Text variant="h4" style={[styles.backButtonText, { color: theme.colors.text }]}>{points.toLocaleString()} points</Text>
                 </View>
                 <TouchableOpacity
                     activeOpacity={0.85}
@@ -31,7 +33,7 @@ const Lobby: React.FC = () => {
                 >
                     <Text variant="h3" style={styles.primaryActionText}>Play Games</Text>
                 </TouchableOpacity>
-                <View style={styles.horizontalRule} />
+                <View style={[styles.horizontalRule, { backgroundColor: theme.colors.border }]} />
                 <TouchableOpacity
                     activeOpacity={0.85}
                     style={styles.secondaryAction}
@@ -50,7 +52,6 @@ const Lobby: React.FC = () => {
                 >
                     <Text variant="h4" style={styles.backButtonText}>Back</Text>
                 </TouchableOpacity>
-                {/* <Icon iconStyle="solid" name="coins" size={18} color="#B57B2A" /> */}
             </View>
         </Screen>
     );
@@ -60,7 +61,6 @@ export default Lobby;
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#F5F5F5',
         justifyContent: 'space-between',
         padding: 16,
     },
@@ -69,7 +69,6 @@ const styles = StyleSheet.create({
         gap: 24,
     },
     primaryAction: {
-        // height: 142,
         width: '90%',
         paddingVertical: OFFSET.VERTICAL * 2.5,
         borderRadius: 6,
@@ -91,14 +90,12 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         width: '70%',
         paddingVertical: 16,
-        // height: 62,
         borderRadius: 8,
         backgroundColor: '#2A7EA4',
         justifyContent: 'center',
         alignItems: 'center',
     },
     secondaryActionText: {
-        // fontFamily: 'Outfit-Bold',
         fontWeight: 700,
         fontFamily: 'Open Sans',
         fontSize: 36,
@@ -122,7 +119,6 @@ const styles = StyleSheet.create({
         borderColor: '#A9A9A9',
     },
     backButtonText: {
-        // fontFamily: 'Outfit-Bold',
         fontWeight: 700,
         fontFamily: 'Open Sans',
         fontSize: 24,
@@ -137,9 +133,6 @@ const styles = StyleSheet.create({
     },
     horizontalRule: {
         height: 1,
-        backgroundColor: '#000',
-        // backgroundColor: '#D9D9D9',
-        // marginBottom: 16,
     },
     shadowBtn: {
         shadowColor: '#000000',

@@ -6,7 +6,7 @@ import {
     TouchableOpacity,
     ActivityIndicator,
 } from 'react-native';
-import moment from 'moment';
+import dayjs from 'services/date';
 import React, { useCallback, useMemo } from 'react';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -36,16 +36,16 @@ const SaveValueScreen: React.FC = () => {
     const measurementName = params?.measurementName || measurementType;
     const measurementPhaseItem = params?.measurementPhaseItem;
     const savedValue = params?.savedValue;
-    const currentDate = params?.date || moment().format('YYYY-MM-DD');
+    const currentDate = params?.date || dayjs().format('YYYY-MM-DD');
 
-    const isSameDate = moment().isSame(currentDate, 'day');
-    const isFutureDate = moment(currentDate).isAfter(moment(), 'day');
+    const isSameDate = dayjs().isSame(currentDate, 'day');
+    const isFutureDate = dayjs(currentDate).isAfter(dayjs(), 'day');
 
     const { data: aggregateData, isLoading } = useGetAggregateMeasurementDataQuery({
         type: measurementType,
         period: '1-day',
         date: currentDate,
-        offset: moment().utcOffset() / 60,
+        offset: dayjs().utcOffset() / 60,
     }, {
         refetchOnMountOrArgChange: true,
     });
@@ -110,10 +110,15 @@ const SaveValueScreen: React.FC = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await deleteMeasurements(measurementIds).unwrap();
-                            MessageService.toastSuccess('Measurement deleted');
+                            // Flip the phase item to PENDING first so the server commits the new
+                            // status before deleteMeasurements invalidates 'DayOverview'. If we
+                            // delete first, the invalidation-triggered refetch can race the
+                            // updatePhaseItem PUT and overwrite the optimistic PENDING with the
+                            // still-DONE server snapshot (updatePhaseItem has no invalidatesTags
+                            // and never re-patches getDayOverview on queryFulfilled).
                             if (measurementPhaseItem) {
                                 await updatePhaseItem({
+                                    date: currentDate,
                                     id: measurementPhaseItem.id,
                                     phaseId: measurementPhaseItem.phaseId!,
                                     data: {
@@ -122,6 +127,8 @@ const SaveValueScreen: React.FC = () => {
                                     },
                                 }).unwrap();
                             }
+                            await deleteMeasurements(measurementIds).unwrap();
+                            MessageService.toastSuccess('Measurement deleted');
                             navigation.goBack();
                         } catch (error) {
                             // console.error('[SaveValue] Delete error:', error);
@@ -135,12 +142,13 @@ const SaveValueScreen: React.FC = () => {
                 },
             ]
         );
-    }, [measurementIds, deleteMeasurements, navigation]);
+    }, [measurementIds, measurementPhaseItem, currentDate, deleteMeasurements, updatePhaseItem, navigation]);
 
     const handleDone = useCallback(async () => {
         try {
             if (measurementPhaseItem) {
                 await updatePhaseItem({
+                    date: currentDate,
                     id: measurementPhaseItem.id,
                     phaseId: measurementPhaseItem.phaseId!,
                     data: {
@@ -158,7 +166,7 @@ const SaveValueScreen: React.FC = () => {
                 message: 'Failed to update measurement status',
             });
         }
-    }, [measurementPhaseItem, updatePhaseItem, navigation]);
+    }, [measurementPhaseItem, currentDate, updatePhaseItem, navigation]);
 
     const isDisabled = isDeleting || isFutureDate || measurementPhaseItem?.status === PHASE_ITEM_STATUS.DONE;
 
@@ -173,19 +181,22 @@ const SaveValueScreen: React.FC = () => {
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <TouchableOpacity
+                disabled={!isSameDate}
+                onPress={handleGoToChart}
                 style={[
                     styles.graphButton,
-                    !isSameDate && styles.graphButtonDisabled,
                     { borderColor: theme.colors.primary },
+                    !isSameDate && styles.graphButtonDisabled,
                 ]}
-                onPress={handleGoToChart}
-                disabled={!isSameDate}
             >
                 {isSameDate && <Icon iconStyle="solid" name="chart-line" size={18} color={theme.colors.primary} />}
                 <Text
                     style={[
                         styles.graphButtonText,
-                        { color: isSameDate ? theme.colors.primary : theme.colors.grey },
+                        { color: isSameDate
+                                ? theme.colors.primary
+                                : theme.colors.grey
+                        },
                     ]}
                 >
                     Graph
@@ -195,7 +206,7 @@ const SaveValueScreen: React.FC = () => {
             <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
             <Text variant="h1" textAlign="center" style={styles.title}>
-                {!displayValue && !moment().isSame(currentDate)
+                {!displayValue && !dayjs().isSame(currentDate)
                     ? `No ${measurementName}`
                     : `Current ${measurementName}`}
             </Text>
@@ -205,7 +216,7 @@ const SaveValueScreen: React.FC = () => {
                     <View
                         style={[
                             styles.valueContainer,
-                            { borderColor: theme.colors.text, backgroundColor: '#F3F3F3' },
+                            { borderColor: theme.colors.text, backgroundColor: theme.colors.muted },
                         ]}
                     >
                         {displayValue ? (
@@ -221,7 +232,7 @@ const SaveValueScreen: React.FC = () => {
                                     : displayValue}
                             </Text>
                         ) : (
-                            <Text textAlign="center" style={styles.noDataText}>
+                            <Text textAlign="center" style={[styles.noDataText, { color: theme.colors.textSecondary }]}>
                                 No {measurementName} was recorded recently
                             </Text>
                         )}
@@ -235,8 +246,8 @@ const SaveValueScreen: React.FC = () => {
                                 {
                                     backgroundColor:
                                         isDisabled || measurementIds.length === 0
-                                            ? '#CCCCCC'
-                                            : '#FFB3B3',
+                                            ? theme.colors.skeleton
+                                            : theme.colors.pink,
                                     borderColor: theme.colors.text,
                                 },
                             ]}
@@ -259,14 +270,14 @@ const SaveValueScreen: React.FC = () => {
                 style={[
                     styles.doneBtn,
                     {
-                        backgroundColor: isDisabled ? '#EEEEEE' : '#96E072',
+                        backgroundColor: isDisabled ? theme.colors.muted : theme.colors.successAlt,
                     },
                 ]}
             >
                 <Text
                     style={[
                         styles.doneBtnText,
-                        { color: isDisabled ? '#888888' : '#4E733C' },
+                        { color: isDisabled ? theme.colors.textMuted : theme.colors.successAltText },
                     ]}
                 >
                     Done
@@ -298,9 +309,7 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         gap: 10,
     },
-    graphButtonDisabled: {
-        borderColor: '#CCCCCC',
-    },
+    graphButtonDisabled: {},
     graphButtonText: {
         fontSize: 16,
         fontWeight: '600',
@@ -327,7 +336,6 @@ const styles = StyleSheet.create({
     },
     noDataText: {
         fontSize: 16,
-        color: '#777777',
     },
     deleteBtnWrapper: {
         flexDirection: 'row',

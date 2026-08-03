@@ -1,4 +1,12 @@
 // outsource dependencies
+import React, {
+    memo,
+    useRef,
+    useMemo,
+    useEffect,
+    useCallback,
+    type RefObject,
+} from 'react';
 import {
     Text,
     View,
@@ -17,16 +25,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Polygon } from 'react-native-svg';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
-import React, {
-    memo,
-    useRef,
-    useMemo,
-    useEffect,
-    useCallback,
-    type RefObject,
-} from 'react';
 // local dependencies
 import { useAppSelector } from 'store';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { selectRewardStar } from 'store/slices/rewardStarSlice';
 import { useGetPatientGamblingPointsQuery } from 'store/api/gamblingPointsApi';
 import { ANIMATION_CONFIG, COUNTER_CONFIG, STAR_CONFIG, getGrainFlightTotalDurationMs } from './config';
@@ -516,7 +517,7 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({
                             <Polygon points={starPolygonPoints} fill="#DC2626" />
                         </Svg>
                         <Animated.View style={[styles.counterHit, counterTextStyle]}>
-                            <Text style={styles.counterText} pointerEvents="none">
+                            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.counterText} pointerEvents="none">
                                 {counterDisplay}
                             </Text>
                         </Animated.View>
@@ -540,7 +541,7 @@ export const RewardStarOverlay: React.FC<RewardStarOverlayProps> = ({
 
 const styles = StyleSheet.create({
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         zIndex: 50,
     },
     starWrap: {

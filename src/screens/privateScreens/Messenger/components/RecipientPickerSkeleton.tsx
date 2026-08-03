@@ -3,7 +3,6 @@ import React, { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 // local dependencies
-import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { useTheme } from 'hooks/useTheme';
 import { Skeleton } from 'components/Skeleton';
@@ -24,7 +23,7 @@ const RecipientPickerSkeletonComponent: React.FC<RecipientPickerSkeletonProps> =
             <View
                 style={[
                     styles.sectionHeader,
-                    { backgroundColor: theme.colors.lightGrey, borderBottomColor: COLORS.LIGHTER_GREY },
+                    { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border },
                 ]}
             >
                 <Skeleton width={90} height={12} borderRadius={3} />
@@ -33,7 +32,7 @@ const RecipientPickerSkeletonComponent: React.FC<RecipientPickerSkeletonProps> =
             {Array.from({ length: rows }).map((_, index) => (
                 <View
                     key={index}
-                    style={[styles.row, { borderBottomColor: COLORS.LIGHTER_GREY }]}
+                    style={[styles.row, { borderBottomColor: theme.colors.border }]}
                 >
                     <Skeleton width={44} height={44} borderRadius={22} style={styles.avatar} />
                     <View style={styles.body}>

@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import moment from 'moment';
+import dayjs from 'services/date';
 import DatePicker from 'react-native-date-picker';
 
 interface DatePickerProps {
@@ -12,7 +12,7 @@ interface DatePickerProps {
 
 const DatePickerSelector = ({ currentDate, onSelect, modalOpened, onCancel }: DatePickerProps) => {
     const handleConfirm = (date: Date) => {
-        onSelect(moment(date).format('YYYY-MM-DD'));
+        onSelect(dayjs(date).format('YYYY-MM-DD'));
         onCancel();
     };
     return <DatePicker

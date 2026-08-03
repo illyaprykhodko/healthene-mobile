@@ -3,8 +3,9 @@ import React, { useState, useRef, memo, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Animated, StyleSheet, Dimensions } from 'react-native';
 
 // local dependencies
-import { COLORS } from 'constants/colors';
-import { SHOPPING_LIST_TAB, SHOPPING_ITEM_TYPE, ORIENTATION } from 'constants/spec';
+import { useTheme } from 'hooks/useTheme';
+import { MAX_FONT_SCALE } from 'constants/typography';
+import { SHOPPING_LIST_TAB, SHOPPING_ITEM_TYPE } from 'constants/spec';
 
 interface ListSwitcherProps {
     itemType: string;
@@ -22,6 +23,7 @@ const ListSwitcher: React.FC<ListSwitcherProps> = ({
     getRescue,
     getOriginal,
 }) => {
+    const theme = useTheme();
     const getTabFromItemType = (type: string) => {
         return type === SHOPPING_ITEM_TYPE.ORIGINAL
             ? SHOPPING_LIST_TAB.ORIGINAL
@@ -83,10 +85,11 @@ const ListSwitcher: React.FC<ListSwitcherProps> = ({
 
     return (
         <View style={styles.container}>
-            <View style={styles.switcher}>
+            <View style={[styles.switcher, { backgroundColor: theme.colors.surfaceAlt }]}>
                 <Animated.View
                     style={[
                         styles.animatedTab,
+                        { backgroundColor: theme.colors.surface, borderColor: theme.colors.primary },
                         {
                             width: tabWidth,
                             transform: [{ translateX }],
@@ -99,9 +102,10 @@ const ListSwitcher: React.FC<ListSwitcherProps> = ({
                     onPress={() => handleTabPress(SHOPPING_LIST_TAB.ORIGINAL)}
                 >
                     <Text
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
                         style={[
                             styles.tabText,
-                            selectedTab === SHOPPING_LIST_TAB.ORIGINAL && styles.activeTabText,
+                            { color: selectedTab === SHOPPING_LIST_TAB.ORIGINAL ? theme.colors.primary : theme.colors.textSecondary },
                         ]}
                     >
                         My List
@@ -112,9 +116,10 @@ const ListSwitcher: React.FC<ListSwitcherProps> = ({
                     onPress={() => handleTabPress(SHOPPING_LIST_TAB.RESCUE)}
                 >
                     <Text
+                        maxFontSizeMultiplier={MAX_FONT_SCALE}
                         style={[
                             styles.tabText,
-                            selectedTab === SHOPPING_LIST_TAB.RESCUE && styles.activeTabText,
+                            { color: selectedTab === SHOPPING_LIST_TAB.RESCUE ? theme.colors.primary : theme.colors.textSecondary },
                         ]}
                     >
                         Rescue Foods
@@ -136,7 +141,6 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         flexDirection: 'row',
         position: 'relative',
-        backgroundColor: '#e0e0e0',
     },
     tab: {
         flex: 1,
@@ -150,16 +154,10 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderRadius: 8,
         position: 'absolute',
-        backgroundColor: COLORS.WHITE,
-        borderColor: COLORS.DARK_GREY,
     },
     tabText: {
         zIndex: 2,
         fontWeight: 'bold',
-        color: COLORS.DARK_GREY,
-    },
-    activeTabText: {
-        color: COLORS.BLUE,
     },
     content: {
         fontSize: 18,

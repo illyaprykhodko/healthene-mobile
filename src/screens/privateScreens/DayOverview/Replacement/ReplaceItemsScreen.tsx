@@ -1,39 +1,42 @@
 // outsource dependencies
 import React, { useState, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 // local dependencies
 import { Meal } from 'types/meal';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
+import DefImage from 'components/DefImage';
+import Checkbox from 'components/Checkbox';
+import { BoxHolder } from 'components/preloader';
 import { RootStackParamList } from 'services/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useGetRescueMealsQuery, useUpdatePhaseWithRescueMutation } from 'store/api/dayOverviewApi';
 
-interface Checkbox {
-    value: boolean;
-    disabled?: boolean;
-    onChange: () => void;
-}
+// interface Checkbox {
+//     value: boolean;
+//     disabled?: boolean;
+//     onChange: () => void;
+// }
 
-const Checkbox: React.FC<Checkbox> = ({ value, onChange, disabled }) => {
-    const theme = useTheme();
-    return (
-        <TouchableOpacity
-            onPress={onChange}
-            disabled={disabled}
-            style={[
-                styles.checkbox,
-                { borderColor: theme.colors.border },
-                value && { backgroundColor: theme.colors.success, borderColor: theme.colors.success },
-            ]}
-        >
-            {value && <Text style={styles.checkmark}>✓</Text>}
-        </TouchableOpacity>
-    );
-};
+// const Checkbox: React.FC<Checkbox> = ({ value, onChange, disabled }) => {
+//     const theme = useTheme();
+//     return (
+//         <TouchableOpacity
+//             onPress={onChange}
+//             disabled={disabled}
+//             style={[
+//                 styles.checkbox,
+//                 { borderColor: theme.colors.border },
+//                 value && { backgroundColor: theme.colors.success, borderColor: theme.colors.success },
+//             ]}
+//         >
+//             {value && <Text style={styles.checkmark}>✓</Text>}
+//         </TouchableOpacity>
+//     );
+// };
 
 const ReplaceItemsScreen: React.FC = () => {
     const theme = useTheme();
@@ -78,11 +81,13 @@ const ReplaceItemsScreen: React.FC = () => {
 
                             await updatePhase({ phaseId, items }).unwrap();
                             
-                            // Navigate back to Edit with success toast
-                            navigation.navigate(ROUTES.EDIT, {
+                            // popTo (not navigate): return to the existing Edit screen and drop every
+                            // replacement screen left above it in the stack, so Back from Edit goes to
+                            // Day Overview instead of back into the replacement catalog.
+                            navigation.popTo(ROUTES.EDIT, {
                                 phaseId,
                                 isToast: true,
-                            }, { pop: true });
+                            }, { merge: true });
                         } catch (error) {
                             console.error('Replace error:', error);
                         }
@@ -93,16 +98,12 @@ const ReplaceItemsScreen: React.FC = () => {
     }, [selectedIndex, options, phaseId, updatePhase, navigation]);
 
     if (isLoading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={theme.colors.primary} />
-            </View>
-        );
+        return <BoxHolder active />;
     }
     return (
         <Screen initialized style={styles.container}>
-            <View style={[styles.title, { backgroundColor: '#E0EBF7' }]}>
-                <Text textAlign="center" style={[styles.titleText, { color: theme.colors.text }]}>
+            <View style={[styles.title, { backgroundColor: theme.colors.surfaceAlt }]}>
+                <Text variant="h3" textAlign="center" style={[styles.titleText, { color: theme.colors.text }]}>
                     Replacement options
                 </Text>
             </View>
@@ -121,21 +122,21 @@ const ReplaceItemsScreen: React.FC = () => {
                             ]}
                         >
                             <View style={styles.optionHeader}>
-                                <Text variant="h5" style={[styles.optionTitle, { color: theme.colors.text }]}>
+                                <Text variant="h3" style={[styles.optionTitle, { color: theme.colors.text }]}>
                                     {option.title}
                                 </Text>
                                 <Checkbox
                                     value={isSelected}
-                                    disabled={isDisabled}
+                                    editable={!isDisabled}
                                     onChange={() => setSelectedIndex(isSelected ? null : idx)}
                                 />
                             </View>
                             <View style={styles.optionContent}>
                                 {(option?.meals || []).map((meal: Meal) => (
                                     <View key={meal.id} style={styles.mealContainer}>
-                                        <Image source={{ uri: meal.recipe.coverImage?.url }} width={48} height={48} />
+                                        <DefImage src={meal.recipe?.coverImage?.url} style={{ width: 48, height: 48 }} />
                                         <View style={styles.mealInfo}>
-                                            <Text style={[styles.mealName, { color: theme.colors.text }]}>
+                                            <Text variant="h3" style={[styles.mealName, { color: theme.colors.text }]}>
                                                 {meal.recipe?.name || 'Unknown Recipe'}
                                             </Text>
                                             <Text style={[styles.mealServing, { color: theme.colors.textSecondary }]}>
@@ -168,6 +169,7 @@ const ReplaceItemsScreen: React.FC = () => {
                 disabled={selectedIndex === null || isUpdating}
                 style={[
                     styles.replaceBtn,
+                    selectedIndex === null && { backgroundColor: theme.colors.muted },
                     selectedIndex !== null ? styles.replaceBtnActive : styles.replaceBtnDisabled,
                 ]}
             >

@@ -11,7 +11,9 @@ import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
+import StackHeader from 'components/StackHeader';
 import ConfirmationAlert from 'components/ConfirmationAlert';
+import { useReviewAlert } from 'components/ReviewAlertContext';
 import { TagType, CuisineTag, CuisineFrequency } from 'types/cuisineDistribution';
 import {
     useGetCuisineTagsQuery,
@@ -37,7 +39,7 @@ const ListItem: React.FC<ListItemProps> = ({ item, isSelected, onPress }) => {
     }, [onPress, item]);
 
     return (
-        <View style={[styles.itemWrapper, { backgroundColor: theme.colors.white }]}>
+        <View style={[styles.itemWrapper, { backgroundColor: theme.colors.surface }]}>
             <TouchableOpacity
                 onPress={handlePress}
                 style={[styles.itemContainer, { borderBottomColor: theme.colors.border }]}
@@ -55,13 +57,24 @@ const ListItem: React.FC<ListItemProps> = ({ item, isSelected, onPress }) => {
 
 const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => {
     const theme = useTheme();
+    const { hasShown, markShown, sessionId } = useReviewAlert();
+    const [trackedSessionId, setTrackedSessionId] = useState(sessionId);
     const [isHydrated, setIsHydrated] = useState(false);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
-    const [hasReviewBeenShown, setHasReviewBeenShown] = useState(false);
     const [initialFavoriteTagIds, setInitialFavoriteTagIds] = useState<number[]>([]);
     const [page, setPage] = useState(0);
     const [localFavoriteList, setLocalFavoriteList] = useState<CuisineFrequency[]>([]);
     const [allTags, setAllTags] = useState<CuisineTag[]>([]);
+
+    if (trackedSessionId !== sessionId) {
+        setTrackedSessionId(sessionId);
+        setIsReviewOpen(false);
+        setIsHydrated(false);
+        setInitialFavoriteTagIds([]);
+        setLocalFavoriteList([]);
+        setAllTags([]);
+        setPage(0);
+    }
 
     const user = useSelector((state: RootState) => state.app.user);
 
@@ -81,16 +94,15 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
     const [saveCuisine, { isLoading: isSaving }] = useSaveCuisineFrequencyMutation();
 
     useEffect(() => {
-        if (favoriteList !== undefined) {
-            setLocalFavoriteList(favoriteList);
-            setInitialFavoriteTagIds(
-                favoriteList
-                    .map(item => item?.tag?.id || item?.id)
-                    .filter((id): id is number => typeof id === 'number')
-            );
-            setIsHydrated(true);
-        }
-    }, [favoriteList]);
+        if (isHydrated || favoriteList === undefined) { return; }
+        setLocalFavoriteList(favoriteList);
+        setInitialFavoriteTagIds(
+            favoriteList
+                .map(item => item?.tag?.id || item?.id)
+                .filter((id): id is number => typeof id === 'number')
+        );
+        setIsHydrated(true);
+    }, [isHydrated, favoriteList]);
 
     const selectedFavoriteTagIds = React.useMemo(
         () => localFavoriteList
@@ -112,11 +124,11 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
     }, [isHydrated, selectedFavoriteTagIds, initialFavoriteTagIdsSorted]);
 
     useEffect(() => {
-        if (hasUnsavedChanges && !hasReviewBeenShown) {
+        if (hasUnsavedChanges && !hasShown()) {
             setIsReviewOpen(true);
-            setHasReviewBeenShown(true);
+            markShown();
         }
-    }, [hasUnsavedChanges, hasReviewBeenShown]);
+    }, [hasUnsavedChanges, hasShown, markShown]);
 
     useEffect(() => {
         if (tagsData?.content) {
@@ -212,11 +224,19 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
 
     return (
         <Screen
-            style={styles.container}
             initialized={!isLoading}
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.background }
+            ]}
         >
+            <StackHeader
+                title="International Cuisine"
+                onBack={() => navigation.goBack()}
+                onOpenDrawer={() => navigation.openDrawer?.()}
+            />
             <View style={styles.content}>
-                <View style={[styles.titleButtons, { backgroundColor: theme.colors.white }]}>
+                <View style={[styles.titleButtons, { backgroundColor: theme.colors.surface }]}>
                     <TouchableOpacity
                         onPress={clearChoose}
                         style={[styles.changeButton, { borderBottomColor: theme.colors.border }]}
@@ -238,7 +258,6 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
 
                 <FlatList
                     data={allTags}
-                    style={styles.list}
                     initialNumToRender={15}
                     renderItem={renderItem}
                     keyExtractor={keyExtractor}
@@ -246,6 +265,10 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
                     onEndReached={handleLoadMore}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.listContent}
+                    style={[
+                        styles.list,
+                        { backgroundColor: theme.colors.surface }
+                    ]}
                 />
             </View>
 
@@ -276,7 +299,6 @@ const CuisineListScreen: React.FC<CuisineListScreenProps> = ({ navigation }) => 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
     },
     content: {
         flex: 1,
@@ -301,9 +323,7 @@ const styles = StyleSheet.create({
         marginBottom: OFFSET.VERTICAL,
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
-    list: {
-        backgroundColor: '#FFFFFF',
-    },
+    list: {},
     listContent: {
         paddingBottom: OFFSET.VERTICAL * 2,
     },

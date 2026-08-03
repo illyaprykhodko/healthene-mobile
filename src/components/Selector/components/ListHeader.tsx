@@ -9,6 +9,7 @@ import { debounce } from 'utils/general.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { useTheme } from 'hooks/useTheme.ts';
 import Separator from 'components/FlatListSeparator.tsx';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 
 interface ListHeaderProps {
     value?: string,
@@ -50,6 +51,7 @@ const ListHeader = ({ searchValue = '', disabled, placeholder, value, onSearch, 
                         debouncedSearch(v);
                     }}
                     selectionColor={theme.colors.info}
+                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                     style={[styles.inputStyle, { color: theme.colors.black }]}
                 />
             </View>

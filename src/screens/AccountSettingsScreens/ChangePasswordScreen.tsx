@@ -4,6 +4,7 @@ import * as yup from 'yup';
 import { Formik } from 'formik';
 import { StyleSheet } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useNavigation } from '@react-navigation/native';
 
 // local dependencies
 import { ChangePassword } from 'types';
@@ -13,6 +14,7 @@ import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
 import TextInput from 'components/TextInput.tsx';
+import { isBadCredentialsError } from 'services/auth/errors';
 import { useChangePasswordMutation } from 'store/api/settingsApi.ts';
 
 // validation
@@ -29,24 +31,31 @@ const validationSchema = yup
 
 const ChangePasswordScreen = () => {
     const theme = useTheme();
-    const [updatePassword] = useChangePasswordMutation();
+    const navigation = useNavigation();
+    const [updatePassword, { isLoading }] = useChangePasswordMutation();
 
     const onSubmit = async (data: ChangePassword) => {
         try {
-            // await updatePassword({
-            //     newPassword: data.newPassword,
-            //     currentPassword: data.currentPassword,
-            // }).unwrap();
+            await updatePassword({
+                newPassword: data.newPassword,
+                currentPassword: data.currentPassword,
+            }).unwrap();
             Toast.show({
                 type: 'success',
                 text1: 'Password updated',
                 text2: 'Your password has been changed successfully.',
             });
+            if (navigation.canGoBack()) {
+                navigation.goBack();
+            }
         } catch (error: any) {
+            const badCredentials = isBadCredentialsError(error);
             Toast.show({
                 type: 'error',
-                text1: 'Password update failed',
-                text2: String(filters.humanize(error?.data?.errorCode)) || 'Something went wrong while changing your password. Please try again later.',
+                text1: badCredentials ? 'Incorrect Current Password' : 'Password update failed',
+                text2: badCredentials
+                    ? 'The current password you entered is incorrect. Please try again.'
+                    : String(filters.humanize(error?.data?.errorCode)) || 'Something went wrong while changing your password. Please try again later.',
             });
         }
     };
@@ -69,9 +78,10 @@ const ChangePasswordScreen = () => {
                 handleSubmit,
             }) => <>
                 <TextInput
-                    disabled={false}
+                    secureTextEntry
                     textAlign="left"
                     touched={touched}
+                    disabled={isLoading}
                     name="currentPassword"
                     label="Current Password"
                     color={theme.colors.black}
@@ -80,10 +90,11 @@ const ChangePasswordScreen = () => {
                     error={touched.currentPassword && errors.currentPassword ? { currentPassword: errors.currentPassword } : undefined}
                 />
                 <TextInput
-                    disabled={false}
+                    secureTextEntry
                     textAlign="left"
                     touched={touched}
                     name="newPassword"
+                    disabled={isLoading}
                     label="New Password"
                     color={theme.colors.black}
                     value={values.newPassword}
@@ -91,9 +102,10 @@ const ChangePasswordScreen = () => {
                     error={touched.newPassword && errors.newPassword ? { newPassword: errors.newPassword } : undefined}
                 />
                 <TextInput
-                    disabled={false}
+                    secureTextEntry
                     textAlign="left"
                     touched={touched}
+                    disabled={isLoading}
                     name="checkPassword"
                     color={theme.colors.black}
                     label="Confirm New Password"
@@ -103,6 +115,8 @@ const ChangePasswordScreen = () => {
                 />
                 <Button
                     variant="outline"
+                    loading={isLoading}
+                    disabled={isLoading}
                     onPress={handleSubmit}
                     title="CHANGE PASSWORD"
                     style={styles.submitBtn}

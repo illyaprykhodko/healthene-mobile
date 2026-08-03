@@ -9,6 +9,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 // local dependencies
 import Text from 'components/Text';
+import { config } from 'constants';
 import Screen from 'components/Screen';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
@@ -17,7 +18,6 @@ import { Button } from 'components/Button';
 import TextInput from 'components/TextInput';
 import { IconButton } from 'components/IconButton';
 import BackgroundImage from 'components/BackgroundImage';
-import { useForgotPassword } from 'hooks/useForgotPassword';
 import { useForgotPasswordMutation } from 'store/api/authApi';
 import { RootStackParamList } from 'services/navigation/types';
 import { RootState, useAppDispatch, useAppSelector } from 'store';
@@ -33,8 +33,9 @@ export const ForgotPasswordScreen: React.FC = () => {
     const dispatch = useAppDispatch();
     const navigation = useNavigation<NavigationProp>();
     const theme = useTheme();
-    const { success, isLoading } = useForgotPassword();
-    const { email } = useAppSelector((state: RootState) => state.forgotPassword);
+    const { email, success, error, isSubmitting } = useAppSelector(
+        (state: RootState) => state.forgotPassword,
+    );
     const [forgotPassword] = useForgotPasswordMutation();
 
     const goToSignIn = useCallback(() => {
@@ -66,11 +67,18 @@ export const ForgotPasswordScreen: React.FC = () => {
                     try {
                         dispatch(setSubmitting(true));
                         dispatch(setError(null));
-                        await forgotPassword({ email: values.email }).unwrap();
+                        await forgotPassword({
+                            email: values.email,
+                            resetUrl: `${config.publicSiteUrl}/change-password/`,
+                        }).unwrap();
                         dispatch(setEmail(values.email));
                         dispatch(setSuccess(true));
-                    } catch (error: any) {
-                        dispatch(setError(error.message || 'Failed to send reset email'));
+                    } catch (submitError: any) {
+                        dispatch(setError(
+                            submitError?.data?.message
+                                || submitError?.data?.errorCode
+                                || 'Failed to send reset email',
+                        ));
                     } finally {
                         dispatch(setSubmitting(false));
                     }
@@ -81,16 +89,27 @@ export const ForgotPasswordScreen: React.FC = () => {
                         <TextInput
                             name="email"
                             label="Email"
+                            touched={touched}
                             value={values.email}
-                            disabled={isLoading}
+                            disabled={isSubmitting}
                             color={theme.colors.primary}
                             onChangeText={handleChange('email')}
-                            error={touched.email && errors.email ? { [errors.email]: errors.email } : undefined}
+                            error={touched.email && errors.email ? { email: errors.email } : undefined}
                         />
+                        {error ? (
+                            <Text
+                                textAlign="center"
+                                style={styles.errorText}
+                                color={theme.colors.error}
+                            >
+                                {error}
+                            </Text>
+                        ) : null}
                         <Button
-                            loading={isLoading}
                             style={styles.button}
                             onPress={handleSubmit}
+                            loading={isSubmitting}
+                            disabled={isSubmitting}
                             title="RECOVERY PASSWORD"
                             color={theme.colors.primary}
                         />
@@ -98,7 +117,7 @@ export const ForgotPasswordScreen: React.FC = () => {
                 )}
             </Formik>
         </View>
-    ), [dispatch, forgotPassword, isLoading, theme.colors.primary]);
+    ), [dispatch, forgotPassword, isSubmitting, error, theme.colors.primary, theme.colors.error]);
 
     const renderSuccess = useCallback(() => (
         <View style={styles.formContainer}>
@@ -181,6 +200,9 @@ const styles = StyleSheet.create({
     },
     button: {
         marginTop: OFFSET.VERTICAL * 1.5,
+    },
+    errorText: {
+        marginTop: OFFSET.VERTICAL,
     },
 });
 

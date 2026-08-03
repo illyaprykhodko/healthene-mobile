@@ -1,6 +1,6 @@
 // outsource dependencies
 import Icon from '@react-native-vector-icons/ionicons';
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, ViewStyle, Modal, ScrollView } from 'react-native';
 
 // local dependencies
@@ -9,6 +9,7 @@ import { useTheme } from 'hooks/useTheme';
 import YoutubeVideo from './YoutubeVideo';
 import PrivateVideo from './PrivateVideo';
 import type { Attachment } from 'types/video';
+import { MAX_FONT_SCALE } from 'constants/typography';
 import HTMLView, { RenderNodeProps } from './HTMLView';
 
 // interface VideoAttachment {
@@ -28,6 +29,31 @@ interface DescriptionProps {
 const Description: React.FC<DescriptionProps> = memo(
     ({ style, video, onClose, isActive, description }) => {
         const theme = useTheme();
+        const htmlStyles = useMemo(() => StyleSheet.create({
+            b: { fontWeight: 'bold' },
+            em: { fontStyle: 'italic' },
+            strong: { fontWeight: 'bold' },
+            u: { textDecorationLine: 'underline' },
+            ins: { textDecorationLine: 'underline' },
+            ul: {
+                marginLeft: 15,
+                marginVertical: 5,
+            },
+            p: {
+                fontSize: 16,
+                lineHeight: 24,
+                marginBottom: 10,
+                color: theme.colors.text,
+            },
+            li: {
+                flex: 1,
+                fontSize: 16,
+                lineHeight: 24,
+                marginVertical: 5,
+                color: theme.colors.text,
+                paddingRight: OFFSET.VERTICAL * 2,
+            },
+        }), [theme]);
         const [showDescription, setShowDescription] = useState(false);
         const isVideoEnabled = Boolean(video);
         const toggleText = useCallback(() => {
@@ -46,8 +72,8 @@ const Description: React.FC<DescriptionProps> = memo(
 
                 return (
                     <View key={Math.random()} style={styles.htmlViewTextContainer}>
-                        <Text style={styles.bullet}>•</Text>
-                        <Text style={htmlStyles.li}>{renderedChildren}</Text>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.bullet}>•</Text>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={htmlStyles.li}>{renderedChildren}</Text>
                     </View>
                 );
             }
@@ -61,8 +87,8 @@ const Description: React.FC<DescriptionProps> = memo(
                     return (
                         <HTMLView
                             value={description}
-                            // renderNode={renderNode}
                             stylesheet={htmlStyles}
+                            // renderNode={renderNode}
                         />
                     );
                 }
@@ -81,8 +107,8 @@ const Description: React.FC<DescriptionProps> = memo(
             return (
                 <HTMLView
                     value={description}
-                    // renderNode={renderNode}
                     stylesheet={htmlStyles}
+                    // renderNode={renderNode}
                 />
             );
         }, [isVideoEnabled, showDescription, video, description]);
@@ -91,7 +117,7 @@ const Description: React.FC<DescriptionProps> = memo(
             if (isVideoEnabled) {
                 return (
                     <TouchableOpacity onPress={toggleText} style={styles.actionButton}>
-                        <Text style={[styles.helpLink, { color: theme.colors.blue }]}>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.helpLink, { color: theme.colors.blue }]}>
                             {showDescription ? 'Back to Video' : 'More'}
                         </Text>
                     </TouchableOpacity>
@@ -100,7 +126,7 @@ const Description: React.FC<DescriptionProps> = memo(
 
             return (
                 <TouchableOpacity onPress={onClose} style={styles.actionButton}>
-                    <Text style={[styles.helpLink, { color: theme.colors.blue }]}>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.helpLink, { color: theme.colors.blue }]}>
                         Close
                     </Text>
                 </TouchableOpacity>
@@ -116,7 +142,11 @@ const Description: React.FC<DescriptionProps> = memo(
                 // presentationStyle="pageSheet"
             >
                 <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }, style]}>
+                    <View style={[
+                        style,
+                        styles.modalContent,
+                        { backgroundColor: theme.colors.surface },
+                    ]}>
                         <TouchableOpacity
                             onPress={onClose}
                             style={styles.closeButton}
@@ -128,8 +158,8 @@ const Description: React.FC<DescriptionProps> = memo(
 
                         <ScrollView
                             style={styles.scrollView}
-                            contentContainerStyle={styles.scrollContent}
                             showsVerticalScrollIndicator={true}
+                            contentContainerStyle={styles.scrollContent}
                         >
                             <View style={styles.content}>
                                 {renderContent()}
@@ -207,38 +237,3 @@ const styles = StyleSheet.create({
     },
 });
 
-const htmlStyles = StyleSheet.create({
-    p: {
-        fontSize: 16,
-        marginBottom: 10,
-        color: '#333',
-        lineHeight: 24,
-    },
-    strong: {
-        fontWeight: 'bold',
-    },
-    b: {
-        fontWeight: 'bold',
-    },
-    em: {
-        fontStyle: 'italic',
-    },
-    ins: {
-        textDecorationLine: 'underline',
-    },
-    u: {
-        textDecorationLine: 'underline',
-    },
-    li: {
-        flex: 1,
-        fontSize: 16,
-        color: '#333',
-        marginVertical: 5,
-        paddingRight: OFFSET.VERTICAL * 2,
-        lineHeight: 24,
-    },
-    ul: {
-        marginLeft: 15,
-        marginVertical: 5,
-    },
-});

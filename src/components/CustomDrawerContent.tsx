@@ -1,6 +1,6 @@
 // outsource dependencies
 import _ from 'lodash';
-import moment from 'moment';
+import dayjs from 'services/date';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Icon from '@react-native-vector-icons/fontawesome5';
@@ -40,13 +40,15 @@ type DrawerIconName =
     | 'file'
     | 'book'
     | 'award'
+    | 'headset'
     | 'comments'
     | 'utensils'
     | 'chart-bar'
     | 'clipboard'
     | 'heartbeat'
     | 'info-circle'
-    | 'shopping-cart';
+    | 'shopping-cart'
+    | 'question-circle';
 
 interface DrawerItemProps {
     title: string;
@@ -62,7 +64,11 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
     return (
         <TouchableOpacity
             onPress={onPress}
-            style={[styles.menuItem, focused && styles.menuItemFocused]}
+            style={[
+                styles.menuItem,
+                { borderBottomColor: theme.colors.border },
+                focused && { backgroundColor: theme.colors.surfaceAlt },
+            ]}
         >
             <Icon
                 size={24}
@@ -70,7 +76,6 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                 iconStyle="solid"
                 style={styles.menuIcon}
                 color={theme.colors.primary}
-                // color={focused ? theme.colors.primary : theme.colors.textSecondary}
             />
             <Text
                 variant="h5"
@@ -80,11 +85,10 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
                 {title}
             </Text>
             {!!badge && badge > 0 && (
-                <View style={styles.badgeContainer}>
+                <View style={[styles.badgeContainer, { backgroundColor: theme.colors.error }]}>
                     <Text
                         variant="bold"
                         style={styles.badgeText}
-                        // color="#FFFFFF"
                         color={theme.colors.white}
                     >
                         {badge > 99 ? '99+' : badge}
@@ -95,13 +99,16 @@ const DrawerItem: React.FC<DrawerItemProps> = ({ icon, title, focused, onPress, 
     );
 };
 
-const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
-    <View style={styles.sectionHeader}>
-        <Text variant="h5" style={styles.sectionHeaderText}>
-            {title}
-        </Text>
-    </View>
-);
+const SectionHeader: React.FC<{ title: string }> = ({ title }) => {
+    const theme = useTheme();
+    return (
+        <View style={[styles.sectionHeader, { backgroundColor: theme.colors.surfaceAlt }]}>
+            <Text variant="h5" style={styles.sectionHeaderText} color={theme.colors.textSecondary}>
+                {title}
+            </Text>
+        </View>
+    );
+};
 
 interface CustomDrawerContentProps {
     state: any;
@@ -115,7 +122,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     const user = useSelector((state: RootState) => state.app.user);
 
     // Fetch badge data
-    const currentDate = useMemo(() => moment().format('YYYY-MM-DD'), []);
+    const currentDate = useMemo(() => dayjs().format('YYYY-MM-DD'), []);
     const { data: dailyPlanCounter } = useGetIncompleteQuestionsVideosQuery(currentDate);
     const { data: untrackedMeasurementsCounter } = useGetUntrackedMeasurementsQuery(currentDate);
     const { data: libraryItemsTree } = useGetLibraryItemsTotalTreeQuery();
@@ -233,7 +240,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <Pressable onPress={goToAccountSettings} style={[styles.profileSection, { borderBottomColor: theme.colors.border }]}>
                 <ProfileImage style={styles.userIcon} uri={user?.coverImage?.url} />
-                <View>
+                <View style={styles.profileTextContainer}>
                     <Text variant="h4" style={styles.userName} color={theme.colors.text}>
                         {user?.firstName} {user?.lastName}
                     </Text>
@@ -266,8 +273,8 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                     icon="file"
                     title="My Daily Plan"
                     badge={badges.dailyPlan}
-                    onPress={() => navigate(ROUTES.DAILY_PLAN)}
                     focused={getFocusedRoute() === ROUTES.DAILY_PLAN}
+                    onPress={() => navigate(ROUTES.DAILY_PLAN, { screen: ROUTES.DAY_OVERVIEW })}
                 />
                 <DrawerItem
                     icon="shopping-cart"
@@ -328,6 +335,12 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                     focused={getFocusedRoute() === ROUTES.LIBRARY}
                 />
                 <DrawerItem
+                    icon="headset"
+                    title="Help & Support"
+                    onPress={() => navigate(ROUTES.HELP_SUPPORT)}
+                    focused={getFocusedRoute() === ROUTES.HELP_SUPPORT}
+                />
+                <DrawerItem
                     title="Info"
                     icon="info-circle"
                     onPress={() => navigate(ROUTES.INFO)}
@@ -338,8 +351,8 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
                 title="LOGOUT"
                 variant="outline"
                 onPress={handleLogout}
-                style={styles.logoutButton}
                 textStyle={{ color: theme.colors.error }}
+                style={[styles.logoutButton, { borderColor: theme.colors.error }]}
             />
         </SafeAreaView>
     );
@@ -362,7 +375,7 @@ const styles = StyleSheet.create({
     },
     userIcon: {
         marginRight: OFFSET.POINT * 2,
-        borderWidth: 1
+        borderWidth: 1,
     },
     menuItem: {
         paddingVertical: 15,
@@ -370,10 +383,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderBottomWidth: 1,
         paddingHorizontal: 20,
-        borderBottomColor: '#E5E5E5',
-    },
-    menuItemFocused: {
-        backgroundColor: '#F0F8FF',
     },
     menuIcon: {
         width: 30,
@@ -393,28 +402,26 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 10,
-        backgroundColor: '#E74C3C',
     },
     badgeText: {
         fontSize: 10,
     },
     sectionHeader: {
         padding: 10,
-        backgroundColor: '#F0F1F5',
     },
     sectionHeaderText: {
         fontSize: 11,
         fontWeight: '600',
-        color: '#666666',
     },
     logoutButton: {
-        // color: '#E74C3C',
         borderRadius: 30,
-        borderColor: '#E74C3C',
         margin: OFFSET.VERTICAL,
     },
     userName: {
         fontSize: 16,
         fontWeight: '600',
+    },
+    profileTextContainer: {
+        flex: 1,
     },
 });

@@ -1,7 +1,7 @@
 // outsource dependencies
 import * as yup from 'yup';
-import moment from 'moment';
 import { Formik } from 'formik';
+import dayjs from 'services/date';
 import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,9 +9,9 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { pick, types } from '@react-native-documents/picker';
 import React, { useCallback, useMemo, useState } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // local dependencies
 import { config } from 'constants';
@@ -29,6 +29,7 @@ import { getClinicRoleLabel } from 'constants/spec.ts';
 import { RootStackParamList } from 'services/navigation';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { MessageForm, Recipient } from 'types/messenger.ts';
+import { buildAttachmentFormData } from 'utils/attachment/attachmentFormData';
 import Attachments from 'screens/privateScreens/Messenger/components/Attachments.tsx';
 import { useCreateChainMutation, useReplyToChainMutation } from 'store/api/messengerApi.ts';
 import { useDeleteFileMutation, useUploadAttachmentMutation } from 'store/api/s3ServiceApi.ts';
@@ -175,15 +176,21 @@ const WriteMessageScreen = () => {
         try {
             setPreloader(true);
             const [file] = await pick({ type: [types.allFiles] });
-            const formData = new FormData();
-            formData.append('file', {
-                uri: file.uri,
-                name: file.name,
-                type: file.type ?? 'application/octet-stream',
-            });
-            formData.append('title', file.name);
-            formData.append('description', moment().format());
-            const attachment = await uploadFile({ body: formData }).unwrap();
+            // The picker leaves `name` null for some providers; it feeds both the upload filename
+            // and the title, so fall back rather than sending null through.
+            const fileName = file.name ?? 'attachment';
+            const body = buildAttachmentFormData(
+                {
+                    uri: file.uri,
+                    name: fileName,
+                    mimeType: file.type ?? 'application/octet-stream',
+                },
+                {
+                    title: fileName,
+                    description: dayjs().format(),
+                },
+            );
+            const attachment = await uploadFile({ body }).unwrap();
             dispatch(setAttachment(attachment));
             Toast.show({
                 type: 'success',
@@ -267,22 +274,22 @@ const WriteMessageScreen = () => {
             default: return <Pressable
                 key={item}
                 onPress={() => showCaptureModeSelector(onSave)}
-                style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
+                style={[styles.mediaButton, { backgroundColor: theme.colors.surfaceAlt }]}
             >
-                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
-                    <Icon iconStyle="solid" name="video" color={theme.colors.darkGrey} size={20} />
+                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.border }]}>
+                    <Icon iconStyle="solid" name="video" color={theme.colors.textSecondary} size={20} />
                 </View>
-                <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
+                <Text color={theme.colors.textSecondary}>{filters.humanize(item)}</Text>
             </Pressable>;
             case ATTACHMENTS.AUDIO: return <Pressable
                 key={item}
                 onPress={() => navigation.navigate(ROUTES.MESSENGER_AUDIO)}
-                style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
+                style={[styles.mediaButton, { backgroundColor: theme.colors.surfaceAlt }]}
             >
-                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
-                    <Icon iconStyle="solid" name="microphone" color={theme.colors.darkGrey} size={20} />
+                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.border }]}>
+                    <Icon iconStyle="solid" name="microphone" color={theme.colors.textSecondary} size={20} />
                 </View>
-                <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
+                <Text color={theme.colors.textSecondary}>{filters.humanize(item)}</Text>
             </Pressable>;
             case ATTACHMENTS.FILE: return <Pressable
                 key={item}
@@ -290,12 +297,12 @@ const WriteMessageScreen = () => {
                     onSave();
                     handleAttachFile().catch(error => console.error(error));
                 }}
-                style={[styles.mediaButton, { backgroundColor: theme.colors.lightGrey }]}
+                style={[styles.mediaButton, { backgroundColor: theme.colors.surfaceAlt }]}
             >
-                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.lighterGrey }]}>
-                    <Icon iconStyle="solid" name="paperclip" color={theme.colors.darkGrey} size={20} />
+                <View style={[styles.mediaButtonIcon, { backgroundColor: theme.colors.border }]}>
+                    <Icon iconStyle="solid" name="paperclip" color={theme.colors.textSecondary} size={20} />
                 </View>
-                <Text color={theme.colors.darkGrey}>{filters.humanize(item)}</Text>
+                <Text color={theme.colors.textSecondary}>{filters.humanize(item)}</Text>
             </Pressable>;
         }
     }, [handleAttachFile, showCaptureModeSelector]);
@@ -305,9 +312,8 @@ const WriteMessageScreen = () => {
         <Screen initialized={true} style={styles.container}>
             <ScrollView>
                 <KeyboardAwareScrollView
-                    enableOnAndroid
+                    bottomOffset={80}
                     style={styles.flex}
-                    extraScrollHeight={80}
                     contentContainerStyle={styles.flexGrow}
                 >
                     <Pressable
@@ -332,7 +338,7 @@ const WriteMessageScreen = () => {
                                 size={14}
                                 iconStyle="solid"
                                 name="chevron-right"
-                                color={theme.colors.darkGrey}
+                                color={theme.colors.textSecondary}
                             />
                         )}
                     </Pressable>

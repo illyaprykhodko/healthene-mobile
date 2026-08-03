@@ -51,7 +51,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
                 style={[
                     styles.shimmer,
                     {
-                        backgroundColor: theme.colors.grey,
+                        backgroundColor: theme.colors.skeleton ?? theme.colors.grey,
                         borderRadius,
                     },
                     animatedStyle,

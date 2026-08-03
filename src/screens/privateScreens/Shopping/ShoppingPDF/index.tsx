@@ -1,10 +1,11 @@
 // outsource dependencies
-import moment from 'moment';
+import dayjs from 'services/date';
 import RNBlobUtil from 'react-native-blob-util';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { memo, useCallback, useState, useEffect } from 'react';
 import { StyleSheet, View, Platform, Alert, ActivityIndicator } from 'react-native';
+
 // local dependencies
 import { config } from 'constants';
 import Text from 'components/Text';
@@ -12,11 +13,14 @@ import Screen from 'components/Screen';
 import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
+import StackHeader from 'components/StackHeader';
 import { sessionManager } from 'store/api/baseApi';
+import { useShoppingDrawer } from '../useShoppingDrawer';
 
 const ShoppingPDF: React.FC = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
+    const openDrawer = useShoppingDrawer();
 
     const [isDownloading, setIsDownloading] = useState(false);
     const [token, setToken] = useState<string | null>(null);
@@ -42,7 +46,7 @@ const ShoppingPDF: React.FC = () => {
 
         try {
             const url = `${config.serviceUrl}/${config.apiPath}/patient-service/patients/shopping-list/print?startDate=${startDate}&endDate=${endDate}`;
-            const fileName = `shopping-list-${moment().format('YYYY-MM-DD-HH-mm-ss')}.pdf`;
+            const fileName = `shopping-list-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}.pdf`;
 
             const { dirs } = RNBlobUtil.fs;
             const downloadDir = Platform.OS === 'ios' ? dirs.DocumentDir : dirs.DCIMDir;
@@ -69,26 +73,41 @@ const ShoppingPDF: React.FC = () => {
             });
 
             const info = response.info();
+            const headers = (info.headers || {}) as Record<string, string>;
+            const contentType = (
+                headers['content-type'] || headers['Content-Type'] || ''
+            ).toLowerCase();
 
-            let fileContent: string | null = null;
-            try {
-                fileContent = await RNBlobUtil.fs.readFile(response.path(), 'utf8') as string;
-            } catch (readError) {
-                console.error('Failed to inspect downloaded file:', readError);
+            if (info.status < 200 || info.status >= 300) {
+                let errorBody: string | null = null;
+                try {
+                    errorBody = await RNBlobUtil.fs.readFile(response.path(), 'utf8') as string;
+                } catch (readError) {
+                    console.error('Failed to read error body:', readError);
+                }
+                Alert.alert(
+                    'Error',
+                    errorBody
+                        ? `Server returned: ${errorBody.substring(0, 200)}`
+                        : `Server returned status ${info.status}`
+                );
+                await RNBlobUtil.fs.unlink(response.path());
+                return;
             }
 
-            const isPdf = typeof fileContent === 'string' && fileContent.startsWith('%PDF');
-
-            if (!isPdf) {
-                if (fileContent) {
-                    console.error('API Error Content:', fileContent);
-                    Alert.alert(
-                        'Error',
-                        `Server returned: ${fileContent.substring(0, 200)}`
-                    );
-                } else {
-                    Alert.alert('Error', `Server returned status ${info.status}`);
+            if (contentType && !contentType.includes('pdf')) {
+                let errorBody: string | null = null;
+                try {
+                    errorBody = await RNBlobUtil.fs.readFile(response.path(), 'utf8') as string;
+                } catch (readError) {
+                    console.error('Failed to read non-PDF body:', readError);
                 }
+                Alert.alert(
+                    'Error',
+                    errorBody
+                        ? `Server returned: ${errorBody.substring(0, 200)}`
+                        : 'Server returned a non-PDF response'
+                );
                 await RNBlobUtil.fs.unlink(response.path());
                 return;
             }
@@ -108,6 +127,11 @@ const ShoppingPDF: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
+            <StackHeader
+                title="Download File"
+                onOpenDrawer={openDrawer}
+                onBack={() => navigation.goBack()}
+            />
             <View style={styles.content}>
                 <Icon name="file-pdf" color={COLORS.DARK_GREY} size={150} iconStyle="solid" style={styles.icon} />
 
@@ -119,7 +143,7 @@ const ShoppingPDF: React.FC = () => {
                         Author: <Text style={styles.metaInfoDescription}>Healthene®</Text>
                     </Text>
                     <Text style={styles.metaInfoTitle}>
-                        Date: <Text style={styles.metaInfoDescription}>{moment().format('llll')}</Text>
+                        Date: <Text style={styles.metaInfoDescription}>{dayjs().format('llll')}</Text>
                     </Text>
                 </View>
 

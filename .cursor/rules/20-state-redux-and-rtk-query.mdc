@@ -1,0 +1,20 @@
+---
+description: Redux Toolkit and RTK Query state conventions
+globs: src/store/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# State Management (Redux Toolkit + RTK Query)
+
+- Keep reducers pure and deterministic; side effects belong in services or RTK Query endpoints.
+- Use typed action payloads; validate optional fields before use.
+- Keep slice state normalized and avoid duplicating derived data.
+- Prefer RTK Query for network data fetching, caching, and invalidation.
+- Use selectors for derived data instead of duplicating computed values in state.
+
+## Async flow conventions
+
+- Use clear `request/success/failure` flow for async operations.
+- Wrap effectful calls in `try/catch` and surface user-safe error messages.
+- Keep API transformations in services, API layer, or mappers, not inside UI components.
+- Prefer RTK Query tags (`providesTags`/`invalidatesTags`) for cache consistency.

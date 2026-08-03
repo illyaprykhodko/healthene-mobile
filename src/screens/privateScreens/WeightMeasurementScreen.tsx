@@ -8,17 +8,18 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import * as yup from 'yup';
-import moment from 'moment';
-import { Formik } from 'formik';
+import dayjs from 'services/date';
+import { Formik, FormikProps } from 'formik';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import React, { useState, useCallback, useRef } from 'react';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 
 // local dependencies
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { SwipeablePanel } from 'components/SwipeablePanel';
 import { RootStackParamList } from 'services/navigation/types';
 import { useMeasurementSubmit } from 'hooks/useMeasurementSubmit';
@@ -40,16 +41,28 @@ const WeightMeasurementScreen: React.FC = () => {
     const [isPanelOpen, setIsPanelOpen] = useState(false);
 
     const measurementPhaseItem = (route.params as any)?.measurementPhaseItem;
-    const currentDate = (route.params as any)?.date || moment().format('YYYY-MM-DD');
+    const currentDate = (route.params as any)?.date || dayjs().format('YYYY-MM-DD');
+    const isFutureDay = dayjs(currentDate).isAfter(dayjs(), 'day');
+
     const item = measurementPhaseItem || {};
     const { data: aggregateData } = useGetAggregateMeasurementDataQuery({
         type: 'WEIGHT',
         period: '1-day',
         date: currentDate,
-        offset: moment().utcOffset() / 60,
+        offset: dayjs().utcOffset() / 60,
     });
     const hasRecentWeight = aggregateData?.data?.length > 0;
     const lastSubmittedValueRef = useRef<string | null>(null);
+    // WeightMeasurementScreen stays mounted in the stack while the user visits SaveValue
+    // and navigates back. Formik preserves its values across that round-trip, so the
+    // previously-typed weight would still be in the input. Reset the form on every focus
+    // so the manual-entry sheet starts empty again.
+    const formikRef = useRef<FormikProps<{ value: string }>>(null);
+    useFocusEffect(
+        useCallback(() => {
+            formikRef.current?.resetForm();
+        }, [])
+    );
     // const hasRecentWeight = aggregateData?.totalLastValuesByUnitType?.DEFAULT !== null
     //     && aggregateData?.totalLastValuesByUnitType?.DEFAULT !== undefined;
     const { submit, isSubmitting } = useMeasurementSubmit(item, {
@@ -97,7 +110,7 @@ const WeightMeasurementScreen: React.FC = () => {
         [submit]
     );
 
-    return (<View style={styles.container}>
+    return (<View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {isPanelOpen && (
             <TouchableOpacity
                 activeOpacity={1}
@@ -106,18 +119,28 @@ const WeightMeasurementScreen: React.FC = () => {
             />
         )}
         <TouchableOpacity
+            disabled={isFutureDay}
             onPress={handleSmartScalePress}
-            style={[styles.scaleButton, { borderColor: theme.colors.success }]}
+            style={[
+                styles.scaleButton,
+                isFutureDay && styles.opacityFuture,
+                { borderColor: theme.colors.success, backgroundColor: theme.colors.muted }
+            ]}
         >
-            <Text style={[styles.scaleButtonText, { color: theme.colors.darkGrey }]}>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.scaleButtonText, { color: theme.colors.darkGrey }]}>
                     Step on Scale
             </Text>
         </TouchableOpacity>
         <TouchableOpacity
+            disabled={isFutureDay}
             onPress={handleManualPress}
-            style={[styles.manualButton, { borderColor: theme.colors.primary }]}
+            style={[
+                styles.manualButton,
+                isFutureDay && styles.opacityFuture,
+                { borderColor: theme.colors.primary, backgroundColor: theme.colors.surface }
+            ]}
         >
-            <Text style={[styles.manualButtonText, { color: theme.colors.primary }]}>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.manualButtonText, { color: theme.colors.primary }]}>
                 {isSubmitting
                     ? <ActivityIndicator size="small" color={theme.colors.primary} />
                     : 'Add your Weight Manually'
@@ -133,6 +156,7 @@ const WeightMeasurementScreen: React.FC = () => {
             onClose={() => setIsPanelOpen(false)}
         >
             <Formik
+                innerRef={formikRef}
                 onSubmit={handleSubmit}
                 initialValues={{ value: '' }}
                 validationSchema={validationSchema}
@@ -144,11 +168,11 @@ const WeightMeasurementScreen: React.FC = () => {
                                 style={styles.headerButton}
                                 onPress={() => setIsPanelOpen(false)}
                             >
-                                <Text style={[styles.headerButtonText, { color: theme.colors.primary }]}>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.headerButtonText, { color: theme.colors.primary }]}>
                                         Cancel
                                 </Text>
                             </TouchableOpacity>
-                            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+                            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.headerTitle, { color: theme.colors.text }]}>
                                     Weight
                             </Text>
                             <TouchableOpacity
@@ -157,6 +181,7 @@ const WeightMeasurementScreen: React.FC = () => {
                                 disabled={!values.value || !!errors.value || isSubmitting}
                             >
                                 <Text
+                                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                                     style={[styles.headerButtonText,
                                         {
                                             color: !values.value || errors.value
@@ -170,25 +195,25 @@ const WeightMeasurementScreen: React.FC = () => {
                             </TouchableOpacity>
                         </View>
                         {!hasRecentWeight && (
-                            <Text style={[styles.noRecentDataText, { color: theme.colors.primary }]}>
+                            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.noRecentDataText, { color: theme.colors.primary }]}>
                                     No Weight was recorded recently - please add it manually
                             </Text>
                         )}
                         <View style={styles.dateContainer}>
                             <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
-                                <Text style={[styles.itemLabel, { color: theme.colors.text }]}>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.itemLabel, { color: theme.colors.text }]}>
                                         Date
                                 </Text>
-                                <Text style={[styles.itemValue, { color: theme.colors.text }]}>
-                                    {moment().format('MMM Do YY')}
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.itemValue, { color: theme.colors.text }]}>
+                                    {dayjs().format('MMM Do YY')}
                                 </Text>
                             </View>
                             <View style={[styles.item, { borderBottomColor: theme.colors.border }]}>
-                                <Text style={[styles.itemLabel, { color: theme.colors.text }]}>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.itemLabel, { color: theme.colors.text }]}>
                                         Time
                                 </Text>
-                                <Text style={[styles.itemValue, { color: theme.colors.text }]}>
-                                    {moment().format('LT')}
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.itemValue, { color: theme.colors.text }]}>
+                                    {dayjs().format('LT')}
                                 </Text>
                             </View>
                             <View
@@ -199,6 +224,7 @@ const WeightMeasurementScreen: React.FC = () => {
                                 ]}
                             >
                                 <Text
+                                    maxFontSizeMultiplier={MAX_FONT_SCALE}
                                     style={[
                                         styles.itemLabel,
                                         { color: theme.colors.text },
@@ -229,7 +255,7 @@ const WeightMeasurementScreen: React.FC = () => {
                                 />
                             </View>
                             {errors.value && touched.value && (
-                                <Text style={[styles.errorTextSmall, { color: theme.colors.error }]}>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.errorTextSmall, { color: theme.colors.error }]}>
                                     {errors.value}
                                 </Text>
                             )}
@@ -247,13 +273,12 @@ export default WeightMeasurementScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
     },
     swipeablePanel: {
         paddingTop: 25,
     },
     overlayBackground: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: '#DADADA99',
         zIndex: 1,
     },
@@ -265,7 +290,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#E8F5E9',
     },
     scaleButtonText: {
         fontSize: 24,
@@ -279,7 +303,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
     },
     manualButtonText: {
         fontSize: 18,
@@ -353,5 +376,8 @@ const styles = StyleSheet.create({
         fontSize: 12,
         textAlign: 'right',
         paddingRight: 20,
+    },
+    opacityFuture: {
+        opacity: 0.4,
     },
 });

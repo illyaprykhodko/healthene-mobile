@@ -54,8 +54,8 @@ const QuestionCategoryScreen: React.FC = () => {
     const handleCategoryPress = useCallback((category: QuestionCategory) => {
         navigation.navigate(ROUTES.QUESTION_LIST, {
             date,
-            categoryId: category.libraryCategory.id,
             questions: category.questions,
+            categoryId: category.libraryCategory.id,
             categoryName: category.libraryCategory.name,
         });
     }, [navigation, date]);
@@ -65,8 +65,11 @@ const QuestionCategoryScreen: React.FC = () => {
 
         return (
             <TouchableOpacity
-                style={styles.item}
                 onPress={() => handleCategoryPress(item)}
+                style={[
+                    styles.item,
+                    { borderBottomColor: theme.colors.border }
+                ]}
             >
                 <Text
                     variant="h4"
@@ -129,12 +132,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     item: {
-        // height: 60,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
     },
     itemTitle: {
         flex: 1,
@@ -161,6 +162,5 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
     },
 });

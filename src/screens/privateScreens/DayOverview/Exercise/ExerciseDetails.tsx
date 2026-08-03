@@ -1,7 +1,10 @@
+
 // outsource dependencies
+import dayjs from 'services/date';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useRef, useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image } from 'react-native';
+
 // local dependencies
 import { ExerciseType } from 'types';
 import { useTheme } from 'hooks/useTheme';
@@ -13,6 +16,7 @@ import { EXERCISE_CONFIGS } from './exerciseFactory';
 import { useAppDispatch, useAppSelector } from 'store';
 import { initializeExercise, updateSteps, setLoading, clearExercise } from 'store/slices/exerciseSlice';
 import { useGetPhysicalActivityItemQuery, useGetStretchingExerciseQuery, useGetAerobicExerciseQuery, useGetResistanceExerciseQuery, useUpdateStretchingStepsMutation, useUpdateAerobicStepsMutation, useUpdateResistanceStepsMutation, useUpdatePhaseItemMutation } from 'store/api/dayOverviewApi';
+
 // components
 import Text from 'components/Text';
 import Screen from 'components/Screen';
@@ -40,6 +44,7 @@ export default function ExerciseDetails () {
     const [showGoodWork, setShowGoodWork] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const title = exercise?.title || 'Exercise';
+    const isFutureDay = dayjs(date).isAfter(dayjs(), 'day');
 
     // Load exercise data based on type
     const { data: stretchingData, isLoading: stretchingLoading } = useGetStretchingExerciseQuery(exercise?.id?.toString() || '', {
@@ -82,14 +87,16 @@ export default function ExerciseDetails () {
     //             ? resistanceData
     //             : fallbackData;
     
-    const isLoading = useMemo(() => (exercise?.type === ExerciseType.STRETCHING
-        ? stretchingLoading
-        : exercise?.type === ExerciseType.AEROBIC
-            ? aerobicLoading
-            : exercise?.type === ExerciseType.RESISTANCE
-                ? resistanceLoading
-                : fallbackLoading),
-    [exercise?.type, stretchingLoading, aerobicLoading, resistanceLoading, fallbackLoading]);
+    const isLoading = useMemo(
+        () => (exercise?.type === ExerciseType.STRETCHING
+            ? stretchingLoading
+            : exercise?.type === ExerciseType.AEROBIC
+                ? aerobicLoading
+                : exercise?.type === ExerciseType.RESISTANCE
+                    ? resistanceLoading
+                    : fallbackLoading),
+        [exercise?.type, stretchingLoading, aerobicLoading, resistanceLoading, fallbackLoading]
+    );
     // const isLoading = exercise?.type === ExerciseType.STRETCHING
     //     ? stretchingLoading
     //     : exercise?.type === ExerciseType.AEROBIC
@@ -248,8 +255,7 @@ export default function ExerciseDetails () {
     // Step management functions
     const updateStepCallback = useCallback((stepId: string | number, vals: any) => {
         const updatedSteps = (memoizedSteps || [])?.map((step: any) =>
-            (step.id === stepId ? { ...step, ...vals, modified: true } : step)
-        );
+            (step.id === stepId ? { ...step, ...vals, modified: true } : step));
         dispatch(updateSteps({
             isDirty: true,
             steps: updatedSteps,
@@ -259,8 +265,7 @@ export default function ExerciseDetails () {
 
     const completeStep = useCallback((stepId: string | number) => {
         const updatedSteps = (memoizedSteps || [])?.map((step: any) =>
-            (step.id === stepId ? { ...step, completed: !step.completed } : step)
-        );
+            (step.id === stepId ? { ...step, completed: !step.completed } : step));
         dispatch(updateSteps({
             isDirty: true,
             steps: updatedSteps,
@@ -278,7 +283,7 @@ export default function ExerciseDetails () {
                         key={tab.key}
                         style={[
                             styles.tabButton,
-                            { backgroundColor: theme.colors.lightGrey },
+                            { backgroundColor: theme.colors.surfaceAlt },
                             isActive && [styles.activeTabButton, { backgroundColor: theme.colors.info }],
                             { borderRightWidth: TABS.length === index + 1 ? 0 : 2, borderRightColor: theme.colors.primary },
                         ]}
@@ -322,7 +327,8 @@ export default function ExerciseDetails () {
                 >
                     {(video || instruction) ? (
                         <TouchableOpacity
-                            style={[{ alignSelf: 'flex-end' }, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.5 }]}
+                            disabled={isFutureDay}
+                            style={[{ alignSelf: 'flex-end' }, exercise?.type !== ExerciseType.RESISTANCE && completed && { opacity: 0.1 }]}
                             onPress={() => {
                                 setVideoData(video);
                                 setIsPanelOpen(true);
@@ -333,7 +339,7 @@ export default function ExerciseDetails () {
                         </TouchableOpacity>
                     ) : null}
                     
-                    <View style={styles.imageContainer}>
+                    <View style={[styles.imageContainer, { backgroundColor: theme.dark ? theme.colors.grey : theme.colors.white }]}>
                         {image ? (
                             <Image
                                 resizeMode="contain"
@@ -347,7 +353,8 @@ export default function ExerciseDetails () {
                     {/* Goal row */}
                     <View style={styles.repsContainer}>
                         <TouchableOpacity
-                            style={completed && { opacity: 0.5 }}
+                            disabled={isFutureDay}
+                            style={(completed || isFutureDay)&& { opacity: 0.5 }}
                             onPress={() => {
                                 navigation.navigate('EditExercise', {
                                     title,
@@ -362,6 +369,7 @@ export default function ExerciseDetails () {
                         <Checkbox
                             size={15}
                             value={completed}
+                            editable={!isFutureDay}
                             onChange={() => completeStep(itemId)}
                         />
                     </View>
@@ -372,6 +380,7 @@ export default function ExerciseDetails () {
                             {extraDisplay.map((line: string) => (
                                 <TouchableOpacity
                                     key={line}
+                                    disabled={isFutureDay}
                                     onPress={() => navigation.navigate('EditExercise', {
                                         itemId,
                                         viewOnlyExtra: true,
@@ -394,6 +403,30 @@ export default function ExerciseDetails () {
     const [toggle, setToggle] = useState(false);
     const toggleText = useCallback(() => setToggle(prevState => !prevState), []);
 
+    // Theme-aware HTML stylesheet for HTMLView so paragraphs/lists/headings adapt to dark mode.
+    const themedHtmlStyles = useMemo(() => StyleSheet.create({
+        ...htmlStyles,
+        ol: { marginLeft: 15 },
+        div: { color: theme.colors.text },
+        span: { color: theme.colors.text },
+        u: { ...htmlStyles.u, color: theme.colors.text },
+        b: { ...htmlStyles.b, color: theme.colors.text },
+        p: { ...htmlStyles.p, color: theme.colors.text },
+        em: { ...htmlStyles.em, color: theme.colors.text },
+        li: { ...htmlStyles.li, color: theme.colors.text },
+        ins: { ...htmlStyles.ins, color: theme.colors.text },
+        strong: { ...htmlStyles.strong, color: theme.colors.text },
+        a: { color: theme.colors.info, textDecorationLine: 'underline' },
+        h1: { fontSize: 24, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h2: { fontSize: 22, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h3: { fontSize: 20, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h4: { fontSize: 18, fontWeight: 'bold', marginVertical: 6, color: theme.colors.text },
+        h5: { fontSize: 16, fontWeight: 'bold', marginVertical: 6, color: theme.colors.text },
+        h6: { fontSize: 14, fontWeight: 'bold', marginVertical: 4, color: theme.colors.text },
+    }), [theme.colors.text, theme.colors.info]);
+
+    const themedRenderNode = useMemo(() => createRenderNode(theme.colors.text), [theme.colors.text]);
+
     // Render science content
     const renderScienceContent = useCallback(() => (
         <View>
@@ -405,31 +438,30 @@ export default function ExerciseDetails () {
                                 ? scientificVideo?.embedUrl
                                     ? <YoutubeVideo url={scientificVideo?.embedUrl} />
                                     : <PrivateVideo video={scientificVideo} />
-                                : <Text>No video available</Text>
+                                : <Text color={theme.colors.textSecondary}>No video available</Text>
                             : scientificDescription?.length > 0 ? (
                                 <HTMLView
                                     value={scientificDescription}
-                                    renderNode={renderNode}
-                                    stylesheet={htmlStyles}
+                                    renderNode={themedRenderNode}
+                                    stylesheet={themedHtmlStyles}
                                 />
-                            ) : <Text>No scientific information available</Text>}
+                            ) : <Text color={theme.colors.textSecondary}>No scientific information available</Text>}
                     </View>
                     <TouchableOpacity onPress={toggleText}>
-                        <Text style={[styles.helpLink, styles.swipePanelButton]}>
+                        <Text style={[styles.helpLink, styles.swipePanelButton, { color: theme.colors.info }]}>
                             {toggle ? 'Back' : 'More'}
                         </Text>
                     </TouchableOpacity>
                 </View>
             ) : (
-                <Text>No scientific information available</Text>
+                <Text color={theme.colors.textSecondary}>No scientific information available</Text>
             )}
         </View>
-    ), [scientificVideo, scientificDescription, toggle, toggleText]);
+    ), [scientificVideo, scientificDescription, toggle, toggleText, theme.colors.info, theme.colors.textSecondary, themedHtmlStyles, themedRenderNode]);
 
     // const clearHandler = useCallback(() => {
     //     dispatch(updateSteps({ steps: memoizedSteps, selectedSteps: [] }));
     // }, [dispatch, memoizedSteps]);
-    
     return (
         <Screen initialized={!isLoading} clear={() => {}} style={[styles.container, { backgroundColor: theme.colors.background }]}>
             {renderTabs()}
@@ -438,9 +470,13 @@ export default function ExerciseDetails () {
                 <Text textAlign="center" style={[styles.name, { color: theme.colors.text }]}>
                     {title}
                 </Text>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <IconButton iconStyle="solid" icon="times" size={24} color={theme.colors.text} />
-                </TouchableOpacity>
+                <IconButton
+                    size={24}
+                    icon="times"
+                    iconStyle="solid"
+                    color={theme.colors.text}
+                    onPress={() => navigation.goBack()}
+                />
             </View>
             <ScrollView>
                 <View style={styles.tabContent}>
@@ -450,13 +486,18 @@ export default function ExerciseDetails () {
             </ScrollView>
 
             <Description
+                style={{ backgroundColor: theme.colors.background }}
                 video={videoData}
                 isPanelOpen={isPanelOpen}
                 description={instructionData}
                 closePanel={() => setIsPanelOpen(false)}
             />
             {showGoodWork && (
-                <Animated.View style={[styles.goodWorkContainer, { opacity: fadeAnim }]}>
+                <Animated.View style={[
+                    { opacity: fadeAnim },
+                    styles.goodWorkContainer,
+                    { backgroundColor: theme.colors.surfaceAlt },
+                ]}>
                     <Text style={[styles.goodWorkText, { color: theme.colors.text }]}>Good Work!</Text>
                 </Animated.View>
             )}
@@ -481,7 +522,29 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
     const toggleText = useCallback(() => setToggle(prevState => !prevState), []);
     const normalizedDescription = normalizeDescription(description);
     const hasDescription = normalizedDescription.trim().length > 0;
+    console.log(normalizedDescription);
     const hasVideo = Boolean(video);
+    const themedHtmlStyles = useMemo(() => StyleSheet.create({
+        ...htmlStyles,
+        p: { ...htmlStyles.p, color: theme.colors.text },
+        li: { ...htmlStyles.li, color: theme.colors.text },
+        h1: { fontSize: 24, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h2: { fontSize: 22, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h3: { fontSize: 20, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
+        h4: { fontSize: 18, fontWeight: 'bold', marginVertical: 6, color: theme.colors.text },
+        h5: { fontSize: 16, fontWeight: 'bold', marginVertical: 6, color: theme.colors.text },
+        h6: { fontSize: 14, fontWeight: 'bold', marginVertical: 4, color: theme.colors.text },
+        strong: { ...htmlStyles.strong, color: theme.colors.text },
+        b: { ...htmlStyles.b, color: theme.colors.text },
+        em: { ...htmlStyles.em, color: theme.colors.text },
+        ins: { ...htmlStyles.ins, color: theme.colors.text },
+        u: { ...htmlStyles.u, color: theme.colors.text },
+        span: { color: theme.colors.text },
+        div: { color: theme.colors.text },
+        ol: { marginLeft: 15 },
+        a: { color: theme.colors.info, textDecorationLine: 'underline' },
+    }), [theme.colors.text, theme.colors.info]);
+    const themedRenderNode = useMemo(() => createRenderNode(theme.colors.text), [theme.colors.text]);
     return (
         <SwipeablePanel
             fullWidth
@@ -510,25 +573,25 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
                                 : <PrivateVideo video={video} />
                             : hasDescription
                                 ? <HTMLView
-                                    renderNode={renderNode}
-                                    stylesheet={htmlStyles}
+                                    renderNode={themedRenderNode}
+                                    stylesheet={themedHtmlStyles}
                                     value={normalizedDescription}
                                 />
-                                : <Text textAlign="center">No video available</Text>
+                                : <Text textAlign="center" color={theme.colors.textSecondary}>No video available</Text>
                         : <HTMLView
-                            renderNode={renderNode}
-                            stylesheet={htmlStyles}
+                            renderNode={themedRenderNode}
+                            stylesheet={themedHtmlStyles}
                             value={normalizedDescription}
                         />}
                 </View>
                 {hasDescription && hasVideo
                     ? <TouchableOpacity onPress={toggleText}>
-                        <Text style={[styles.helpLink, styles.swipePanelButton]}>
+                        <Text style={[styles.helpLink, styles.swipePanelButton, { color: theme.colors.info }]}>
                             {toggle ? 'Back' : 'More'}
                         </Text>
                     </TouchableOpacity>
                     : <TouchableOpacity onPress={closePanel}>
-                        <Text style={[styles.helpLink, styles.swipePanelButton]}>Close</Text>
+                        <Text style={[styles.helpLink, styles.swipePanelButton, { color: theme.colors.info }]}>Close</Text>
                     </TouchableOpacity>}
             </View>
         </SwipeablePanel>
@@ -640,9 +703,9 @@ const styles = StyleSheet.create({
         marginVertical: 10,
     },
     image: {
-        resizeMode: 'contain',
         width: '100%',
         height: 150,
+        resizeMode: 'contain',
     },
     repsContainer: {
         flexDirection: 'row',
@@ -655,24 +718,21 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     goodWorkContainer: {
-        alignItems: 'center',
         zIndex: 10,
+        alignItems: 'center',
     },
     goodWorkText: {
-        fontSize: 32,
-        fontWeight: '500',
-        color: COLORS.BLACK,
-        backgroundColor: 'white',
-        borderRadius: 12,
         padding: 16,
+        fontSize: 32,
+        borderRadius: 12,
+        fontWeight: '500',
     },
     submitBtn: {
         width: '90%',
         borderRadius: 30,
-        alignSelf: 'center',
-        // backgroundColor: '#96E072',
-        borderColor: 'transparent',
         marginBottom: 16,
+        alignSelf: 'center',
+        borderColor: 'transparent',
     },
     swipePanel: {
         backgroundColor: COLORS.WHITE,
@@ -698,8 +758,8 @@ const styles = StyleSheet.create({
     },
 });
 
-const renderNode = ({ node, parent, defaultRenderer, index }: any) => {
-    if (node?.data === '\n') { return <View />; }
+const createRenderNode = (textColor: string) => ({ node, index }: any) => {
+    if (node?.data === '\n') { return <View key={`ws-${index}`} />; }
     if (node?.name === 'li') {
         const flattenText = (children: any[] = []): string => children.map(child => {
             if (!child) { return ''; }
@@ -711,8 +771,8 @@ const renderNode = ({ node, parent, defaultRenderer, index }: any) => {
         const renderedChildren = flattenText(node.children);
         return (
             <View key={`li-${index}`} style={styles.htmlViewTextContainer}>
-                <Text style={{ marginRight: 5, marginTop: 5 }}>•</Text>
-                <Text style={htmlStyles.li}>{renderedChildren}</Text>
+                <Text style={{ marginRight: 5, marginTop: 5, color: textColor }}>•</Text>
+                <Text style={[htmlStyles.li, { color: textColor }]}>{renderedChildren}</Text>
             </View>
         );
     }

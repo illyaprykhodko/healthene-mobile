@@ -8,8 +8,9 @@ import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme.ts';
-import { formatDuration } from 'utils/general.ts';
 import { OFFSET } from 'constants/offset.ts';
+import { formatDuration } from 'utils/general.ts';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
 
 type AudioPlayerProps = {
     file: string | undefined;
@@ -78,7 +79,7 @@ const AudioPlayer = ({ file }: AudioPlayerProps) => {
                 />
             </Pressable>
 
-            <Text style={styles.time}>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.time}>
                 {formatDuration(Math.floor(position / 1000))}
             </Text>
 
@@ -93,7 +94,7 @@ const AudioPlayer = ({ file }: AudioPlayerProps) => {
                 maximumTrackTintColor={theme.colors.grey}
             />
 
-            <Text style={styles.time}>
+            <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={styles.time}>
                 {formatDuration(Math.floor(duration / 1000))}
             </Text>
 

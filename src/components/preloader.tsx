@@ -1,7 +1,7 @@
 // outsource dependencies
 import React, { PureComponent } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { SkypeIndicator, MaterialIndicator } from 'react-native-indicators';
+import { SkypeIndicator, MaterialIndicator } from 'components/Indicators';
 // local dependencies
 import Text from './Text';
 import { useTheme } from '../hooks/useTheme';
@@ -51,7 +51,6 @@ const MStyles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#fff',
     },
     spinnerRow: {
         display: 'flex',
@@ -75,7 +74,7 @@ const Maintenance: React.FC = () => {
     const theme = useTheme();
     // BallIndicator, BarIndicator, DotIndicator, MaterialIndicator, PacmanIndicator, PulseIndicator, UIActivityIndicator, WaveIndicator
     return (
-        <View style={MStyles.container}>
+        <View style={[MStyles.container, { backgroundColor: theme.colors.background }]}>
             <View style={MStyles.spinnerRow}>
                 <MaterialIndicator color={theme.colors.primary} size={70} style={MStyles.sp1} />
                 <MaterialIndicator color={theme.colors.secondary} size={150} style={MStyles.sp2} />
@@ -96,7 +95,6 @@ const BPStyles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#fff',
     },
 });
 
@@ -106,7 +104,7 @@ interface BoxPreloaderProps {
 
 const BoxPreloader: React.FC<BoxPreloaderProps> = ({ containerStyle }) => {
     const theme = useTheme();
-    const style = StyleSheet.flatten([BPStyles.container, containerStyle]);
+    const style = StyleSheet.flatten([BPStyles.container, { backgroundColor: theme.colors.background }, containerStyle]);
 
     return (
         <View style={style}>

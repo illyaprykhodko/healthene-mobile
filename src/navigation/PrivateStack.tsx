@@ -16,7 +16,7 @@ export const PrivateStack = () => {
                 headerShown: false,
             }}
         >
-            <Stack.Screen name="Drawer" component={PrivateDrawer} />
+            <Stack.Screen name={ROUTES.DRAWER} component={PrivateDrawer} />
             <Stack.Screen name={ROUTES.SETTINGS_STACK} component={AccountSettingsStack} />
         </Stack.Navigator>
     );

@@ -18,8 +18,10 @@ import WebView, { WebViewMessageEvent } from 'react-native-webview';
 import Text from 'components/Text';
 import { config } from 'constants';
 import Screen from 'components/Screen';
+import { NestBird } from 'animation/NestBird.tsx';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
 import { RootStackParamList } from 'services/navigation';
 import { sessionManager, TOKEN_KEYS } from 'store/api/baseApi';
 
@@ -46,6 +48,7 @@ const PanelCloseIcon = () => (
 const SlotMachine: React.FC = () => {
     const navigation = useNavigation<Navigation>();
     const route = useRoute<SlotRoute>();
+    const theme = useTheme();
     const webViewRef = useRef<WebView>(null);
     const [reloadKey, setReloadKey] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
@@ -163,23 +166,27 @@ const SlotMachine: React.FC = () => {
             <Pressable style={styles.backdrop} onPress={() => closePanel()} />
 
             <Animated.View style={[styles.panelContainer, { transform: [{ translateY: panelTranslateY }] }]}>
-                <View style={styles.panelCard}>
+                <View style={[styles.panelCard, { backgroundColor: theme.colors.surface }]}>
                     <View style={styles.handleTouchArea} {...panelPanResponder.panHandlers}>
-                        <View style={styles.handle} />
+                        <View style={[styles.handle, { backgroundColor: theme.colors.border }]} />
                     </View>
                     <View style={styles.topRow}>
-                        <TouchableOpacity
-                            style={[styles.bankChip, styles.shadowBtn]}
-                            onPress={() => closePanel(() => navigation.navigate(ROUTES.GAMBLING_CASH_OUT))}
-                            // onPress={() => closePanel(() => navigation.navigate(ROUTES.GAMBLING_BANK))}
-                            activeOpacity={0.85}
-                        >
-                            <Text variant="h3" style={styles.bankText}>$ Bank</Text>
-                        </TouchableOpacity>
-                        {/* <Text variant="h6" style={styles.gameTypeText}>{title}</Text> */}
-                        <TouchableOpacity style={styles.closeButton} onPress={() => closePanel()} activeOpacity={0.85}>
-                            <PanelCloseIcon />
-                        </TouchableOpacity>
+                        <View style={styles.topRowEdges}>
+                            <NestBird />
+                            <TouchableOpacity style={styles.closeButton} onPress={() => closePanel()} activeOpacity={0.85}>
+                                <PanelCloseIcon />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.topRowBankOverlay} pointerEvents="box-none">
+                            <TouchableOpacity
+                                style={[styles.bankChip, styles.shadowBtn]}
+                                onPress={() => closePanel(() => navigation.navigate(ROUTES.GAMBLING_CASH_OUT))}
+                                // onPress={() => closePanel(() => navigation.navigate(ROUTES.GAMBLING_BANK))}
+                                activeOpacity={0.85}
+                            >
+                                <Text variant="h3" style={styles.bankText}>$ Bank</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     <View style={styles.webViewContainer}>
@@ -262,17 +269,17 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
     },
     backdrop: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(7, 12, 20, 0.45)',
     },
     initialLoaderOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
     },
     panelContainer: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         justifyContent: 'flex-end',
     },
     handleTouchArea: {
@@ -285,11 +292,9 @@ const styles = StyleSheet.create({
         width: 46,
         height: 5,
         borderRadius: 4,
-        backgroundColor: '#A9A9A9',
     },
     panelCard: {
         height: '90%',
-        backgroundColor: '#F4F5F7',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         paddingHorizontal: 8,
@@ -297,12 +302,20 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
     },
     topRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        position: 'relative',
+        justifyContent: 'center',
         paddingHorizontal: 6,
-        // marginBottom: 8,
         paddingVertical: OFFSET.VERTICAL,
+    },
+    topRowEdges: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    topRowBankOverlay: {
+        ...StyleSheet.absoluteFill,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     bankChip: {
         backgroundColor: '#9CFD83',
@@ -350,7 +363,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     loaderOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(13, 27, 42, 0.9)',
         alignItems: 'center',
         justifyContent: 'center',
@@ -361,7 +374,7 @@ const styles = StyleSheet.create({
         fontFamily: 'Outfit-Medium',
     },
     errorOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(13, 27, 42, 0.95)',
         alignItems: 'center',
         justifyContent: 'center',

@@ -1,6 +1,6 @@
 // outsource dependencies
 import React from 'react';
-import moment from 'moment';
+import dayjs from 'services/date';
 import { useSelector } from 'react-redux';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Icon from '@react-native-vector-icons/fontawesome5';
@@ -26,9 +26,23 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
     const handlePress = () => goToReadMessage(id);
 
     return (
-        <Pressable onPress={handlePress} style={[styles.container, { backgroundColor: lastMessage?.isRead ? theme.colors.white : theme.colors.lightGrey }]}>
+        <Pressable
+            onPress={handlePress}
+            style={[
+                styles.container,
+                { backgroundColor: (!isIncoming || lastMessage?.isRead)
+                    ? theme.colors.surface
+                    : theme.colors.surfaceAlt
+                }
+            ]}>
             <View style={[styles.row, styles.alignItems]}>
-                <View style={[styles.unreadDot, { backgroundColor: lastMessage?.isRead ? 'transparent' : theme.colors.primary }]} />
+                <View style={[
+                    styles.unreadDot,
+                    { backgroundColor: (!isIncoming || lastMessage?.isRead)
+                        ? 'transparent'
+                        : theme.colors.primary
+                    }
+                ]} />
                 <ProfileImage uri={owner?.coverImage?.url} />
             </View>
             <View style={styles.messageInfoContainer}>
@@ -38,13 +52,13 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
                             <View style={[
                                 styles.badge,
                                 {
-                                    borderColor: theme.colors.grey,
-                                    backgroundColor: theme.colors.lighterGrey,
+                                    borderColor: theme.colors.border,
+                                    backgroundColor: theme.colors.surfaceAlt,
                                 }
                             ]}>
                                 <Icon
                                     iconStyle="solid"
-                                    color={theme.colors.grey}
+                                    color={theme.colors.textSecondary}
                                     name={isIncoming ? 'angle-double-left' : 'angle-double-right'}
                                 />
                             </View>
@@ -52,6 +66,7 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
                                 variant="caption"
                                 numberOfLines={1}
                                 style={styles.shrink}
+                                color={theme.colors.textSecondary}
                             >
                                 { isIncoming ? 'From:' : 'To:' }
                                     &nbsp;
@@ -61,12 +76,13 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
                         <Text
                             numberOfLines={1}
                             style={styles.shrink}
+                            color={theme.colors.text}
                         >
                             { subject }
                                 &nbsp;
                             { messagesCount }
                         </Text>
-                        <Text numberOfLines={1} style={styles.shrink}>
+                        <Text numberOfLines={1} style={styles.shrink} color={theme.colors.textSecondary}>
                             {lastMessage?.text.replace(/<\/?[^>]+(>|$)/g, '')}
                         </Text>
                     </View>
@@ -74,7 +90,7 @@ export const Message = ({ owner, collocutor, date, subject, messagesCount, lastM
             </View>
             <View style={styles.additionalInfoWrapper}>
                 <Text color={theme.colors.grey}>
-                    { moment(date).format('DD MMM') }
+                    { dayjs(date).format('DD MMM') }
                 </Text>
                 { attachmentCount ? <Icon iconStyle="solid" name="paperclip" size={16} color={theme.colors.grey} /> : null }
             </View>

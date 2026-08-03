@@ -1,25 +1,25 @@
 // outsource dependencies
 import * as yup from 'yup';
+import { Formik } from 'formik';
+import { useSelector } from 'react-redux';
+import Toast from 'react-native-toast-message';
+import { StyleSheet, View } from 'react-native';
+import React, { useRef, useCallback, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
     BottomSheetView,
     BottomSheetModal,
     BottomSheetBackdrop,
     BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
-import { Formik } from 'formik';
-import { useSelector } from 'react-redux';
-import Toast from 'react-native-toast-message';
-import { Platform, StyleSheet, View } from 'react-native';
-import React, { useRef, useCallback, useState } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // local dependencies
 import { User } from 'types';
 import { RootState } from 'store';
+import { config } from 'constants';
 import Text from 'components/Text.tsx';
 import { filters } from 'services/filter';
 import { useAuth } from 'hooks/useAuth.ts';
-import { config } from '../../../constants';
 import { useTheme } from 'hooks/useTheme.ts';
 import { OFFSET } from 'constants/offset.ts';
 import { Button } from 'components/Button.tsx';
@@ -68,12 +68,11 @@ const EmailForm = ({ onPreloader }: EmailFormProps) => {
             setIsRequesting(true);
             onPreloader(true);
 
-            const verificationUrl = `${config.websiteUrl}/public/email-change/`;
+            const verificationUrl = `${config.publicSiteUrl}/email-change/`;
             await changeEmailRequest({
                 newEmail: email,
                 verificationUrl,
             }).unwrap();
-
             // If request succeeds, switch to informational mode
             setSheetMode('info');
         } catch (error: any) {
@@ -151,7 +150,7 @@ const EmailForm = ({ onPreloader }: EmailFormProps) => {
                     touched={touched}
                     value={values.email}
                     label="Email Address"
-                    color={theme.colors.black}
+                    color={theme.colors.text}
                     onChangeText={handleChange('email')}
                     error={touched.email && errors.email ? { email: errors.email } : undefined}
                 />
@@ -177,7 +176,7 @@ const EmailForm = ({ onPreloader }: EmailFormProps) => {
                 backgroundColor: theme.colors.grey,
             }}
         >
-            <BottomSheetView style={[styles.confirmationContainer, { paddingBottom: Platform.OS === 'android' ? insets.bottom + OFFSET.VERTICAL : 0 }]}>
+            <BottomSheetView style={[styles.confirmationContainer, { paddingBottom: insets.bottom + OFFSET.VERTICAL }]}>
                 {sheetMode === 'confirm' ? (
                     <>
                         <Text variant="h3" style={styles.confirmationTitle}>
@@ -195,9 +194,9 @@ const EmailForm = ({ onPreloader }: EmailFormProps) => {
                                 style={styles.confirmationButton}
                             />
                             <Button
-                                loading={isRequesting}
                                 title="Yes"
                                 variant="primary"
+                                loading={isRequesting}
                                 onPress={handleConfirmYes}
                                 style={styles.confirmationButton}
                             />

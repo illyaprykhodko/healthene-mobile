@@ -84,6 +84,15 @@ export const mealPreferencesApi = createApi({
             }),
             invalidatesTags: ['MealPreferences', 'Meals'],
         }),
+
+        // Reset preferences for a specific meal back to default templates
+        resetMealPreferencesToDefault: builder.mutation<void, { mealId: number }>({
+            query: ({ mealId }) => ({
+                method: 'POST',
+                url: `/patient-service/patient/me/meals/${mealId}/meal-template-preferences/default`,
+            }),
+            invalidatesTags: ['MealPreferences', 'MealTemplates', 'Meals'],
+        }),
     }),
 });
 
@@ -93,5 +102,6 @@ export const {
     useGetNewMealTemplatesQuery,
     useSaveMealPreferencesMutation,
     useDeleteMealPreferencesMutation,
+    useResetMealPreferencesToDefaultMutation,
     useUpdateMealPreferencesFrequencyMutation,
 } = mealPreferencesApi;

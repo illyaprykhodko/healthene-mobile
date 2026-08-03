@@ -6,9 +6,13 @@ import { Alert, Image, Platform, StyleSheet, TouchableOpacity, View } from 'reac
 // local dependencies
 import Text from 'components/Text';
 import Screen from 'components/Screen';
+import { useAppSelector } from 'store';
 import { ROUTES } from 'constants/routes';
 import { OFFSET } from 'constants/offset';
+import { useTheme } from 'hooks/useTheme';
+import { BranchBird } from 'animation/BranchBird.tsx';
 import { RootStackParamList } from 'services/navigation';
+import { selectBirdSoundEnabled } from 'store/slices/appSlice';
 import { useClaimGiftCardMutation } from 'store/api/giftCardApi';
 
 type Navigation = NativeStackNavigationProp<RootStackParamList>;
@@ -17,6 +21,8 @@ type RouteProps = RouteProp<RootStackParamList, typeof ROUTES.GAMBLING_GIFT_CARD
 const GiftCardConfirmation: React.FC = () => {
     const navigation = useNavigation<Navigation>();
     const route = useRoute<RouteProps>();
+    const theme = useTheme();
+    const birdSoundEnabled = useAppSelector(selectBirdSoundEnabled);
     const { brandCode, brandName, imageUrl, priceInCents } = route.params;
 
     const [claimGiftCard, { isLoading }] = useClaimGiftCardMutation();
@@ -38,20 +44,21 @@ const GiftCardConfirmation: React.FC = () => {
 
     return (
         <Screen initialized style={styles.container}>
-            <View style={styles.header}>
+            <BranchBird muted={!birdSoundEnabled} />
+            <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
                 <View style={styles.logoContainer}>
                     {imageUrl ? (
                         <Image source={{ uri: imageUrl }} style={styles.logo} resizeMode="contain" />
                     ) : (
-                        <View style={styles.logoPlaceholder}>
+                        <View style={[styles.logoPlaceholder, { backgroundColor: theme.colors.border }]}>
                             <Text variant="h4" style={styles.logoPlaceholderText}>{brandName[0]}</Text>
                         </View>
                     )}
                 </View>
-                <Text variant="h3" style={styles.headerLabel}>Get Gift Card</Text>
+                <Text variant="h3" style={[styles.headerLabel, { color: theme.colors.textSecondary }]}>Get Gift Card</Text>
             </View>
             <View style={styles.content}>
-                <Text variant="h1" style={styles.amountText}>
+                <Text variant="h1" style={[styles.amountText, { color: theme.colors.text }]}>
                     Get Gift Card{'\n'}${dollars}
                 </Text>
                 <TouchableOpacity
@@ -83,21 +90,14 @@ export default GiftCardConfirmation;
 
 const styles = StyleSheet.create({
     container: {
-        // backgroundColor: '#F5F5F5',
         justifyContent: 'space-between',
         paddingBottom: OFFSET.VERTICAL,
     },
     header: {
-        // marginTop: 8,
         borderBottomWidth: 1,
-        borderBottomColor: '#000',
         paddingBottom: OFFSET.VERTICAL,
-        // backgroundColor: '#F4F4F4',
     },
     logoContainer: {
-        // justifyContent: 'flex-start',
-        // alignItems: 'flex-start',
-        // alignSelf: 'flex-start',
         width: '60%',
         height: 120,
         marginLeft: OFFSET.HORIZONTAL,
@@ -105,14 +105,11 @@ const styles = StyleSheet.create({
     logo: {
         width: '50%',
         height: '100%',
-        // resizeMode: 'contain',
-        // resizeMode: 'cover',
     },
     logoPlaceholder: {
         width: 100,
         height: 100,
         borderRadius: 12,
-        backgroundColor: '#D0D0D0',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -125,14 +122,8 @@ const styles = StyleSheet.create({
         fontFamily: 'Open Sans',
         fontWeight: '700',
         fontSize: 24,
-        color: '#333333',
         marginTop: -OFFSET.VERTICAL,
         paddingLeft: OFFSET.HORIZONTAL,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#111111',
-        marginTop: 12,
     },
     content: {
         flex: 1,
@@ -144,7 +135,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         fontFamily: 'Open Sans',
         fontSize: 55,
-        color: '#111111',
         textAlign: 'center',
         lineHeight: 70,
     },
@@ -175,7 +165,6 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
         backgroundColor: '#FFA5A5',
         borderRadius: 8,
-        // minWidth: 78,
         paddingVertical: 12,
         paddingHorizontal: 20,
         alignItems: 'center',

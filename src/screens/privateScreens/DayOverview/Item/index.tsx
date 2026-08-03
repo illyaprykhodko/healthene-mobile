@@ -1,4 +1,6 @@
+
 // outsource dependencies
+import dayjs from 'services/date';
 import Toast from 'react-native-toast-message';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -50,6 +52,7 @@ const Item: React.FC = () => {
     const params = route.params as RouteParams | undefined;
     const itemId = params?.id;
     const date = params?.date;
+    const isFutureDay = dayjs(date).isAfter(dayjs(), 'day');
     const initialTab = params?.activeTab || ITEM_TABS.OVERVIEW;
     
     const [activeTab, setActiveTab] = useState(initialTab);
@@ -141,17 +144,24 @@ const Item: React.FC = () => {
             return;
         }
 
+        const phaseId = item?.phase?.id;
         const previousRating = item?.rating || 0;
         const nextRating = updatedItem?.rating || 0;
         const isRatingUpdate = Boolean(options?.isRatingUpdate);
 
         try {
-            const updatePromise = updatePhaseItem({
-                id: itemId,
-                phaseId: item.phase.id,
-                data: updatedItem,
-                date,
-            }).unwrap();
+            const updatePromise = new Promise<PhaseItem>((resolve, reject) => {
+                setTimeout(() => {
+                    updatePhaseItem({
+                        date,
+                        phaseId,
+                        id: itemId,
+                        data: updatedItem,
+                    })
+                        .unwrap()
+                        .then(resolve, reject);
+                }, 0);
+            });
 
             if (isRatingUpdate) {
                 pendingRatingSaveRef.current = updatePromise;
@@ -195,15 +205,15 @@ const Item: React.FC = () => {
                 return (
                     <Overview
                         item={item}
-                        disabled={false}
+                        disabled={isFutureDay}
                         updateItem={handleUpdateItem}
                         isSurrogateRecipe={isSurrogateRecipe}
                     />
                 );
             case ITEM_TABS.RECIPE:
-                return item.recipe ? <Recipe recipe={item.recipe as any} /> : null;
+                return item.recipe ? <Recipe recipe={item.recipe as any} disabled={isFutureDay} /> : null;
             case ITEM_TABS.INGREDIENTS:
-                return <Ingredients item={item} />;
+                return <Ingredients item={item} disabled={isFutureDay} />;
             default:
                 return (
                     <View style={styles.emptyContainer}>
@@ -236,6 +246,7 @@ const Item: React.FC = () => {
                                 styles.tabButton,
                                 isActive && styles.activeTabButton,
                                 { borderRightWidth: tabs.length === index + 1 ? 0 : 2 },
+                                { backgroundColor: isActive ? theme.colors.primary : theme.colors.surfaceSecond },
                             ]}
                             onPress={() => setActiveTab(tab.value)}
                         >
@@ -313,7 +324,6 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.BLUE,
     },
     tabText: {
-        color: COLORS.BLACK,
         fontWeight: '500',
         fontSize: 15.5,
     },
