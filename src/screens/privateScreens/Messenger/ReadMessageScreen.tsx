@@ -36,7 +36,9 @@ const ReadMessageScreen = () => {
     const goToWriteMessage = useCallback(() => navigation.navigate(ROUTES.WRITE_MESSAGE), [dispatch, navigation]);
     return <Screen initialized={!isLoading} style={styles.container}>
         <View style={styles.header}>
-            <Text style={styles.subject} variant="h4" color={theme.colors.headerText}>{data?.subject}</Text>
+            {/* NOTE this row sits on the screen background, not the navigation header — using
+                `headerText` here rendered the subject white-on-white in the light theme. */}
+            <Text style={styles.subject} variant="h4" color={theme.colors.text}>{data?.subject}</Text>
             <Pressable onPress={goToWriteMessage} hitSlop={8}>
                 <Icon iconStyle="solid" name="reply" color={theme.colors.grey} size={24} />
             </Pressable>

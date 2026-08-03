@@ -36,6 +36,7 @@ export type RootStackParamList = {
   [ROUTES.MY_RESULTS]: undefined;
   [ROUTES.ABOUT_PLAN]: undefined;
   [ROUTES.DAY_OVERVIEW]: undefined;
+  [ROUTES.HELP_SUPPORT]: undefined;
   [ROUTES.MESSAGE_LIST]: undefined;
   [ROUTES.GAMBLING_HOME]: undefined;
   [ROUTES.GAMBLING_BANK]: undefined;

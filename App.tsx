@@ -9,6 +9,7 @@ import { Provider } from 'react-redux';
 import React, { useEffect } from 'react';
 import * as Sentry from '@sentry/react-native';
 import Toast from 'react-native-toast-message';
+import { toastConfig } from 'components/Toast';
 import { Platform, StyleSheet } from 'react-native';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -135,7 +136,10 @@ function App (): React.JSX.Element {
                     </KeyboardProvider>
                 </GestureHandlerRootView>
             </SafeAreaProvider>
-            <Toast />
+            {/* NOTE `config` carries the `warning` type MessageService.toastWarning emits — without
+                it react-native-toast-message throws "Toast type: 'warning' does not exist" and
+                red-screens instead of showing the message. */}
+            <Toast config={toastConfig} />
         </Provider>
     );
 }

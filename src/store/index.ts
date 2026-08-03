@@ -13,6 +13,7 @@ import reactotron from '../../ReactotronConfig';
 import { shoppingApi } from './api/shoppingApi';
 import { questionApi } from './api/questionApi';
 import { giftCardApi } from './api/giftCardApi';
+import { feedbackApi } from './api/feedbackApi';
 import signInReducer from './slices/signInSlice';
 import { publicApi } from 'store/api/publicApi.ts';
 import exerciseReducer from './slices/exerciseSlice';
@@ -99,6 +100,7 @@ const combinedReducer = combineReducers({
     [settingsApi.reducerPath]: settingsApi.reducer,
     [shoppingApi.reducerPath]: shoppingApi.reducer,
     [giftCardApi.reducerPath]: giftCardApi.reducer,
+    [feedbackApi.reducerPath]: feedbackApi.reducer,
     [s3ServiceApi.reducerPath]: s3ServiceApi.reducer,
     [messengerApi.reducerPath]: messengerApi.reducer,
     [dayOverviewApi.reducerPath]: dayOverviewApi.reducer,
@@ -130,6 +132,7 @@ export const store = configureStore({
                 settingsApi.middleware,
                 shoppingApi.middleware,
                 giftCardApi.middleware,
+                feedbackApi.middleware,
                 messengerApi.middleware,
                 s3ServiceApi.middleware,
                 dayOverviewApi.middleware,
