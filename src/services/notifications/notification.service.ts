@@ -33,6 +33,7 @@ import {
 import { store } from 'store';
 import { PRIVATE, ROUTES } from 'constants/routes';
 import { navigationRef } from 'services/navigation';
+import { messengerApi } from 'store/api/messengerApi';
 import {
     isWeightDeepLink,
     normalizeDeepLinkPath,
@@ -253,6 +254,23 @@ class NotificationService {
     }
 
     /**
+     * Mark the messenger caches stale so the screens show what the push was about.
+     *
+     * NOTE without this, tapping a "new message" push lands on data RTK Query already has:
+     * the chain list and any previously opened thread are served from cache, and the patient
+     * has to pull to refresh to see the message they were just notified about. Invalidating
+     * covers both cases — an active subscription refetches immediately, and an entry left
+     * behind by a screen visited earlier refetches when that screen mounts again.
+     *
+     * Invalidated before navigating, so the request is already in flight while the screen
+     * mounts. Both tags go together because a message can arrive in a thread the patient has
+     * open as well as change the list's ordering and unread state.
+     */
+    private static refreshMessengerData (): void {
+        store.dispatch(messengerApi.util.invalidateTags(['ListOfChain', 'ChanMessages']));
+    }
+
+    /**
      * Translate a parsed deep link into an in-app navigation. Handles the two
      * shapes we currently emit from the backend:
      *  - weight reminder: `/public/app-redirect/measurements/weight`
@@ -279,6 +297,7 @@ class NotificationService {
             const threadId = getMessageThreadIdFromDeepLink(deepLink);
             const numericId = threadId ? Number(threadId) : NaN;
             if (Number.isFinite(numericId)) {
+                NotificationService.refreshMessengerData();
                 navigateNested(ROUTES.MESSENGER, ROUTES.READ_MESSAGE, { id: numericId });
                 return;
             }
@@ -289,6 +308,7 @@ class NotificationService {
         // instead of handing the URL to the OS and leaving the app. Once the id is
         // included the branch above takes over on its own.
         if (isMessagesSectionDeepLink(deepLink)) {
+            NotificationService.refreshMessengerData();
             navigateNested(ROUTES.MESSENGER, ROUTES.MESSAGE_LIST);
             return;
         }
@@ -318,7 +338,13 @@ class NotificationService {
     private handleNotificationOpen (notification: unknown): void {
         if (!notification) { return; }
         const deepLink = getNotificationDeepLink(notification);
-        if (!deepLink) { return; }
+        if (!deepLink) {
+            // NOTE the one branch that used to leave no trace at all: the tap was
+            // handled, but the payload carried no link under any key we scan. Log the
+            // container's top-level keys only — never the values, they are PHI.
+            this.log('Notification carries no deep link', { keys: Object.keys(notification as object) });
+            return;
+        }
         void this.navigateFromDeepLink(deepLink);
     }
 
@@ -344,6 +370,14 @@ class NotificationService {
         await this.ensureMessagingPermission();
 
         this.unsubscribeOnMessage = onMessage(this.messaging, async remoteMessage => {
+            // NOTE also refresh on arrival, not only on tap: a message push that lands while
+            // the patient is already looking at the messenger would otherwise leave them on a
+            // stale list with a banner about a message they cannot see. Gated on the link so a
+            // weight reminder does not refetch conversations.
+            const deepLink = getNotificationDeepLink(remoteMessage);
+            if (isMessageThreadDeepLink(deepLink) || isMessagesSectionDeepLink(deepLink)) {
+                NotificationService.refreshMessengerData();
+            }
             await this.displayForegroundNotification(remoteMessage);
         });
 

@@ -3,8 +3,10 @@
  * Modern functional wrapper around react-native-health
  */
 // outsource dependencies
+import { NativeModules } from 'react-native';
 import AppleHealthKit from 'react-native-health';
 // local dependencies
+import { formatAppleHealthDate } from 'utils/measurement/health-import';
 import type {
     DateRange,
     HealthSample,
@@ -13,6 +15,11 @@ import type {
     BloodPressureValue,
 } from 'types/health';
 
+// NOTE ask for exactly what the import reads — weight, glucose and both halves of
+// blood pressure. HeartRate and StepCount used to be requested here while nothing
+// ever fetched them, which put unused rows in the system Health sheet and invites
+// questions during App Review. Steps come from CMPedometer (`pedometer.service`),
+// not from HealthKit.
 const PERMISSIONS = {
     permissions: {
         read: [
@@ -20,11 +27,43 @@ const PERMISSIONS = {
             AppleHealthKit.Constants.Permissions.BloodGlucose,
             AppleHealthKit.Constants.Permissions.BloodPressureSystolic,
             AppleHealthKit.Constants.Permissions.BloodPressureDiastolic,
-            AppleHealthKit.Constants.Permissions.HeartRate,
-            AppleHealthKit.Constants.Permissions.StepCount,
         ],
         write: [], // No write permissions needed for now
     },
+};
+
+// NOTE HealthKit hands glucose over in whichever unit we ask for, and the value is
+// meaningless without knowing which one that was. Pin it here and map it to the
+// matching backend unit id in `resolveImportUnitIds` — relying on the library
+// default left the previous code claiming mmol/L with no way to verify it.
+export const APPLE_HEALTH_GLUCOSE_UNIT = 'mgPerdL';
+
+type HealthCallback = (error: unknown, results: any) => void;
+
+interface NativeHealthKit {
+    isAvailable: (onResult: HealthCallback) => void;
+    initHealthKit: (permissions: unknown, onResult: HealthCallback) => void;
+    getWeightSamples: (options: unknown, onResult: HealthCallback) => void;
+    getBloodGlucoseSamples: (options: unknown, onResult: HealthCallback) => void;
+    getBloodPressureSamples: (options: unknown, onResult: HealthCallback) => void;
+}
+
+/**
+ * The native module, resolved at call time rather than at import time.
+ *
+ * NOTE `react-native-health` snapshots it on import:
+ * `Object.assign({}, NativeModules.AppleHealthKit, { Constants })`. Under the new
+ * architecture `NativeModules.X` is a lazy proxy into the TurboModule interop registry, so a
+ * snapshot taken while that registry is still warming up keeps only `Constants` — every
+ * method silently disappears and the app reports "HealthKit not available" on a device that
+ * has it. Looking the module up per call costs nothing and survives the ordering. `Constants`
+ * still comes from the library import, since the native module does not expose it.
+ */
+const getNative = (): NativeHealthKit => {
+    const snapshot = AppleHealthKit as unknown as NativeHealthKit;
+    if (typeof snapshot?.isAvailable === 'function') { return snapshot; }
+    const live = (NativeModules as Record<string, unknown>).AppleHealthKit as NativeHealthKit | undefined;
+    return live ?? snapshot;
 };
 
 /**
@@ -33,25 +72,39 @@ const PERMISSIONS = {
 const isAvailable = (): Promise<boolean> => {
     return new Promise(resolve => {
         try {
-            // Check if the method exists before calling it
-            if (typeof AppleHealthKit.isAvailable === 'function') {
-                AppleHealthKit.isAvailable((error, available) => {
-                    if (error) {
-                        // console.warn('[AppleHealth] isAvailable error:', error);
-                        resolve(false);
-                    } else {
-                        resolve(available);
-                    }
+            // NOTE availability must stay side-effect free: it runs when the settings screen
+            // opens, and the `initHealthKit` fallback this replaced meant that merely asking
+            // "is HealthKit here?" could put the permission sheet on screen.
+            const native = getNative();
+
+            if (typeof native?.isAvailable !== 'function') {
+                // A missing method does NOT mean the device lacks HealthKit — it means the
+                // native module never reached JS. Keep the two apart: an absent live module
+                // is a build problem (`npm run ios:pods`, which sets
+                // `RCT_REMOVE_LEGACY_ARCH=0` to keep the legacy bridge symbols), while a
+                // present live module with an empty snapshot is the import-ordering issue
+                // `getNative` works around.
+                console.warn('[AppleHealth] native module methods missing', {
+                    snapshotKeys: Object.keys(AppleHealthKit).length,
+                    liveModuleAvailable: Boolean((NativeModules as Record<string, unknown>).AppleHealthKit),
                 });
-            } else {
-                // Fallback: try to initialize to check if HealthKit works
-                // console.warn('[AppleHealth] isAvailable method not found, trying initHealthKit as fallback');
-                AppleHealthKit.initHealthKit(PERMISSIONS, (error, results) => {
-                    resolve(!error);
-                });
+                resolve(false);
+                return;
             }
+
+            native.isAvailable((error: unknown, available: boolean) => {
+                if (error) {
+                    console.warn('[AppleHealth] isAvailable failed', error);
+                    resolve(false);
+                    return;
+                }
+                if (!available) {
+                    console.warn('[AppleHealth] HealthKit reports itself unavailable on this device');
+                }
+                resolve(Boolean(available));
+            });
         } catch (error) {
-            // console.warn('[AppleHealth] HealthKit not available:', error);
+            console.warn('[AppleHealth] isAvailable threw', error);
             resolve(false);
         }
     });
@@ -62,15 +115,19 @@ const isAvailable = (): Promise<boolean> => {
  */
 const requestPermissions = (): Promise<boolean> => {
     return new Promise(resolve => {
-        AppleHealthKit.initHealthKit(PERMISSIONS, (error, results) => {
-            if (error) {
-                // console.warn('[AppleHealth] Permission request failed:', error);
-                resolve(false);
-            } else {
-                // console.log('[AppleHealth] Permissions granted:', results);
+        try {
+            getNative().initHealthKit(PERMISSIONS, (error: unknown) => {
+                if (error) {
+                    console.warn('[AppleHealth] Permission request failed', error);
+                    resolve(false);
+                    return;
+                }
                 resolve(true);
-            }
-        });
+            });
+        } catch (error) {
+            console.warn('[AppleHealth] initHealthKit threw', error);
+            resolve(false);
+        }
     });
 };
 
@@ -79,11 +136,10 @@ const requestPermissions = (): Promise<boolean> => {
  */
 const fetchWeightSamples = (options: { startDate: string; endDate: string }): Promise<HealthSample[]> => {
     return new Promise((resolve, reject) => {
-        AppleHealthKit.getWeightSamples(
-            { ...options, unit: 'pound' as any },
-            (error, results) => {
+        getNative().getWeightSamples(
+            { ...options, unit: 'pound' },
+            (error: unknown, results: any) => {
                 if (error) {
-                    // console.error('[AppleHealth] getWeightSamples error:', error);
                     reject(error);
                 } else {
                     const samples: HealthSample[] = (results || []).map((item: any) => ({
@@ -104,11 +160,10 @@ const fetchWeightSamples = (options: { startDate: string; endDate: string }): Pr
  */
 const fetchBloodPressureSamples = (options: { startDate: string; endDate: string }): Promise<HealthSample[]> => {
     return new Promise((resolve, reject) => {
-        AppleHealthKit.getBloodPressureSamples(
-            { ...options, unit: 'mmhg' as any },
-            (error, results) => {
+        getNative().getBloodPressureSamples(
+            { ...options, unit: 'mmhg' },
+            (error: unknown, results: any) => {
                 if (error) {
-                    // console.error('[AppleHealth] getBloodPressureSamples error:', error);
                     reject(error);
                 } else {
                     const samples: HealthSample[] = (results || []).map((item: any) => ({
@@ -128,59 +183,43 @@ const fetchBloodPressureSamples = (options: { startDate: string; endDate: string
 };
 
 /**
- * Fetch blood glucose samples
+ * Fetch blood glucose samples, in mg/dL — see `APPLE_HEALTH_GLUCOSE_UNIT`
  */
 const fetchBloodGlucoseSamples = (options: { startDate: string; endDate: string }): Promise<HealthSample[]> => {
     return new Promise((resolve, reject) => {
-        AppleHealthKit.getBloodGlucoseSamples(options as any, (error, results) => {
-            if (error) {
-                // console.error('[AppleHealth] getBloodGlucoseSamples error:', error);
-                reject(error);
-            } else {
-                const samples: HealthSample[] = (results || []).map((item: any) => ({
-                    value: item.value, // already in mmol/L
-                    endDate: item.endDate,
-                    startDate: item.startDate,
-                    source: 'APPLE_HEALTH' as const,
-                }));
-                resolve(samples);
+        getNative().getBloodGlucoseSamples(
+            { ...options, unit: APPLE_HEALTH_GLUCOSE_UNIT },
+            (error: unknown, results: any) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    const samples: HealthSample[] = (results || []).map((item: any) => ({
+                        value: item.value,
+                        endDate: item.endDate,
+                        startDate: item.startDate,
+                        source: 'APPLE_HEALTH' as const,
+                    }));
+                    resolve(samples);
+                }
             }
-        });
-    });
-};
-
-/**
- * Fetch step count samples
- */
-const fetchStepCountSamples = (options: { startDate: string; endDate: string }): Promise<HealthSample[]> => {
-    return new Promise((resolve, reject) => {
-        AppleHealthKit.getStepCount(options as any, (error, result: any) => {
-            if (error) {
-                // console.error('[AppleHealth] getStepCount error:', error);
-                reject(error);
-            } else {
-                const sample: HealthSample = {
-                    value: result.value || 0,
-                    endDate: options.endDate,
-                    startDate: options.startDate,
-                    source: 'APPLE_HEALTH' as const,
-                };
-                resolve([sample]);
-            }
-        });
+        );
     });
 };
 
 /**
  * Fetch samples for a specific measurement type
+ *
+ * NOTE only the three imported types are handled. Steps used to be here, but they are read
+ * from CMPedometer (`pedometer.service`) and written as activities, so importing them as
+ * measurements would file the same walk twice under different sources.
  */
 const fetchSamples = async (
     type: MeasurementType,
     dateRange: DateRange
 ): Promise<HealthSample[]> => {
     const options = {
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
+        startDate: formatAppleHealthDate(dateRange.startDate),
+        endDate: formatAppleHealthDate(dateRange.endDate),
     };
 
     switch (type) {
@@ -190,8 +229,6 @@ const fetchSamples = async (
             return fetchBloodPressureSamples(options);
         case 'BLOOD_GLUCOSE':
             return fetchBloodGlucoseSamples(options);
-        case 'STEPS':
-            return fetchStepCountSamples(options);
         default:
             console.warn(`[AppleHealth] Unsupported type: ${type}`);
             return [];

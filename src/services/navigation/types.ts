@@ -58,6 +58,7 @@ export type RootStackParamList = {
   [ROUTES.APPEARANCE_SETTINGS]: undefined;
   [ROUTES.HEALTH_PROFILE_STACK]: undefined;
   [ROUTES.PERSONAL_INFORMATION]: undefined;
+  [ROUTES.HEALTH_SYNC_SETTINGS]: undefined;
   [ROUTES.CUISINE_DISTRIBUTION]: undefined;
   [ROUTES.MEAL_PREFERENCES_MEALS_LIST]: undefined;
   [ROUTES.DAILY_PLAN]: { screen?: string } | undefined;

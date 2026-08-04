@@ -15,6 +15,7 @@ import NotificationsScreen from 'screens/AccountSettingsScreens/NotificationsScr
 import AnimationSettingsScreen from 'screens/AccountSettingsScreens/AnimationSettings';
 import ChangePasswordScreen from 'screens/AccountSettingsScreens/ChangePasswordScreen.tsx';
 import { BiometricSettingsScreen } from 'screens/AccountSettingsScreens/BiometricSettingsScreen';
+import { HealthSyncSettingsScreen } from 'screens/AccountSettingsScreens/HealthSyncSettingsScreen';
 import { PersonalInformationScreen } from 'screens/AccountSettingsScreens/PersonalInformationScreen.tsx';
 
 const Stack = createStackNavigator();
@@ -64,6 +65,11 @@ export const AccountSettingsStack = () => {
                 name={ROUTES.BIOMETRIC_SETTINGS}
                 component={BiometricSettingsScreen}
                 options={{ title: 'Biometric Authentication' }}
+            />
+            <Stack.Screen
+                name={ROUTES.HEALTH_SYNC_SETTINGS}
+                component={HealthSyncSettingsScreen}
+                options={{ title: 'Health App Sync' }}
             />
             <Stack.Screen
                 name={ROUTES.NOTIFICATIONS}

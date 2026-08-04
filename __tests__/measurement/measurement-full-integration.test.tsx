@@ -24,13 +24,17 @@ describe('Measurement Full Integration', () => {
         // @ts-ignore
         const { supportsHealthApp } = require('../../src/utils/measurement/measurement-config');
         
-        // Types that should support health app (like original)
+        // Types the health app import actually covers — the same three v1 imported
         expect(supportsHealthApp('WEIGHT')).toBe(true);
         expect(supportsHealthApp('BLOOD_PRESSURE')).toBe(true);
         expect(supportsHealthApp('BLOOD_GLUCOSE')).toBe(true);
-        expect(supportsHealthApp('HEART_RATE')).toBe(true);
-        expect(supportsHealthApp('STEPS')).toBe(true);
-        
+
+        // HEART_RATE has no fetcher in either health service and its read permission is
+        // not requested; STEPS reach the backend as activities via CMPedometer, so
+        // importing them here would file the same walk twice.
+        expect(supportsHealthApp('HEART_RATE')).toBe(false);
+        expect(supportsHealthApp('STEPS')).toBe(false);
+
         // Types that don't support health app
         expect(supportsHealthApp('BMI')).toBe(false);
         expect(supportsHealthApp('HEIGHT')).toBe(false);
