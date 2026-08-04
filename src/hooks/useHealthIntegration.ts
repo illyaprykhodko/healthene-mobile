@@ -34,7 +34,12 @@ export const useHealthIntegration = (): UseHealthIntegrationReturn => {
     const serviceName = Platform.OS === 'ios' ? 'Apple Health' : 'Google Fit';
 
     /**
-   * Initialize: check availability and permissions
+   * Initialize: check availability only.
+   *
+   * NOTE deliberately does NOT request permissions. It used to, "silently", but
+   * `initHealthKit` puts the system Health sheet on screen — so merely mounting this hook
+   * prompted the patient out of nowhere. Permissions are asked for through the returned
+   * `requestPermissions`, i.e. only when the patient turns health sync on.
    */
     useEffect(() => {
         const initialize = async () => {
@@ -44,12 +49,6 @@ export const useHealthIntegration = (): UseHealthIntegrationReturn => {
             try {
                 const available = await service.isAvailable();
                 setIsAvailable(available);
-
-                if (available) {
-                    // Try to request permissions silently
-                    const granted = await service.requestPermissions();
-                    setHasPermissions(granted);
-                }
             } catch (error) {
                 console.error(`[useHealthIntegration] ${serviceName} init error:`, error);
                 setError(`Failed to initialize ${serviceName}`);
