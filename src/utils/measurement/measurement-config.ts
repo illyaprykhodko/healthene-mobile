@@ -178,7 +178,9 @@ export const MEASUREMENT_CONFIG: Record<MeasurementType, MeasurementConfig> = {
         ],
         defaultUnit: 'BPM',
         maxDecimalPlaces: 0,
-        supportsHealthApp: true,
+        // NOTE no health-app path exists: neither service has a heart-rate fetcher, and
+        // the read permission is not requested. Flip back only together with both.
+        supportsHealthApp: false,
     },
 
     BMI: {
@@ -278,7 +280,10 @@ export const MEASUREMENT_CONFIG: Record<MeasurementType, MeasurementConfig> = {
         ],
         maxDecimalPlaces: 0,
         defaultUnit: 'steps',
-        supportsHealthApp: true,
+        // NOTE steps reach the backend as activities (`useWalkingSession` → CMPedometer),
+        // not as measurements. Importing them from the health app too would file the same
+        // walk twice under different sources.
+        supportsHealthApp: false,
     },
 
     RESPIRATORY_RATE: {

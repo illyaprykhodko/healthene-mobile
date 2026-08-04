@@ -111,18 +111,24 @@ const fetchBloodPressureSamples = async (options: {
 };
 
 /**
- * Fetch blood glucose samples
- * Note: GoogleFit returns mg/dL, we convert to mmol/L
+ * Fetch blood glucose samples, normalised to mg/dL
+ *
+ * NOTE the unit was ambiguous here: the old comment claimed the library returns mg/dL,
+ * while `convertBloodGlucose` multiplies by 18.0182, which is mmol/L → mg/dL. Google Fit
+ * stores blood glucose in mmol/L (`TYPE_BLOOD_GLUCOSE`), so we now ask for mmol/L
+ * explicitly and convert once — that way both the "library honours the unit" and the
+ * "library ignores it" case yield mg/dL, matching `MEASUREMENT_UNIT_IDS.MG_DL` and the
+ * iOS side. Still worth confirming against a known reading in Google Fit on a device.
  */
 const fetchBloodGlucoseSamples = async (options: {
     startDate: string;
     endDate: string;
 }): Promise<HealthSample[]> => {
     try {
-        const results = await RNGoogleFit.getBloodGlucoseSamples(options as any);
+        const results = await RNGoogleFit.getBloodGlucoseSamples({ ...options, unit: 'mmol/L' } as any);
 
         const samples: HealthSample[] = (results || []).map((item: any) => ({
-            value: filters.convertBloodGlucose(item.value), // Convert mg/dL → mmol/L
+            value: filters.convertBloodGlucose(item.value), // mmol/L → mg/dL
             startDate: item.startDate || dayjs().format(),
             endDate: item.endDate || dayjs().format(),
             source: 'GOOGLE_FIT' as const,
