@@ -19,10 +19,12 @@ import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets, EdgeInsets } from 'r
 import { config } from 'constants';
 import { useTheme } from 'hooks/useTheme';
 import { store, useAppDispatch } from 'store';
+import { useHealthSync } from 'hooks/useHealthSync';
 import { useAppUpdateGate } from 'hooks/useAppUpdateGate';
 import { setBirdSoundEnabled } from 'store/slices/appSlice';
 import { ThemeProvider } from 'providers/ThemeProvider.tsx';
 import { RootNavigator } from 'navigation/RootNavigator.tsx';
+import { useMessengerFreshness } from 'hooks/useMessengerFreshness';
 import { SoftUpdateModal } from 'components/update/SoftUpdateModal';
 import { BoxHolder, MaintenanceHolder } from 'components/preloader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -105,6 +107,12 @@ function AppContent (): React.JSX.Element {
     // NOTE the FCM token only reaches the backend from here — without it push
     // notifications cannot be addressed to this installation at all.
     useNotificationTokenSync();
+    // NOTE imports measurements the patient recorded in Apple Health / Google Fit. Does
+    // nothing until they switch health sync on in Account Settings.
+    useHealthSync();
+    // NOTE messages can appear without a push ever arriving, so the messenger is refreshed on
+    // every return to the foreground instead of relying on notifications alone.
+    useMessengerFreshness();
     // if (isHealthLoading) { return <BoxHolder active />; }
     if (isInitializing) { return <BoxHolder active />; }
     // Only an explicit `false` means "backend is down". `null` means "not known yet" — treating
