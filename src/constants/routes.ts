@@ -82,6 +82,7 @@ export const ROUTES = {
     BIOMETRIC_SETTINGS: 'BiometricSettings',
     ANIMATION_SETTINGS: 'AnimationSettings',
     APPEARANCE_SETTINGS: 'AppearanceSettings',
+    HEALTH_SYNC_SETTINGS: 'HealthSyncSettings',
     PERSONAL_INFORMATION: 'PersonalInformation',
 
     // Messenger
