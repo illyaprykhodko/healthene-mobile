@@ -28,8 +28,8 @@ import {
     IMPORTED_MEASUREMENT_TYPES,
     type BackendUnit,
 } from 'utils/measurement/health-import';
-import GoogleFitService from './google-fit.service';
 import AppleHealthService from './apple-health.service';
+import HealthConnectService, { getGrantedTypes } from './health-connect.service';
 
 const ENABLED_KEY = '@health_sync_enabled';
 const WATERMARKS_KEY = '@health_sync_watermarks';
@@ -47,13 +47,13 @@ interface WindowStart {
 }
 
 /** What happened to one type in one run — logged so a silent no-op is never ambiguous. */
-type ImportOutcome = 'imported' | 'nothing-new' | 'no-matching-unit' | 'failed';
+type ImportOutcome = 'imported' | 'nothing-new' | 'no-matching-unit' | 'not-permitted' | 'failed';
 
 interface ImportReport {
-    outcome: ImportOutcome;
-    fetched: number;
     fresh: number;
+    fetched: number;
     window: WindowStart;
+    outcome: ImportOutcome;
     /**
      * Only meaningful for `imported`. `false` means the batch went to the backend but no
      * watermark could be derived from it, so the very same samples will be sent again on the
@@ -65,7 +65,10 @@ interface ImportReport {
 
 // NOTE the platform is fixed for the lifetime of the process, so resolve the service and
 // the source label once instead of branching on every call.
-const healthService = Platform.OS === 'ios' ? AppleHealthService : GoogleFitService;
+const healthService = Platform.OS === 'ios' ? AppleHealthService : HealthConnectService;
+// NOTE Android records come from Health Connect now, but the backend's source enum only knows
+// GOOGLE_FIT, so that literal stays until a HEALTH_CONNECT value exists there. This is the one
+// place to change when it does.
 const SOURCE: Extract<MeasurementSource, 'APPLE_HEALTH' | 'GOOGLE_FIT'>
     = Platform.OS === 'ios' ? 'APPLE_HEALTH' : 'GOOGLE_FIT';
 
@@ -273,8 +276,8 @@ class HealthSyncService {
             return {
                 window,
                 fresh: fresh.length,
-                fetched: samples.length,
                 outcome: 'imported',
+                fetched: samples.length,
                 watermarkAdvanced: false,
             };
         }
@@ -283,8 +286,8 @@ class HealthSyncService {
         return {
             window,
             fresh: fresh.length,
-            fetched: samples.length,
             outcome: 'imported',
+            fetched: samples.length,
             watermarkAdvanced: true,
         };
     }
@@ -317,11 +320,22 @@ class HealthSyncService {
                 this.getWatermarks(),
                 this.fetchBackendUnits(),
             ]);
+            // NOTE Android tells us which types the patient actually shared, so a type without
+            // permission is skipped instead of queried — Health Connect would just return an
+            // empty list and look identical to "no data". iOS cannot answer this question at
+            // all, so there every type is attempted.
+            const permittedTypes = Platform.OS === 'android' ? await getGrantedTypes() : null;
+
             for (const type of IMPORTED_MEASUREMENT_TYPES) {
                 // NOTE one line per type, always, with the outcome in it — including failures.
                 // Values are never logged (PHI); counts, the window's origin and the outcome are
                 // what actually explain a run. A previous version only logged successes, which
                 // made a re-sending loop look like normal operation.
+                if (permittedTypes && !permittedTypes.includes(type)) {
+                    this.log(`Import ${type}`, { outcome: 'not-permitted' });
+                    continue;
+                }
+
                 try {
                     const report = await this.importType(type, watermarks, backendUnits);
                     this.log(`Import ${type}`, report);

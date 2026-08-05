@@ -5,7 +5,9 @@ import {
     getNewestSampleDate,
     resolveImportUnitIds,
     formatAppleHealthDate,
+    mapHealthConnectRecord,
     IMPORTED_MEASUREMENT_TYPES,
+    HEALTH_CONNECT_RECORD_TYPE,
 } from '../../src/utils/measurement/health-import';
 
 const sample = (endDate: string, value: number = 180): HealthSample => ({
@@ -105,6 +107,78 @@ describe('formatAppleHealthDate', () => {
     it('keeps the instant intact, only the representation changes', () => {
         const iso = '2026-08-04T07:56:30.808Z';
         expect(new Date(formatAppleHealthDate(iso)).getTime()).toBe(new Date(iso).getTime());
+    });
+});
+
+describe('mapHealthConnectRecord', () => {
+    // Health Connect hands back explicit unit accessors when reading, so the mapper must pick
+    // the one matching the backend and the iOS side: pounds, mg/dL, mmHg. Picking another
+    // accessor would silently file a value on a different scale.
+    const TIME = '2026-08-04T09:00:00.000Z';
+
+    it('maps weight in pounds, matching the unit the backend publishes', () => {
+        const sample = mapHealthConnectRecord('WEIGHT', {
+            time: TIME,
+            weight: { inPounds: 180.5 },
+        });
+        expect(sample).toEqual({
+            value: 180.5,
+            endDate: TIME,
+            startDate: TIME,
+            source: 'GOOGLE_FIT',
+        });
+    });
+
+    it('maps blood glucose in mg/dL, the same unit the iOS import sends', () => {
+        const sample = mapHealthConnectRecord('BLOOD_GLUCOSE', {
+            time: TIME,
+            level: { inMilligramsPerDeciliter: 95.5 },
+        });
+        expect(sample?.value).toBe(95.5);
+    });
+
+    it('maps blood pressure into the two-field value shape', () => {
+        const sample = mapHealthConnectRecord('BLOOD_PRESSURE', {
+            time: TIME,
+            systolic: { inMillimetersOfMercury: 120 },
+            diastolic: { inMillimetersOfMercury: 80 },
+        });
+        expect(sample?.value).toEqual({
+            systolic: 120,
+            diastolic: 80,
+        });
+    });
+
+    it('returns null when the record carries no timestamp — it could not be placed in the record', () => {
+        expect(mapHealthConnectRecord('WEIGHT', { weight: { inPounds: 180 } })).toBeNull();
+    });
+
+    it('returns null when the measured value is missing', () => {
+        expect(mapHealthConnectRecord('WEIGHT', { time: TIME })).toBeNull();
+        expect(mapHealthConnectRecord('BLOOD_GLUCOSE', { time: TIME, level: {} })).toBeNull();
+    });
+
+    it('returns null when blood pressure is missing either half', () => {
+        expect(mapHealthConnectRecord('BLOOD_PRESSURE', {
+            time: TIME,
+            systolic: { inMillimetersOfMercury: 120 },
+        })).toBeNull();
+    });
+
+    it('falls back to interval timestamps for records that have no instant', () => {
+        const sample = mapHealthConnectRecord('WEIGHT', {
+            startTime: '2026-08-04T08:00:00.000Z',
+            endTime: TIME,
+            weight: { inPounds: 180 },
+        });
+        expect(sample?.startDate).toBe('2026-08-04T08:00:00.000Z');
+        expect(sample?.endDate).toBe(TIME);
+    });
+
+    it('covers every imported type with a Health Connect record type', () => {
+        IMPORTED_MEASUREMENT_TYPES.forEach(type => {
+            expect(HEALTH_CONNECT_RECORD_TYPE[type]).toBeTruthy();
+        });
     });
 });
 
