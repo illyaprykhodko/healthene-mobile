@@ -1,10 +1,11 @@
 /**
- * Pure helpers for importing measurements from Apple Health / Google Fit.
+ * Pure helpers for importing measurements from Apple Health / Health Connect.
  *
  * Kept free of native modules on purpose: `react-native-health` and
- * `react-native-google-fit` are not mocked in the Jest setup, so anything importing
+ * `react-native-health-connect` are not mocked in the Jest setup, so anything importing
  * the health services cannot be unit-tested. These functions carry the parts worth
- * testing — unit mapping and the de-duplication filter.
+ * testing — unit mapping, record mapping and the de-duplication filter. The unit bug on
+ * iOS reached a device precisely because that logic used to live inside a service.
  */
 // outsource dependencies
 import dayjs from 'services/date';
@@ -87,6 +88,83 @@ export const resolveImportUnitIds = (
     if (!defaultUnitId) { return null; }
 
     return { defaultUnitId };
+};
+
+/**
+ * Health Connect record types for the measurements we import, keyed by our own type.
+ * `null` means the type has no Health Connect counterpart in this import.
+ */
+export const HEALTH_CONNECT_RECORD_TYPE: Partial<Record<MeasurementType, 'Weight' | 'BloodGlucose' | 'BloodPressure'>> = {
+    WEIGHT: 'Weight',
+    BLOOD_GLUCOSE: 'BloodGlucose',
+    BLOOD_PRESSURE: 'BloodPressure',
+};
+
+/**
+ * Shape of what `readRecords` hands back for the three types we read. Only the fields the
+ * mapper touches are declared — Health Connect returns much more per record.
+ *
+ * NOTE reading gives explicit unit accessors (`inPounds`, `inMilligramsPerDeciliter`,
+ * `inMillimetersOfMercury`), unlike the write-side `{ value, unit }` shape. That is the whole
+ * reason Health Connect is easier to trust than the iOS side: there is no library default to
+ * guess at, so the unit a value is in cannot be wrong.
+ */
+export interface HealthConnectRecord {
+    time?: string;
+    endTime?: string;
+    startTime?: string;
+    weight?: { inPounds?: number };
+    level?: { inMilligramsPerDeciliter?: number };
+    systolic?: { inMillimetersOfMercury?: number };
+    diastolic?: { inMillimetersOfMercury?: number };
+}
+
+/**
+ * Map one Health Connect record to a `HealthSample`, or null when it carries nothing usable.
+ *
+ * The unit picked per type matches what the backend publishes and what the iOS side sends, so
+ * a patient's series stays in one scale regardless of which platform filed it: pounds for
+ * weight, mg/dL for glucose, mmHg for pressure.
+ *
+ * Weight and glucose are instantaneous records with a single `time`; it is copied into both
+ * ends of the sample so the watermark logic behaves exactly as it does on iOS.
+ */
+export const mapHealthConnectRecord = (
+    type: MeasurementType,
+    record: HealthConnectRecord,
+): HealthSample | null => {
+    const timestamp = record.time || record.endTime || record.startTime;
+    if (!timestamp) { return null; }
+
+    const base = {
+        endDate: timestamp,
+        startDate: record.startTime || timestamp,
+        source: 'GOOGLE_FIT' as const,
+    };
+
+    if (type === 'BLOOD_PRESSURE') {
+        const systolic = record.systolic?.inMillimetersOfMercury;
+        const diastolic = record.diastolic?.inMillimetersOfMercury;
+        if (typeof systolic !== 'number' || typeof diastolic !== 'number') { return null; }
+        return {
+            ...base,
+            value: {
+                systolic,
+                diastolic,
+            },
+        };
+    }
+
+    const value = type === 'WEIGHT'
+        ? record.weight?.inPounds
+        : record.level?.inMilligramsPerDeciliter;
+
+    if (typeof value !== 'number') { return null; }
+
+    return {
+        ...base,
+        value,
+    };
 };
 
 /**

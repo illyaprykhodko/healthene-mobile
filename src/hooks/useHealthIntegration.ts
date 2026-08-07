@@ -7,7 +7,7 @@ import dayjs from 'services/date';
 import { Platform } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 // local dependencies
-import { AppleHealthService, GoogleFitService } from 'services/health';
+import { AppleHealthService, HealthConnectService } from 'services/health';
 import type { MeasurementType, HealthSample, DateRange } from 'types/health';
 
 export interface UseHealthIntegrationReturn {
@@ -30,8 +30,8 @@ export const useHealthIntegration = (): UseHealthIntegrationReturn => {
     const [error, setError] = useState<string | null>(null);
 
     // Get the appropriate service based on platform
-    const service = Platform.OS === 'ios' ? AppleHealthService : GoogleFitService;
-    const serviceName = Platform.OS === 'ios' ? 'Apple Health' : 'Google Fit';
+    const service = Platform.OS === 'ios' ? AppleHealthService : HealthConnectService;
+    const serviceName = Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect';
 
     /**
    * Initialize: check availability only.

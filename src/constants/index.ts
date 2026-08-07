@@ -23,7 +23,6 @@ export const config = {
     iosStoreUrl: env.IOS_STORE_URL || 'https://apps.apple.com/app/id0000000000',
     androidStoreUrl: env.ANDROID_STORE_URL || 'https://play.google.com/store/apps/details?id=com.example.app',
     // senderFirebaseId: env.SENDER_FIREBASE_ID,
-    // googleFitDataUrl: env.GOOGLE_FIT_DATA_URL,
     DEBUG: env.APP_DEBUG === String(true),
     // platform: Platform.OS === 'ios' ? 'IOS' : 'ANDROID'
     // Compile-time feature flags driven by `.env*` files (see `react-native-config`).

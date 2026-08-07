@@ -16,7 +16,7 @@ Code targets iOS and Android, Hermes enabled.
 - Notifications: `@notifee/react-native`, `@react-native-firebase/messaging`
 - Crash / telemetry: `@sentry/react-native`
 - Secure storage: `@react-native-async-storage/async-storage`, `react-native-keychain`, `react-native-biometrics`
-- Health data: `react-native-health` (HealthKit), `react-native-google-fit`
+- Health data: `react-native-health` (HealthKit), `react-native-health-connect`
 - Media / IO: `react-native-vision-camera`, `react-native-video`, `react-native-image-crop-picker`, `react-native-blob-util`, `react-native-nitro-sound`, `@react-native-documents/picker`, `@react-native-documents/viewer`
 - BLE: `react-native-ble-plx` (smart scale and similar devices)
 - UI: `@gorhom/bottom-sheet`, `react-native-reanimated@4`, `react-native-gesture-handler`, vector icons, `react-native-calendars`, `react-native-mask-text`, `react-native-swipe-list-view`, `react-native-toast-message`, `react-native-htmlview`
