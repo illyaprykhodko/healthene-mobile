@@ -111,8 +111,8 @@ export const HEALTH_CONNECT_RECORD_TYPE: Partial<Record<MeasurementType, 'Weight
  */
 export interface HealthConnectRecord {
     time?: string;
-    startTime?: string;
     endTime?: string;
+    startTime?: string;
     weight?: { inPounds?: number };
     level?: { inMilligramsPerDeciliter?: number };
     systolic?: { inMillimetersOfMercury?: number };

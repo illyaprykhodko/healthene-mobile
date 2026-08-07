@@ -14,8 +14,8 @@
  */
 // outsource dependencies
 import {
-    readRecords,
     initialize,
+    readRecords,
     getSdkStatus,
     requestPermission,
     getGrantedPermissions,
