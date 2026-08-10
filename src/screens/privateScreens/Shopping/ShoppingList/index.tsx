@@ -706,18 +706,74 @@ const ShoppingList: React.FC = () => {
     //         )}
     //     </View>
     // ), [currentStep, status]);
-    if (isLoading) {
+    // Only the list body swaps for a skeleton. An early return used to unmount StackHeader too,
+    // which left the user with no back button and no drawer for the whole load — no way out if the
+    // request was slow or failed. It also delayed the bottom bar's onLayout, so the list's first
+    // paint had paddingBottom 0 and jumped once the bar measured.
+    const renderList = () => (
+        <SectionList
+            windowSize={7}
+            ref={sectionListRef}
+            sections={groupedList}
+            initialNumToRender={8}
+            maxToRenderPerBatch={6}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            onEndReachedThreshold={0.4}
+            stickySectionHeadersEnabled
+            getItemLayout={getItemLayout}
+            updateCellsBatchingPeriod={60}
+            onEndReached={handleEndReached}
+            ListFooterComponent={listFooter}
+            onScrollBeginDrag={endFirstWave}
+            keyboardShouldPersistTaps="handled"
+            renderSectionHeader={renderSectionHeader}
+            contentContainerStyle={contentContainerStyle}
+            refreshControl={
+                <RefreshControl
+                // Only a deliberate pull spins this. Gating on `isFetching` used to make it
+                // spin at the top while page N+1 was loading at the bottom.
+                    refreshing={isRefreshing}
+                    onRefresh={handleRefresh}
+                />
+            }
+        />
+    );
+
+    const renderBody = () => {
+        if (isLoading) {
+            return (
+                <ShoppingListSkeleton
+                    compact={compact}
+                    rowHeight={itemHeight}
+                    headerHeight={sectionHeaderHeight}
+                />
+            );
+        }
         return (
-            <ShoppingListSkeleton
-                compact={compact}
-                rowHeight={itemHeight}
-                headerHeight={sectionHeaderHeight}
-            />
+            <>
+                <HorizontalMenu
+                    data={tabs}
+                    activeItem={activeCategory}
+                    handleItem={handleCategoryChange}
+                />
+                {groupedList.length === 0 ? (
+                    <EmptyState
+                        icon="shopping-cart"
+                        title="Your shopping list is empty"
+                        subtitle="Items you add will show up here, grouped by aisle."
+                    />
+                ) : (
+                    <KeyboardAvoidingView behavior="padding" style={styles.keyboardAvoider}>
+                        {renderList()}
+                    </KeyboardAvoidingView>
+                )}
+            </>
         );
-    }
+    };
 
     return (
-        <Screen initialized={!isLoading} style={styles.container}>
+        <Screen initialized style={styles.container}>
             <StackHeader
                 onBack={handleBack}
                 onOpenDrawer={openDrawer}
@@ -771,49 +827,7 @@ const ShoppingList: React.FC = () => {
                     <Text style={styles.printText}> Print List</Text>
                 </TouchableOpacity>
             )}
-            <HorizontalMenu
-                data={tabs}
-                disabled={isLoading}
-                activeItem={activeCategory}
-                handleItem={handleCategoryChange}
-            />
-            {groupedList.length === 0 ? (
-                <EmptyState
-                    icon="shopping-cart"
-                    title="Your shopping list is empty"
-                    subtitle="Items you add will show up here, grouped by aisle."
-                />
-            ) : (
-                <KeyboardAvoidingView behavior="padding" style={styles.keyboardAvoider}>
-                    <SectionList
-                        windowSize={7}
-                        ref={sectionListRef}
-                        sections={groupedList}
-                        initialNumToRender={8}
-                        maxToRenderPerBatch={6}
-                        renderItem={renderItem}
-                        keyExtractor={keyExtractor}
-                        onEndReachedThreshold={0.4}
-                        stickySectionHeadersEnabled
-                        getItemLayout={getItemLayout}
-                        updateCellsBatchingPeriod={60}
-                        onEndReached={handleEndReached}
-                        ListFooterComponent={listFooter}
-                        onScrollBeginDrag={endFirstWave}
-                        keyboardShouldPersistTaps="handled"
-                        renderSectionHeader={renderSectionHeader}
-                        contentContainerStyle={contentContainerStyle}
-                        refreshControl={
-                            <RefreshControl
-                            // Only a deliberate pull spins this. Gating on `isFetching` used to make it
-                            // spin at the top while page N+1 was loading at the bottom.
-                                refreshing={isRefreshing}
-                                onRefresh={handleRefresh}
-                            />
-                        }
-                    />
-                </KeyboardAvoidingView>
-            )}
+            {renderBody()}
             <GlassSurface
                 intensity={5}
                 style={styles.glassBar}
@@ -827,6 +841,7 @@ const ShoppingList: React.FC = () => {
                                 title="Back"
                                 variant="secondary"
                                 onPress={handleBack}
+                                disabled={isLoading}
                                 style={styles.backBtn}
                                 textStyle={styles.backBtnText}
                             />
@@ -834,6 +849,7 @@ const ShoppingList: React.FC = () => {
                                 title="Done"
                                 variant="primary"
                                 onPress={handleDone}
+                                disabled={isLoading}
                                 style={styles.doneBtn}
                                 textStyle={styles.doneBtnText}
                             />

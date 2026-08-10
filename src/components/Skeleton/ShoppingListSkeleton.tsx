@@ -12,6 +12,7 @@ import { Skeleton, useShimmerProgress } from './Skeleton';
 // ~133-169) made content visibly jump when the data landed.
 const IMAGE_SIZE = 100;
 const SECTION_SHAPE = [3, 2, 3];
+const CHIP_WIDTHS = [58, 96, 72, 104, 80];
 
 interface ShoppingListSkeletonProps {
     /** Real row height, from the screen's itemMetrics. */
@@ -22,12 +23,18 @@ interface ShoppingListSkeletonProps {
     sections?: number[];
     /** Real sticky section header height, from the screen's itemMetrics. */
     headerHeight: number;
+    /**
+     * Stand in for HorizontalMenu. The real bar is kept unmounted while loading because its only
+     * tab at that point is "All", so mounting it would show a lone chip that then expands.
+     */
+    showChips?: boolean;
 }
 
 export const ShoppingListSkeleton: React.FC<ShoppingListSkeletonProps> = ({
     rowHeight,
     headerHeight,
     compact = false,
+    showChips = true,
     sections = SECTION_SHAPE,
 }) => {
     const theme = useTheme();
@@ -36,6 +43,20 @@ export const ShoppingListSkeleton: React.FC<ShoppingListSkeletonProps> = ({
 
     return (
         <View style={styles.container}>
+            {showChips && (
+                <View style={styles.chipsRow}>
+                    {CHIP_WIDTHS.map((width, index) => (
+                        <Skeleton
+                            key={index}
+                            width={width}
+                            height={32}
+                            borderRadius={25}
+                            progress={progress}
+                            style={styles.chip}
+                        />
+                    ))}
+                </View>
+            )}
             {sections.map((rows, sectionIndex) => (
                 <View key={sectionIndex}>
                     <View style={[styles.header, {
@@ -75,6 +96,15 @@ const styles = StyleSheet.create({
         flex: 1,
         // Trailing placeholder rows clip at the viewport edge instead of forcing the screen to scroll.
         overflow: 'hidden',
+    },
+    chipsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+    },
+    chip: {
+        marginHorizontal: 10,
     },
     header: {
         justifyContent: 'center',
