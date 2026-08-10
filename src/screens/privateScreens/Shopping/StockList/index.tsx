@@ -2,8 +2,7 @@
 // outsource dependencies
 import { useNavigation, StackActions } from '@react-navigation/native';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
-import { StyleSheet, View, SectionList, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { StyleSheet, View, SectionList, NativeSyntheticEvent, NativeScrollEvent, RefreshControl } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text';
@@ -12,16 +11,28 @@ import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import { ROUTES } from 'constants/routes';
 import { useTheme } from 'hooks/useTheme';
-import Checkbox from 'components/Checkbox';
-import DefImage from 'components/DefImage';
+import { useHaptic } from 'hooks/useHaptic';
 import { Button } from 'components/Button';
+import { StockListItem } from './StockListItem';
 import StackHeader from 'components/StackHeader';
+import { useFontScale } from 'hooks/useFontScale';
 import { useAppDispatch, useAppSelector } from 'store';
 import HorizontalMenu from 'components/HorizontalMenu';
+import { useListEntrance } from 'hooks/useListEntrance';
 import { useShoppingDrawer } from '../useShoppingDrawer';
-import { PressableScale } from 'components/PressableScale';
+import type { GroupedSection, StockItem } from './types';
 import ConfirmationAlert from 'components/ConfirmationAlert';
+import { AnimatedListRow } from 'components/AnimatedListRow';
+import { useDevHeightAssert } from 'hooks/useDevHeightAssert';
+import { HEADER_CONTENT_INSET, getStockHeaderHeight, getStockItemHeight } from './metrics';
+import { StockListSkeleton } from 'components/Skeleton/StockListSkeleton';
+import { ListFooterLoader, type ListFooterState } from 'components/ListFooterLoader';
 import { SHOPPING_STEP, SHOPPING_STATUS, SHOPPING_CONFIRMED_ITEM_TYPE } from 'constants/spec';
+import {
+    getSectionOffsets,
+    resolveActiveSectionIndex,
+    createSectionListGetItemLayout,
+} from 'utils/sectionListLayout';
 import {
     selectShopping,
     setCurrentStep,
@@ -38,43 +49,37 @@ import {
     useUpdateShoppingListStatusMutation,
 } from 'store/api/shoppingApi';
 
-interface StockItem {
-    id: number;
-    gramWeight: number;
-    food: {
-        id: number;
-        name: string;
-        coverImage?: { url: string };
-        shoppingCartCategory?: {
-            id: number;
-            name: string;
-        };
-    };
-}
-
-interface GroupedSection {
-    title: string;
-    data: StockItem[];
-}
-
 const ADDITIONAL_CATEGORY_NAME = 'Additional';
-// Used only for the onScroll tab-sync approximation — NOT passed to SectionList.
-// Items with wrapping text are taller; the sync may lag by a few items, which is acceptable.
-const ITEM_HEIGHT_APPROX = 121;      // padding: 20*2 + image: 80 + hairline
-const SECTION_HEADER_HEIGHT = 53;    // paddingVertical: 16*2 + ~20px text + 1px border
+// MUST stay different from the `size` ShoppingList passes to useGetStockListQuery (20). The endpoint's
+// serializeQueryArgs strips only `page`, so an equal size would collapse both screens onto ONE cache
+// entry whose `originalArgs` carry conflicting page numbers — they would refetch over each other.
+const PAGE_SIZE = 100;
+// An animated scrollToLocation does not reliably emit onMomentumScrollEnd on every platform, so the
+// programmatic-scroll lock also expires on its own. Without this a single missed event silently
+// kills scroll-driven highlighting for the rest of the session.
+const PROGRAMMATIC_SCROLL_TIMEOUT = 800;
+
+const keyExtractor = (item: StockItem) => String(item.id);
 
 const StockList: React.FC = () => {
     const theme = useTheme();
+    const haptics = useHaptic();
+    const fontScale = useFontScale();
     const navigation = useNavigation<any>();
     const dispatch = useAppDispatch();
     const openDrawer = useShoppingDrawer({ guarded: true });
+    const { seenKeys, firstWaveRef, endFirstWave, resetEntrance } = useListEntrance();
 
     const [open, setOpen] = useState(true);
     const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
     const [activeCategory, setActiveCategory] = useState<{ name: string; id?: number | null }>({ name: '' });
     const [page, setPage] = useState(0);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const sectionListRef = useRef<SectionList<StockItem, GroupedSection>>(null);
-    const suppressScrollRef = useRef(false);
+    const programmaticScrollRef = useRef<number | null>(null);
+    const programmaticTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const hapticPageRef = useRef(0);
+    const endHapticRef = useRef(false);
     const activeCategoryRef = useRef(activeCategory);
     activeCategoryRef.current = activeCategory;
     const checkedItems = useAppSelector(selectCheckedStockItems);
@@ -85,8 +90,7 @@ const StockList: React.FC = () => {
         id: shoppingListId,
     } = useAppSelector(selectShopping);
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
-    const { data: stockData, isLoading, isFetching } = useGetStockListQuery({ page, size: 100 });
-    // const { data: stockData, isLoading } = useGetStockListQuery();
+    const { data: stockData, isLoading, isFetching, refetch } = useGetStockListQuery({ page, size: PAGE_SIZE });
     // TEMP: updateStock is kept for the upcoming revert — the call site below is commented in handleNextBtn.
     // eslint-disable-next-line no-unused-vars
     const [updateStock, { isLoading: isUpdating }] = useUpdateStockItemsMutation();
@@ -97,6 +101,24 @@ const StockList: React.FC = () => {
     const uncategorizedCategoryName = useMemo(() => {
         const cat = (categoriesData || []).find(c => c?.id === null || c?.id === 0);
         return cat?.name?.trim() || ADDITIONAL_CATEGORY_NAME;
+    }, [categoriesData]);
+
+    // Row and header heights are derived, never hardcoded — see ./metrics.ts.
+    const itemHeight = useMemo(() => getStockItemHeight(fontScale), [fontScale]);
+    const headerHeight = useMemo(() => getStockHeaderHeight(fontScale), [fontScale]);
+    const layoutConfig = useMemo(() => ({ itemHeight, headerHeight }), [itemHeight, headerHeight]);
+
+    // getStockCategories carries the clinician-facing ordering. Grouping by first appearance instead
+    // made the section order depend on which page an item happened to arrive in, so the list visibly
+    // reshuffled as pages landed — which is a large part of the "nothing loaded properly" impression.
+    const categoryRank = useMemo(() => {
+        const rank = new Map<string, number>();
+        (categoriesData || []).forEach((cat, fallbackIndex) => {
+            const name = cat?.name?.trim();
+            if (!name) { return; }
+            rank.set(name, cat.order ?? fallbackIndex);
+        });
+        return rank;
     }, [categoriesData]);
 
     // Filter and group by category
@@ -112,8 +134,21 @@ const StockList: React.FC = () => {
             grouped[categoryName].push(item);
         });
 
-        return Object.entries(grouped).map(([title, data]) => ({ title, data }));
-    }, [stockList, uncategorizedCategoryName]);
+        return Object.entries(grouped)
+            .map(([title, data]) => ({
+                title,
+                // Stable order inside a section too, so a late-arriving item lands predictably
+                // instead of always appending to the bottom.
+                data: [...data].sort((a, b) => (a.food?.name || '').localeCompare(b.food?.name || '')),
+            }))
+            .sort((a, b) => {
+                // Unranked categories (and "Additional") sink to the bottom, then alphabetical so the
+                // ordering is total and stable across pages.
+                const rankA = categoryRank.get(a.title) ?? Number.MAX_SAFE_INTEGER;
+                const rankB = categoryRank.get(b.title) ?? Number.MAX_SAFE_INTEGER;
+                return rankA === rankB ? a.title.localeCompare(b.title) : rankA - rankB;
+            });
+    }, [stockList, uncategorizedCategoryName, categoryRank]);
 
     const tabs = useMemo(() => {
         const categoryMap = new Map(
@@ -124,20 +159,57 @@ const StockList: React.FC = () => {
         return groupedList.map(section => categoryMap.get(section.title) ?? { name: section.title });
     }, [groupedList, categoriesData]);
 
-    const sectionHeaderOffsets = useMemo(() => {
-        let offset = 0;
-        return groupedList.map(section => {
-            const headerOffset = offset;
-            offset += SECTION_HEADER_HEIGHT + section.data.length * ITEM_HEIGHT_APPROX;
-            return headerOffset;
-        });
-    }, [groupedList]);
+    const getItemLayout = useMemo(
+        () => createSectionListGetItemLayout<GroupedSection>(layoutConfig),
+        [layoutConfig],
+    );
+    // Derived from groupedList, so appending a page into an already-rendered earlier section
+    // recomputes the offsets and they stay exact — the estimate-drift bug class is gone.
+    const sectionOffsets = useMemo(() => getSectionOffsets(groupedList, layoutConfig), [groupedList, layoutConfig]);
+
+    const totalPages = stockData?.totalPages ?? 0;
+    const hasNextPage = page + 1 < totalPages;
+    // RTK Query merges every page into ONE cache entry (serializeQueryArgs strips `page`), so there is
+    // no isLoadingMore flag — only isFetching, which is also true on first load and on a refetch.
+    const isLoadingMore = isFetching && page > 0 && !isRefreshing;
+    const footerState: ListFooterState = isLoadingMore
+        ? 'loading'
+        : (!isFetching && !hasNextPage && totalPages > 1) ? 'end' : 'idle';
 
     useEffect(() => {
         if (tabs.length > 0 && !activeCategoryRef.current.name) {
             setActiveCategory(tabs[0]);
         }
     }, [tabs]);
+
+    // One tick per landed page, on the isFetching falling edge, guarded by the page number so a
+    // re-render cannot repeat it. `selection` is the quietest entry in useHaptic's vocabulary;
+    // `light` is already the app's press feedback, so reusing it here would blur that meaning.
+    useEffect(() => {
+        if (isFetching || page === 0 || hapticPageRef.current === page) { return; }
+        hapticPageRef.current = page;
+        haptics.selection();
+    }, [isFetching, page, haptics]);
+
+    // A softer, distinct tick the first time the list is fully loaded.
+    useEffect(() => {
+        if (footerState !== 'end') {
+            endHapticRef.current = false;
+            return;
+        }
+        if (endHapticRef.current) { return; }
+        endHapticRef.current = true;
+        haptics.light();
+    }, [footerState, haptics]);
+
+    // RefreshControl must spin ONLY for a pull, never while page N+1 loads at the bottom.
+    useEffect(() => {
+        if (!isFetching && isRefreshing) { setIsRefreshing(false); }
+    }, [isFetching, isRefreshing]);
+
+    useEffect(() => () => {
+        if (programmaticTimerRef.current) { clearTimeout(programmaticTimerRef.current); }
+    }, []);
 
     const handleGoBack = useCallback(() => {
         dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
@@ -216,151 +288,194 @@ const StockList: React.FC = () => {
         (navigation as any).toggleDrawer?.();
     }, [dispatch, navigation]);
 
+    const endProgrammaticScroll = useCallback(() => {
+        programmaticScrollRef.current = null;
+        if (programmaticTimerRef.current) {
+            clearTimeout(programmaticTimerRef.current);
+            programmaticTimerRef.current = null;
+        }
+    }, []);
+
+    const beginProgrammaticScroll = useCallback((sectionIndex: number) => {
+        programmaticScrollRef.current = sectionIndex;
+        if (programmaticTimerRef.current) { clearTimeout(programmaticTimerRef.current); }
+        programmaticTimerRef.current = setTimeout(endProgrammaticScroll, PROGRAMMATIC_SCROLL_TIMEOUT);
+    }, [endProgrammaticScroll]);
+
     const handleCategoryChange = useCallback((item: any) => {
         const next = item?.activeItem ?? item;
         setActiveCategory({ name: next?.name ?? '', id: next?.id });
         const sectionIndex = groupedList.findIndex(s => s.title === next?.name);
         if (sectionIndex === -1 || !sectionListRef.current) { return; }
-        suppressScrollRef.current = true;
-        const offset = sectionHeaderOffsets[sectionIndex] ?? 0;
-        (sectionListRef.current.getScrollResponder() as any)?.scrollTo?.({ y: offset, animated: true });
-    }, [groupedList, sectionHeaderOffsets]);
+        // Suppress scroll-driven highlighting while the animation runs: the reference line sweeps
+        // across every intervening section, which would machine-gun the chip bar through them.
+        beginProgrammaticScroll(sectionIndex);
+        // itemIndex 0 targets the SECTION HEADER itself — VirtualizedSectionList flattens each section
+        // to [header, ...items, footer] — so no manual sticky-header offset is needed here.
+        sectionListRef.current.scrollToLocation({
+            sectionIndex,
+            itemIndex: 0,
+            animated: true,
+            viewPosition: 0,
+        });
+    }, [groupedList, beginProgrammaticScroll]);
+
+    // With an exact getItemLayout this should never fire; kept so a mistuned constant degrades to
+    // "jumps to roughly the right place" instead of "does nothing".
+    const handleScrollToIndexFailed = useCallback(() => {
+        const target = sectionOffsets[programmaticScrollRef.current ?? 0] ?? 0;
+        (sectionListRef.current?.getScrollResponder() as any)?.scrollTo?.({ y: target, animated: true });
+    }, [sectionOffsets]);
 
     const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        if (suppressScrollRef.current) { return; }
-        const y = event.nativeEvent.contentOffset.y;
-        let newIndex = 0;
-        for (let i = sectionHeaderOffsets.length - 1; i >= 0; i--) {
-            if (sectionHeaderOffsets[i] <= y) {
-                newIndex = i;
-                break;
-            }
-        }
-        const matchingTab = tabs[newIndex];
+        if (programmaticScrollRef.current !== null) { return; }
+        const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+        const nextIndex = resolveActiveSectionIndex(
+            sectionOffsets,
+            { y: contentOffset.y, contentHeight: contentSize.height, viewportHeight: layoutMeasurement.height },
+            headerHeight,
+        );
+        const matchingTab = tabs[nextIndex];
         if (matchingTab && matchingTab.name !== activeCategoryRef.current.name) {
             setActiveCategory(matchingTab);
+            haptics.selection();
         }
-    }, [sectionHeaderOffsets, tabs]);
+    }, [sectionOffsets, tabs, headerHeight, haptics]);
 
-    const onMomentumScrollEnd = useCallback(() => {
-        suppressScrollRef.current = false;
-    }, []);
-
-    // Reset suppression when the user begins a manual drag — programmatic scrollTo
-    // does not fire onMomentumScrollEnd, so without this the tab sync stays blocked.
     const onScrollBeginDrag = useCallback(() => {
-        suppressScrollRef.current = false;
-    }, []);
+        // The user took over — release the lock and stop staggering later rows.
+        endProgrammaticScroll();
+        endFirstWave();
+    }, [endProgrammaticScroll, endFirstWave]);
+
+    const handleEndReached = useCallback(() => {
+        if (isFetching || !hasNextPage) { return; }
+        endFirstWave();
+        setPage(prev => prev + 1);
+    }, [isFetching, hasNextPage, endFirstWave]);
+
+    const handleRefresh = useCallback(() => {
+        setIsRefreshing(true);
+        hapticPageRef.current = 0;
+        resetEntrance();
+        // page 0 makes `merge` REPLACE content instead of appending. Changing `page` alone already
+        // re-issues the request (the cache key ignores it), so refetch() would double-fire.
+        if (page > 0) {
+            setPage(0);
+            return;
+        }
+        refetch();
+    }, [page, refetch, resetEntrance]);
 
     const handleCloseAlert = useCallback(() => setOpen(false), []);
 
     const disabled = isLoading || isUpdating || isMovingStocks || isFinalizing;
 
-    const renderItem = useCallback(({ item, index }: { item: StockItem; index: number }) => {
-        const isChecked = checkedItems.includes(item.id);
+    // Set lookup instead of `checkedItems.includes` per row — that was O(checked) on every row of
+    // every render, and every toggle re-renders the whole list.
+    const checkedIds = useMemo(() => new Set(checkedItems), [checkedItems]);
 
-        // Convert weight
-        // let convertedWeight = filters.kilogramsToPounds(item.gramWeight);
-        let convertedWeight = Math.round((item.gramWeight / 1000) * 2.20462 * 100) / 100;
-        let unit = 'lbs';
-        if (convertedWeight <= 0) {
-            convertedWeight = Math.round(item.gramWeight * 0.03527396195 * 1000) / 1000;
-            unit = 'oz';
-        }
+    const renderItem = useCallback(({ item, index }: { item: StockItem; index: number }) => (
+        <AnimatedListRow
+            index={index}
+            itemKey={item.id}
+            seenKeys={seenKeys}
+            isFirstWave={firstWaveRef.current}
+        >
+            <StockListItem
+                item={item}
+                height={itemHeight}
+                disabled={disabled}
+                onToggle={handleToggleItem}
+                isChecked={checkedIds.has(item.id)}
+            />
+        </AnimatedListRow>
+    ), [checkedIds, disabled, handleToggleItem, itemHeight, seenKeys, firstWaveRef]);
 
-        return (
-            <Animated.View
-                exiting={FadeOut.duration(200)}
-                layout={LinearTransition.springify().damping(20)}
-                entering={FadeInDown.delay(Math.min(index, 10) * 80).springify().mass(1.2).damping(30)}
-            >
-                <PressableScale
-                    scale={1}
-                    haptic="success"
-                    disabled={disabled}
-                    style={styles.itemContainer}
-                    onPress={() => handleToggleItem(item)}
-                >
-                    <DefImage
-                        src={item.food?.coverImage?.url}
-                        style={isChecked ? { ...styles.image, ...styles.imageChecked } : styles.image}
-                    />
-                    <View style={styles.textContainer}>
-                        <Text
-                            variant="h5"
-                            style={isChecked ? styles.textDecoration : undefined}
-                        >
-                            {item.food?.name}
-                        </Text>
-                        <Text
-                            variant="h6"
-                            color={COLORS.GREY}
-                            style={isChecked ? styles.textDecoration : undefined}
-                        >
-                            {convertedWeight} {unit}
-                        </Text>
-                    </View>
-                    {/* Visual-only checkbox — pointerEvents=none so the row PressableScale owns the tap. */}
-                    <View pointerEvents="none" style={styles.checkboxWrap}>
-                        <Checkbox
-                            editable={false}
-                            value={isChecked}
-                            onChange={() => {}}
-                        />
-                    </View>
-                </PressableScale>
-            </Animated.View>
-        );
-    }, [checkedItems, disabled, handleToggleItem]);
+    const assertHeaderHeight = useDevHeightAssert('StockList section header', headerHeight - HEADER_CONTENT_INSET);
 
     const renderSectionHeader = useCallback(({ section }: { section: GroupedSection }) => (
-        <View style={[styles.section, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
-            <Text variant="h4" style={styles.sectionTitle} color={theme.colors.primary}>
-                Select all the {section.title}
-            </Text>
+        <View style={[styles.section, {
+            height: headerHeight,
+            borderBottomColor: theme.colors.border,
+            backgroundColor: theme.colors.surfaceAlt,
+        }]}>
+            {/* The count turns "this category looks suspiciously empty" into a stated fact. */}
+            {/* The wrapper carries onLayout: the shared Text does not forward it, and the header
+                View itself has a pinned height, so only this unconstrained box can reveal overflow. */}
+            <View onLayout={assertHeaderHeight}>
+                <Text variant="h4" numberOfLines={1} style={styles.sectionTitle} color={theme.colors.primary}>
+                    Select all the {section.title} ({section.data.length})
+                </Text>
+            </View>
         </View>
-    ), [theme.colors]);
+    ), [theme.colors, headerHeight, assertHeaderHeight]);
+
+    const listFooter = useMemo(() => (
+        <ListFooterLoader
+            imageSize={80}
+            state={footerState}
+            rowHeight={itemHeight}
+            endLabel={`That's everything — ${stockData?.totalElements ?? 0} items`}
+        />
+    ), [footerState, itemHeight, stockData?.totalElements]);
+
+    const renderBody = () => {
+        if (isLoading) { return <StockListSkeleton />; }
+        if (groupedList.length === 0) {
+            return (
+                <Text textAlign="center" color={COLORS.GREY} style={styles.emptyText}>
+                    No Stock list was found
+                </Text>
+            );
+        }
+        return (
+            <>
+                <HorizontalMenu
+                    data={tabs}
+                    disabled={disabled}
+                    activeItem={activeCategory}
+                    handleItem={handleCategoryChange}
+                />
+                <SectionList<StockItem, GroupedSection>
+                    windowSize={7}
+                    onScroll={onScroll}
+                    ref={sectionListRef}
+                    sections={groupedList}
+                    renderItem={renderItem}
+                    initialNumToRender={12}
+                    maxToRenderPerBatch={6}
+                    scrollEventThrottle={16}
+                    stickySectionHeadersEnabled
+                    keyExtractor={keyExtractor}
+                    onEndReachedThreshold={0.5}
+                    getItemLayout={getItemLayout}
+                    updateCellsBatchingPeriod={60}
+                    onEndReached={handleEndReached}
+                    ListFooterComponent={listFooter}
+                    onScrollBeginDrag={onScrollBeginDrag}
+                    onScrollEndDrag={endProgrammaticScroll}
+                    renderSectionHeader={renderSectionHeader}
+                    onMomentumScrollEnd={endProgrammaticScroll}
+                    onScrollToIndexFailed={handleScrollToIndexFailed}
+                    refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+                />
+            </>
+        );
+    };
 
     return (
-        <Screen initialized={!isLoading} style={styles.container}>
+        // The list body owns its own loading state now — gating `Screen` on isLoading blanked the
+        // whole screen behind a SkypeIndicator, so StackHeader and the Finalize bar only appeared
+        // once data arrived.
+        <Screen initialized style={styles.container}>
             <StackHeader
                 title="Stock List"
                 onBack={handleGoBack}
                 onOpenDrawer={openDrawer}
             />
             <View style={styles.content}>
-                {groupedList.length === 0 ? (
-                    <Text textAlign="center" color={COLORS.GREY} style={styles.emptyText}>
-                        No Stock list was found
-                    </Text>
-                ) : (
-                    <>
-                        <HorizontalMenu
-                            data={tabs}
-                            disabled={disabled}
-                            activeItem={activeCategory}
-                            handleItem={handleCategoryChange}
-                        />
-                        <SectionList<StockItem, GroupedSection>
-                            onScroll={onScroll}
-                            ref={sectionListRef}
-                            sections={groupedList}
-                            renderItem={renderItem}
-                            scrollEventThrottle={50}
-                            initialNumToRender={100}
-                            stickySectionHeadersEnabled
-                            onScrollBeginDrag={onScrollBeginDrag}
-                            renderSectionHeader={renderSectionHeader}
-                            onMomentumScrollEnd={onMomentumScrollEnd}
-                            keyExtractor={(item, index) => `${item.id}_${index}`}
-                            onEndReached={() => {
-                                if (stockData && !isFetching && page + 1 < stockData.totalPages) {
-                                    setPage(p => p + 1);
-                                }
-                            }}
-                        />
-                    </>
-                )}
+                {renderBody()}
             </View>
 
             <View style={styles.buttonControl}>
@@ -377,12 +492,13 @@ const StockList: React.FC = () => {
 
             <ConfirmationAlert
                 hideCancelBtn
-                isOpen={open}
                 title="Stock List"
                 disabled={disabled}
                 applyTxt="View List"
                 onClose={handleCloseAlert}
                 onSubmit={handleCloseAlert}
+                // Wait for real content — otherwise the alert pops over an empty loading screen.
+                isOpen={open && !isLoading}
                 message="Check that these items are still in your kitchen."
             />
             {/* HS-3113: finalize confirmation moved here from ShoppingList. With the third
@@ -427,56 +543,15 @@ const styles = StyleSheet.create({
     },
     section: {
         paddingLeft: 16,
-        paddingVertical: 16,
         alignItems: 'center',
         flexDirection: 'row',
         borderBottomWidth: 1,
         justifyContent: 'space-between',
-        borderBottomColor: COLORS.LIGHT_GREY,
-    },
-    sectionMuted: {
-        paddingLeft: 20,
-        paddingVertical: 4,
-        alignItems: 'center',
-        flexDirection: 'row',
-        borderBottomWidth: 1,
-        justifyContent: 'space-between',
-        backgroundColor: COLORS.LIGHT_GREY,
         borderBottomColor: COLORS.LIGHT_GREY,
     },
     sectionTitle: {
         fontWeight: 'semibold',
         color: COLORS.THEME_COLOR,
-    },
-    itemContainer: {
-        padding: 20,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottomColor: COLORS.LIGHT_GREY,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-    },
-    image: {
-        width: 80,
-        height: 80,
-        borderRadius: 8,
-    },
-    imageChecked: {
-        opacity: 0.5,
-    },
-    textContainer: {
-        flex: 1,
-        marginLeft: OFFSET.HORIZONTAL,
-    },
-    textDecoration: {
-        color: COLORS.GREY,
-        textDecorationStyle: 'solid',
-        textDecorationLine: 'line-through',
-    },
-    // Visual checkbox is now `<Checkbox>` (FA5 icon). This wrapper just reserves space + right alignment.
-    checkboxWrap: {
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     buttonControl: {
         borderTopWidth: 1,
