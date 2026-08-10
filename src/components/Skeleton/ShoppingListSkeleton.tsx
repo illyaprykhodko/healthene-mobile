@@ -48,8 +48,8 @@ export const ShoppingListSkeleton: React.FC<ShoppingListSkeletonProps> = ({
                     {CHIP_WIDTHS.map((width, index) => (
                         <Skeleton
                             key={index}
-                            width={width}
                             height={32}
+                            width={width}
                             borderRadius={25}
                             progress={progress}
                             style={styles.chip}

@@ -260,9 +260,14 @@ export const shoppingApi = createApi({
             query: ({ shoppingCartCategoryId, page, size }) => ({
                 url: '/patient-service/patients/me/stock-foods',
                 params: {
-                    shoppingCartCategoryId,
                     page,
                     size,
+                    shoppingCartCategoryId,
+                    // Without it the backend returns stock foods in no particular order, so a single
+                    // category was spread across pages and later pages inserted rows into sections the
+                    // user had already scrolled past. Kept as a literal here rather than a query arg:
+                    // serializeQueryArgs strips only `page`, so any new arg would join the cache key.
+                    sort: 'food.shoppingCartCategory.name,ASC',
                 },
             }),
             serializeQueryArgs: ({ endpointName, queryArgs }) => {
