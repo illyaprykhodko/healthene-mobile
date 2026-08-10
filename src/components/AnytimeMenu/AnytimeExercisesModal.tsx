@@ -1,7 +1,7 @@
 // outsource dependencies
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useMemo, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 
 // local dependencies
 import { Badge } from './Badge';
@@ -39,6 +39,11 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
 }) => {
     const theme = useTheme();
     const navigation = useNavigation();
+
+    useLayoutEffect(() => {
+        navigation.setOptions({ onBackPress: visible ? onClose : undefined } as any);
+    }, [visible, onClose, navigation]);
+
     const { data: dayOverviewData, refetch } = useGetDayOverviewQuery(date || new Date().toISOString().split('T')[0]);
     const [updatePhase] = useUpdatePhaseMutation();
     const exerciseCategories = useMemo(() => {
@@ -89,7 +94,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
         const anytimeItems = anytimePhase?.items || [];
         return anytimeItems
             .filter(isAnytimeExerciseItem)
-            .filter(item => item.status === PHASE_ITEM_STATUS.PENDING).length;
+            .filter(item => (item.status !== PHASE_ITEM_STATUS.DONE || item.status !== PHASE_ITEM_STATUS.DID_NOT_EAT)).length;
     }, [dayOverviewData]);
     const listIsDone = useMemo(() => areAllItemsFullyDone(exerciseCategories), [exerciseCategories]);
     const isSingleExerciseCategoryDone = useMemo(
@@ -171,103 +176,86 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
 
     if (!visible) { return null; }
 
-    return (
-        <View style={styles.overlay}>
-            {/* <BottomGlassModal
-           visible={visible}
-            onClose={onClose}
-            maxHeight={maxHeight}
-             fullScreen={fullScreen}
-         > */}
+    return <View style={[styles.modal, { backgroundColor: theme.colors.surface }]}>
+        <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
+            <View style={styles.headerLeft}>
+                <Badge count={activeExercisesCount} bgColor={theme.colors.aqua}>
+                    <ActivityIcon size={24} />
+                </Badge>
+                <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+                    Exercise
+                </Text>
+            </View>
+
             <TouchableOpacity
                 onPress={onClose}
-                activeOpacity={1}
-                style={StyleSheet.absoluteFill}
-            />
-      
-            <View style={[styles.modal, { backgroundColor: theme.colors.surface }]}>
-                <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
-                    <View style={styles.headerLeft}>
-                        <Badge count={activeExercisesCount} bgColor={theme.colors.aqua}>
-                            <ActivityIcon size={24} />
-                        </Badge>
-                        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-                            Exercise
-                        </Text>
-                    </View>
-          
-                    <TouchableOpacity
-                        onPress={onClose}
-                        disabled={disabled}
-                        style={styles.closeButton}
-                    >
-                        <CloseIcon size={24} color={theme.colors.text} />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.content}>
-                    {exerciseCategories.length === 0 ? (
-                        <View style={styles.emptyState}>
-                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                                No exercises found
-                            </Text>
-                        </View>
-                    ) : (
-                        <ScrollView style={styles.scrollView}>
-                            {exerciseCategories.map((item: any) =>
-                                <TouchableOpacity
-                                    disabled={disabled}
-                                    key={String(item.id)}
-                                    onPress={() => handleItemPress(item)}
-                                    style={[styles.exerciseItem, { borderBottomColor: theme.colors.border }]}
-                                >
-                                    <View style={styles.exerciseContent}>
-                                        <Text style={[styles.exerciseName, { color: theme.colors.text }]}>
-                                            {item.title}
-                                        </Text>
-                                    </View>
-                                        
-                                    {item?.status === PHASE_ITEM_STATUS.DONE && (
-                                        <Checkbox
-                                            value
-                                            size={15}
-                                            editable={false}
-                                            onChange={() => {}}
-                                        />
-                                    )}
-                                        
-                                    {item?.status === PHASE_ITEM_STATUS.INCOMPLETE && (
-                                        <View style={[styles.finishBadge, { backgroundColor: theme.colors.warning }]}>
-                                            <Text style={styles.finishText}>Finish</Text>
-                                        </View>
-                                    )}
-                                        
-                                    {![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.INCOMPLETE].includes(item?.status) && (
-                                        <Text style={[styles.chevron, { color: theme.colors.textSecondary }]}>›</Text>
-                                    )}
-                                </TouchableOpacity>)}
-                        </ScrollView>
-                    )}
-                </View>
-                {listIsDone && (
-                    <View style={styles.completionContainer}>
-                        <Text style={[styles.goodWorkText, { backgroundColor: theme.colors.surface, color: theme.colors.text }]}>
-                            Keep It Up!
-                        </Text>
-                        <TouchableOpacity
-                            style={[styles.nextActivityButton, { backgroundColor: theme.colors.successAlt }]}
-                            onPress={onClose}
-                        >
-                            <Text style={[styles.nextActivityText, { color: theme.colors.white }]}>
-                                {isSingleExerciseCategoryDone ? 'DONE' : 'NEXT ACTIVITY'}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-            </View>
-            {/* </BottomGlassModal> */}
+                disabled={disabled}
+                style={styles.closeButton}
+            >
+                <CloseIcon size={24} color={theme.colors.text} />
+            </TouchableOpacity>
         </View>
-    );
+
+        <View style={styles.content}>
+            {exerciseCategories.length === 0 ? (
+                <View style={styles.emptyState}>
+                    <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                        No exercises found
+                    </Text>
+                </View>
+            ) : (
+                <ScrollView style={styles.scrollView}>
+                    {exerciseCategories.map((item: any) =>
+                        <TouchableOpacity
+                            disabled={disabled}
+                            key={String(item.id)}
+                            onPress={() => handleItemPress(item)}
+                            style={[styles.exerciseItem, { borderBottomColor: theme.colors.border }]}
+                        >
+                            <View style={styles.exerciseContent}>
+                                <Text style={[styles.exerciseName, { color: theme.colors.text }]}>
+                                    {item.title}
+                                </Text>
+                            </View>
+
+                            {item?.status === PHASE_ITEM_STATUS.DONE && (
+                                <Checkbox
+                                    value
+                                    size={15}
+                                    editable={false}
+                                    onChange={() => {}}
+                                />
+                            )}
+
+                            {item?.status === PHASE_ITEM_STATUS.INCOMPLETE && (
+                                <View style={[styles.finishBadge, { backgroundColor: theme.colors.warning }]}>
+                                    <Text style={styles.finishText}>Finish</Text>
+                                </View>
+                            )}
+
+                            {![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.INCOMPLETE].includes(item?.status) && (
+                                <Text style={[styles.chevron, { color: theme.colors.textSecondary }]}>›</Text>
+                            )}
+                        </TouchableOpacity>)}
+                </ScrollView>
+            )}
+        </View>
+        {(listIsDone && exerciseCategories.length > 0)
+            && <View style={styles.completionContainer}>
+                <Text style={[styles.goodWorkText, { backgroundColor: theme.colors.surface, color: theme.colors.text }]}>
+                    Keep It Up!
+                </Text>
+                <TouchableOpacity
+                    style={[styles.nextActivityButton, { backgroundColor: theme.colors.successAlt }]}
+                    onPress={onClose}
+                >
+                    <Text style={[styles.nextActivityText, { color: theme.colors.white }]}>
+                        {isSingleExerciseCategoryDone ? 'DONE' : 'NEXT ACTIVITY'}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        }
+    </View>;
 };
 
 const styles = StyleSheet.create({

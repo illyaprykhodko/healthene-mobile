@@ -1,8 +1,9 @@
+
 // outsource dependencies
-import { StyleSheet, View, SectionList } from 'react-native';
-import React, { memo, useCallback, useMemo, useState } from 'react';
 import { useNavigation, StackActions } from '@react-navigation/native';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
+import { StyleSheet, View, SectionList, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text';
@@ -56,8 +57,11 @@ interface GroupedSection {
     data: StockItem[];
 }
 
-const ALL_CATEGORY: { name: string; id?: number | null } = { name: 'All' };
 const ADDITIONAL_CATEGORY_NAME = 'Additional';
+// Used only for the onScroll tab-sync approximation — NOT passed to SectionList.
+// Items with wrapping text are taller; the sync may lag by a few items, which is acceptable.
+const ITEM_HEIGHT_APPROX = 121;      // padding: 20*2 + image: 80 + hairline
+const SECTION_HEADER_HEIGHT = 53;    // paddingVertical: 16*2 + ~20px text + 1px border
 
 const StockList: React.FC = () => {
     const theme = useTheme();
@@ -67,8 +71,12 @@ const StockList: React.FC = () => {
 
     const [open, setOpen] = useState(true);
     const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
-    const [activeCategory, setActiveCategory] = useState<{ name: string; id?: number | null }>(ALL_CATEGORY);
+    const [activeCategory, setActiveCategory] = useState<{ name: string; id?: number | null }>({ name: '' });
     const [page, setPage] = useState(0);
+    const sectionListRef = useRef<SectionList<StockItem, GroupedSection>>(null);
+    const suppressScrollRef = useRef(false);
+    const activeCategoryRef = useRef(activeCategory);
+    activeCategoryRef.current = activeCategory;
     const checkedItems = useAppSelector(selectCheckedStockItems);
     const {
         confirmedItemsType,
@@ -77,15 +85,7 @@ const StockList: React.FC = () => {
         id: shoppingListId,
     } = useAppSelector(selectShopping);
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
-    const hasActiveCategoryId = Object.prototype.hasOwnProperty.call(activeCategory || {}, 'id');
-    const selectedStockCategoryId = hasActiveCategoryId
-        ? activeCategory.id
-        : undefined;
-    const { data: stockData, isLoading, isFetching } = useGetStockListQuery({
-        shoppingCartCategoryId: selectedStockCategoryId,
-        page,
-        size: 20,
-    });
+    const { data: stockData, isLoading, isFetching } = useGetStockListQuery({ page, size: 100 });
     // const { data: stockData, isLoading } = useGetStockListQuery();
     // TEMP: updateStock is kept for the upcoming revert — the call site below is commented in handleNextBtn.
     // eslint-disable-next-line no-unused-vars
@@ -94,41 +94,13 @@ const StockList: React.FC = () => {
     const [moveStocksToShoppingList, { isLoading: isMovingStocks }] = useMoveStocksToShoppingListMutation();
     const [updateShoppingListStatus, { isLoading: isFinalizing }] = useUpdateShoppingListStatusMutation();
     const stockList = stockData?.content || [];
-    const isAllCategory = activeCategory?.name === 'All';
-    // Get unique categories
-    // const tabs = useMemo(() => {
-    //     const categories = new Map<number, string>();
-    //     stockList.forEach((item: StockItem) => {
-    //         const cat = item.food?.shoppingCartCategory;
-    //         if (cat) {
-    //             categories.set(cat.id, cat.name);
-    //         }
-    //     });
-    //     return [
-    //         { name: 'All' },
-    //         ...Array.from(categories.entries()).map(([id, name]) => ({ id, name })),
-    //     ];
-    // }, [stockList]);
-    const tabs = useMemo(() => {
-        const categories = categoriesData || [];
-        const normalized = categories
-            .filter(category => category && typeof category.name === 'string' && category.name.trim() !== '')
-            .map(category => ({ ...category, name: category.name.trim() }));
-        return [ALL_CATEGORY, ...normalized];
+    const uncategorizedCategoryName = useMemo(() => {
+        const cat = (categoriesData || []).find(c => c?.id === null || c?.id === 0);
+        return cat?.name?.trim() || ADDITIONAL_CATEGORY_NAME;
     }, [categoriesData]);
 
-    const uncategorizedCategoryName = useMemo(() => (
-        tabs.find(tab => tab?.id === null || tab?.id === 0)?.name || ADDITIONAL_CATEGORY_NAME
-    ), [tabs]);
     // Filter and group by category
     const groupedList: GroupedSection[] = useMemo(() => {
-        // let filtered = stockList;
-        // if (activeCategory.id) {
-        //     filtered = stockList.filter(
-        //         (item: StockItem) => item.food?.shoppingCartCategory?.id === activeCategory.id
-        //     );
-        // }
-
         const grouped: Record<string, StockItem[]> = {};
         stockList.forEach((item: StockItem) => {
             const categoryName = item.food?.shoppingCartCategory?.name
@@ -142,6 +114,30 @@ const StockList: React.FC = () => {
 
         return Object.entries(grouped).map(([title, data]) => ({ title, data }));
     }, [stockList, uncategorizedCategoryName]);
+
+    const tabs = useMemo(() => {
+        const categoryMap = new Map(
+            (categoriesData || [])
+                .filter(cat => cat && typeof cat.name === 'string' && cat.name.trim() !== '')
+                .map(cat => [cat.name.trim(), { ...cat, name: cat.name.trim() }]),
+        );
+        return groupedList.map(section => categoryMap.get(section.title) ?? { name: section.title });
+    }, [groupedList, categoriesData]);
+
+    const sectionHeaderOffsets = useMemo(() => {
+        let offset = 0;
+        return groupedList.map(section => {
+            const headerOffset = offset;
+            offset += SECTION_HEADER_HEIGHT + section.data.length * ITEM_HEIGHT_APPROX;
+            return headerOffset;
+        });
+    }, [groupedList]);
+
+    useEffect(() => {
+        if (tabs.length > 0 && !activeCategoryRef.current.name) {
+            setActiveCategory(tabs[0]);
+        }
+    }, [tabs]);
 
     const handleGoBack = useCallback(() => {
         dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
@@ -222,9 +218,38 @@ const StockList: React.FC = () => {
 
     const handleCategoryChange = useCallback((item: any) => {
         const next = item?.activeItem ?? item;
-        setActiveCategory({ name: next?.name ?? 'All', id: next?.id });
-        // setActiveCategory(item.activeItem || item);
-        setPage(0);
+        setActiveCategory({ name: next?.name ?? '', id: next?.id });
+        const sectionIndex = groupedList.findIndex(s => s.title === next?.name);
+        if (sectionIndex === -1 || !sectionListRef.current) { return; }
+        suppressScrollRef.current = true;
+        const offset = sectionHeaderOffsets[sectionIndex] ?? 0;
+        (sectionListRef.current.getScrollResponder() as any)?.scrollTo?.({ y: offset, animated: true });
+    }, [groupedList, sectionHeaderOffsets]);
+
+    const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        if (suppressScrollRef.current) { return; }
+        const y = event.nativeEvent.contentOffset.y;
+        let newIndex = 0;
+        for (let i = sectionHeaderOffsets.length - 1; i >= 0; i--) {
+            if (sectionHeaderOffsets[i] <= y) {
+                newIndex = i;
+                break;
+            }
+        }
+        const matchingTab = tabs[newIndex];
+        if (matchingTab && matchingTab.name !== activeCategoryRef.current.name) {
+            setActiveCategory(matchingTab);
+        }
+    }, [sectionHeaderOffsets, tabs]);
+
+    const onMomentumScrollEnd = useCallback(() => {
+        suppressScrollRef.current = false;
+    }, []);
+
+    // Reset suppression when the user begins a manual drag — programmatic scrollTo
+    // does not fire onMomentumScrollEnd, so without this the tab sync stays blocked.
+    const onScrollBeginDrag = useCallback(() => {
+        suppressScrollRef.current = false;
     }, []);
 
     const handleCloseAlert = useCallback(() => setOpen(false), []);
@@ -245,7 +270,7 @@ const StockList: React.FC = () => {
 
         return (
             <Animated.View
-                exiting={FadeOut.duration(220)}
+                exiting={FadeOut.duration(200)}
                 layout={LinearTransition.springify().damping(20)}
                 entering={FadeInDown.delay(Math.min(index, 10) * 80).springify().mass(1.2).damping(30)}
             >
@@ -289,18 +314,10 @@ const StockList: React.FC = () => {
     }, [checkedItems, disabled, handleToggleItem]);
 
     const renderSectionHeader = useCallback(({ section }: { section: GroupedSection }) => (
-        <View style={[
-            isAllCategory ? styles.sectionMuted : styles.section,
-            { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border },
-        ]}>
-            <Text variant="h3" style={styles.sectionTitle} color={theme.colors.primary}>
-                {isAllCategory ? section.title : `Select all ${section.title} You Need`}
-            </Text>
-        </View>
-    ), [isAllCategory, theme.colors]);
-    const renderListHeader = useCallback(() => (
         <View style={[styles.section, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
-            <Text variant="h3" style={styles.sectionTitle} color={theme.colors.primary}>Select all Produce You Need</Text>
+            <Text variant="h4" style={styles.sectionTitle} color={theme.colors.primary}>
+                Select all the {section.title}
+            </Text>
         </View>
     ), [theme.colors]);
 
@@ -324,12 +341,17 @@ const StockList: React.FC = () => {
                             activeItem={activeCategory}
                             handleItem={handleCategoryChange}
                         />
-                        {isAllCategory && renderListHeader()}
-                        <SectionList
+                        <SectionList<StockItem, GroupedSection>
+                            onScroll={onScroll}
+                            ref={sectionListRef}
                             sections={groupedList}
                             renderItem={renderItem}
+                            scrollEventThrottle={50}
+                            initialNumToRender={100}
                             stickySectionHeadersEnabled
+                            onScrollBeginDrag={onScrollBeginDrag}
                             renderSectionHeader={renderSectionHeader}
+                            onMomentumScrollEnd={onMomentumScrollEnd}
                             keyExtractor={(item, index) => `${item.id}_${index}`}
                             onEndReached={() => {
                                 if (stockData && !isFetching && page + 1 < stockData.totalPages) {
@@ -399,7 +421,6 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        marginTop: OFFSET.VERTICAL,
     },
     emptyText: {
         marginTop: OFFSET.VERTICAL * 2,
@@ -424,6 +445,7 @@ const styles = StyleSheet.create({
         borderBottomColor: COLORS.LIGHT_GREY,
     },
     sectionTitle: {
+        fontWeight: 'semibold',
         color: COLORS.THEME_COLOR,
     },
     itemContainer: {
@@ -431,8 +453,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: COLORS.LIGHT_GREY,
+        borderBottomWidth: StyleSheet.hairlineWidth,
     },
     image: {
         width: 80,

@@ -69,7 +69,7 @@ export const ForgotPasswordScreen: React.FC = () => {
                         dispatch(setError(null));
                         await forgotPassword({
                             email: values.email,
-                            resetUrl: `${config.websiteUrl}/public/change-password/`,
+                            resetUrl: `${config.publicSiteUrl}/change-password/`,
                         }).unwrap();
                         dispatch(setEmail(values.email));
                         dispatch(setSuccess(true));

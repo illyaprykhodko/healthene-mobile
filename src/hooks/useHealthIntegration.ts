@@ -7,7 +7,7 @@ import dayjs from 'services/date';
 import { Platform } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 // local dependencies
-import { AppleHealthService, GoogleFitService } from 'services/health';
+import { AppleHealthService, HealthConnectService } from 'services/health';
 import type { MeasurementType, HealthSample, DateRange } from 'types/health';
 
 export interface UseHealthIntegrationReturn {
@@ -30,11 +30,16 @@ export const useHealthIntegration = (): UseHealthIntegrationReturn => {
     const [error, setError] = useState<string | null>(null);
 
     // Get the appropriate service based on platform
-    const service = Platform.OS === 'ios' ? AppleHealthService : GoogleFitService;
-    const serviceName = Platform.OS === 'ios' ? 'Apple Health' : 'Google Fit';
+    const service = Platform.OS === 'ios' ? AppleHealthService : HealthConnectService;
+    const serviceName = Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect';
 
     /**
-   * Initialize: check availability and permissions
+   * Initialize: check availability only.
+   *
+   * NOTE deliberately does NOT request permissions. It used to, "silently", but
+   * `initHealthKit` puts the system Health sheet on screen — so merely mounting this hook
+   * prompted the patient out of nowhere. Permissions are asked for through the returned
+   * `requestPermissions`, i.e. only when the patient turns health sync on.
    */
     useEffect(() => {
         const initialize = async () => {
@@ -44,12 +49,6 @@ export const useHealthIntegration = (): UseHealthIntegrationReturn => {
             try {
                 const available = await service.isAvailable();
                 setIsAvailable(available);
-
-                if (available) {
-                    // Try to request permissions silently
-                    const granted = await service.requestPermissions();
-                    setHasPermissions(granted);
-                }
             } catch (error) {
                 console.error(`[useHealthIntegration] ${serviceName} init error:`, error);
                 setError(`Failed to initialize ${serviceName}`);

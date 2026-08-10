@@ -19,11 +19,13 @@ setBackgroundMessageHandler(getMessaging(), async remoteMessage => {
     await notificationService.handleBackgroundMessage(remoteMessage);
 });
 
-// NOTE Taps on notifee-rendered notifications while the app is backgrounded/quit
-// arrive here — without this registration notifee warns at runtime and the deep
-// link attached to the notification is dropped.
+// NOTE Taps on notifee-rendered banners while the app sits in the background are
+// delivered here — `onNotificationOpenedApp` never fires for them, since APNs/FCM
+// did not display those notifications. Like the handler above, this MUST be
+// registered outside the React tree. Foreground taps go through `onForegroundEvent`
+// inside `notificationService.initialize()`.
 notifee.onBackgroundEvent(async event => {
-    notificationService.handleNotifeeEvent(event);
+    await notificationService.handleNotifeeEvent(event);
 });
 
 AppRegistry.registerComponent(appName, () => App);

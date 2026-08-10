@@ -10,7 +10,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "if [ -f &quot;${PROJECT_DIR}/../.env.development&quot; ]; then&#10;  cp -f &quot;${PROJECT_DIR}/../.env.development&quot; &quot;${PROJECT_DIR}/../.env&quot;&#10;fi&#10;">
+               scriptText = "# Selects the env file baked in by the react-native-config Config codegen phase.&#10;# ReadDotEnv.rb reads /tmp/envfile before ENVFILE and before .env, so the tracked&#10;# .env file is left untouched by builds.&#10;echo &quot;.env.development&quot; &gt; /tmp/envfile&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"

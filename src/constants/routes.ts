@@ -9,6 +9,9 @@ export const ROUTES = {
     MAIN: 'Main',
     EDIT: 'Edit',
     INFO: 'Info',
+    // NOTE the drawer navigator itself, as registered in `PrivateStack`. Needed to
+    // address screens nested inside it (`linking.ts`, push deep links).
+    DRAWER: 'Drawer',
     LIBRARY: 'Library',
     UPC_SCAN: 'UPCScan',
     SHOPPING: 'Shopping',
@@ -19,6 +22,7 @@ export const ROUTES = {
     ABOUT_PLAN: 'AboutPlan',
     SMART_SCALE: 'SmartScale',
     REPLACEMENT: 'Replacement',
+    HELP_SUPPORT: 'HelpSupport',
     DAY_OVERVIEW: 'DayOverview',
     GAMBLING_HOME: 'GamblingHome',
     GAMBLING_BANK: 'GamblingBank',
@@ -78,6 +82,7 @@ export const ROUTES = {
     BIOMETRIC_SETTINGS: 'BiometricSettings',
     ANIMATION_SETTINGS: 'AnimationSettings',
     APPEARANCE_SETTINGS: 'AppearanceSettings',
+    HEALTH_SYNC_SETTINGS: 'HealthSyncSettings',
     PERSONAL_INFORMATION: 'PersonalInformation',
 
     // Messenger

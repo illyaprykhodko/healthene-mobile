@@ -73,8 +73,8 @@ export const AnimatedDropdown: React.FC<AnimatedDropdownProps> = ({
     return (
         <View style={[styles.container, containerStyle]}>
             <TouchableOpacity
-                activeOpacity={hasManyOptions ? 0.75 : 1}
                 disabled={!hasManyOptions}
+                activeOpacity={hasManyOptions ? 0.75 : 1}
                 onPress={() => setIsOpen(prev => !prev)}
                 style={[
                     styles.trigger,

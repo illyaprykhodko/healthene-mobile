@@ -56,6 +56,19 @@ export const isMessageThreadDeepLink = (deepLink?: string | null): boolean => (
     Boolean(getMessageThreadIdFromDeepLink(deepLink))
 );
 
+/**
+ * Matches the message link with NO thread id attached — plain
+ * `/public/app-redirect/messages/thread`.
+ *
+ * NOTE this is what the backend actually emits for new-message notifications
+ * today. There is nothing to open a specific thread with, so callers should land
+ * the patient on the message list rather than hand the URL back to the OS (which
+ * leaves the app and, without a served AASA, ends up in the App Store).
+ */
+export const isMessagesSectionDeepLink = (deepLink?: string | null): boolean => (
+    Boolean(deepLink) && normalizeDeepLinkPath(deepLink) === DEEP_LINK_PATH.MESSAGE_THREAD_PREFIX
+);
+
 // NOTE Push-notification payload shape varies widely between platforms,
 // FCM delivery modes (notification / data / mixed) and even between library
 // versions. To stay resilient we scan every common container (`data`,

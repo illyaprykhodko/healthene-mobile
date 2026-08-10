@@ -41,7 +41,7 @@ export const BottomGlassModal: React.FC<BottomGlassModalProps> = ({
     onClose,
     children,
     maxHeight,
-    topOffset = 50,
+    topOffset = 45,
     fullScreen = true,
 }) => {
     const theme = useTheme();

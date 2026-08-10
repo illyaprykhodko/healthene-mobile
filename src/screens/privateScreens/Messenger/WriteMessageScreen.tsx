@@ -29,6 +29,7 @@ import { getClinicRoleLabel } from 'constants/spec.ts';
 import { RootStackParamList } from 'services/navigation';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { MessageForm, Recipient } from 'types/messenger.ts';
+import { buildAttachmentFormData } from 'utils/attachment/attachmentFormData';
 import Attachments from 'screens/privateScreens/Messenger/components/Attachments.tsx';
 import { useCreateChainMutation, useReplyToChainMutation } from 'store/api/messengerApi.ts';
 import { useDeleteFileMutation, useUploadAttachmentMutation } from 'store/api/s3ServiceApi.ts';
@@ -175,15 +176,21 @@ const WriteMessageScreen = () => {
         try {
             setPreloader(true);
             const [file] = await pick({ type: [types.allFiles] });
-            const formData = new FormData();
-            formData.append('file', {
-                uri: file.uri,
-                name: file.name,
-                type: file.type ?? 'application/octet-stream',
-            });
-            formData.append('title', file.name);
-            formData.append('description', dayjs().format());
-            const attachment = await uploadFile({ body: formData }).unwrap();
+            // The picker leaves `name` null for some providers; it feeds both the upload filename
+            // and the title, so fall back rather than sending null through.
+            const fileName = file.name ?? 'attachment';
+            const body = buildAttachmentFormData(
+                {
+                    uri: file.uri,
+                    name: fileName,
+                    mimeType: file.type ?? 'application/octet-stream',
+                },
+                {
+                    title: fileName,
+                    description: dayjs().format(),
+                },
+            );
+            const attachment = await uploadFile({ body }).unwrap();
             dispatch(setAttachment(attachment));
             Toast.show({
                 type: 'success',

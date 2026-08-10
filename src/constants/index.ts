@@ -15,6 +15,7 @@ export const config = {
     websiteUrl: env.WEBSITE_URL,
     serviceUrl: env.SERVICE_URL,
     environment: env.ENVIRONMENT,
+    publicSiteUrl: env.PUBLIC_SITE_URL,
     updatePolicyMockEnabled: env.UPDATE_POLICY_MOCK_ENABLED !== 'false',
     softUpdateCooldownHours: Number(env.SOFT_UPDATE_COOLDOWN_HOURS || 24),
     softUpdateShowOnLaunch: env.SOFT_UPDATE_SHOW_ON_LAUNCH !== 'false',
@@ -22,7 +23,6 @@ export const config = {
     iosStoreUrl: env.IOS_STORE_URL || 'https://apps.apple.com/app/id0000000000',
     androidStoreUrl: env.ANDROID_STORE_URL || 'https://play.google.com/store/apps/details?id=com.example.app',
     // senderFirebaseId: env.SENDER_FIREBASE_ID,
-    // googleFitDataUrl: env.GOOGLE_FIT_DATA_URL,
     DEBUG: env.APP_DEBUG === String(true),
     // platform: Platform.OS === 'ios' ? 'IOS' : 'ANDROID'
     // Compile-time feature flags driven by `.env*` files (see `react-native-config`).
