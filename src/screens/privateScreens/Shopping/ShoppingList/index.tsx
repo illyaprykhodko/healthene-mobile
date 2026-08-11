@@ -74,6 +74,17 @@ interface GroupedItem {
 
 const ALL_CATEGORY: { name: string; id?: number | null } = { name: 'All' };
 const ADDITIONAL_CATEGORY_NAME = 'Additional';
+// Modal identities, most blocking first. Only ONE may be mounted at a time: every alert here
+// renders a React Native `Modal`, and two open at once physically stack instead of queueing.
+const MODAL = {
+    STATUS_POPOVER: 'statusPopover',
+    FINALIZE_CONFIRM: 'finalizeConfirm',
+    MEAL_COUNT_PROMPT: 'mealCountPrompt',
+    UNFINISHED_LIST_WARNING: 'unfinishedListWarning',
+} as const;
+
+type ActiveModal = typeof MODAL[keyof typeof MODAL] | null;
+
 // Visible slack above a focused amount input once scrollToLocation has pinned it to the top.
 const FOCUS_TOP_GAP = 12;
 
@@ -115,8 +126,11 @@ const ShoppingList: React.FC = () => {
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
     const submittedShoppingList = useAppSelector(state => (state.app?.user as any)?.submittedShoppingList) ?? false;
 
-    const [open, setOpen] = useState(true);
-    const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
+    // `open` used to mean "the arrival announcement is open" — the popover whose copy comes from
+    // `popoverText`. `isFinalizeOpen` sat one letter away from the unrelated Redux flag
+    // `isFinalizeAlertOpen`, which is the "your list isn't done" warning.
+    const [isStatusPopoverOpen, setIsStatusPopoverOpen] = useState(true);
+    const [isFinalizeConfirmOpen, setIsFinalizeConfirmOpen] = useState(false);
     const [page, setPage] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
     // Height of the absolutely-positioned bottom button bar, measured so the list can reserve
@@ -404,7 +418,7 @@ const ShoppingList: React.FC = () => {
         }
         if (currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.MEAL) {
             if (stockList.length > 0) {
-                setOpen(false);
+                setIsStatusPopoverOpen(false);
                 dispatch(setCurrentStep(SHOPPING_STEP.STOCK));
                 navigation.navigate(ROUTES.STOCK_LIST);
             // HS-3113: Final Check step removed. Previously, a touched list with no stock
@@ -414,10 +428,10 @@ const ShoppingList: React.FC = () => {
             //     dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
             //     refetch();
             } else {
-                setIsFinalizeOpen(true);
+                setIsFinalizeConfirmOpen(true);
             }
         } else {
-            setIsFinalizeOpen(true);
+            setIsFinalizeConfirmOpen(true);
         }
     }, [navigation, currentStep, stockList, dispatch, isStockResolving, stockData]);
 
@@ -515,7 +529,7 @@ const ShoppingList: React.FC = () => {
                 }));
             }
             dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
-            setIsFinalizeOpen(false);
+            setIsFinalizeConfirmOpen(false);
             navigation.dispatch(StackActions.replace(ROUTES.SHOPPING_LIST, { isShopOnMyOwn: true }));
         } catch (error) {
             console.error('Error finalizing shopping list:', error);
@@ -528,7 +542,7 @@ const ShoppingList: React.FC = () => {
         navigation.navigate(ROUTES.SHOPPING_PDF, { date: { endDate, startDate } });
     }, [navigation]);
 
-    const handleCloseAlert = useCallback(() => setOpen(false), []);
+    const handleCloseStatusPopover = useCallback(() => setIsStatusPopoverOpen(false), []);
 
     const handleFinishUpAlert = useCallback(() => {
         pendingBackActionRef.current = null;
@@ -635,6 +649,28 @@ const ShoppingList: React.FC = () => {
         }
         return null;
     }, [currentStep, shoppingListDates, status, route.params]);
+
+    // Resolve one winner by priority so the next alert surfaces only once the current one closes.
+    // Order matches the established flow: an explicit Finalize tap wins, then the unfinished-list
+    // warning, then the meal-count prompt, and the arrival announcement comes last.
+    const activeModal: ActiveModal = useMemo(() => {
+        if (isFinalizeConfirmOpen) { return MODAL.FINALIZE_CONFIRM; }
+        if (isFinalizeAlertOpen) { return MODAL.UNFINISHED_LIST_WARNING; }
+        if (isCustomAlertOpen && status !== SHOPPING_STATUS.SHOP_ON_MY_OWN) { return MODAL.MEAL_COUNT_PROMPT; }
+        // Held back until the list is on screen: the copy talks about a list the user cannot see yet.
+        // Before the loading branch stopped being an early return this was implicit.
+        if (isStatusPopoverOpen && isFocused && Boolean(popoverText) && !isLoading) { return MODAL.STATUS_POPOVER; }
+        return null;
+    }, [
+        status,
+        isLoading,
+        isFocused,
+        popoverText,
+        isCustomAlertOpen,
+        isFinalizeAlertOpen,
+        isStatusPopoverOpen,
+        isFinalizeConfirmOpen,
+    ]);
 
     const assertHeaderHeight = useDevHeightAssert(
         'ShoppingList section header',
@@ -866,11 +902,11 @@ const ShoppingList: React.FC = () => {
                     )}
                 </View>
             </GlassSurface>
-            {(status !== SHOPPING_STATUS.SHOP_ON_MY_OWN && isCustomAlertOpen) && (
+            {activeModal === MODAL.MEAL_COUNT_PROMPT && (
                 <Modal
+                    visible
                     transparent
                     animationType="fade"
-                    visible={isCustomAlertOpen}
                     onRequestClose={handleCloseCustomAlert}
                 >
                     <TouchableOpacity
@@ -919,10 +955,10 @@ const ShoppingList: React.FC = () => {
                 cancelTxt="Cancel"
                 applyTxt="Finalize"
                 disabled={isLoading}
-                isOpen={isFinalizeOpen}
                 onSubmit={handleFinalize}
                 message="This action cannot be undone."
-                onClose={() => setIsFinalizeOpen(false)}
+                isOpen={activeModal === MODAL.FINALIZE_CONFIRM}
+                onClose={() => setIsFinalizeConfirmOpen(false)}
                 title="Are you sure you want to finalize your shopping list?"
             />
             <ConfirmationAlert
@@ -931,19 +967,19 @@ const ShoppingList: React.FC = () => {
                 cancelTxt="Not Now"
                 applyTxt="Finish Up"
                 onClose={handleNotNowAlert}
-                isOpen={isFinalizeAlertOpen}
                 onSubmit={handleFinishUpAlert}
+                isOpen={activeModal === MODAL.UNFINISHED_LIST_WARNING}
                 message="Looks like your list isn’t done yet. Finish it before you go?"
             />
-            {popoverText && !isCustomAlertOpen && (
+            {popoverText && (
                 <ConfirmationAlert
                     hideCancelBtn
                     disabled={isLoading}
                     title={popoverText.title}
-                    isOpen={open && isFocused}
-                    onClose={handleCloseAlert}
-                    onSubmit={handleCloseAlert}
                     message={popoverText.message}
+                    onClose={handleCloseStatusPopover}
+                    onSubmit={handleCloseStatusPopover}
+                    isOpen={activeModal === MODAL.STATUS_POPOVER}
                     applyTxt={route.params?.isSubmitted ? 'Got it!' : 'View List'}
                 />
             )}

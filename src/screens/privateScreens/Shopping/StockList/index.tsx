@@ -59,6 +59,16 @@ const PAGE_SIZE = 100;
 // kills scroll-driven highlighting for the rest of the session.
 const PROGRAMMATIC_SCROLL_TIMEOUT = 800;
 
+// Modal identities, most blocking first. Only ONE may be mounted at a time: every alert here
+// renders a React Native `Modal`, and two open at once physically stack instead of queueing.
+const MODAL = {
+    INTRO: 'intro',
+    FINALIZE_CONFIRM: 'finalizeConfirm',
+    UNFINISHED_LIST_WARNING: 'unfinishedListWarning',
+} as const;
+
+type ActiveModal = typeof MODAL[keyof typeof MODAL] | null;
+
 const keyExtractor = (item: StockItem) => String(item.id);
 
 const StockList: React.FC = () => {
@@ -70,8 +80,10 @@ const StockList: React.FC = () => {
     const openDrawer = useShoppingDrawer({ guarded: true });
     const { seenKeys, firstWaveRef, endFirstWave, resetEntrance } = useListEntrance();
 
-    const [open, setOpen] = useState(true);
-    const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
+    // `isIntroAlertOpen` is the "check your kitchen" arrival alert; `isFinalizeConfirmOpen` sat one
+    // letter away from the unrelated Redux flag `isFinalizeAlertOpen` (the unfinished-list warning).
+    const [isIntroAlertOpen, setIsIntroAlertOpen] = useState(true);
+    const [isFinalizeConfirmOpen, setIsFinalizeConfirmOpen] = useState(false);
     const [activeCategory, setActiveCategory] = useState<{ name: string; id?: number | null }>({ name: '' });
     const [page, setPage] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -226,7 +238,7 @@ const StockList: React.FC = () => {
         // finalize confirmation right here. Kept commented to ease revert.
         // dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
         // navigation.navigate(ROUTES.SHOPPING_LIST);
-        setIsFinalizeOpen(true);
+        setIsFinalizeConfirmOpen(true);
     }, []);
 
     const buildShopOnMyOwnPayload = useCallback(() => {
@@ -261,14 +273,14 @@ const StockList: React.FC = () => {
                 }));
             }
             dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
-            setIsFinalizeOpen(false);
+            setIsFinalizeConfirmOpen(false);
             navigation.dispatch(StackActions.replace(ROUTES.SHOPPING_LIST, { isShopOnMyOwn: true }));
         } catch (error) {
             console.error('Error finalizing shopping list:', error);
         }
     }, [checkedItems, moveStocksToShoppingList, shoppingListId, separateRescueItems, buildShopOnMyOwnPayload, updateShoppingListStatus, dispatch, navigation]);
 
-    const handleCloseFinalizeAlert = useCallback(() => setIsFinalizeOpen(false), []);
+    const handleCloseFinalizeAlert = useCallback(() => setIsFinalizeConfirmOpen(false), []);
 
     const handleFinishUpAlert = useCallback(() => {
         dispatch(updateShoppingMeta({ isFinalizeAlertOpen: false, isTryToOpenSideMenu: false }));
@@ -367,9 +379,18 @@ const StockList: React.FC = () => {
         refetch();
     }, [page, refetch, resetEntrance]);
 
-    const handleCloseAlert = useCallback(() => setOpen(false), []);
+    const handleCloseIntroAlert = useCallback(() => setIsIntroAlertOpen(false), []);
 
     const disabled = isLoading || isUpdating || isMovingStocks || isFinalizing;
+
+    // One winner by priority, so the next alert surfaces only once the current one closes.
+    const activeModal: ActiveModal = useMemo(() => {
+        if (isFinalizeConfirmOpen) { return MODAL.FINALIZE_CONFIRM; }
+        if (isFinalizeAlertOpen) { return MODAL.UNFINISHED_LIST_WARNING; }
+        // Waits for real content — it asks the user to check a list that is still a skeleton.
+        if (isIntroAlertOpen && !isLoading) { return MODAL.INTRO; }
+        return null;
+    }, [isFinalizeConfirmOpen, isFinalizeAlertOpen, isIntroAlertOpen, isLoading]);
 
     // Set lookup instead of `checkedItems.includes` per row — that was O(checked) on every row of
     // every render, and every toggle re-renders the whole list.
@@ -495,10 +516,9 @@ const StockList: React.FC = () => {
                 title="Stock List"
                 disabled={disabled}
                 applyTxt="View List"
-                onClose={handleCloseAlert}
-                onSubmit={handleCloseAlert}
-                // Wait for real content — otherwise the alert pops over an empty loading screen.
-                isOpen={open && !isLoading}
+                onClose={handleCloseIntroAlert}
+                onSubmit={handleCloseIntroAlert}
+                isOpen={activeModal === MODAL.INTRO}
                 message="Check that these items are still in your kitchen."
             />
             {/* HS-3113: finalize confirmation moved here from ShoppingList. With the third
@@ -510,9 +530,9 @@ const StockList: React.FC = () => {
                 applyTxt="Finalize"
                 disabled={disabled}
                 title="Are you done?"
-                isOpen={isFinalizeOpen}
                 onSubmit={handleFinalize}
                 onClose={handleCloseFinalizeAlert}
+                isOpen={activeModal === MODAL.FINALIZE_CONFIRM}
             />
             <ConfirmationAlert
                 title="Oops!"
@@ -520,8 +540,8 @@ const StockList: React.FC = () => {
                 cancelTxt="Not Now"
                 applyTxt="Finish Up"
                 onClose={handleNotNowAlert}
-                isOpen={isFinalizeAlertOpen}
                 onSubmit={handleFinishUpAlert}
+                isOpen={activeModal === MODAL.UNFINISHED_LIST_WARNING}
                 message="Looks like your list isn’t done yet. Finish it before you go?"
             />
         </Screen>
