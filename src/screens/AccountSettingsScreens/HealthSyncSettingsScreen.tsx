@@ -19,12 +19,18 @@ import Screen from 'components/Screen';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 import healthSyncService from 'services/health/health-sync.service';
+import { openHealthConnectSettings } from 'react-native-health-connect';
+import { getAvailability, type HealthConnectAvailability } from 'services/health/health-connect.service';
 
-const HEALTH_APP_NAME = Platform.OS === 'ios' ? 'Apple Health' : 'Google Fit';
-// NOTE opens the Health app itself. iOS shows its permission sheet only once per requested
-// set of types, so after the patient has answered it there is no way back to it from inside
-// our app — which types are shared can then only be changed in Health → Sharing → Apps.
-const HEALTH_APP_URL = 'x-apple-health://';
+const IS_IOS = Platform.OS === 'ios';
+const HEALTH_APP_NAME = IS_IOS ? 'Apple Health' : 'Health Connect';
+// NOTE opens the health app itself, where the patient can change which types are shared. On
+// iOS that is the only way back: the permission sheet is shown once per requested set of types
+// and never again, so from inside our app there is nothing left to open.
+const APPLE_HEALTH_URL = 'x-apple-health://';
+// NOTE Health Connect is a separate app on Android 13 and below, so it can be missing or too
+// old to talk to. Both cases are normal, not failures — this is where the patient is sent.
+const HEALTH_CONNECT_PLAY_URL = 'market://details?id=com.google.android.apps.healthdata';
 
 export const HealthSyncSettingsScreen: React.FC = () => {
     const theme = useTheme();
@@ -32,6 +38,10 @@ export const HealthSyncSettingsScreen: React.FC = () => {
     const [isAvailable, setIsAvailable] = useState(false);
     const [isEnabled, setIsEnabled] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    // NOTE Android distinguishes "Health Connect is missing" from "it is installed but too old",
+    // and the patient can act on both — so the screen keeps the finer state instead of collapsing
+    // it into `isAvailable`. On iOS there is nothing comparable to report.
+    const [availability, setAvailability] = useState<HealthConnectAvailability>('unavailable');
 
     useEffect(() => {
         const checkStatus = async () => {
@@ -42,6 +52,9 @@ export const HealthSyncSettingsScreen: React.FC = () => {
                 ]);
                 setIsAvailable(available);
                 setIsEnabled(enabled);
+                if (!IS_IOS && !available) {
+                    setAvailability(await getAvailability());
+                }
             } catch (error) {
                 console.error('[HealthSyncSettings] Error checking status:', error);
             } finally {
@@ -103,11 +116,28 @@ export const HealthSyncSettingsScreen: React.FC = () => {
     }, []);
 
     const handleOpenHealthApp = useCallback(async () => {
+        if (!IS_IOS) {
+            // Health Connect exposes its own settings screen; that is where per-type access lives.
+            openHealthConnectSettings();
+            return;
+        }
+
         try {
-            await Linking.openURL(HEALTH_APP_URL);
+            await Linking.openURL(APPLE_HEALTH_URL);
         } catch {
             // Fall back to our own settings page — better than doing nothing.
             await Linking.openSettings();
+        }
+    }, []);
+
+    const handleInstallHealthConnect = useCallback(async () => {
+        try {
+            await Linking.openURL(HEALTH_CONNECT_PLAY_URL);
+        } catch {
+            // The Play Store app may be absent (or the URL scheme unhandled) — fall back to web.
+            await Linking.openURL(
+                'https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata'
+            );
         }
     }, []);
 
@@ -122,6 +152,11 @@ export const HealthSyncSettingsScreen: React.FC = () => {
     }
 
     if (!isAvailable) {
+        // NOTE on Android this is usually fixable by the patient — Health Connect is a separate
+        // app on Android 13 and below, so it can simply be missing or out of date. Offering the
+        // Play Store beats telling them their device cannot do it.
+        const isFixable = !IS_IOS && (availability === 'update-required' || availability === 'unavailable');
+
         return (
             <Screen initialized style={styles.container}>
                 <View style={styles.notAvailableContainer}>
@@ -131,7 +166,9 @@ export const HealthSyncSettingsScreen: React.FC = () => {
                         color={theme.colors.text}
                         style={styles.notAvailableTitle}
                     >
-                        {HEALTH_APP_NAME} Not Available
+                        {availability === 'update-required'
+                            ? `${HEALTH_APP_NAME} Needs an Update`
+                            : `${HEALTH_APP_NAME} Not Available`}
                     </Text>
                     <Text
                         variant="body"
@@ -139,9 +176,27 @@ export const HealthSyncSettingsScreen: React.FC = () => {
                         style={styles.notAvailableText}
                         color={theme.colors.textSecondary}
                     >
-                        This device does not provide {HEALTH_APP_NAME}, so measurements cannot be
-                        imported automatically.
+                        {isFixable
+                            ? `Healthene needs ${HEALTH_APP_NAME} to read your measurements. Install or update it, then come back to this screen.`
+                            : `This device does not provide ${HEALTH_APP_NAME}, so measurements cannot be imported automatically.`}
                     </Text>
+                    {isFixable && (
+                        <TouchableOpacity
+                            onPress={handleInstallHealthConnect}
+                            style={[styles.manageButton, styles.notAvailableAction, { borderColor: theme.colors.primary }]}
+                        >
+                            <Icon size={20} name="download-outline" color={theme.colors.primary} />
+                            <Text
+                                variant="body"
+                                style={styles.manageButtonText}
+                                color={theme.colors.primary}
+                            >
+                                {availability === 'update-required'
+                                    ? `Update ${HEALTH_APP_NAME}`
+                                    : `Get ${HEALTH_APP_NAME}`}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </Screen>
         );
@@ -201,27 +256,25 @@ export const HealthSyncSettingsScreen: React.FC = () => {
                     </View>
                 </View>
 
-                {Platform.OS === 'ios' && (
-                    <TouchableOpacity
-                        onPress={handleOpenHealthApp}
-                        style={[styles.manageButton, { borderColor: theme.colors.primary }]}
+                <TouchableOpacity
+                    onPress={handleOpenHealthApp}
+                    style={[styles.manageButton, { borderColor: theme.colors.primary }]}
+                >
+                    <Icon size={20} name="open-outline" color={theme.colors.primary} />
+                    <Text
+                        variant="body"
+                        color={theme.colors.primary}
+                        style={styles.manageButtonText}
                     >
-                        <Icon size={20} name="open-outline" color={theme.colors.primary} />
-                        <Text
-                            variant="body"
-                            style={styles.manageButtonText}
-                            color={theme.colors.primary}
-                        >
                             Manage access in {HEALTH_APP_NAME}
-                        </Text>
-                    </TouchableOpacity>
-                )}
+                    </Text>
+                </TouchableOpacity>
 
                 <View style={styles.infoSection}>
                     <Text
                         variant="caption"
-                        color={theme.colors.text}
                         style={styles.infoTitle}
+                        color={theme.colors.text}
                     >
                         What to expect
                     </Text>
@@ -320,6 +373,10 @@ const styles = StyleSheet.create({
     toggleInfo: {
         flex: 1,
         marginRight: OFFSET.HORIZONTAL,
+    },
+    notAvailableAction: {
+        marginTop: OFFSET.VERTICAL * 2,
+        paddingHorizontal: OFFSET.HORIZONTAL,
     },
     manageButton: {
         flexDirection: 'row',

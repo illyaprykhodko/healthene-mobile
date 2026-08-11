@@ -109,6 +109,32 @@ export interface MeasurementPayload {
 }
 
 /**
+ * A single value inside a logged measurement record.
+ */
+export interface LoggedMeasurementValue {
+  value: number;
+  measurementUnit: MeasurementUnit;
+}
+
+/**
+ * One logged measurement record returned by
+ * `POST /patient-service/patients/me/measurement/logged`.
+ * `source` distinguishes manual entries from data imported via Apple Health / Google Fit.
+ */
+export interface LoggedMeasurementRecord {
+  id: number;
+  timestamp: string;
+  textValue: string | null;
+  source: MeasurementSource;
+  values: LoggedMeasurementValue[];
+  // Backend relations present in the payload but not consumed on the client.
+  visit?: Record<string, unknown>;
+  patient?: Record<string, unknown>;
+  measurement?: Record<string, unknown>;
+  dayOverviewItem?: Record<string, unknown>;
+}
+
+/**
  * BLE Smart Scale specific types
  */
 export interface SmartScaleReading {

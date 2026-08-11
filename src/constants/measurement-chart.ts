@@ -3,6 +3,8 @@
  * Constants for measurement chart periods, dates and data visualization
  */
 
+import { Platform } from 'react-native';
+
 import dayjs from 'services/date';
 
 // Date period types
@@ -99,3 +101,6 @@ export const MEASUREMENT_SOURCE = {
 } as const;
 
 export type MeasurementSource = typeof MEASUREMENT_SOURCE[keyof typeof MEASUREMENT_SOURCE];
+
+// User-facing name of the platform health app that a measurement can be imported from
+export const HEALTH_APP_NAME = Platform.OS === 'ios' ? 'Apple Health' : 'Google Fit';

@@ -1,7 +1,10 @@
 buildscript {
     ext {
         buildToolsVersion = "36.0.0"
-        minSdkVersion = 24
+        // NOTE 26 is the floor for react-native-health-connect (androidx.health.connect). The
+        // library reads this ext value, so leaving it at 24 would let the build through and fail
+        // at manifest merge instead. Raising it drops Android 7.x devices.
+        minSdkVersion = 26
         compileSdkVersion = 36
         targetSdkVersion = 36
         ndkVersion = "27.1.12297006"

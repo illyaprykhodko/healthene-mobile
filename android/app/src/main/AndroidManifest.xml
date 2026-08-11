@@ -25,13 +25,22 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
 
-    <!-- Google Fit permissions -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
-    
+
     <!-- Step counter and activity recognition -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+
+    <!-- Health Connect: exactly the three types the import reads, nothing more -->
+    <uses-permission android:name="android.permission.health.READ_WEIGHT" />
+    <uses-permission android:name="android.permission.health.READ_BLOOD_GLUCOSE" />
+    <uses-permission android:name="android.permission.health.READ_BLOOD_PRESSURE" />
+
+    <!-- NOTE Health Connect is a separate app on Android 13 and below; without this the system
+         hides it from us and availability cannot be determined. -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
 
     <application
       android:name=".MainApplication"
@@ -96,6 +105,26 @@
             <category android:name="android.intent.category.BROWSABLE" />
             <data android:scheme="healthene" />
         </intent-filter>
+
+        <!-- NOTE Google Play requires an app reading Health Connect data to explain why, and it
+             reaches that explanation through this intent. Android 13 and below open it on the
+             activity itself; Android 14+ uses the activity-alias below. Both are mandatory —
+             without them the listing is rejected. -->
+        <intent-filter>
+            <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+        </intent-filter>
       </activity>
+
+      <!-- Android 14+ moved the rationale to a dedicated permission-usage entry point -->
+      <activity-alias
+          android:name="ViewPermissionUsageActivity"
+          android:exported="true"
+          android:targetActivity=".MainActivity"
+          android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+          <intent-filter>
+              <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+              <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+          </intent-filter>
+      </activity-alias>
     </application>
 </manifest>
