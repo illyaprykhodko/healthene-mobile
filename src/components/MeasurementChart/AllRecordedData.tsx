@@ -12,14 +12,27 @@ import {
 
 // local dependencies
 import { useTheme } from 'hooks/useTheme';
+import { LoggedMeasurementRecord } from 'types/health';
 import { MAX_FONT_SCALE } from 'constants/typography.ts';
 import { useGetLoggedMeasurementDataMutation } from 'store/api/dayOverviewApi';
+import { HEALTH_APP_NAME, MEASUREMENT_SOURCE, MeasurementSource } from 'constants/measurement-chart';
 
 interface RecordItem {
     id: string;
     date: string;
     value: string;
+    source?: MeasurementSource;
 }
+
+// Measurements imported from the platform health app are labelled with its name;
+// manual entries carry no badge.
+const getSourceLabel = (source?: MeasurementSource): string | null => {
+    if (source === MEASUREMENT_SOURCE.APPLE_HEALTH || source === MEASUREMENT_SOURCE.GOOGLE_FIT) {
+        return HEALTH_APP_NAME;
+    }
+
+    return null;
+};
 
 interface AllRecordedDataProps {
     measurementType: string;
@@ -51,8 +64,9 @@ const AllRecordedData: React.FC<AllRecordedDataProps> = ({
                     sort: 'timestamp,DESC',
                 }).unwrap();
 
-                const newRecords = (response?.content || []).map((item: any) => ({
+                const newRecords = (response?.content || []).map((item: LoggedMeasurementRecord) => ({
                     id: String(item?.id),
+                    source: item?.source,
                     value: `${(item?.values?.[0]?.value || 0).toFixed(0)} ${item?.values?.[0]?.measurementUnit?.name || ''}`,
                     date: dayjs(item?.timestamp).format('MMM DD, YYYY [at] h:mm A'),
                 }));
@@ -79,12 +93,23 @@ const AllRecordedData: React.FC<AllRecordedDataProps> = ({
     }, [isLoading, page, totalPages, loadData]);
 
     const renderItem = useCallback(
-        ({ item }: { item: RecordItem }) => (
-            <View style={[styles.row, { borderBottomColor: theme.colors.border }]}>
-                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.value, { color: theme.colors.text }]}>{item.value}</Text>
-                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.date, { color: theme.colors.textSecondary }]}>{item.date}</Text>
-            </View>
-        ),
+        ({ item }: { item: RecordItem }) => {
+            const sourceLabel = getSourceLabel(item.source);
+
+            return (
+                <View style={[styles.row, { borderBottomColor: theme.colors.border }]}>
+                    <View style={styles.valueColumn}>
+                        <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.value, { color: theme.colors.text }]}>{item.value}</Text>
+                        {sourceLabel && (
+                            <View style={[styles.sourceBadge, { backgroundColor: theme.colors.muted }]}>
+                                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.sourceBadgeText, { color: theme.colors.textSecondary }]}>{sourceLabel}</Text>
+                            </View>
+                        )}
+                    </View>
+                    <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.date, { color: theme.colors.textSecondary }]}>{item.date}</Text>
+                </View>
+            );
+        },
         [theme.colors]
     );
 
@@ -144,10 +169,23 @@ const styles = StyleSheet.create({
         paddingHorizontal: 7,
         borderBottomWidth: 1,
     },
+    valueColumn: {
+        width: '45%',
+    },
     value: {
         fontSize: 16,
         fontWeight: 'bold',
-        width: '45%',
+    },
+    sourceBadge: {
+        marginTop: 4,
+        borderRadius: 4,
+        paddingVertical: 2,
+        alignSelf: 'flex-start',
+        paddingHorizontal: 6,
+    },
+    sourceBadgeText: {
+        fontSize: 11,
+        fontWeight: '500',
     },
     date: {
         fontSize: 14,
