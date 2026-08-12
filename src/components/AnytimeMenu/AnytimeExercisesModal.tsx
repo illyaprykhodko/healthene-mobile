@@ -44,6 +44,15 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
         navigation.setOptions({ onBackPress: visible ? onClose : undefined } as any);
     }, [visible, onClose, navigation]);
 
+    useEffect(() => {
+        if (!visible) { return; }
+        const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+            e.preventDefault();
+            onClose();
+        });
+        return unsubscribe;
+    }, [visible, onClose, navigation]);
+
     const { data: dayOverviewData, refetch } = useGetDayOverviewQuery(date || new Date().toISOString().split('T')[0]);
     const [updatePhase] = useUpdatePhaseMutation();
     const exerciseCategories = useMemo(() => {
@@ -270,6 +279,7 @@ const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
+        zIndex: 999,
         elevation: 7,
         shadowColor: '#000000',
         shadowOffset: {
