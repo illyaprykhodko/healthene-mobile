@@ -3,7 +3,6 @@ import {
     Modal,
     View,
     Platform,
-    Dimensions,
     StyleSheet,
     ScrollView,
     TouchableOpacity,
@@ -13,19 +12,21 @@ import Icon from '@react-native-vector-icons/fontawesome5';
 // local dependencies
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
+import type { Attachment } from 'types/video';
+import PrivateVideo from 'components/PrivateVideo';
 
 interface ReplaceItemModalProps {
     visible: boolean;
+    video?: Attachment;
     onClose: () => void;
     onApply: () => void;
-    videoUrl?: string; // Optional video about rescue foods
 }
 
 const ReplaceItemModal: React.FC<ReplaceItemModalProps> = ({
+    video,
     visible,
     onClose,
     onApply,
-    videoUrl,
 }) => {
     const theme = useTheme();
 
@@ -63,12 +64,9 @@ const ReplaceItemModal: React.FC<ReplaceItemModalProps> = ({
                         Click to learn more.
                     </Text>
 
-                    {/* Video placeholder - can be replaced with actual video component */}
-                    {videoUrl && (
-                        <View style={[styles.videoContainer, { backgroundColor: theme.colors.primary }]}>
-                            <Text style={[styles.videoPlaceholder, { color: theme.colors.white }]}>
-                                Video about Additional Food Options
-                            </Text>
+                    {video && (
+                        <View style={styles.videoContainer}>
+                            <PrivateVideo video={video} />
                         </View>
                     )}
                 </View>
@@ -92,8 +90,6 @@ const ReplaceItemModal: React.FC<ReplaceItemModalProps> = ({
 };
 
 export default memo(ReplaceItemModal);
-
-const screenHeight = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
     container: {
@@ -148,16 +144,10 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     videoContainer: {
-        height: screenHeight / 4,
+        overflow: 'hidden',
+        borderRadius: 10,
         marginHorizontal: 15,
         marginVertical: 20,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    videoPlaceholder: {
-        fontSize: 16,
-        fontWeight: '500',
     },
     title1: {
         fontSize: Platform.OS === 'ios' ? 28 : 22,
