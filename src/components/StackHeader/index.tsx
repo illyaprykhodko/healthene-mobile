@@ -64,20 +64,21 @@ export default StackHeader;
 const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
-        alignItems: 'flex-end',
-        justifyContent: 'flex-end',
+        alignItems: 'center',
         paddingBottom: OFFSET.VERTICAL,
+        justifyContent: 'space-between',
         paddingHorizontal: OFFSET.HORIZONTAL,
     },
     side: {
-        flex: 1,
-        alignItems: 'flex-start',
+        minWidth: 60,
+        justifyContent: 'center',
     },
     sideRight: {
         alignItems: 'flex-end',
     },
     center: {
-        flex: 2,
+        flex: 1,
         alignItems: 'center',
+        justifyContent: 'center',
     },
 });

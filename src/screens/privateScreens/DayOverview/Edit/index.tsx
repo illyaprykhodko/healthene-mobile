@@ -1049,11 +1049,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 visible={showConfirmationModal}
                 prevItem={replacementData.prevItem}
                 nextItem={replacementData.nextItem}
+                onApply={handleConfirmationModalApply}
                 onClose={() => {
                     setShowConfirmationModal(false);
                     setReplacementData({ prevItem: null, nextItem: null });
                 }}
-                onApply={handleConfirmationModalApply}
             />
 
             <ConfirmationAlert
