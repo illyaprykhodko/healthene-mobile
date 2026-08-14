@@ -43,6 +43,8 @@ export default function ExerciseDetails () {
     const { exercise, refreshCurrentList, parentNavigation, deepPhaseId, date, onRefresh } = route.params || {};
     const [showGoodWork, setShowGoodWork] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const initialCompletedCountRef = useRef<number | null>(null);
+    const isDoneInFlightRef = useRef(false);
     const title = exercise?.title || 'Exercise';
     const isFutureDay = dayjs(date).isAfter(dayjs(), 'day');
 
@@ -50,15 +52,15 @@ export default function ExerciseDetails () {
     const { data: stretchingData, isLoading: stretchingLoading } = useGetStretchingExerciseQuery(exercise?.id?.toString() || '', {
         skip: !exercise?.id || exercise?.type !== ExerciseType.STRETCHING
     });
-    
+
     const { data: aerobicData, isLoading: aerobicLoading } = useGetAerobicExerciseQuery(exercise?.id?.toString() || '', {
         skip: !exercise?.id || exercise?.type !== ExerciseType.AEROBIC
     });
-    
+
     const { data: resistanceData, isLoading: resistanceLoading } = useGetResistanceExerciseQuery(exercise?.id?.toString() || '', {
         skip: !exercise?.id || exercise?.type !== ExerciseType.RESISTANCE
     });
-    
+
     // Fallback to general physical activity item query
     const { data: fallbackData, isLoading: fallbackLoading } = useGetPhysicalActivityItemQuery(
         exercise?.id?.toString() || '',
@@ -70,7 +72,7 @@ export default function ExerciseDetails () {
             )
         }
     );
-    
+
     // Get the appropriate data based on exercise type
     const exerciseData = useMemo(() => (exercise?.type === ExerciseType.STRETCHING
         ? stretchingData
@@ -86,7 +88,7 @@ export default function ExerciseDetails () {
     //         : exercise?.type === ExerciseType.RESISTANCE
     //             ? resistanceData
     //             : fallbackData;
-    
+
     const isLoading = useMemo(
         () => (exercise?.type === ExerciseType.STRETCHING
             ? stretchingLoading
@@ -108,7 +110,7 @@ export default function ExerciseDetails () {
     // Get exercise state from Redux
     const exerciseState = useAppSelector((state: any) => state.exercise || {});
     const { steps = [], scientificDescription, scientificVideo, subtype, isDirty = false } = exerciseState;
-    
+
     const memoizedSteps = useMemo(() => {
         return steps;
     }, [steps]);
@@ -135,7 +137,7 @@ export default function ExerciseDetails () {
                     scientificDescription: exerciseData?.scientificDescription,
                     steps: [...(exerciseData?.steps || [])]?.sort((a: any, b: any) => a?.order - b?.order) || [],
                 };
-            
+
                 dispatch(initializeExercise({
                     id: exercise.id,
                     exerciseType: exercise.type,
@@ -144,6 +146,14 @@ export default function ExerciseDetails () {
             }
         }
     }, [exerciseData, exercise?.id, exercise?.type, dispatch, exerciseState.id, exerciseState.initialized]);
+
+    // Capture baseline completed-step count once after initialization so handleDone
+    // can compare against it without touching the initialization logic above.
+    useEffect(() => {
+        if (exerciseState.initialized && exerciseState.id === exercise?.id && initialCompletedCountRef.current === null) {
+            initialCompletedCountRef.current = steps.filter((s: any) => s.completed).length;
+        }
+    }, [exerciseState.initialized, exerciseState.id, exercise?.id, steps]);
 
     useLayoutEffect(() => {
         parentNavigation?.setOptions({
@@ -183,7 +193,7 @@ export default function ExerciseDetails () {
                 console.error('Failed to update phase item status:', error);
             }
         }
-        
+
         // Update steps via API
         const updateMutation = exercise?.type === ExerciseType.STRETCHING
             ? updateStretchingSteps
@@ -192,7 +202,7 @@ export default function ExerciseDetails () {
                 : exercise?.type === ExerciseType.RESISTANCE
                     ? updateResistanceSteps
                     : null;
-        
+
         if (updateMutation && exercise?.id) {
             try {
                 dispatch(setLoading(true));
@@ -208,24 +218,30 @@ export default function ExerciseDetails () {
     }, [updatePhaseItemApi, deepPhaseId, exercise?.id, exercise?.type, updateStretchingSteps, updateAerobicSteps, updateResistanceSteps, dispatch]);
 
     const handleDone = useCallback(async () => {
-        setShowGoodWork(true);
-        Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-        }).start();
-        setTimeout(() => {
+        if (isDoneInFlightRef.current) { return; }
+        isDoneInFlightRef.current = true;
+
+        const currentCompletedCount = memoizedSteps.filter((step: any) => step.completed).length;
+        if (initialCompletedCountRef.current !== null && currentCompletedCount > initialCompletedCountRef.current) {
+            setShowGoodWork(true);
             Animated.timing(fadeAnim, {
-                toValue: 0,
+                toValue: 1,
                 duration: 300,
                 useNativeDriver: true,
-            }).start(() => setShowGoodWork(false));
-        }, 3000);
-        
+            }).start();
+            setTimeout(() => {
+                Animated.timing(fadeAnim, {
+                    toValue: 0,
+                    duration: 300,
+                    useNativeDriver: true,
+                }).start(() => setShowGoodWork(false));
+            }, 3000);
+        }
+
         const nextStatus = memoizedSteps.every((step: any) => step.completed)
             ? PHASE_ITEM_STATUS.DONE
             : memoizedSteps.some((step: any) => step.completed) ? PHASE_ITEM_STATUS.INCOMPLETE : PHASE_ITEM_STATUS.PENDING;
-        
+
         // Save changes and reset dirty flag
         try {
             await updateExerciseDataCallback(nextStatus, memoizedSteps);
@@ -236,13 +252,14 @@ export default function ExerciseDetails () {
             }));
             refreshCurrentList?.(exercise.id, 'status', nextStatus);
             onRefresh?.();
-            
+
             if (nextStatus === PHASE_ITEM_STATUS.DONE) {
                 setTimeout(() => {
                     navigation.goBack();
                 }, 700);
             }
         } catch (error) {
+            isDoneInFlightRef.current = false;
             console.error('Failed to save exercise:', error);
         }
     }, [memoizedSteps, exercise?.id, refreshCurrentList, updateExerciseDataCallback, navigation, fadeAnim, dispatch, onRefresh]);
@@ -311,7 +328,7 @@ export default function ExerciseDetails () {
             let extraDisplay: any[] = [];
             const config = EXERCISE_CONFIGS[exercise?.type]?.[exerciseParams.subtype || 'DEFAULT']?.[exerciseParams.goalType || 'DEFAULT'];
             const isExerciseComplete = memoizedSteps.every((step: any) => step.completed);
-            
+
             if (config) {
                 goalDisplay = config.renderGoal(step);
                 extraDisplay = config.renderExtra(step);
@@ -338,7 +355,7 @@ export default function ExerciseDetails () {
                             <Text style={[styles.videoText, { color: theme.colors.info }]}>Video</Text>
                         </TouchableOpacity>
                     ) : null}
-                    
+
                     <View style={[styles.imageContainer, { backgroundColor: theme.dark ? theme.colors.grey : theme.colors.white }]}>
                         {image ? (
                             <Image
@@ -349,7 +366,7 @@ export default function ExerciseDetails () {
                             />
                         ) : null}
                     </View>
-                    
+
                     {/* Goal row */}
                     <View style={styles.repsContainer}>
                         <TouchableOpacity
@@ -373,7 +390,7 @@ export default function ExerciseDetails () {
                             onChange={() => completeStep(itemId)}
                         />
                     </View>
-                    
+
                     {/* Extra fields */}
                     {extraDisplay && extraDisplay.length > 0 && (
                         <View style={{ marginTop: 8 }}>
@@ -522,7 +539,6 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
     const toggleText = useCallback(() => setToggle(prevState => !prevState), []);
     const normalizedDescription = normalizeDescription(description);
     const hasDescription = normalizedDescription.trim().length > 0;
-    console.log(normalizedDescription);
     const hasVideo = Boolean(video);
     const themedHtmlStyles = useMemo(() => StyleSheet.create({
         ...htmlStyles,
@@ -556,13 +572,13 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
             snapPoints={['65%']}
             isActive={isPanelOpen}
             onPressCloseButton={closePanel}
+            closeRootStyle={{ backgroundColor: 'transparent' }}
             style={StyleSheet.flatten([styles.swipePanel, style])}
             closeIconStyle={{
                 borderWidth: 1.5,
                 borderColor: theme.colors.grey,
                 backgroundColor: theme.colors.grey,
             }}
-            closeRootStyle={{ backgroundColor: 'transparent' }}
         >
             <View style={{ paddingHorizontal: OFFSET.HORIZONTAL, marginTop: OFFSET.VERTICAL }}>
                 <View style={{ marginTop: 16 * 2 }}>

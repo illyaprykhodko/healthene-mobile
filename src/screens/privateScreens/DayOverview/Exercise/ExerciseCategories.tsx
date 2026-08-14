@@ -87,11 +87,13 @@ export default function ExerciseCategories () {
     // Use exercise categories if no current list is set
     const displayList = currentList.length > 0 ? currentList : exerciseCategories;
     const listIsDone = useMemo(() => areAllItemsFullyDone(displayList), [displayList]);
-    const isExercise = Boolean(route.params?.list && route.params?.list?.length);
-    const isSingleExerciseCategoryDone = useMemo(
-        () => title === 'Exercise' && displayList.length === 1 && listIsDone,
-        [title, displayList.length, listIsDone]
+    const showKeepItUp = useMemo(
+        () => !listIsDone && displayList.some(
+            (item: any) => item.status === PHASE_ITEM_STATUS.DONE || item.status === PHASE_ITEM_STATUS.INCOMPLETE
+        ),
+        [listIsDone, displayList]
     );
+    const isExercise = Boolean(route.params?.list && route.params?.list?.length);
     const swipeWidth = 123;
 
     // Calculate active exercises count
@@ -279,7 +281,10 @@ export default function ExerciseCategories () {
                     />
                 )}
                 renderItem={({ item }: { item: any }) => (
-                    <View style={[styles.listItemContainer, { backgroundColor: theme.colors.surface }, isExercise && styles.swipeItemDecorator]}>
+                    <View style={[
+                        styles.listItemContainer, { backgroundColor: theme.colors.surface },
+                        isExercise && styles.swipeItemDecorator
+                    ]}>
                         <TouchableOpacity
                             key={String(item.id)}
                             onPress={() => handleItemPress(item)}
@@ -322,6 +327,9 @@ export default function ExerciseCategories () {
                     </View>
                 )}
                 renderHiddenItem={({ item }: { item: any }, rowMap: Record<string, any>) => {
+                    if (item.status === PHASE_ITEM_STATUS.DONE) {
+                        return <View style={styles.listItemHidden} />;
+                    }
                     const isSkipped = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
                     return (
                         <View style={styles.listItemHidden}>
@@ -365,17 +373,12 @@ export default function ExerciseCategories () {
                     }
                 }}
             />
-            {listIsDone && (<Text textAlign="center" style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>Keep It Up!</Text>)}
-            {listIsDone && !isSingleExerciseCategoryDone && (
-                <Button
-                    variant="primary"
-                    title="NEXT ACTIVITY"
-                    style={styles.submitBtn}
-                    textStyle={styles.submitBtnText}
-                    onPress={() => navigation.goBack()}
-                />
+            {showKeepItUp && (
+                <Text textAlign="center" style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>
+                    Keep It Up!
+                </Text>
             )}
-            {isSingleExerciseCategoryDone && (
+            {listIsDone && (
                 <Button
                     title="DONE"
                     variant="primary"
@@ -476,9 +479,11 @@ const styles = StyleSheet.create({
     goodWorkText: {
         fontSize: 32,
         fontWeight: '500',
-        backgroundColor: 'white',
         borderRadius: 12,
-        padding: 16
+        padding: 16,
+        marginHorizontal: 16,
+        marginBottom: 8,
+        textAlign: 'center',
     },
     submitBtn: {
         width: '90%',
