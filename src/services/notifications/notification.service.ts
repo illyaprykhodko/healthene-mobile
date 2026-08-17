@@ -39,6 +39,7 @@ import {
     normalizeDeepLinkPath,
     getNotificationDeepLink,
     isMessageThreadDeepLink,
+    isShoppingListDeepLink,
     isMessagesSectionDeepLink,
     getMessageThreadIdFromDeepLink,
 } from 'services/deepLink';
@@ -71,18 +72,22 @@ const delay = (ms: number): Promise<void> => new Promise<void>(resolve => { setT
  * the dev console). Addressing the full path also mounts the intermediate
  * navigators on the way in.
  */
-const navigateNested = (drawerScreen: string, screen: string, params: object = {}): void => {
+const navigateNested = (drawerScreen: string, screen?: string, params: object = {}): void => {
     navigationRef.dispatch(CommonActions.navigate({
         name: PRIVATE,
         params: {
             screen: ROUTES.DRAWER,
-            params: {
-                screen: drawerScreen,
-                params: {
-                    screen,
-                    params,
-                },
-            },
+            // NOTE `screen` is optional so a caller can stop at the drawer level and let the
+            // target's own stack pick its initial route (see the shopping list below).
+            params: screen
+                ? {
+                    screen: drawerScreen,
+                    params: {
+                        screen,
+                        params,
+                    },
+                }
+                : { screen: drawerScreen },
         },
     }));
 };
@@ -290,6 +295,14 @@ class NotificationService {
         if (isWeightDeepLink(deepLink)) {
             const date = dayjs().format('YYYY-MM-DD');
             navigateNested(ROUTES.DAILY_PLAN, ROUTES.WEIGHT_MEASUREMENT, { date });
+            return;
+        }
+
+        // NOTE stop at the drawer-level `Shopping` screen instead of addressing a child
+        // route: the inner stack resolves its `initialRouteName` (list vs preferences) from
+        // the shopping-status query, so the child does not exist yet when the link arrives.
+        if (isShoppingListDeepLink(deepLink)) {
+            navigateNested(ROUTES.SHOPPING);
             return;
         }
 
