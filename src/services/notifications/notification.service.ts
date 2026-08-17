@@ -37,9 +37,9 @@ import { messengerApi } from 'store/api/messengerApi';
 import {
     isWeightDeepLink,
     normalizeDeepLinkPath,
+    isShoppingListDeepLink,
     getNotificationDeepLink,
     isMessageThreadDeepLink,
-    isShoppingListDeepLink,
     isMessagesSectionDeepLink,
     getMessageThreadIdFromDeepLink,
 } from 'services/deepLink';
