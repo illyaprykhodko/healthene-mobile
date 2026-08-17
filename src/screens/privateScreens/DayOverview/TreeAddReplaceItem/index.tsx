@@ -76,6 +76,7 @@ const TreeAddReplaceItem: React.FC = () => {
     const [isAiItemLoading, setIsAiItemLoading] = useState(false);
     const [aiFoods, setAiFoods] = useState<any[]>([]);
     const [isAiFoodsAdded, setIsAiFoodsAdded] = useState(false);
+    const [isAiServiceUnavailable, setIsAiServiceUnavailable] = useState(false);
     // Count of distinct committed (debounced) searches in the current session. HS-3130: the
     // GPT "Show More" must NOT appear during the first search, only from the second onward.
     const [searchRound, setSearchRound] = useState(0);
@@ -107,6 +108,7 @@ const TreeAddReplaceItem: React.FC = () => {
         setAiFoods([]);
         setAllItems([]);
         setIsAiFoodsAdded(false);
+        setIsAiServiceUnavailable(false);
     }, [debouncedSearchQuery, selectedTab]);
 
     // Track distinct searches so GPT "Show More" stays hidden on the first one (HS-3130).
@@ -436,6 +438,7 @@ const TreeAddReplaceItem: React.FC = () => {
         setDebouncedSearchQuery('');
         setCurrentNodeId(null);
         setBreadcrumb([]);
+        setIsAiServiceUnavailable(false);
         // setSearchType(SEARCH_TYPE.ITEM);
         setSearchType(tabType === TAG_TYPE.RESTAURANT ? SEARCH_TYPE.TREE : SEARCH_TYPE.ITEM);
     }, []);
@@ -448,6 +451,7 @@ const TreeAddReplaceItem: React.FC = () => {
             setIsAiLoading(true);
             const data = await getAiFoodsTrigger({ name: debouncedSearchQuery.trim() }).unwrap();
             if (!Array.isArray(data) || data.length === 0) {
+                setIsAiServiceUnavailable(true);
                 return;
             }
             const preparedData = data.map((item: any) => ({
@@ -457,6 +461,8 @@ const TreeAddReplaceItem: React.FC = () => {
             }));
             setAiFoods(preparedData);
             setIsAiFoodsAdded(true);
+        } catch {
+            setIsAiServiceUnavailable(true);
         } finally {
             setIsAiLoading(false);
         }
@@ -671,6 +677,10 @@ const TreeAddReplaceItem: React.FC = () => {
                         <View style={styles.loadingMore}>
                             <ActivityIndicator size="small" color={theme.colors.primary} />
                         </View>
+                    ) : isAiServiceUnavailable ? (
+                        <View style={styles.showMoreContainer}>
+                            <Text style={styles.showMoreUnavailableText}>Oops! We can’t find anything yet</Text>
+                        </View>
                     ) : isShowMoreVisible ? (
                         <TouchableOpacity
                             onPress={handleShowMore}
@@ -860,6 +870,11 @@ const styles = StyleSheet.create({
         fontSize: 22,
         color: '#156F93',
         fontWeight: '300',
+    },
+    showMoreUnavailableText: {
+        fontSize: 16,
+        color: COLORS.GREY,
+        fontStyle: 'italic',
     },
     overlay: {
         ...StyleSheet.absoluteFill,

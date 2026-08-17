@@ -81,10 +81,10 @@ const Maintenance: React.FC = () => {
                 <MaterialIndicator color={theme.colors.success} size={70} style={MStyles.sp3} />
             </View>
             <Text variant="bold" style={{ textAlign: 'center' }}>
-          APP IS UNDER MAINTENANCE
+                APP IS UNDER MAINTENANCE
             </Text>
             <Text style={{ textAlign: 'center' }}>
-          We'll back online shortly!
+                We'll back online shortly!
             </Text>
         </View>
     );

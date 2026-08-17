@@ -90,7 +90,12 @@ export const AnytimeExerciseList: React.FC = () => {
     );
 
     const listIsDone = useMemo(() => areAllItemsFullyDone(exerciseCategories), [exerciseCategories]);
-    const isSingleExerciseCategoryDone = exerciseCategories.length === 1 && listIsDone;
+    const showKeepItUp = useMemo(
+        () => !listIsDone && exerciseCategories.some(
+            item => item.status === PHASE_ITEM_STATUS.DONE || item.status === PHASE_ITEM_STATUS.INCOMPLETE
+        ),
+        [listIsDone, exerciseCategories]
+    );
     const isToday = queryDate === today;
 
     useEffect(() => {
@@ -197,17 +202,19 @@ export const AnytimeExerciseList: React.FC = () => {
                 )}
             />
 
+            {showKeepItUp && (
+                <Text style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>
+                    Keep It Up!
+                </Text>
+            )}
             {listIsDone && (
                 <View style={styles.completionContainer}>
-                    <Text style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>
-                        Keep It Up!
-                    </Text>
                     <TouchableOpacity
                         style={[styles.nextActivityButton, { backgroundColor: theme.colors.successAlt }]}
                         onPress={onClose}
                     >
                         <Text style={[styles.nextActivityText, { color: theme.colors.white }]}>
-                            {isSingleExerciseCategoryDone ? 'DONE' : 'NEXT ACTIVITY'}
+                            DONE
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -284,18 +291,19 @@ const styles = StyleSheet.create({
     opacity: {
         opacity: 0.3,
     },
-    completionContainer: {
-        alignItems: 'center',
-        paddingVertical: 20,
-        paddingHorizontal: 24,
-    },
     goodWorkText: {
         fontSize: 32,
         fontWeight: '500',
         borderRadius: 12,
         padding: 16,
-        elevation: 2,
-        marginBottom: 20,
+        marginHorizontal: 24,
+        marginVertical: 12,
+        textAlign: 'center',
+    },
+    completionContainer: {
+        alignItems: 'center',
+        paddingVertical: 20,
+        paddingHorizontal: 24,
     },
     nextActivityButton: {
         width: '90%',

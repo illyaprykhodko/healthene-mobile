@@ -11,6 +11,7 @@ import {
     useGetDayOverviewQuery,
     useUpdatePhaseMutation,
     useAddPhaseItemMutation,
+    useGetRescueVideosQuery,
     useUpdatePhaseItemMutation,
     useDeletePhaseItemMutation,
     useAddPhaseMealItemMutation,
@@ -157,6 +158,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
     const [addPhaseMealItem] = useAddPhaseMealItemMutation();
+    const { data: rescueVideos } = useGetRescueVideosQuery();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
     const [updatePatientGamblingPoints] = useUpdatePatientGamblingPointsMutation();
@@ -1025,6 +1027,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
             {/* Rescue Foods Modal */}
             <ReplaceItemModal
+                video={rescueVideos?.[0]}
                 visible={showRescueFoodsModal}
                 onClose={() => setShowRescueFoodsModal(false)}
                 onApply={async () => {
@@ -1046,11 +1049,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 visible={showConfirmationModal}
                 prevItem={replacementData.prevItem}
                 nextItem={replacementData.nextItem}
+                onApply={handleConfirmationModalApply}
                 onClose={() => {
                     setShowConfirmationModal(false);
                     setReplacementData({ prevItem: null, nextItem: null });
                 }}
-                onApply={handleConfirmationModalApply}
             />
 
             <ConfirmationAlert

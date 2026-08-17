@@ -1,8 +1,8 @@
 // outsource dependencies
+import { SwipeRow } from 'react-native-swipe-list-view';
 import Icon from '@react-native-vector-icons/fontawesome5';
-import { SwipeListView } from 'react-native-swipe-list-view';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { View, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import React, { useCallback, useLayoutEffect, useMemo, useState, useEffect, useRef } from 'react';
 
 // local dependencies
@@ -22,6 +22,9 @@ import {
     areAllItemsFullyDone,
 } from 'utils/exercise';
 import { useGetDayOverviewQuery, useUpdatePhaseMutation, useUpdatePhaseItemMutation } from 'store/api/dayOverviewApi';
+
+// SwipeRow type definitions predate the explicit children prop required by React 19
+const TypedSwipeRow = SwipeRow as any;
 
 export default function ExerciseCategories () {
     const theme = useTheme();
@@ -87,11 +90,13 @@ export default function ExerciseCategories () {
     // Use exercise categories if no current list is set
     const displayList = currentList.length > 0 ? currentList : exerciseCategories;
     const listIsDone = useMemo(() => areAllItemsFullyDone(displayList), [displayList]);
-    const isExercise = Boolean(route.params?.list && route.params?.list?.length);
-    const isSingleExerciseCategoryDone = useMemo(
-        () => title === 'Exercise' && displayList.length === 1 && listIsDone,
-        [title, displayList.length, listIsDone]
+    const showKeepItUp = useMemo(
+        () => !listIsDone && displayList.some(
+            (item: any) => item.status === PHASE_ITEM_STATUS.DONE || item.status === PHASE_ITEM_STATUS.INCOMPLETE
+        ),
+        [listIsDone, displayList]
     );
+    const isExercise = Boolean(route.params?.list && route.params?.list?.length);
     const swipeWidth = 123;
 
     // Calculate active exercises count
@@ -240,142 +245,177 @@ export default function ExerciseCategories () {
             )
         });
     }, [parentNavigation, handleBack]);
+
+    const rowRefs = useRef<Record<string, any>>({});
+    const openRowKeyRef = useRef<string | null>(null);
+    const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => () => {
+        if (autoCloseTimerRef.current) { clearTimeout(autoCloseTimerRef.current); }
+    }, []);
+
+    const handleRowOpen = useCallback((key: string, item: any) => {
+        setScrollEnabled(false);
+        openRowKeyRef.current = key;
+        if (item?.status === PHASE_ITEM_STATUS.INCOMPLETE) {
+            rowRefs.current[key]?.closeRow();
+            return;
+        }
+        if (autoCloseTimerRef.current) { clearTimeout(autoCloseTimerRef.current); }
+        autoCloseTimerRef.current = setTimeout(() => {
+            rowRefs.current[key]?.closeRow();
+        }, 10 * 1000);
+    }, []);
+
+    const handleRowClose = useCallback(() => {
+        setScrollEnabled(true);
+        openRowKeyRef.current = null;
+        if (autoCloseTimerRef.current) {
+            clearTimeout(autoCloseTimerRef.current);
+            autoCloseTimerRef.current = null;
+        }
+    }, []);
+
+    const handleScroll = useCallback(() => {
+        if (openRowKeyRef.current) {
+            rowRefs.current[openRowKeyRef.current]?.closeRow();
+        }
+    }, []);
+
+    const renderHeader = useCallback(() => (
+        <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt || theme.colors.surface }]}>
+            <View style={styles.row}>
+                {title === 'Exercise' && (
+                    <Badge count={activeExercisesCount}>
+                        <View style={{ marginRight: 3 }}>
+                            <ActivityIcon disabled={false} />
+                        </View>
+                    </Badge>
+                )}
+            </View>
+            <Text variant="h3" style={[styles.name, { color: theme.colors.text }]}>{title}</Text>
+            <TouchableOpacity onPress={handleBack}>
+                <Icon iconStyle="solid" name="times" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+        </View>
+    ), [title, activeExercisesCount, theme.colors, handleBack]);
+
+    const renderEmpty = useCallback(() => (
+        <EmptyState
+            icon="activity"
+            title="No exercises"
+            subtitle="Nothing planned for this category."
+        />
+    ), []);
+
+    const renderItem = useCallback(({ item }: { item: any }) => {
+        const key = String(item.id);
+        const isSkipped = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
+        const isDone = item.status === PHASE_ITEM_STATUS.DONE;
+        return (
+            <TypedSwipeRow
+                disableRightSwipe
+                recalculateHiddenLayout
+                onRowClose={handleRowClose}
+                rightOpenValue={-swipeWidth}
+                disableLeftSwipe={!isExercise || isDone}
+                onRowOpen={() => handleRowOpen(key, item)}
+                ref={(ref: any) => { rowRefs.current[key] = ref; }}
+            >
+                {/* Hidden (back) row — swipe action */}
+                <View style={styles.listItemHidden}>
+                    <View style={[styles.listItemContent, { width: swipeWidth }]}>
+                        <TouchableOpacity
+                            style={styles.listItemBtnNotEat}
+                            onPress={() => {
+                                handleChangeStatus(
+                                    item,
+                                    isSkipped ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DID_NOT_EAT
+                                );
+                                setTimeout(() => rowRefs.current[key]?.closeRow(), 200);
+                            }}
+                        >
+                            <Icon iconStyle="solid" name="times" color={theme.colors.black} size={30} />
+                            <Text style={[styles.notEatBtn, styles.offsetTop]}>Skipped</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+                {/* Visible (front) row */}
+                <View style={[
+                    styles.listItemContainer,
+                    { backgroundColor: theme.colors.surface },
+                    isExercise && styles.swipeItemDecorator,
+                ]}>
+                    <TouchableOpacity
+                        disabled={isSkipped}
+                        onPress={() => handleItemPress(item)}
+                        style={[styles.categoryItem, { borderBottomColor: theme.colors.border }]}
+                    >
+                        <View style={[styles.categoryContent, isSkipped && styles.opacity]}>
+                            <Text style={[styles.categoryName, { color: theme.colors.text }]}>{item.title}</Text>
+                        </View>
+                        {isSkipped && (
+                            <View style={styles.skippedLabel}>
+                                <View style={styles.notEatView}>
+                                    <Text style={[styles.notEatText, { color: theme.colors.primary }]}>Skipped</Text>
+                                </View>
+                                {/* Category rows have derived DID_NOT_EAT status with a fake id (idx+1) — no API call */}
+                                {!(item.list && item.list.length > 0) && (
+                                    <TouchableOpacity onPress={() => handleChangeStatus(item, PHASE_ITEM_STATUS.PENDING)}>
+                                        <Icon iconStyle="solid" name="minus-square" size={30} color={theme.colors.primary} />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        )}
+                        {isDone && (
+                            <Checkbox
+                                value
+                                size={15}
+                                editable={false}
+                                onChange={() => {}}
+                            />
+                        )}
+                        {item?.status === PHASE_ITEM_STATUS.INCOMPLETE && (
+                            <View style={[styles.finishTextContainer, { backgroundColor: theme.colors.warning }]}>
+                                <Text style={styles.finishText}>Finish</Text>
+                            </View>
+                        )}
+                        {![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.INCOMPLETE, PHASE_ITEM_STATUS.DID_NOT_EAT].includes(item?.status) && (
+                            <Icon iconStyle="solid" name="chevron-right" size={18} color={theme.colors.text} />
+                        )}
+                    </TouchableOpacity>
+                </View>
+            </TypedSwipeRow>
+        );
+    }, [
+        isExercise,
+        swipeWidth,
+        theme.colors,
+        handleRowOpen,
+        handleRowClose,
+        handleItemPress,
+        handleChangeStatus,
+    ]);
+
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <SwipeListView
-                useFlatList
-                closeOnScroll
-                disableRightSwipe
+            <FlatList
                 data={displayList}
                 style={styles.list}
-                recalculateHiddenLayout
-                rightOpenValue={-swipeWidth}
+                onScroll={handleScroll}
+                renderItem={renderItem}
                 scrollEnabled={scrollEnabled}
-                disableLeftSwipe={!isExercise}
+                ListEmptyComponent={renderEmpty}
+                ListHeaderComponent={renderHeader}
                 keyExtractor={(item: any) => String(item.id)}
                 contentContainerStyle={displayList.length === 0 && styles.emptyContent}
-                ListHeaderComponent={(
-                    <View style={[styles.header, { backgroundColor: theme.colors.surfaceAlt || theme.colors.surface }]}>
-                        <View style={styles.row}>
-                            {title === 'Exercise' && (
-                                <Badge count={activeExercisesCount}>
-                                    <View style={{ marginRight: 3 }}>
-                                        <ActivityIcon disabled={false} />
-                                    </View>
-                                </Badge>
-                            )}
-                        </View>
-                        <Text variant="h3" style={[styles.name, { color: theme.colors.text }]}>{title}</Text>
-                        <TouchableOpacity onPress={handleBack}>
-                            <Icon iconStyle="solid" name="times" size={24} color={theme.colors.text} />
-                        </TouchableOpacity>
-                    </View>
-                )}
-                ListEmptyComponent={(
-                    <EmptyState
-                        icon="activity"
-                        title="No exercises"
-                        subtitle="Nothing planned for this category."
-                    />
-                )}
-                renderItem={({ item }: { item: any }) => (
-                    <View style={[styles.listItemContainer, { backgroundColor: theme.colors.surface }, isExercise && styles.swipeItemDecorator]}>
-                        <TouchableOpacity
-                            key={String(item.id)}
-                            onPress={() => handleItemPress(item)}
-                            disabled={item?.status === PHASE_ITEM_STATUS.DID_NOT_EAT}
-                            style={[styles.categoryItem, { borderBottomColor: theme.colors.border }]}
-                        >
-                            <View style={[styles.categoryContent, item?.status === PHASE_ITEM_STATUS.DID_NOT_EAT && styles.opacity]}>
-                                <Text style={[styles.categoryName, { color: theme.colors.text }]}>{item.title}</Text>
-                            </View>
-                            {item?.status === PHASE_ITEM_STATUS.DID_NOT_EAT && (
-                                <View style={styles.skippedLabel}>
-                                    <View style={styles.notEatView}>
-                                        <Text style={[styles.notEatText, { color: theme.colors.primary }]}>Skipped</Text>
-                                    </View>
-                                    {/* Category rows have derived DID_NOT_EAT status with a fake id (idx+1) — no API call */}
-                                    {!(item.list && item.list.length > 0) && (
-                                        <TouchableOpacity onPress={() => handleChangeStatus(item, PHASE_ITEM_STATUS.PENDING)}>
-                                            <Icon iconStyle="solid" name="minus-square" size={30} color={theme.colors.primary} />
-                                        </TouchableOpacity>
-                                    )}
-                                </View>
-                            )}
-                            {item?.status === PHASE_ITEM_STATUS.DONE && (
-                                <Checkbox
-                                    value
-                                    size={15}
-                                    editable={false}
-                                    onChange={() => {}}
-                                />
-                            )}
-                            {item?.status === PHASE_ITEM_STATUS.INCOMPLETE && (
-                                <View style={[styles.finishTextContainer, { backgroundColor: theme.colors.warning }]}>
-                                    <Text style={styles.finishText}>Finish</Text>
-                                </View>
-                            )}
-                            {![PHASE_ITEM_STATUS.DONE, PHASE_ITEM_STATUS.INCOMPLETE, PHASE_ITEM_STATUS.DID_NOT_EAT].includes(item?.status) && (
-                                <Icon iconStyle="solid" name="chevron-right" size={18} color={theme.colors.text} />
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                )}
-                renderHiddenItem={({ item }: { item: any }, rowMap: Record<string, any>) => {
-                    const isSkipped = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
-                    return (
-                        <View style={styles.listItemHidden}>
-                            <View style={[styles.listItemContent, { width: swipeWidth }]}>
-                                <TouchableOpacity
-                                    style={styles.listItemBtnNotEat}
-                                    onPress={() => {
-                                        handleChangeStatus(
-                                            item,
-                                            isSkipped ? PHASE_ITEM_STATUS.PENDING : PHASE_ITEM_STATUS.DID_NOT_EAT
-                                        );
-                                        setTimeout(() => {
-                                            rowMap[item?.id] && rowMap[item?.id].closeRow();
-                                        }, 200);
-                                    }}
-                                >
-                                    <Icon iconStyle="solid" name="times" color={theme.colors.black} size={30} />
-                                    <Text style={[styles.notEatBtn, styles.offsetTop]}>Skipped</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    );
-                }}
-                onRowOpen={(rowKey: string, rowMap: Record<string, any>) => {
-                    setScrollEnabled(false);
-                    const item = displayList.find((x: any) => x.id?.toString() === rowKey);
-                    if (item?.status === PHASE_ITEM_STATUS.INCOMPLETE || item?.status === PHASE_ITEM_STATUS.DONE) {
-                        rowMap[rowKey] && rowMap[rowKey].closeRow();
-                    }
-                    setTimeout(() => {
-                        rowMap[rowKey] && rowMap[rowKey].closeRow();
-                    }, 10 * 1000);
-                }}
-                onRowDidClose={() => setScrollEnabled(true)}
-                onSwipeValueChange={({ value }: { value: number }) => {
-                    if (value !== 0 && scrollEnabled) {
-                        setScrollEnabled(false);
-                    }
-                    if (value === 0 && !scrollEnabled) {
-                        setScrollEnabled(true);
-                    }
-                }}
             />
-            {listIsDone && (<Text textAlign="center" style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>Keep It Up!</Text>)}
-            {listIsDone && !isSingleExerciseCategoryDone && (
-                <Button
-                    variant="primary"
-                    title="NEXT ACTIVITY"
-                    style={styles.submitBtn}
-                    textStyle={styles.submitBtnText}
-                    onPress={() => navigation.goBack()}
-                />
+            {showKeepItUp && (
+                <Text textAlign="center" style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>
+                    Keep It Up!
+                </Text>
             )}
-            {isSingleExerciseCategoryDone && (
+            {listIsDone && (
                 <Button
                     title="DONE"
                     variant="primary"
@@ -476,9 +516,11 @@ const styles = StyleSheet.create({
     goodWorkText: {
         fontSize: 32,
         fontWeight: '500',
-        backgroundColor: 'white',
         borderRadius: 12,
-        padding: 16
+        padding: 16,
+        marginHorizontal: 16,
+        marginBottom: 8,
+        textAlign: 'center',
     },
     submitBtn: {
         width: '90%',
