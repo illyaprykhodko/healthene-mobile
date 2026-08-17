@@ -257,6 +257,8 @@ export default function ExerciseDetails () {
                 setTimeout(() => {
                     navigation.goBack();
                 }, 700);
+            } else {
+                isDoneInFlightRef.current = false;
             }
         } catch (error) {
             isDoneInFlightRef.current = false;
@@ -542,23 +544,23 @@ const Description = React.memo(({ closePanel, isPanelOpen, description, video, s
     const hasVideo = Boolean(video);
     const themedHtmlStyles = useMemo(() => StyleSheet.create({
         ...htmlStyles,
+        ol: { marginLeft: 15 },
+        div: { color: theme.colors.text },
+        span: { color: theme.colors.text },
+        u: { ...htmlStyles.u, color: theme.colors.text },
         p: { ...htmlStyles.p, color: theme.colors.text },
+        b: { ...htmlStyles.b, color: theme.colors.text },
         li: { ...htmlStyles.li, color: theme.colors.text },
+        em: { ...htmlStyles.em, color: theme.colors.text },
+        ins: { ...htmlStyles.ins, color: theme.colors.text },
+        strong: { ...htmlStyles.strong, color: theme.colors.text },
+        a: { color: theme.colors.info, textDecorationLine: 'underline' },
         h1: { fontSize: 24, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
         h2: { fontSize: 22, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
         h3: { fontSize: 20, fontWeight: 'bold', marginVertical: 8, color: theme.colors.text },
         h4: { fontSize: 18, fontWeight: 'bold', marginVertical: 6, color: theme.colors.text },
         h5: { fontSize: 16, fontWeight: 'bold', marginVertical: 6, color: theme.colors.text },
         h6: { fontSize: 14, fontWeight: 'bold', marginVertical: 4, color: theme.colors.text },
-        strong: { ...htmlStyles.strong, color: theme.colors.text },
-        b: { ...htmlStyles.b, color: theme.colors.text },
-        em: { ...htmlStyles.em, color: theme.colors.text },
-        ins: { ...htmlStyles.ins, color: theme.colors.text },
-        u: { ...htmlStyles.u, color: theme.colors.text },
-        span: { color: theme.colors.text },
-        div: { color: theme.colors.text },
-        ol: { marginLeft: 15 },
-        a: { color: theme.colors.info, textDecorationLine: 'underline' },
     }), [theme.colors.text, theme.colors.info]);
     const themedRenderNode = useMemo(() => createRenderNode(theme.colors.text), [theme.colors.text]);
     return (

@@ -451,6 +451,7 @@ const TreeAddReplaceItem: React.FC = () => {
             setIsAiLoading(true);
             const data = await getAiFoodsTrigger({ name: debouncedSearchQuery.trim() }).unwrap();
             if (!Array.isArray(data) || data.length === 0) {
+                setIsAiServiceUnavailable(true);
                 return;
             }
             const preparedData = data.map((item: any) => ({
@@ -460,11 +461,8 @@ const TreeAddReplaceItem: React.FC = () => {
             }));
             setAiFoods(preparedData);
             setIsAiFoodsAdded(true);
-        } catch (error: any) {
-            const reason: string | undefined = error?.data?.REASON ?? error?.REASON;
-            if (reason) {
-                setIsAiServiceUnavailable(true);
-            }
+        } catch {
+            setIsAiServiceUnavailable(true);
         } finally {
             setIsAiLoading(false);
         }

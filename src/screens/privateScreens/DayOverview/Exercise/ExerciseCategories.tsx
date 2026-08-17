@@ -314,13 +314,13 @@ export default function ExerciseCategories () {
         const isDone = item.status === PHASE_ITEM_STATUS.DONE;
         return (
             <TypedSwipeRow
-                ref={(ref: any) => { rowRefs.current[key] = ref; }}
                 disableRightSwipe
-                rightOpenValue={-swipeWidth}
                 recalculateHiddenLayout
+                onRowClose={handleRowClose}
+                rightOpenValue={-swipeWidth}
                 disableLeftSwipe={!isExercise || isDone}
                 onRowOpen={() => handleRowOpen(key, item)}
-                onRowClose={handleRowClose}
+                ref={(ref: any) => { rowRefs.current[key] = ref; }}
             >
                 {/* Hidden (back) row — swipe action */}
                 <View style={styles.listItemHidden}>
@@ -347,8 +347,8 @@ export default function ExerciseCategories () {
                     isExercise && styles.swipeItemDecorator,
                 ]}>
                     <TouchableOpacity
-                        onPress={() => handleItemPress(item)}
                         disabled={isSkipped}
+                        onPress={() => handleItemPress(item)}
                         style={[styles.categoryItem, { borderBottomColor: theme.colors.border }]}
                     >
                         <View style={[styles.categoryContent, isSkipped && styles.opacity]}>
@@ -393,8 +393,8 @@ export default function ExerciseCategories () {
         theme.colors,
         handleRowOpen,
         handleRowClose,
-        handleChangeStatus,
         handleItemPress,
+        handleChangeStatus,
     ]);
 
     return (
@@ -403,12 +403,12 @@ export default function ExerciseCategories () {
                 data={displayList}
                 style={styles.list}
                 onScroll={handleScroll}
-                scrollEnabled={scrollEnabled}
                 renderItem={renderItem}
+                scrollEnabled={scrollEnabled}
+                ListEmptyComponent={renderEmpty}
+                ListHeaderComponent={renderHeader}
                 keyExtractor={(item: any) => String(item.id)}
                 contentContainerStyle={displayList.length === 0 && styles.emptyContent}
-                ListHeaderComponent={renderHeader}
-                ListEmptyComponent={renderEmpty}
             />
             {showKeepItUp && (
                 <Text textAlign="center" style={[styles.goodWorkText, { backgroundColor: theme.colors.surface }]}>
