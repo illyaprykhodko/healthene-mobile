@@ -1,9 +1,8 @@
 // outsource dependencies
 import dayjs from 'services/date';
 import Icon from '@react-native-vector-icons/feather';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
+import { KeyboardAvoidingView, KeyboardEvents } from 'react-native-keyboard-controller';
 import { useNavigation, useRoute, useIsFocused, StackActions } from '@react-navigation/native';
 import { StyleSheet, View, TouchableOpacity, Modal, RefreshControl, SectionList } from 'react-native';
 
@@ -15,12 +14,20 @@ import { OFFSET } from 'constants/offset';
 import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
 import { Button } from 'components/Button';
+import { useHaptic } from 'hooks/useHaptic';
 import StackHeader from 'components/StackHeader';
+import { useFontScale } from 'hooks/useFontScale';
 import { EmptyState } from 'components/EmptyState';
 import { useAppDispatch, useAppSelector } from 'store';
+import { useListEntrance } from 'hooks/useListEntrance';
 import { useShoppingDrawer } from '../useShoppingDrawer';
+import { AnimatedListRow } from 'components/AnimatedListRow';
 import { PlayBtn, QuestionBtn } from 'components/LibraryButtons';
+import { createSectionListGetItemLayout } from 'utils/sectionListLayout';
 import { useGetCurrentLibraryElementsQuery } from 'store/api/questionApi';
+import { useDevHeightAssert } from 'hooks/useDevHeightAssert';
+import { HEADER_CONTENT_INSET, getSectionHeaderHeight, getShoppingItemHeight } from './itemMetrics';
+import { ListFooterLoader, type ListFooterState } from 'components/ListFooterLoader';
 import {
     DESTINATIONS,
     QUESTION_TYPE,
@@ -67,14 +74,35 @@ interface GroupedItem {
 
 const ALL_CATEGORY: { name: string; id?: number | null } = { name: 'All' };
 const ADDITIONAL_CATEGORY_NAME = 'Additional';
+// Modal identities, most blocking first. Only ONE may be mounted at a time: every alert here
+// renders a React Native `Modal`, and two open at once physically stack instead of queueing.
+const MODAL = {
+    STATUS_POPOVER: 'statusPopover',
+    FINALIZE_CONFIRM: 'finalizeConfirm',
+    MEAL_COUNT_PROMPT: 'mealCountPrompt',
+    UNFINISHED_LIST_WARNING: 'unfinishedListWarning',
+} as const;
+
+type ActiveModal = typeof MODAL[keyof typeof MODAL] | null;
+
+// Visible slack above a focused amount input once scrollToLocation has pinned it to the top.
+const FOCUS_TOP_GAP = 12;
+
+// `item.id` is unique per shopping-list row (RTK Query's `merge` dedups by it), so the old
+// `${id}_${index}` key only ever shifted identity when a page appended into an earlier section —
+// which remounted rows and re-fired their entrance animation mid-scroll.
+const keyExtractor = (item: any) => String(item.id);
 
 const ShoppingList: React.FC = () => {
     const theme = useTheme();
+    const haptics = useHaptic();
+    const fontScale = useFontScale();
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const dispatch = useAppDispatch();
     const isFocused = useIsFocused();
     const openDrawer = useShoppingDrawer({ guarded: true });
+    const { seenKeys, firstWaveRef, endFirstWave, resetEntrance } = useListEntrance();
 
     const {
         status,
@@ -98,15 +126,22 @@ const ShoppingList: React.FC = () => {
     const includeRescueFoodsInShoppingList = useAppSelector(state => state.app?.user?.includeRescueFoodsInShoppingList);
     const submittedShoppingList = useAppSelector(state => (state.app?.user as any)?.submittedShoppingList) ?? false;
 
-    const [open, setOpen] = useState(true);
-    const [isFinalizeOpen, setIsFinalizeOpen] = useState(false);
+    // `open` used to mean "the arrival announcement is open" — the popover whose copy comes from
+    // `popoverText`. `isFinalizeOpen` sat one letter away from the unrelated Redux flag
+    // `isFinalizeAlertOpen`, which is the "your list isn't done" warning.
+    const [isStatusPopoverOpen, setIsStatusPopoverOpen] = useState(true);
+    const [isFinalizeConfirmOpen, setIsFinalizeConfirmOpen] = useState(false);
     const [page, setPage] = useState(0);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     // Height of the absolutely-positioned bottom button bar, measured so the list can reserve
     // matching bottom padding — otherwise the last item is hidden under the bar and can't be reached.
     const [bottomBarHeight, setBottomBarHeight] = useState(0);
     const pendingBackActionRef = useRef<any | null>(null);
     const allowBackRef = useRef(false);
     const sectionListRef = useRef<any>(null);
+    const hapticPageRef = useRef(0);
+    const endHapticRef = useRef(false);
+    const keyboardSubRef = useRef<{ remove(): void } | null>(null);
 
     // Queries
     const { data: statusData } = useGetShoppingListStatusQuery();
@@ -237,14 +272,39 @@ const ShoppingList: React.FC = () => {
         if (!location || !sectionListRef.current?.scrollToLocation) {
             return;
         }
-        sectionListRef.current.scrollToLocation({
-            sectionIndex: location.sectionIndex,
-            itemIndex: location.itemIndex,
-            viewPosition: 0.35,
-            viewOffset: 120,
+        // SectionList flattens to [header, ...items, footer] but scrollToLocation computes
+        // `index = itemIndex + Σ(count + 2)` — i.e. it lands on item (itemIndex - 1), and on the
+        // section HEADER for itemIndex 0. Passing itemIndex + 1 targets the real row, and also
+        // satisfies RN's internal `params.itemIndex > 0` guard, which is what adds the sticky
+        // header height to viewOffset.
+        //
+        // viewOffset is SUBTRACTED from the scroll offset, so the previous
+        // `viewPosition: 0.35, viewOffset: 120` pushed the row DOWN the screen — the opposite of
+        // lifting it above the keyboard. viewPosition 0 pins the row to the top of the viewport
+        // (RN already offsets it past the sticky header), so FOCUS_TOP_GAP is the only slack.
+        const scroll = () => sectionListRef.current?.scrollToLocation?.({
             animated: true,
+            viewPosition: 0,
+            viewOffset: FOCUS_TOP_GAP,
+            itemIndex: location.itemIndex + 1,
+            sectionIndex: location.sectionIndex,
+        });
+        // KeyboardAvoidingView shrinks the list AFTER the focus event, so an immediate scroll uses
+        // the pre-keyboard viewport height. Scroll once now (feels instant) and once when the
+        // keyboard frame has settled (lands correctly).
+        scroll();
+        keyboardSubRef.current?.remove();
+        keyboardSubRef.current = KeyboardEvents.addListener('keyboardDidShow', () => {
+            keyboardSubRef.current?.remove();
+            keyboardSubRef.current = null;
+            scroll();
         });
     }, [itemPositionById]);
+
+    useEffect(() => () => {
+        keyboardSubRef.current?.remove();
+        keyboardSubRef.current = null;
+    }, []);
 
     const isOriginalConfirmed = useMemo(() => (
         confirmedItemsType === SHOPPING_CONFIRMED_ITEM_TYPE.ORIGINAL
@@ -256,6 +316,28 @@ const ShoppingList: React.FC = () => {
         || confirmedItemsType === SHOPPING_CONFIRMED_ITEM_TYPE.ALL
         || (status === SHOPPING_STATUS.SHOP_ON_MY_OWN && itemType === confirmedItemsType)
     ), [status, itemType, confirmedItemsType]);
+
+    // Lifted out of ShoppingItem: `compact` feeds both the row height and the render branch, so it
+    // has to be known here. `isMainStep` gates the exclude button — a different condition.
+    const isMainStep = currentStep === SHOPPING_STEP.MAIN;
+    const compact = !((currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.MEAL) && !isConfirmed);
+
+    // Row and header heights are derived, never hardcoded — see ./itemMetrics.
+    const itemHeight = useMemo(() => getShoppingItemHeight(fontScale, compact), [fontScale, compact]);
+    const sectionHeaderHeight = useMemo(() => getSectionHeaderHeight(fontScale), [fontScale]);
+    const getItemLayout = useMemo(
+        () => createSectionListGetItemLayout<GroupedItem>({ itemHeight, headerHeight: sectionHeaderHeight }),
+        [itemHeight, sectionHeaderHeight],
+    );
+
+    const totalPages = listData?.totalPages ?? 0;
+    const hasNextPage = page + 1 < totalPages;
+    // RTK Query merges every page into ONE cache entry (serializeQueryArgs strips `page`), so there is
+    // no isLoadingMore flag — only isFetching, which is also true on first load and on a refetch.
+    const isLoadingMore = isFetching && page > 0 && !isRefreshing;
+    const footerState: ListFooterState = isLoadingMore
+        ? 'loading'
+        : (!isFetching && !hasNextPage && totalPages > 1) ? 'end' : 'idle';
 
     const headerCenter = useMemo(() => (
         <View style={styles.headerContainer}>
@@ -270,8 +352,54 @@ const ShoppingList: React.FC = () => {
 
     const handleCategoryChange = useCallback((item: any) => {
         dispatch(setActiveCategory(item.activeItem || item));
+        hapticPageRef.current = 0;
+        resetEntrance();
         setPage(0);
-    }, [dispatch]);
+    }, [dispatch, resetEntrance]);
+
+    const handleEndReached = useCallback(() => {
+        if (isFetching || !hasNextPage) { return; }
+        endFirstWave();
+        setPage(prev => prev + 1);
+    }, [isFetching, hasNextPage, endFirstWave]);
+
+    const handleRefresh = useCallback(() => {
+        setIsRefreshing(true);
+        hapticPageRef.current = 0;
+        resetEntrance();
+        // page 0 makes `merge` REPLACE content instead of appending. Changing `page` alone already
+        // re-issues the request (the cache key ignores it), so refetch() would double-fire.
+        if (page > 0) {
+            setPage(0);
+            return;
+        }
+        refetch();
+    }, [page, refetch, resetEntrance]);
+
+    // RefreshControl must spin ONLY for a pull, never while page N+1 loads at the bottom.
+    useEffect(() => {
+        if (!isFetching && isRefreshing) { setIsRefreshing(false); }
+    }, [isFetching, isRefreshing]);
+
+    // One tick per landed page, on the isFetching falling edge, guarded by the page number so a
+    // re-render cannot repeat it. `selection` is the quietest entry in useHaptic's vocabulary;
+    // `light` is already the app's press feedback, so reusing it here would blur that meaning.
+    useEffect(() => {
+        if (isFetching || page === 0 || hapticPageRef.current === page) { return; }
+        hapticPageRef.current = page;
+        haptics.selection();
+    }, [isFetching, page, haptics]);
+
+    // A softer, distinct tick the first time the list is fully loaded.
+    useEffect(() => {
+        if (footerState !== 'end') {
+            endHapticRef.current = false;
+            return;
+        }
+        if (endHapticRef.current) { return; }
+        endHapticRef.current = true;
+        haptics.light();
+    }, [footerState, haptics]);
 
     const handleUpdateItem = useCallback(async (item: any) => {
         try {
@@ -290,7 +418,7 @@ const ShoppingList: React.FC = () => {
         }
         if (currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.MEAL) {
             if (stockList.length > 0) {
-                setOpen(false);
+                setIsStatusPopoverOpen(false);
                 dispatch(setCurrentStep(SHOPPING_STEP.STOCK));
                 navigation.navigate(ROUTES.STOCK_LIST);
             // HS-3113: Final Check step removed. Previously, a touched list with no stock
@@ -300,10 +428,10 @@ const ShoppingList: React.FC = () => {
             //     dispatch(setCurrentStep(SHOPPING_STEP.CHECK));
             //     refetch();
             } else {
-                setIsFinalizeOpen(true);
+                setIsFinalizeConfirmOpen(true);
             }
         } else {
-            setIsFinalizeOpen(true);
+            setIsFinalizeConfirmOpen(true);
         }
     }, [navigation, currentStep, stockList, dispatch, isStockResolving, stockData]);
 
@@ -401,7 +529,7 @@ const ShoppingList: React.FC = () => {
                 }));
             }
             dispatch(setCurrentStep(SHOPPING_STEP.MAIN));
-            setIsFinalizeOpen(false);
+            setIsFinalizeConfirmOpen(false);
             navigation.dispatch(StackActions.replace(ROUTES.SHOPPING_LIST, { isShopOnMyOwn: true }));
         } catch (error) {
             console.error('Error finalizing shopping list:', error);
@@ -414,7 +542,7 @@ const ShoppingList: React.FC = () => {
         navigation.navigate(ROUTES.SHOPPING_PDF, { date: { endDate, startDate } });
     }, [navigation]);
 
-    const handleCloseAlert = useCallback(() => setOpen(false), []);
+    const handleCloseStatusPopover = useCallback(() => setIsStatusPopoverOpen(false), []);
 
     const handleFinishUpAlert = useCallback(() => {
         pendingBackActionRef.current = null;
@@ -522,11 +650,90 @@ const ShoppingList: React.FC = () => {
         return null;
     }, [currentStep, shoppingListDates, status, route.params]);
 
+    // Resolve one winner by priority so the next alert surfaces only once the current one closes.
+    // Order matches the established flow: an explicit Finalize tap wins, then the unfinished-list
+    // warning, then the meal-count prompt, and the arrival announcement comes last.
+    const activeModal: ActiveModal = useMemo(() => {
+        if (isFinalizeConfirmOpen) { return MODAL.FINALIZE_CONFIRM; }
+        if (isFinalizeAlertOpen) { return MODAL.UNFINISHED_LIST_WARNING; }
+        if (isCustomAlertOpen && status !== SHOPPING_STATUS.SHOP_ON_MY_OWN) { return MODAL.MEAL_COUNT_PROMPT; }
+        // Held back until the list is on screen: the copy talks about a list the user cannot see yet.
+        // Before the loading branch stopped being an early return this was implicit.
+        if (isStatusPopoverOpen && isFocused && Boolean(popoverText) && !isLoading) { return MODAL.STATUS_POPOVER; }
+        return null;
+    }, [
+        status,
+        isLoading,
+        isFocused,
+        popoverText,
+        isCustomAlertOpen,
+        isFinalizeAlertOpen,
+        isStatusPopoverOpen,
+        isFinalizeConfirmOpen,
+    ]);
+
+    const assertHeaderHeight = useDevHeightAssert(
+        'ShoppingList section header',
+        sectionHeaderHeight - HEADER_CONTENT_INSET,
+    );
+
     const renderSectionHeader = useCallback(({ section }: any) => (
-        <View style={[styles.section, { backgroundColor: theme.colors.surfaceAlt, borderBottomColor: theme.colors.border }]}>
-            <Text variant="h3" style={styles.sectionTitle} color={theme.colors.primary}>{section?.title}</Text>
+        <View style={[styles.section, {
+            height: sectionHeaderHeight,
+            backgroundColor: theme.colors.surfaceAlt,
+            borderBottomColor: theme.colors.border,
+        }]}>
+            {/* The wrapper carries onLayout: the shared Text does not forward it, and the header
+                View itself has a pinned height, so only this unconstrained box can reveal overflow. */}
+            <View onLayout={assertHeaderHeight}>
+                <Text variant="h3" numberOfLines={1} style={styles.sectionTitle} color={theme.colors.primary}>
+                    {section?.title}
+                </Text>
+            </View>
         </View>
-    ), [theme.colors]);
+    ), [theme.colors, sectionHeaderHeight, assertHeaderHeight]);
+
+    const renderItem = useCallback(({ item, index }: { item: any; index: number }) => (
+        <AnimatedListRow
+            index={index}
+            itemKey={item.id}
+            seenKeys={seenKeys}
+            isFirstWave={firstWaveRef.current}
+        >
+            <ShoppingItem
+                item={item}
+                status={status}
+                compact={compact}
+                height={itemHeight}
+                disabled={isLoading}
+                isMainStep={isMainStep}
+                isConfirmed={isConfirmed}
+                onUpdate={handleUpdateItem}
+                onAmountFocus={handleAmountFocus}
+            />
+        </AnimatedListRow>
+    ), [
+        status,
+        compact,
+        seenKeys,
+        isLoading,
+        itemHeight,
+        isMainStep,
+        isConfirmed,
+        firstWaveRef,
+        handleUpdateItem,
+        handleAmountFocus,
+    ]);
+
+    const contentContainerStyle = useMemo(() => ({ paddingBottom: bottomBarHeight }), [bottomBarHeight]);
+
+    const listFooter = useMemo(() => (
+        <ListFooterLoader
+            state={footerState}
+            rowHeight={itemHeight}
+            endLabel="That's everything on your list"
+        />
+    ), [footerState, itemHeight]);
     // const renderSectionHeader = useCallback(({ section: { title } }: { section: GroupedItem }) => (
     //     <View style={styles.section}>
     //         <Text variant="h3" style={styles.sectionTitle}>{title}</Text>
@@ -535,12 +742,74 @@ const ShoppingList: React.FC = () => {
     //         )}
     //     </View>
     // ), [currentStep, status]);
-    if (isLoading) {
-        return <ShoppingListSkeleton />;
-    }
+    // Only the list body swaps for a skeleton. An early return used to unmount StackHeader too,
+    // which left the user with no back button and no drawer for the whole load — no way out if the
+    // request was slow or failed. It also delayed the bottom bar's onLayout, so the list's first
+    // paint had paddingBottom 0 and jumped once the bar measured.
+    const renderList = () => (
+        <SectionList
+            windowSize={7}
+            ref={sectionListRef}
+            sections={groupedList}
+            initialNumToRender={8}
+            maxToRenderPerBatch={6}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            onEndReachedThreshold={0.4}
+            stickySectionHeadersEnabled
+            getItemLayout={getItemLayout}
+            updateCellsBatchingPeriod={60}
+            onEndReached={handleEndReached}
+            ListFooterComponent={listFooter}
+            onScrollBeginDrag={endFirstWave}
+            keyboardShouldPersistTaps="handled"
+            renderSectionHeader={renderSectionHeader}
+            contentContainerStyle={contentContainerStyle}
+            refreshControl={
+                <RefreshControl
+                // Only a deliberate pull spins this. Gating on `isFetching` used to make it
+                // spin at the top while page N+1 was loading at the bottom.
+                    refreshing={isRefreshing}
+                    onRefresh={handleRefresh}
+                />
+            }
+        />
+    );
+
+    const renderBody = () => {
+        if (isLoading) {
+            return (
+                <ShoppingListSkeleton
+                    compact={compact}
+                    rowHeight={itemHeight}
+                    headerHeight={sectionHeaderHeight}
+                />
+            );
+        }
+        return (
+            <>
+                <HorizontalMenu
+                    data={tabs}
+                    activeItem={activeCategory}
+                    handleItem={handleCategoryChange}
+                />
+                {groupedList.length === 0 ? (
+                    <EmptyState
+                        icon="shopping-cart"
+                        title="Your shopping list is empty"
+                        subtitle="Items you add will show up here, grouped by aisle."
+                    />
+                ) : (
+                    <KeyboardAvoidingView behavior="padding" style={styles.keyboardAvoider}>
+                        {renderList()}
+                    </KeyboardAvoidingView>
+                )}
+            </>
+        );
+    };
 
     return (
-        <Screen initialized={!isLoading} style={styles.container}>
+        <Screen initialized style={styles.container}>
             <StackHeader
                 onBack={handleBack}
                 onOpenDrawer={openDrawer}
@@ -594,62 +863,7 @@ const ShoppingList: React.FC = () => {
                     <Text style={styles.printText}> Print List</Text>
                 </TouchableOpacity>
             )}
-            <HorizontalMenu
-                data={tabs}
-                disabled={isLoading}
-                activeItem={activeCategory}
-                handleItem={handleCategoryChange}
-            />
-            {groupedList.length === 0 ? (
-                <EmptyState
-                    icon="shopping-cart"
-                    title="Your shopping list is empty"
-                    subtitle="Items you add will show up here, grouped by aisle."
-                />
-            ) : (
-                <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-                    <SectionList
-                        ref={sectionListRef}
-                        sections={groupedList}
-
-                        stickySectionHeadersEnabled
-                        onEndReachedThreshold={0.25}
-                        keyboardShouldPersistTaps="handled"
-                        renderSectionHeader={renderSectionHeader}
-                        keyExtractor={(item, index) => `${item.id}_${index}`}
-                        contentContainerStyle={{ paddingBottom: bottomBarHeight }}
-                        renderItem={({ item, index }) => (
-                            <Animated.View
-                                exiting={FadeOut.duration(220)}
-                                layout={LinearTransition.springify().damping(20)}
-                                entering={FadeInDown.delay(Math.min(index, 10) * 80).springify().mass(1.2).damping(30)}
-                            >
-                                <ShoppingItem
-                                    item={item}
-                                    status={status}
-                                    disabled={isLoading}
-                                    isConfirmed={isConfirmed}
-                                    onUpdate={handleUpdateItem}
-                                    onAmountFocus={handleAmountFocus}
-                                />
-                            </Animated.View>
-                        )}
-                        onEndReached={() => {
-                            if (listData && !isFetching && page + 1 < listData.totalPages) {
-                                setPage(p => p + 1);
-                            }
-                        }}
-                        refreshControl={
-                            <RefreshControl
-                            // isFetching is true on initial load AND on refetch — gating on !isLoading
-                            // hides the spinner during first mount (we already show the skeleton screen there).
-                                refreshing={isFetching && !isLoading}
-                                onRefresh={refetch}
-                            />
-                        }
-                    />
-                </KeyboardAvoidingView>
-            )}
+            {renderBody()}
             <GlassSurface
                 intensity={5}
                 style={styles.glassBar}
@@ -663,6 +877,7 @@ const ShoppingList: React.FC = () => {
                                 title="Back"
                                 variant="secondary"
                                 onPress={handleBack}
+                                disabled={isLoading}
                                 style={styles.backBtn}
                                 textStyle={styles.backBtnText}
                             />
@@ -670,6 +885,7 @@ const ShoppingList: React.FC = () => {
                                 title="Done"
                                 variant="primary"
                                 onPress={handleDone}
+                                disabled={isLoading}
                                 style={styles.doneBtn}
                                 textStyle={styles.doneBtnText}
                             />
@@ -686,11 +902,11 @@ const ShoppingList: React.FC = () => {
                     )}
                 </View>
             </GlassSurface>
-            {(status !== SHOPPING_STATUS.SHOP_ON_MY_OWN && isCustomAlertOpen) && (
+            {activeModal === MODAL.MEAL_COUNT_PROMPT && (
                 <Modal
+                    visible
                     transparent
                     animationType="fade"
-                    visible={isCustomAlertOpen}
                     onRequestClose={handleCloseCustomAlert}
                 >
                     <TouchableOpacity
@@ -739,10 +955,10 @@ const ShoppingList: React.FC = () => {
                 cancelTxt="Cancel"
                 applyTxt="Finalize"
                 disabled={isLoading}
-                isOpen={isFinalizeOpen}
                 onSubmit={handleFinalize}
                 message="This action cannot be undone."
-                onClose={() => setIsFinalizeOpen(false)}
+                isOpen={activeModal === MODAL.FINALIZE_CONFIRM}
+                onClose={() => setIsFinalizeConfirmOpen(false)}
                 title="Are you sure you want to finalize your shopping list?"
             />
             <ConfirmationAlert
@@ -751,19 +967,19 @@ const ShoppingList: React.FC = () => {
                 cancelTxt="Not Now"
                 applyTxt="Finish Up"
                 onClose={handleNotNowAlert}
-                isOpen={isFinalizeAlertOpen}
                 onSubmit={handleFinishUpAlert}
+                isOpen={activeModal === MODAL.UNFINISHED_LIST_WARNING}
                 message="Looks like your list isn’t done yet. Finish it before you go?"
             />
-            {popoverText && !isCustomAlertOpen && (
+            {popoverText && (
                 <ConfirmationAlert
                     hideCancelBtn
                     disabled={isLoading}
                     title={popoverText.title}
-                    isOpen={open && isFocused}
-                    onClose={handleCloseAlert}
-                    onSubmit={handleCloseAlert}
                     message={popoverText.message}
+                    onClose={handleCloseStatusPopover}
+                    onSubmit={handleCloseStatusPopover}
+                    isOpen={activeModal === MODAL.STATUS_POPOVER}
                     applyTxt={route.params?.isSubmitted ? 'Got it!' : 'View List'}
                 />
             )}
@@ -833,6 +1049,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
         paddingBottom: OFFSET.VERTICAL,
         borderTopColor: COLORS.LIGHT_GREY,
+    },
+    keyboardAvoider: {
+        flex: 1,
     },
     nextBtn: {
         flex: 1,
