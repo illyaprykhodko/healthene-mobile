@@ -61,7 +61,7 @@
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>We use Bluetooth to connect to devices for data transfer.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Allow "Healthene®" to take pictures and record video</string>
+	<string>"Healthene®" uses the camera so you can scan product barcodes to log food, capture photos and videos to attach to chat messages and app feedback, and set your profile picture.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Enable Face ID to quickly and securely log in to your account</string>
 	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
@@ -77,11 +77,11 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>"Healthene®" requires location access to use Bluetooth for connecting to your smart scale, ensuring accurate and personalized health data</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Allow "Healthene®" to record audio</string>
+	<string>"Healthene®" uses the microphone so you can record and send voice messages to your care team in the chat, and to capture audio when you record a video to attach to messages or app feedback.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Allow "Healthene®" to record steps</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Allow "Healthene®" to upload your photo</string>
+	<string>"Healthene®" accesses your photo library so you can set a profile picture and attach images to messages and support requests.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>
@@ -121,7 +121,6 @@
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>bluetooth-central</string>
 		<string>fetch</string>
 		<string>processing</string>
 		<string>remote-notification</string>
