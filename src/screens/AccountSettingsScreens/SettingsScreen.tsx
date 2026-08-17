@@ -17,12 +17,12 @@ const ITEM = {
     APPEARANCE: 'Appearance',
     HEALTH_SYNC: 'Health App Sync',
     NOTIFICATIONS: 'Notifications',
-    FOOD_ALLERGIES: 'Food Allergies',
-    FOOD_PREFERENCES: 'Food Preferences',
     ACCOUNT_SETTINGS: 'Account Settings',
     ANIMATION_SETTINGS: 'Animation Settings',
     PERSONAL_INFORMATION: 'Personal Information',
     BIOMETRIC_AUTHENTICATION: 'Biometric Authentication',
+    // FOOD_ALLERGIES: 'Food Allergies', // NOTE - commented during HS-3162 request
+    // FOOD_PREFERENCES: 'Food Preferences', // NOTE - commented during HS-3162 request
 };
 
 const SettingsScreen = () => {
@@ -33,8 +33,8 @@ const SettingsScreen = () => {
         { title: ITEM.BIOMETRIC_AUTHENTICATION, navigate: () => navigation.navigate(ROUTES.BIOMETRIC_SETTINGS) },
         { title: ITEM.ADDRESS, navigate: () => navigation.navigate(ROUTES.ADDRESS) },
         { title: ITEM.ACCOUNT_SETTINGS, navigate: () => navigation.navigate(ROUTES.ACCOUNT_SETTINGS) },
-        { title: ITEM.FOOD_PREFERENCES, navigate: () => navigation.navigate(ROUTES.FOOD_PREFERENCES) },
-        { title: ITEM.FOOD_ALLERGIES, navigate: () => navigation.navigate(ROUTES.FOOD_ALLERGIES) },
+        // { title: ITEM.FOOD_PREFERENCES, navigate: () => navigation.navigate(ROUTES.FOOD_PREFERENCES) }, // NOTE - commented during HS-3162 request
+        // { title: ITEM.FOOD_ALLERGIES, navigate: () => navigation.navigate(ROUTES.FOOD_ALLERGIES) }, // NOTE - commented during HS-3162 request
         { title: ITEM.NOTIFICATIONS, navigate: () => navigation.navigate(ROUTES.NOTIFICATIONS) },
         { title: ITEM.HEALTH_SYNC, navigate: () => navigation.navigate(ROUTES.HEALTH_SYNC_SETTINGS) },
         { title: ITEM.APPEARANCE, navigate: () => navigation.navigate(ROUTES.APPEARANCE_SETTINGS) },

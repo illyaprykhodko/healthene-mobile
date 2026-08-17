@@ -6,20 +6,26 @@ import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 // local dependencies
 import Text from 'components/Text';
-import { useAppSelector } from 'store';
 import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
 import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
+import { NAME_MAX_LINES, ROW_CONTENT_INSET } from './itemMetrics';
 import { MAX_FONT_SCALE } from 'constants/typography';
+import { useDevHeightAssert } from 'hooks/useDevHeightAssert';
 import { PressableScale } from 'components/PressableScale';
-import { selectCurrentStep } from 'store/slices/shoppingSlice';
-import { SHOPPING_STATUS, SHOPPING_STEP } from 'constants/spec';
+import { SHOPPING_STATUS } from 'constants/spec';
 
 interface ShoppingItemProps {
     item: any;
+    /** Fixed row height, supplied by the screen so it always equals what getItemLayout reports. */
+    height: number;
     status: string;
+    /** True when the select control is replaced by the read-only amount pill. */
+    compact: boolean;
     disabled?: boolean;
+    /** currentStep === SHOPPING_STEP.MAIN — gates the exclude button only. */
+    isMainStep: boolean;
     isConfirmed: boolean;
     onUpdate: (item: any) => void;
     onAmountFocus?: (itemId: number) => void;
@@ -28,8 +34,11 @@ interface ShoppingItemProps {
 const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
     item,
     status,
+    height,
+    compact,
     onUpdate,
     disabled,
+    isMainStep,
     isConfirmed,
     onAmountFocus,
 }) => {
@@ -38,8 +47,10 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
     const [editable, setEditable] = useState(false);
     const [amount, setAmount] = useState(String(item?.amount || 1));
 
-    const currentStep = useAppSelector(selectCurrentStep);
     const isExcluded = item?.excluded;
+    // Guards the text column, not the row: the row's height is pinned by the style, so only the
+    // content can reveal that the metrics and the StyleSheet have drifted apart.
+    const assertContentHeight = useDevHeightAssert('ShoppingItem', height - ROW_CONTENT_INSET);
     const [isPurchased, setIsPurchased] = useState<boolean>(!!item?.bought);
 
     useEffect(() => {
@@ -120,33 +131,36 @@ const ShoppingItem: React.FC<ShoppingItemProps> = memo(({
     // HS-3113: Final Check step removed. Was:
     //   (currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.CHECK)
     // CHECK is now unreachable, so the clause was dropped.
-    const showExcludeButton = currentStep === SHOPPING_STEP.MAIN
+    // `isMainStep` / `compact` are computed by the screen (compact also feeds the row height), which
+    // removes a per-row Redux subscription to `selectCurrentStep`. They are NOT interchangeable:
+    // exclude is MAIN-only, while the select control also shows in MEAL.
+    const showExcludeButton = isMainStep
         && status !== SHOPPING_STATUS.CONFIRMED
         && status !== SHOPPING_STATUS.SHOP_ON_MY_OWN
     ;
     const showShoppingCheckbox = status === SHOPPING_STATUS.SHOP_ON_MY_OWN;
-    const showSelectButton = (currentStep === SHOPPING_STEP.MAIN || currentStep === SHOPPING_STEP.MEAL) && !isConfirmed;
 
     return (
         <View style={[
             styles.container,
-            { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border },
+            { height, backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border },
             isExcluded && styles.excluded,
         ]}>
             <DefImage
                 src={item?.coverImage?.url}
                 style={isExcluded ? { ...styles.image, ...styles.excludedImage } : styles.image}
             />
-            <View style={styles.textContainer}>
+            <View style={styles.textContainer} onLayout={assertContentHeight}>
                 <Text
                     variant="h5"
                     color={theme.colors.text}
+                    numberOfLines={NAME_MAX_LINES}
                     style={[styles.name, isExcluded && styles.excludedText]}
                 >
                     {item.name || item.food?.name}
                 </Text>
                 <View style={styles.itemInfo}>
-                    {showSelectButton ? (
+                    {!compact ? (
                         <View style={styles.controlsContainer}>
                             <PressableScale
                                 // haptic="light"
@@ -236,12 +250,13 @@ export default ShoppingItem;
 
 const styles = StyleSheet.create({
     container: {
+        paddingVertical: 16,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 16,
+        // Integral border (not hairlineWidth) so the height math in ./itemMetrics stays exact on any DPR.
+        borderBottomWidth: 1,
         paddingHorizontal: 16,
         backgroundColor: COLORS.WHITE,
-        borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: COLORS.LIGHT_GREY,
     },
     excluded: {
@@ -308,6 +323,9 @@ const styles = StyleSheet.create({
     },
     selectBtnText: {
         fontSize: 16,
+        // Explicit lineHeight: the `common` Text variant has none, so the label's height would
+        // otherwise depend on platform font metrics and break the exact row height in itemMetrics.
+        lineHeight: 20,
         color: COLORS.WHITE,
         width: '100%',
         paddingBottom: 2,

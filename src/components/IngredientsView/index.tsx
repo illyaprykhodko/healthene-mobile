@@ -6,6 +6,7 @@ import { StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native';
 // local dependencies
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
+import { HTMLView } from 'components/HTMLView';
 
 interface Ingredient {
     id: number | string;
@@ -50,9 +51,7 @@ const IngredientsView: React.FC<IngredientsViewProps> = ({ ingredients, style, e
                         <View key={item.id} style={styles.unitButton}>
                             <View style={styles.rowCenter}>
                                 <Text style={styles.bullet}>{'\u2022'}</Text>
-                                <Text textAlign="left" style={styles.unitName}>
-                                    {item?.nameWithUnit}
-                                </Text>
+                                <HTMLView value={`<p>${item?.nameWithUnit ?? ''}</p>`} stylesheet={{ p: styles.unitName }} />
                             </View>
                         </View>
                     ))}
@@ -75,6 +74,7 @@ const styles = StyleSheet.create({
     },
     unitButton: {
         paddingVertical: 3,
+        paddingLeft: 23,
     },
     bullet: {
         fontSize: 14,

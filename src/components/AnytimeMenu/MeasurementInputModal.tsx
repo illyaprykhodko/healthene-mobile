@@ -60,6 +60,7 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
     const insets = useSafeAreaInsets();
     const androidTopInset = Platform.OS === 'android' ? insets.top : 0;
     const measurementType = item.measurement?.type as MeasurementType;
+
     const config = useMemo(
         () => getMeasurementConfig(measurementType),
         [measurementType],
@@ -270,7 +271,7 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
 
                                 {/* Unit Selector (if multiple units available and not BP) */}
                                 {availableUnits.length > 1
-                  && measurementType !== 'BLOOD_PRESSURE' && (
+                                    && measurementType !== 'BLOOD_PRESSURE' && (
                                     <View style={styles.unitSelector}>
                                         <AnimatedDropdown
                                             prefix="Unit: "
@@ -292,7 +293,7 @@ export const MeasurementInputModal: React.FC<MeasurementInputModalProps> = ({
                                     >
                                         <InfoIcon />
                                         <Text style={[styles.infoButtonText, { color: theme.colors.info }]}>
-                      How do I measure this?
+                                            How do I measure this?
                                         </Text>
                                     </TouchableOpacity>
                                 )}

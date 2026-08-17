@@ -3,6 +3,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from './baseApi';
 import { MeasurementType } from 'types';
+import type { Attachment } from 'types/video';
 import { LoggedMeasurementRecord } from 'types/health';
 import { PaginatedResponse } from 'types/common/interfaces';
 import {
@@ -731,8 +732,13 @@ export const dayOverviewApi = createApi({
         }),
 
         // Get rescue shopping items videos
-        getRescueVideos: builder.query<any[], void>({
+        getRescueVideos: builder.query<Attachment[], void>({
             query: () => '/patient-service/patients/me/rescue-shopping-items-videos',
+            transformResponse: (response: Array<{ id: number; libraryItem: Omit<Attachment, 'status'> & { status: string }; alreadySeen: boolean }>) =>
+                response.map(item => ({
+                    ...item.libraryItem,
+                    status: item.libraryItem.status === 'COMPLETE' ? 'COMPLETED' : item.libraryItem.status,
+                } as Attachment)),
         }),
 
         // Get rescue catalog list (categories)

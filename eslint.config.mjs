@@ -32,6 +32,9 @@ export default defineConfig([
                 ...globals.es2017,
                 ...globals.node,
                 // ...globals.browser,
+                // React Native injects __DEV__; release bundles inline it to false so guarded
+                // blocks are dead-code-eliminated.
+                __DEV__: 'readonly',
             },
         },
         plugins: {
