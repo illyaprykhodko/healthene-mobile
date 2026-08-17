@@ -4,6 +4,8 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQuery } from './baseApi';
 import { MeasurementType } from 'types';
 import type { Attachment } from 'types/video';
+import { LoggedMeasurementRecord } from 'types/health';
+import { PaginatedResponse } from 'types/common/interfaces';
 import {
     PhaseItem, PatientFoodCategoryQuestion, AddPhaseItemData
 } from 'types/overview';
@@ -658,7 +660,7 @@ export const dayOverviewApi = createApi({
             providesTags: (result, error, { type }) => [{ type: 'PhaseItems', id: `measurement-${type}` }],
         }),
 
-        getLoggedMeasurementData: builder.mutation<any, {
+        getLoggedMeasurementData: builder.mutation<PaginatedResponse<LoggedMeasurementRecord>, {
             type: string;
             page?: number;
             size?: number;
