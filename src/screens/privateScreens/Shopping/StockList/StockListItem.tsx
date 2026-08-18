@@ -9,8 +9,8 @@ import { COLORS } from 'constants/colors';
 import { OFFSET } from 'constants/offset';
 import Checkbox from 'components/Checkbox';
 import DefImage from 'components/DefImage';
-import { useDevHeightAssert } from 'hooks/useDevHeightAssert';
 import { PressableScale } from 'components/PressableScale';
+import { useDevHeightAssert } from 'hooks/useDevHeightAssert';
 import { NAME_MAX_LINES, IMAGE_SIZE, ROW_BORDER, ROW_CONTENT_INSET, ROW_PADDING } from './metrics';
 
 const GRAMS_IN_KILOGRAM = 1000;
@@ -25,9 +25,9 @@ export const formatStockWeight = (gramWeight: number): string => {
 };
 
 interface StockListItemProps {
-    item: StockItem;
     /** Fixed row height, supplied by the screen so it always equals what getItemLayout reports. */
     height: number;
+    item: StockItem;
     disabled: boolean;
     isChecked: boolean;
     onToggle: (item: StockItem) => void;
