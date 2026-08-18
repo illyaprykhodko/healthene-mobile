@@ -426,7 +426,7 @@ const StockList: React.FC = () => {
                 View itself has a pinned height, so only this unconstrained box can reveal overflow. */}
             <View onLayout={assertHeaderHeight}>
                 <Text variant="h4" numberOfLines={1} style={styles.sectionTitle} color={theme.colors.primary}>
-                    Select all the {section.title} ({section.data.length})
+                    Select all the {section.title}
                 </Text>
             </View>
         </View>
