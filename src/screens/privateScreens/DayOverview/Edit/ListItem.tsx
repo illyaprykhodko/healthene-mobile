@@ -1,7 +1,9 @@
 // outsource dependencies
 import React, { useRef, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
+
 // local dependencies
 import Text from 'components/Text';
 import { useAppDispatch } from 'store';
@@ -44,6 +46,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     const isRecipe = item.type === ENTITY_TYPE.RECIPE;
     const isDone = typeof item?.status === 'string'
         && item.status.toUpperCase() === PHASE_ITEM_STATUS.DONE;
+    const isMedication = item.type === ENTITY_TYPE.MEDICATION;
     const isIngredients = item.type === ENTITY_TYPE.INGREDIENTS;
     const isCustomRecipe = item.type === ENTITY_TYPE.CUSTOM_RECIPE;
     const isDidNotEat = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
@@ -288,6 +291,36 @@ export const ListItem: React.FC<ListItemProps> = ({
             );
         }
 
+        if (isMedication) {
+            const coverUrl = item.medication?.coverImage?.url;
+            return (
+                <View style={styles.foodContainer}>
+                    {coverUrl ? (
+                        <Image source={{ uri: coverUrl }} style={[styles.image, isOpacity]} />
+                    ) : (
+                        <View style={[styles.image, styles.medicationIconContainer, isOpacity]}>
+                            <Icon iconStyle="solid" name="capsules" size={24} color={theme.colors.text} />
+                        </View>
+                    )}
+                    <View style={styles.main}>
+                        <Text style={[styles.title, { color: theme.colors.text }, isOpacity || {}]}>
+                            {item.medication?.name || item.title || 'Medication'}
+                        </Text>
+                        {amount && (
+                            <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
+                                {`${amount} ${item.weight?.unit?.name || ''}`}
+                            </Text>
+                        )}
+                        {item.modified && (
+                            <Text style={[styles.subtitle, { color: theme.colors.blue, fontWeight: '600' }]}>
+                                added by me
+                            </Text>
+                        )}
+                    </View>
+                </View>
+            );
+        }
+
         // Default case
         return (
             <View style={styles.defaultContainer}>
@@ -408,6 +441,12 @@ const styles = StyleSheet.create({
     },
     defaultContainer: {
         flex: 1,
+    },
+    medicationIconContainer: {
+        borderRadius: 4,
+        alignItems: 'center',
+        justifyContent: 'center',
+        // backgroundColor: '#E0E0E0',
     },
     main: {
         flex: 1,

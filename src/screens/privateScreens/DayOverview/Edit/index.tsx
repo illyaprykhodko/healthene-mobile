@@ -397,6 +397,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         order: items.length,
                         status: PHASE_ITEM_STATUS.PENDING,
                         amount: selectedItem.amount || 1,
+                        phase: { id: targetPhaseId },
                     };
 
                     if (itemEntityType === ENTITY_TYPE.MEASUREMENT) {
@@ -405,6 +406,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     } else if (itemEntityType === ENTITY_TYPE.MEDICATION) {
                         itemData.medication = { id: selectedItem?.id };
                         itemData.type = ENTITY_TYPE.MEDICATION;
+                        itemData.section = 'Added';
                     } else if (itemEntityType === ENTITY_TYPE.SUPPLEMENT) {
                         itemData.supplement = { id: selectedItem?.id };
                         itemData.type = ENTITY_TYPE.SUPPLEMENT;
@@ -413,13 +415,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         itemData.type = ENTITY_TYPE.PHYSICAL_ACTIVITY;
                     }
 
-                    // await updatePhaseItem({
-                    //     id: selectedItem?.recipe?.id,
-                    //     phaseId: targetPhaseId,
-                    //     data: itemData,
-                    // });
-
-                    await addPhaseItem({
+                    await addPhaseMealItem({
                         phaseId: targetPhaseId,
                         data: itemData,
                     });
@@ -856,9 +852,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 isPastDate={isPastDate}
                                 isFutureDate={isFutureDate}
                                 onDelete={handleDeleteItem}
+                                onReplace={handleReplaceItem}
                                 noDelete={isMedicationPhase}
                                 noReplace={isMedicationPhase}
-                                onReplace={handleReplaceItem}
                                 recipeReplacementEnable={true}
                                 type={currentPhase?.type || ''}
                                 noReplaceItem={handleNoReplaceItem}
@@ -907,7 +903,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 // );
                                 }}
                                 ListHeaderComponent={() => (
-                                    (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
+                                    (sectionItems[0]?.food || sectionItems[0]?.recipe || section === 'Added') ? (
                                         <View style={[
                                             styles.separatorWrapper,
                                             { backgroundColor: theme.colors.surfaceSecond }
@@ -946,41 +942,6 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         tint={theme.dark ? 'dark' : 'light'}
                     >
                         <View style={styles.buttonContainer}>
-                            {!isMedicationPhase && (
-                                <Button
-                                    icon="plus"
-                                    title="Add"
-                                    variant="primary"
-                                    onPress={handleAddItem}
-                                    disabled={isFutureDate}
-                                    textStyle={styles.textAddButton}
-                                    style={{
-                                        ...styles.button,
-                                        ...styles.addButtonActive,
-                                        width: isFutureDate ? '100%' : '45%',
-                                        backgroundColor: theme.colors.transparent,
-                                    }}
-                                />
-                            )}
-                            {!isFutureDate && (
-                                <Button
-                                    variant="secondary"
-                                    disabled={isLoading}
-                                    onPress={handlePhaseDone}
-                                    textStyle={styles.textMealDoneButton}
-                                    title={isMedicationPhase ? 'Done' : 'Meal Done'}
-                                    style={{
-                                        ...styles.button,
-                                        ...styles.mealDoneButton,
-                                        ...(isLoading && styles.mealDoneButtonDisabled),
-                                        ...(isMedicationPhase && { width: '100%' }),
-                                    }}
-                                />
-                            )}
-                        </View>
-                    </GlassSurface>
-                    : <View style={styles.buttonContainer}>
-                        {!isMedicationPhase && (
                             <Button
                                 icon="plus"
                                 title="Add"
@@ -991,21 +952,50 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 style={{
                                     ...styles.button,
                                     ...styles.addButtonActive,
-                                    width: isFutureDate ? '100%' : '45%',
+                                    width: (isFutureDate || isMedicationPhase) ? '100%' : '45%',
                                     backgroundColor: theme.colors.transparent,
                                 }}
                             />
-                        )}
-                        {!isFutureDate && (
+                            {!isFutureDate && !isMedicationPhase && (
+                                <Button
+                                    title="Meal Done"
+                                    variant="secondary"
+                                    disabled={isLoading}
+                                    onPress={handlePhaseDone}
+                                    textStyle={styles.textMealDoneButton}
+                                    style={{
+                                        ...styles.button,
+                                        ...styles.mealDoneButton,
+                                        ...(isLoading && styles.mealDoneButtonDisabled),
+                                    }}
+                                />
+                            )}
+                        </View>
+                    </GlassSurface>
+                    : <View style={styles.buttonContainer}>
+                        <Button
+                            icon="plus"
+                            title="Add"
+                            variant="primary"
+                            onPress={handleAddItem}
+                            disabled={isFutureDate}
+                            textStyle={styles.textAddButton}
+                            style={{
+                                ...styles.button,
+                                ...styles.addButtonActive,
+                                width: (isFutureDate || isMedicationPhase) ? '100%' : '45%',
+                                backgroundColor: theme.colors.transparent,
+                            }}
+                        />
+                        {!isFutureDate && !isMedicationPhase && (
                             <Button
-                                title={isMedicationPhase ? 'Done' : 'Meal Done'}
+                                title="Meal Done"
                                 variant="secondary"
                                 onPress={handlePhaseDone}
                                 textStyle={styles.textMealDoneButton}
                                 style={{
                                     ...styles.button,
                                     ...styles.mealDoneButton,
-                                    ...(isMedicationPhase && { width: '100%' }),
                                     ...isLoading && styles.mealDoneButtonDisabled,
                                 }}
                             />
