@@ -71,6 +71,7 @@ const MedicationAllergiesScreen: React.FC = () => {
 
     const {
         data: patientAllergies = [],
+        isLoading: patientAllergiesLoading,
         isFetching: patientAllergiesFetching,
     } = useGetPatientMedicationAllergiesQuery();
 
@@ -193,7 +194,7 @@ const MedicationAllergiesScreen: React.FC = () => {
 
     const showSkeleton = (isFirstLoad && filterFetching) || (filterFetching && allItems.length === 0 && search === searchQuery);
     const showEmpty = !filterFetching && allItems.length === 0 && !isFirstLoad;
-    const initialized = !patientAllergiesFetching;
+    const initialized = !patientAllergiesLoading;
 
     return (
         <Screen initialized={initialized} style={styles.container}>

@@ -71,6 +71,7 @@ const MedicalProblemsScreen: React.FC = () => {
 
     const {
         data: patientMedicalProblems = [],
+        isLoading: patientProblemsLoading,
         isFetching: patientProblemsFetching,
     } = useGetPatientMedicalProblemsQuery();
 
@@ -194,7 +195,7 @@ const MedicalProblemsScreen: React.FC = () => {
 
     const showSkeleton = (isFirstLoad && filterFetching) || (filterFetching && allItems.length === 0 && search === searchQuery);
     const showEmpty = !filterFetching && allItems.length === 0 && !isFirstLoad;
-    const initialized = !patientProblemsFetching;
+    const initialized = !patientProblemsLoading;
 
     return (
         <Screen initialized={initialized} style={styles.container}>
