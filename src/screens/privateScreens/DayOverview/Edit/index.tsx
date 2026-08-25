@@ -736,6 +736,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                           : convertTypeToTitle(currentPhase?.type || phaseIdentityRef.current?.type || '', true));
     const isPastDate = dayjs(targetDate).isBefore(dayjs(), 'day');
     const isFutureDate = dayjs(targetDate).isAfter(dayjs(), 'day');
+    const isMedicationPhase = currentPhase?.type === OVERVIEW_TYPE.MEDICATION;
 
     const today = dayjs().format('YYYY-MM-DD');
     const { currentData: todayDayOverviewData } = useGetDayOverviewQuery(today, {
@@ -855,6 +856,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 isPastDate={isPastDate}
                                 isFutureDate={isFutureDate}
                                 onDelete={handleDeleteItem}
+                                noDelete={isMedicationPhase}
+                                noReplace={isMedicationPhase}
                                 onReplace={handleReplaceItem}
                                 recipeReplacementEnable={true}
                                 type={currentPhase?.type || ''}
@@ -943,6 +946,41 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         tint={theme.dark ? 'dark' : 'light'}
                     >
                         <View style={styles.buttonContainer}>
+                            {!isMedicationPhase && (
+                                <Button
+                                    icon="plus"
+                                    title="Add"
+                                    variant="primary"
+                                    onPress={handleAddItem}
+                                    disabled={isFutureDate}
+                                    textStyle={styles.textAddButton}
+                                    style={{
+                                        ...styles.button,
+                                        ...styles.addButtonActive,
+                                        width: isFutureDate ? '100%' : '45%',
+                                        backgroundColor: theme.colors.transparent,
+                                    }}
+                                />
+                            )}
+                            {!isFutureDate && (
+                                <Button
+                                    variant="secondary"
+                                    disabled={isLoading}
+                                    onPress={handlePhaseDone}
+                                    textStyle={styles.textMealDoneButton}
+                                    title={isMedicationPhase ? 'Done' : 'Meal Done'}
+                                    style={{
+                                        ...styles.button,
+                                        ...styles.mealDoneButton,
+                                        ...(isLoading && styles.mealDoneButtonDisabled),
+                                        ...(isMedicationPhase && { width: '100%' }),
+                                    }}
+                                />
+                            )}
+                        </View>
+                    </GlassSurface>
+                    : <View style={styles.buttonContainer}>
+                        {!isMedicationPhase && (
                             <Button
                                 icon="plus"
                                 title="Add"
@@ -957,48 +995,17 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                     backgroundColor: theme.colors.transparent,
                                 }}
                             />
-                            {!isFutureDate && (
-                                <Button
-                                    title="Meal Done"
-                                    variant="secondary"
-                                    disabled={isLoading}
-                                    onPress={handlePhaseDone}
-                                    textStyle={styles.textMealDoneButton}
-                                    style={{
-                                        ...styles.button,
-                                        ...styles.mealDoneButton,
-                                        ...(isLoading && styles.mealDoneButtonDisabled),
-                                    }}
-                                />
-                            )}
-                        </View>
-                    </GlassSurface>
-                    : <View style={styles.buttonContainer}>
-                        <Button
-                            icon="plus"
-                            title="Add"
-                            variant="primary"
-                            onPress={handleAddItem}
-                            disabled={isFutureDate}
-                            textStyle={styles.textAddButton}
-                            style={{
-                                ...styles.button,
-                                ...styles.addButtonActive,
-                                width: isFutureDate ? '100%' : '45%',
-                                backgroundColor: theme.colors.transparent,
-                            }}
-                        />
+                        )}
                         {!isFutureDate && (
                             <Button
-                                // disabled={true}
-                                title="Meal Done"
+                                title={isMedicationPhase ? 'Done' : 'Meal Done'}
                                 variant="secondary"
                                 onPress={handlePhaseDone}
-                                // disabled={!allItemsDone || isLoading}
                                 textStyle={styles.textMealDoneButton}
                                 style={{
                                     ...styles.button,
                                     ...styles.mealDoneButton,
+                                    ...(isMedicationPhase && { width: '100%' }),
                                     ...isLoading && styles.mealDoneButtonDisabled,
                                 }}
                             />
