@@ -10,7 +10,7 @@ import {
     useGetPhaseItemsQuery,
     useGetDayOverviewQuery,
     useUpdatePhaseMutation,
-    useAddPhaseItemMutation,
+    // useAddPhaseItemMutation,
     useGetRescueVideosQuery,
     useUpdatePhaseItemMutation,
     useDeletePhaseItemMutation,
@@ -108,16 +108,16 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         }
     }, [localItems]);
 
-    const allItemsDone = useMemo(
-        () =>
-            localItems.length > 0
-            && localItems.every(
-                listItem =>
-                    listItem.status === PHASE_ITEM_STATUS.DONE
-                    || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
-            ),
-        [localItems]
-    );
+    // const allItemsDone = useMemo(
+    //     () =>
+    //         localItems.length > 0
+    //         && localItems.every(
+    //             listItem =>
+    //                 listItem.status === PHASE_ITEM_STATUS.DONE
+    //                 || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
+    //         ),
+    //     [localItems]
+    // );
 
     const { currentData: dayOverviewData } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
@@ -153,7 +153,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         skip: !targetPhaseId,
     });
     // mutations
-    const [addPhaseItem] = useAddPhaseItemMutation();
+    // const [addPhaseItem] = useAddPhaseItemMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
     // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
@@ -471,8 +471,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         setLocalItems(prevItems => {
             const nextItems = prevItems.map(prevItem =>
-                (prevItem.id === item.id ? { ...item } : prevItem)
-            );
+                (prevItem.id === item.id ? { ...item } : prevItem));
             const allDoneNow = nextItems.every(
                 listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
             );
@@ -852,8 +851,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 isPastDate={isPastDate}
                                 isFutureDate={isFutureDate}
                                 onDelete={handleDeleteItem}
-                                onReplace={handleReplaceItem}
                                 noDelete={isMedicationPhase}
+                                onReplace={handleReplaceItem}
                                 noReplace={isMedicationPhase}
                                 recipeReplacementEnable={true}
                                 type={currentPhase?.type || ''}
@@ -863,7 +862,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 onSwipeValueChange={handleScrollDisabled}
                                 handleCheckboxStatus={handleCheckboxStatus}
                                 keyExtractor={({ id }) => String(id)}
-                                renderItem={({ item, index }, ...restProps) => {
+                                renderItem={({ item }, ...restProps) => {
                                     return <ListItem
                                         item={item}
                                         date={targetDate}
@@ -937,9 +936,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
               || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? ( */}
                 {Platform.OS === 'ios'
                     ? <GlassSurface
-                        intensity={10}
-                        style={styles.glassBar}
-                        tint={theme.dark ? 'dark' : 'light'}
+                          intensity={10}
+                          style={styles.glassBar}
+                          tint={theme.dark ? 'dark' : 'light'}
                     >
                         <View style={styles.buttonContainer}>
                             <Button
@@ -952,8 +951,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 style={{
                                     ...styles.button,
                                     ...styles.addButtonActive,
-                                    width: (isFutureDate || isMedicationPhase) ? '100%' : '45%',
                                     backgroundColor: theme.colors.transparent,
+                                    width: (isFutureDate || isMedicationPhase) ? '100%' : '45%',
                                 }}
                             />
                             {!isFutureDate && !isMedicationPhase && (
@@ -983,8 +982,8 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             style={{
                                 ...styles.button,
                                 ...styles.addButtonActive,
-                                width: (isFutureDate || isMedicationPhase) ? '100%' : '45%',
                                 backgroundColor: theme.colors.transparent,
+                                width: (isFutureDate || isMedicationPhase) ? '100%' : '45%',
                             }}
                         />
                         {!isFutureDate && !isMedicationPhase && (

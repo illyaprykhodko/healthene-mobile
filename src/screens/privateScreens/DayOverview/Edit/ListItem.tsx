@@ -31,7 +31,7 @@ interface ListItemProps {
 export const ListItem: React.FC<ListItemProps> = ({
     item,
     date,
-    updateData,
+    // updateData,
     nextSection,
     disabled = false,
     isFutureDate = false,
@@ -446,7 +446,6 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         alignItems: 'center',
         justifyContent: 'center',
-        // backgroundColor: '#E0E0E0',
     },
     main: {
         flex: 1,
@@ -577,7 +576,7 @@ export function prepareIngredientNameWithUnit ({
     amount = 1,
     ingredient,
     useServing = false,
-    peopleEatingNumber = 1,
+    // peopleEatingNumber = 1,
 }: PrepareArgs): string {
     const opt: Required<PrepareOptions> = {
         ...defaultOptions,

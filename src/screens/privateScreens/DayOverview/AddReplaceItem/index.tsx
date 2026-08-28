@@ -5,13 +5,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, StyleSheet, TouchableOpacity, FlatList, TextInput, ActivityIndicator } from 'react-native';
 
 // local dependencies
-import {
-    AvailableItem,
-    useGetFoodsQuery,
-    useGetRecipePrototypesQuery,
-    useGetCatalogPrototypeTreeNodesQuery,
-    useFilterMedicationsQuery,
-} from 'store/api/dayOverviewApi';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { COLORS } from 'constants/colors';
@@ -19,9 +12,15 @@ import { OFFSET } from 'constants/offset';
 import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
 import DefImage from 'components/DefImage';
-import { ENTITY_TYPE } from 'constants/spec';
 import { MAX_FONT_SCALE } from 'constants/typography';
-import { CATALOG_TAG_TYPE, SEARCH_TYPE } from 'constants/spec';
+import { CATALOG_TAG_TYPE, SEARCH_TYPE, ENTITY_TYPE } from 'constants/spec';
+import {
+    AvailableItem,
+    useGetFoodsQuery,
+    useFilterMedicationsQuery,
+    useGetRecipePrototypesQuery,
+    useGetCatalogPrototypeTreeNodesQuery,
+} from 'store/api/dayOverviewApi';
 
 export const AddReplaceItem: React.FC = () => {
     const theme = useTheme();
@@ -65,8 +64,8 @@ export const AddReplaceItem: React.FC = () => {
     const { data: medicationsData, isLoading: isMedicationsLoading } = useFilterMedicationsQuery({
         name: debouncedSearchQuery || undefined,
         excludeIds,
-        page: 0,
         size: 50,
+        page: 0,
     }, {
         skip: !isMedicationMode,
     });
@@ -325,14 +324,12 @@ export const AddReplaceItem: React.FC = () => {
                     </View>
                 ) : (
                     <FlatList
-                        data={medicationItems}
                         style={styles.list}
+                        data={medicationItems}
                         renderItem={renderMedicationItem}
                         keyboardShouldPersistTaps="handled"
                         keyExtractor={item => String(item.id)}
-                        ListEmptyComponent={
-                            <Text style={styles.emptyScreen}>No medications found</Text>
-                        }
+                        ListEmptyComponent={<Text style={styles.emptyScreen}>No medications found</Text>}
                     />
                 )
             ) : (

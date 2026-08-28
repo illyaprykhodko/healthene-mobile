@@ -4,7 +4,7 @@ import Icon from '@react-native-vector-icons/fontawesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, Image, FlatList, UIManager, LayoutAnimation, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, FlatList, UIManager, LayoutAnimation, Platform } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text';
@@ -660,7 +660,6 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        // backgroundColor: '#E0E0E0',
     },
     controlsWrapper: {
         marginBottom: OFFSET.VERTICAL,
