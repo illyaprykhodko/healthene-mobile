@@ -32,4 +32,17 @@ allprojects {
             url = uri(project(":react-native-async-storage_async-storage").file("local_repo"))
         }
     }
+
+    // react-native-video is compiled against media3 1.8.0. Another transitive dependency
+    // (e.g. react-native-vision-camera) pulls the group up to 1.9.0, which removed the
+    // DefaultLoadControl constructor that RNVLoadControl calls → NoSuchMethodError crash.
+    // Pin the whole group so all modules resolve to the version RNV was built against.
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'androidx.media3') {
+                details.useVersion '1.8.0'
+                details.because 'react-native-video requires media3 1.8.0'
+            }
+        }
+    }
 }
