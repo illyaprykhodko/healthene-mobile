@@ -9,6 +9,8 @@ import { Badge } from './Badge';
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
 import Checkbox from 'components/Checkbox';
+import { OFFSET } from 'constants/offset.ts';
+import { Button } from 'components/Button.tsx';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { EmptyState } from 'components/EmptyState';
 import { ActivityIcon, CloseIcon } from './AnytimeIcons';
@@ -208,16 +210,13 @@ export const AnytimeExerciseList: React.FC = () => {
                 </Text>
             )}
             {listIsDone && (
-                <View style={styles.completionContainer}>
-                    <TouchableOpacity
-                        style={[styles.nextActivityButton, { backgroundColor: theme.colors.successAlt }]}
-                        onPress={onClose}
-                    >
-                        <Text style={[styles.nextActivityText, { color: theme.colors.white }]}>
-                            DONE
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+                <Button
+                    title="DONE"
+                    variant="primary"
+                    onPress={onClose}
+                    style={styles.submitBtn}
+                    textStyle={styles.submitBtnText}
+                />
             )}
         </View>
     );
@@ -317,5 +316,16 @@ const styles = StyleSheet.create({
     nextActivityText: {
         fontSize: 20,
         fontWeight: '500',
+    },
+    submitBtn: {
+        width: '90%',
+        borderRadius: 30,
+        alignSelf: 'center',
+        marginBottom: OFFSET.VERTICAL,
+    },
+    submitBtnText: {
+        fontSize: 20,
+        fontWeight: '500',
+        paddingVertical: 3,
     },
 });
