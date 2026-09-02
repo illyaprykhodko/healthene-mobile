@@ -26,6 +26,7 @@ import TextInput from 'components/TextInput.tsx';
 import { RootState, useAppSelector } from 'store';
 import ProfileImage from 'components/ProfileImage.tsx';
 import { getClinicRoleLabel } from 'constants/spec.ts';
+import { EmptyState } from 'components/EmptyState.tsx';
 import { RootStackParamList } from 'services/navigation';
 import LoadingOverlay from 'components/LoadingOverlay.tsx';
 import { MessageForm, Recipient } from 'types/messenger.ts';
@@ -86,12 +87,12 @@ const WriteMessageScreen = () => {
                 coverImage: source.coverImage,
             } as Recipient;
         }
-        if (user?.physician) {
+        if (user?.dieteticsTechnician) {
             return {
-                id: user.physician.id,
-                name: user.physician.name,
-                clinicRole: user.physician.clinicRole,
-                coverImage: user.physician.coverImage as Recipient['coverImage'],
+                id: user.dieteticsTechnician.id,
+                name: user.dieteticsTechnician.name,
+                clinicRole: user.dieteticsTechnician.clinicRole,
+                coverImage: user.dieteticsTechnician.coverImage as Recipient['coverImage'],
             };
         }
         return null;
@@ -307,93 +308,103 @@ const WriteMessageScreen = () => {
         }
     }, [handleAttachFile, showCaptureModeSelector]);
 
+    const noDietitian = !chain && !recipient;
+
     return <>
         <LoadingOverlay init={preloader} />
         <Screen initialized={true} style={styles.container}>
-            <ScrollView>
-                <KeyboardAwareScrollView
-                    bottomOffset={80}
-                    style={styles.flex}
-                    contentContainerStyle={styles.flexGrow}
-                >
-                    <Pressable
-                        style={styles.row}
-                        disabled={!canPickRecipient}
-                        onPress={handleOpenRecipientPicker}
+            {noDietitian ? (
+                <EmptyState
+                    icon="user-x"
+                    title="No Dietetic Technician Assigned"
+                    subtitle="You don't have a dietetic technician assigned to your account. Please contact your administrator."
+                />
+            ) : (
+                <ScrollView>
+                    <KeyboardAwareScrollView
+                        bottomOffset={80}
+                        style={styles.flex}
+                        contentContainerStyle={styles.flexGrow}
                     >
-                        <ProfileImage
-                            uri={recipient?.coverImage?.url}
-                            style={{ ...styles.profileImg, borderColor: theme.colors.grey }}
-                        />
-                        <View style={styles.recipientBody}>
-                            <Text numberOfLines={1}>
+                        <Pressable
+                            style={styles.row}
+                            disabled={!canPickRecipient}
+                            onPress={handleOpenRecipientPicker}
+                        >
+                            <ProfileImage
+                                uri={recipient?.coverImage?.url}
+                                style={{ ...styles.profileImg, borderColor: theme.colors.grey }}
+                            />
+                            <View style={styles.recipientBody}>
+                                <Text numberOfLines={1}>
                                 To:
                                 &nbsp;
-                                {recipientName ?? 'Select recipient'}
-                            </Text>
-                            <Text variant="caption" color={theme.colors.grey}>{roleLabel}</Text>
-                        </View>
-                        {canPickRecipient && (
-                            <Icon
-                                size={14}
-                                iconStyle="solid"
-                                name="chevron-right"
-                                color={theme.colors.textSecondary}
-                            />
-                        )}
-                    </Pressable>
-                    <Formik<MessageForm>
-                        enableReinitialize
-                        initialValues={formInitialValues}
-                        validationSchema={validationSchema}
-                        onSubmit={(values, helpers) => handleSubmit(values, helpers)}
-                    >
-                        {({ values, errors, touched, handleChange, handleSubmit }) => {
-                            return <View style={styles.formContainer}>
-                                <TextInput
-                                    name="subject"
-                                    label="Subject"
-                                    disabled={false}
-                                    textAlign="left"
-                                    value={values.subject}
-                                    color={theme.colors.black}
-                                    onChangeText={handleChange('subject')}
-                                    error={touched.subject && errors.subject ? { subject: errors.subject } : undefined}
+                                    {recipientName ?? 'Select recipient'}
+                                </Text>
+                                <Text variant="caption" color={theme.colors.grey}>{roleLabel}</Text>
+                            </View>
+                            {canPickRecipient && (
+                                <Icon
+                                    size={14}
+                                    iconStyle="solid"
+                                    name="chevron-right"
+                                    color={theme.colors.textSecondary}
                                 />
-                                <TextInput
-                                    multiline
-                                    name="text"
-                                    label="Text"
-                                    disabled={false}
-                                    textAlign="left"
-                                    value={values.text}
-                                    color={theme.colors.black}
-                                    onChangeText={handleChange('text')}
-                                    error={touched.text && errors.text ? { text: errors.text } : undefined}
-                                />
-                                {initialValues.attachments.map(item => (
-                                    <Attachments
-                                        isUploadFile
-                                        key={item?.id}
-                                        onPreloader={setPreloader}
-                                        onRemove={() => { void handleRemoveAttachment(item); }}
-                                        {...item}
+                            )}
+                        </Pressable>
+                        <Formik<MessageForm>
+                            enableReinitialize
+                            initialValues={formInitialValues}
+                            validationSchema={validationSchema}
+                            onSubmit={(values, helpers) => handleSubmit(values, helpers)}
+                        >
+                            {({ values, errors, touched, handleChange, handleSubmit }) => {
+                                return <View style={styles.formContainer}>
+                                    <TextInput
+                                        name="subject"
+                                        label="Subject"
+                                        disabled={false}
+                                        textAlign="left"
+                                        value={values.subject}
+                                        color={theme.colors.black}
+                                        onChangeText={handleChange('subject')}
+                                        error={touched.subject && errors.subject ? { subject: errors.subject } : undefined}
                                     />
-                                ))}
-                                <View style={styles.attachmentsContainer}>
-                                    {Object.values(ATTACHMENTS).map(item => getAttachment(item, () => saveForm(values)))}
-                                </View>
-                                <Button
-                                    variant="outline"
-                                    title="SEND MESSAGE"
-                                    onPress={handleSubmit}
-                                    disabled={!chain && !recipient?.id}
-                                />
-                            </View>;
-                        }}
-                    </Formik>
-                </KeyboardAwareScrollView>
-            </ScrollView>
+                                    <TextInput
+                                        multiline
+                                        name="text"
+                                        label="Text"
+                                        disabled={false}
+                                        textAlign="left"
+                                        value={values.text}
+                                        color={theme.colors.black}
+                                        onChangeText={handleChange('text')}
+                                        error={touched.text && errors.text ? { text: errors.text } : undefined}
+                                    />
+                                    {initialValues.attachments.map(item => (
+                                        <Attachments
+                                            isUploadFile
+                                            key={item?.id}
+                                            onPreloader={setPreloader}
+                                            onRemove={() => { void handleRemoveAttachment(item); }}
+                                            {...item}
+                                        />
+                                    ))}
+                                    <View style={styles.attachmentsContainer}>
+                                        {Object.values(ATTACHMENTS).map(item => getAttachment(item, () => saveForm(values)))}
+                                    </View>
+                                    <Button
+                                        variant="outline"
+                                        title="SEND MESSAGE"
+                                        onPress={handleSubmit}
+                                        disabled={!chain && !recipient?.id}
+                                    />
+                                </View>;
+                            }}
+                        </Formik>
+                    </KeyboardAwareScrollView>
+                </ScrollView>
+            )}
         </Screen>
     </>;
 };

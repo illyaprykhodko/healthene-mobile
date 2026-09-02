@@ -106,7 +106,7 @@ export const healthProfileApi = createApi({
                 url: '/patient-service/medications/filter',
                 params: {
                     page: params.page ?? 0,
-                    size: params.size ?? 10,
+                    size: params.size ?? 20,
                     sort: params.sort ?? 'name,ASC',
                 },
             }),
@@ -124,7 +124,7 @@ export const healthProfileApi = createApi({
                 url: '/patient-service/medical-terms/filter',
                 params: {
                     page: params.page ?? 0,
-                    size: params.size ?? 10,
+                    size: params.size ?? 20,
                     sort: params.sort ?? 'name,ASC',
                 },
             }),

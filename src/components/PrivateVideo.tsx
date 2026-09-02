@@ -1,4 +1,6 @@
 // outsource dependencies
+import Video from 'react-native-video';
+import Icon from '@react-native-vector-icons/ionicons';
 import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
 import {
     View,
@@ -7,8 +9,6 @@ import {
     TouchableOpacity,
     ActivityIndicator,
 } from 'react-native';
-import Video from 'react-native-video';
-import Icon from '@react-native-vector-icons/ionicons';
 
 // local dependencies
 import Text from './Text';

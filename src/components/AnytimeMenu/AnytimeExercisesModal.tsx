@@ -7,6 +7,8 @@ import React, { useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 
 import { Badge } from './Badge';
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
+import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { ActivityIcon, CloseIcon } from './AnytimeIcons';
@@ -58,9 +60,9 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
     const exerciseCategories = useMemo(() => {
         const anytimePhase = dayOverviewData?.phases?.find(phase => phase.type === 'ANYTIME');
         const anytimeItems = anytimePhase?.items || [];
-        
+
         if (!anytimeItems.length) { return []; }
-        
+
         const exerciseItems = anytimeItems.filter(isAnytimeExerciseItem);
 
         // Group exercises by type
@@ -74,7 +76,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
             return acc;
         }, {});
 
-        
+
         // Convert to category format
         return Object.keys(groups).filter(typeKey => typeKey !== 'PHYSICAL_ACTIVITY').map((typeKey, idx) => {
             const items = groups[typeKey];
@@ -84,9 +86,9 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                 .split('_')
                 .map(s => s.charAt(0).toUpperCase() + s.slice(1))
                 .join(' ');
-            
+
             const categoryStatus = getCategoryStatus(items);
-            
+
             return {
                 title,
                 id: idx + 1,
@@ -256,18 +258,15 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                 Keep It Up!
             </Text>
         )}
-        {(listIsDone && exerciseCategories.length > 0)
-            && <View style={styles.completionContainer}>
-                <TouchableOpacity
-                    style={[styles.nextActivityButton, { backgroundColor: theme.colors.successAlt }]}
-                    onPress={onClose}
-                >
-                    <Text style={[styles.nextActivityText, { color: theme.colors.white }]}>
-                        DONE
-                    </Text>
-                </TouchableOpacity>
-            </View>
-        }
+        {listIsDone && exerciseCategories.length > 0 && (
+            <Button
+                title="DONE"
+                variant="primary"
+                onPress={onClose}
+                style={styles.submitBtn}
+                textStyle={styles.submitBtnText}
+            />
+        )}
     </View>;
 };
 
@@ -369,22 +368,15 @@ const styles = StyleSheet.create({
         marginVertical: 12,
         textAlign: 'center',
     },
-    completionContainer: {
-        alignItems: 'center',
-        paddingVertical: 20,
-        paddingHorizontal: 24,
-    },
-    nextActivityButton: {
+    submitBtn: {
         width: '90%',
         borderRadius: 30,
         alignSelf: 'center',
-        borderColor: 'transparent',
-        paddingVertical: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
+        marginBottom: OFFSET.VERTICAL,
     },
-    nextActivityText: {
+    submitBtnText: {
         fontSize: 20,
         fontWeight: '500',
+        paddingVertical: 3,
     },
 });
