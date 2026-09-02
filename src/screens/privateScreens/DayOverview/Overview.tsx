@@ -1,5 +1,4 @@
 // outsource dependencies
-import dayjs from 'services/date';
 import Animated, {
     runOnJS,
     Easing,
@@ -12,6 +11,7 @@ import Animated, {
     useAnimatedStyle,
     useAnimatedReaction,
 } from 'react-native-reanimated';
+import dayjs from 'services/date';
 import { Calendar } from 'react-native-calendars';
 import Svg, { Line, Circle } from 'react-native-svg';
 import { GlassSurface } from 'components/GlassSurface';

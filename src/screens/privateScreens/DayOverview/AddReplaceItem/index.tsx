@@ -2,15 +2,9 @@
 import Icon from '@react-native-vector-icons/fontawesome5';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, FlatList, TextInput } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, FlatList, TextInput, ActivityIndicator } from 'react-native';
 
 // local dependencies
-import {
-    AvailableItem,
-    useGetFoodsQuery,
-    useGetRecipePrototypesQuery,
-    useGetCatalogPrototypeTreeNodesQuery
-} from 'store/api/dayOverviewApi';
 import Text from 'components/Text';
 import Screen from 'components/Screen';
 import { COLORS } from 'constants/colors';
@@ -19,7 +13,14 @@ import { useTheme } from 'hooks/useTheme';
 import { ROUTES } from 'constants/routes';
 import DefImage from 'components/DefImage';
 import { MAX_FONT_SCALE } from 'constants/typography';
-import { CATALOG_TAG_TYPE, SEARCH_TYPE } from 'constants/spec';
+import { CATALOG_TAG_TYPE, SEARCH_TYPE, ENTITY_TYPE } from 'constants/spec';
+import {
+    AvailableItem,
+    useGetFoodsQuery,
+    useFilterMedicationsQuery,
+    useGetRecipePrototypesQuery,
+    useGetCatalogPrototypeTreeNodesQuery,
+} from 'store/api/dayOverviewApi';
 
 export const AddReplaceItem: React.FC = () => {
     const theme = useTheme();
@@ -40,6 +41,10 @@ export const AddReplaceItem: React.FC = () => {
 
     const onApply = route.params?.onApply;
     const date = route.params?.date;
+    const entityType: string = route.params?.entityType || '';
+    const excludeIds: string[] = route.params?.excludeIds || [];
+
+    const isMedicationMode = entityType === ENTITY_TYPE.MEDICATION;
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -55,6 +60,22 @@ export const AddReplaceItem: React.FC = () => {
         }
     }, [debouncedSearchQuery, activeTab]);
 
+    // Medication search
+    const { data: medicationsData, isLoading: isMedicationsLoading } = useFilterMedicationsQuery({
+        name: debouncedSearchQuery || undefined,
+        excludeIds,
+        size: 50,
+        page: 0,
+    }, {
+        skip: !isMedicationMode,
+    });
+
+    const medicationItems: any[] = useMemo(
+        () => (isMedicationMode ? medicationsData?.content || [] : []),
+        [isMedicationMode, medicationsData]
+    );
+
+    // Food / recipe / restaurant queries
     const { data: catalogTreeData, isLoading: isCatalogTreeLoading } = useGetCatalogPrototypeTreeNodesQuery({
         filter: {
             restaurantCatalog: true,
@@ -65,7 +86,7 @@ export const AddReplaceItem: React.FC = () => {
         size: 10,
         sort: 'name,ASC',
     }, {
-        skip: !(activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE),
+        skip: isMedicationMode || !(activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE),
     });
 
     const { data: recipeData, isLoading: isRecipeLoading } = useGetRecipePrototypesQuery({
@@ -77,7 +98,7 @@ export const AddReplaceItem: React.FC = () => {
         size: 10,
         sort: 'name,ASC',
     }, {
-        skip: !(activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES
+        skip: isMedicationMode || !(activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES
             && searchType === SEARCH_TYPE.ITEM
             && debouncedSearchQuery.trim().length > 0),
     });
@@ -93,7 +114,7 @@ export const AddReplaceItem: React.FC = () => {
         size: 10,
         sort: 'name,ASC',
     }, {
-        skip: !(activeTab === CATALOG_TAG_TYPE.PATIENT_FOOD
+        skip: isMedicationMode || !(activeTab === CATALOG_TAG_TYPE.PATIENT_FOOD
             && searchType === SEARCH_TYPE.ITEM
             && debouncedSearchQuery.trim().length > 0),
     });
@@ -114,11 +135,12 @@ export const AddReplaceItem: React.FC = () => {
     }, [activeTab, searchType, catalogTreeData, foodsData, recipeData, EMPTY]);
 
     const isLoading = useMemo(() => {
+        if (isMedicationMode) { return isMedicationsLoading; }
         if (activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE) { return !!isCatalogTreeLoading; }
         if (activeTab === CATALOG_TAG_TYPE.PATIENT_FOOD && searchType === SEARCH_TYPE.ITEM) { return !!isFoodsLoading; }
         if (activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES && searchType === SEARCH_TYPE.ITEM) { return !!isRecipeLoading; }
         return false;
-    }, [activeTab, searchType, isCatalogTreeLoading, isFoodsLoading, isRecipeLoading]);
+    }, [isMedicationMode, isMedicationsLoading, activeTab, searchType, isCatalogTreeLoading, isFoodsLoading, isRecipeLoading]);
 
     const contentKey = useMemo(() => (currentContent || []).map((i: any) => i.id).join('|'), [currentContent]);
     const allItemsKey = useMemo(() => allItems.map(i => i.id).join('|'), [allItems]);
@@ -138,6 +160,19 @@ export const AddReplaceItem: React.FC = () => {
             });
         }
     }, [page, contentKey, allItemsKey, currentContent, debouncedSearchQuery, activeTab]);
+
+    const handleMedicationPress = (item: any) => {
+        navigation.navigate(ROUTES.EDIT_FOOD, {
+            item,
+            date,
+            entityType: ENTITY_TYPE.MEDICATION,
+            onApply: (editedItem: any) => {
+                if (onApply) {
+                    onApply(editedItem);
+                }
+            },
+        });
+    };
 
     const handleItemPress = (item: AvailableItem) => {
         const isNode = activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE;
@@ -232,8 +267,26 @@ export const AddReplaceItem: React.FC = () => {
         );
     };
 
+    const renderMedicationItem = ({ item }: { item: any }) => {
+        const imageUrl = item.coverImage?.url;
+        return (
+            <TouchableOpacity style={styles.listItem} onPress={() => handleMedicationPress(item)}>
+                <View style={styles.content}>
+                    <DefImage src={imageUrl} style={styles.image} />
+                    <View style={styles.listTitle}>
+                        <Text style={styles.itemName} numberOfLines={2}>
+                            {item.name}
+                        </Text>
+                        <Text style={styles.itemType}>MEDICATION</Text>
+                    </View>
+                </View>
+                <Icon iconStyle="solid" name="chevron-right" size={16} color={theme.colors.text} />
+            </TouchableOpacity>
+        );
+    };
+
     const renderSearchInput = () => (
-        <View style={styles.searchContainer}>
+        <View style={[styles.searchContainer, isMedicationMode && styles.searchContainerMedication]}>
             <View style={[styles.searchInputWrapper, { backgroundColor: theme.colors.surfaceAlt, borderColor: theme.colors.border }]}>
                 <Icon iconStyle="solid" name="search" size={14} color={theme.colors.textSecondary} style={styles.searchIcon} />
                 <TextInput
@@ -261,30 +314,47 @@ export const AddReplaceItem: React.FC = () => {
                 <Text style={styles.headerTitle}>Add item</Text>
             </View>
 
-            {renderTabs()}
+            {!isMedicationMode && renderTabs()}
             {renderSearchInput()}
 
-            <FlatList
-                data={allItems}
-                style={styles.list}
-                renderItem={renderItem}
-                onEndReachedThreshold={0.5}
-                onEndReached={handleLoadMore}
-                keyboardShouldPersistTaps="handled"
-                keyExtractor={item => String(item.id)}
-                ListEmptyComponent={
-                    <Text style={styles.emptyScreen}>
-                        {searchQuery.trim().length > 0 && 'No items found'}
-                    </Text>
-                }
-                ListFooterComponent={
-                    isLoading && page > 0 ? (
-                        <View style={styles.loadingMore}>
-                            <Text>Loading more...</Text>
-                        </View>
-                    ) : null
-                }
-            />
+            {isMedicationMode ? (
+                isMedicationsLoading ? (
+                    <View style={styles.spinnerContainer}>
+                        <ActivityIndicator size="large" color={theme.colors.primary} />
+                    </View>
+                ) : (
+                    <FlatList
+                        style={styles.list}
+                        data={medicationItems}
+                        renderItem={renderMedicationItem}
+                        keyboardShouldPersistTaps="handled"
+                        keyExtractor={item => String(item.id)}
+                        ListEmptyComponent={<Text style={styles.emptyScreen}>No medications found</Text>}
+                    />
+                )
+            ) : (
+                <FlatList
+                    data={allItems}
+                    style={styles.list}
+                    renderItem={renderItem}
+                    onEndReachedThreshold={0.5}
+                    onEndReached={handleLoadMore}
+                    keyboardShouldPersistTaps="handled"
+                    keyExtractor={item => String(item.id)}
+                    ListEmptyComponent={
+                        <Text style={styles.emptyScreen}>
+                            {searchQuery.trim().length > 0 && 'No items found'}
+                        </Text>
+                    }
+                    ListFooterComponent={
+                        isLoading && page > 0 ? (
+                            <View style={styles.loadingMore}>
+                                <Text>Loading more...</Text>
+                            </View>
+                        ) : null
+                    }
+                />
+            )}
         </Screen>
     );
 };
@@ -341,14 +411,20 @@ const styles = StyleSheet.create({
         paddingHorizontal: OFFSET.HORIZONTAL,
         marginBottom: OFFSET.VERTICAL,
     },
+    searchContainerMedication: {
+        marginTop: OFFSET.VERTICAL,
+    },
     searchInputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#D9D9D9',
         borderRadius: 25,
         paddingHorizontal: 16,
-        backgroundColor: COLORS.WHITE,
+    },
+    spinnerContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     searchIcon: {
         marginRight: 8,
