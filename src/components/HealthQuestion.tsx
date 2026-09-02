@@ -26,7 +26,7 @@ export const HealthQuestion: React.FC<HealthQuestionProps> = memo(({
     const theme = useTheme();
     const navigation = useNavigation<any>();
 
-    const { data: questions = [], isLoading } = useGetDiseaseQuestionsQuery(date, {
+    const { data: questions = [], isLoading, isFetching } = useGetDiseaseQuestionsQuery(date, {
         skip: !date,
     });
 
@@ -63,8 +63,7 @@ export const HealthQuestion: React.FC<HealthQuestionProps> = memo(({
         }
     }, [questions, navigation, isFutureDate, hasQuestions]);
 
-    // Don't render if no questions or loading
-    if (isLoading || !hasQuestions) {
+    if (isLoading || isFetching || !hasQuestions) {
         return null;
     }
 
