@@ -10,6 +10,7 @@ import { useTheme } from 'hooks/useTheme';
 import Checkbox from 'components/Checkbox';
 import SearchInput from 'components/SearchInput';
 import StackHeader from 'components/StackHeader';
+import { EmptyState } from 'components/EmptyState';
 import { ListItemSkeleton } from 'components/Skeleton';
 import {
     useFilterMedicationsQuery,
@@ -18,7 +19,7 @@ import {
     useRemovePatientMedicationMutation,
 } from 'store/api/healthProfileApi';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 interface ListItemProps {
     id: number;
@@ -57,7 +58,6 @@ const SkeletonList: React.FC = () => (
 );
 
 const MedicationsScreen: React.FC = () => {
-    const theme = useTheme();
     const navigation = useNavigation<any>();
 
     const [search, setSearch] = useState('');
@@ -78,7 +78,12 @@ const MedicationsScreen: React.FC = () => {
     const [addMedication] = useAddPatientMedicationMutation();
     const [removeMedication] = useRemovePatientMedicationMutation();
 
-    const { data: filterResult, isFetching: filterFetching } = useFilterMedicationsQuery({
+    const {
+        data: filterResult,
+        isFetching: filterFetching,
+        isError: filterError,
+        refetch: refetchFilter,
+    } = useFilterMedicationsQuery({
         filter: { name: searchQuery },
         params: { page, size: PAGE_SIZE },
     }, { refetchOnMountOrArgChange: true });
@@ -92,11 +97,16 @@ const MedicationsScreen: React.FC = () => {
 
     const handleSearchChange = useCallback((value: string) => {
         setSearch(value);
-        
+
         if (debounceTimer.current) {
             clearTimeout(debounceTimer.current);
         }
-        
+
+        const trimmed = value.trim();
+        if (trimmed.length > 0 && trimmed.length < 3) {
+            return;
+        }
+
         debounceTimer.current = setTimeout(() => {
             setSearchQuery(value);
             setPage(0);
@@ -116,7 +126,7 @@ const MedicationsScreen: React.FC = () => {
     useEffect(() => {
         if (filterResult?.content) {
             setIsFirstLoad(false);
-            
+
             if (page === 0) {
                 const newItems = filterResult.content;
                 loadedIds.current = new Set(newItems.map(item => item.id));
@@ -174,6 +184,9 @@ const MedicationsScreen: React.FC = () => {
     }, [filterResult, page, filterFetching]);
 
     const handleClear = useCallback(() => {
+        if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current);
+        }
         setSearch('');
         setSearchQuery('');
         setPage(0);
@@ -192,8 +205,9 @@ const MedicationsScreen: React.FC = () => {
 
     const keyExtractor = useCallback((item: { id: number }) => String(item.id), []);
 
-    const showSkeleton = (isFirstLoad && filterFetching) || (filterFetching && allItems.length === 0 && search === searchQuery);
-    const showEmpty = !filterFetching && allItems.length === 0 && !isFirstLoad;
+    const showMinLengthHint = search.trim().length > 0 && search.trim().length < 3;
+    const showSkeleton = !filterError && ((isFirstLoad && filterFetching) || (filterFetching && allItems.length === 0 && search === searchQuery));
+    const showEmpty = !filterFetching && allItems.length === 0 && (!isFirstLoad || filterError);
     const initialized = !patientMedicationsLoading;
 
     return (
@@ -210,15 +224,27 @@ const MedicationsScreen: React.FC = () => {
                     onClear={handleClear}
                     onChange={handleSearchChange}
                 />
+                {showMinLengthHint ? (
+                    <Text style={styles.hintText}>Enter at least 3 characters to search</Text>
+                ) : null}
             </View>
 
             <View style={styles.listContainer}>
                 {showSkeleton ? (
                     <SkeletonList />
                 ) : showEmpty ? (
-                    <Text style={styles.emptyText} color={theme.colors.text}>
-                        No items found
-                    </Text>
+                    filterError ? (
+                        <EmptyState
+                            icon="alert-circle"
+                            title="Something went wrong"
+                            action={{ label: 'Try Again', onPress: refetchFilter }}
+                        />
+                    ) : (
+                        <EmptyState
+                            icon="search"
+                            title="No items found"
+                        />
+                    )
                 ) : (
                     <FlatList
                         data={allItems}
@@ -246,6 +272,12 @@ const styles = StyleSheet.create({
         marginTop: 16,
         paddingHorizontal: 20,
     },
+    hintText: {
+        fontSize: 12,
+        marginTop: 6,
+        paddingHorizontal: 4,
+        opacity: 0.5,
+    },
     listContainer: {
         flex: 1,
         paddingLeft: 20,
@@ -262,10 +294,6 @@ const styles = StyleSheet.create({
         flex: 1,
         maxWidth: '85%',
         fontSize: 14,
-    },
-    emptyText: {
-        textAlign: 'center',
-        marginTop: 20,
     },
     skeletonContainer: {
         paddingHorizontal: 20,

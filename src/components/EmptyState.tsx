@@ -5,6 +5,7 @@ import Icon from '@react-native-vector-icons/feather';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 // local dependencies
 import Text from 'components/Text';
+import { Button } from 'components/Button';
 import { useTheme } from 'hooks/useTheme';
 import { OFFSET } from 'constants/offset';
 
@@ -17,9 +18,10 @@ interface EmptyStateProps {
     icon?: FeatherIconName;
     /** Override the default circle+feather icon with a custom node (e.g. a different icon family). */
     iconNode?: React.ReactNode;
+    action?: { label: string; onPress: () => void };
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ title, subtitle, icon = 'inbox', iconNode }) => {
+export const EmptyState: React.FC<EmptyStateProps> = ({ title, subtitle, icon = 'inbox', iconNode, action }) => {
     const theme = useTheme();
     return (
         <Animated.View
@@ -38,6 +40,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ title, subtitle, icon = 
                 <Text textAlign="center" color={theme.colors.textSecondary} style={styles.subtitle}>
                     {subtitle}
                 </Text>
+            ) : null}
+            {action ? (
+                <Button
+                    size="sm"
+                    variant="outline"
+                    title={action.label}
+                    style={styles.action}
+                    onPress={action.onPress}
+                />
             ) : null}
         </Animated.View>
     );
@@ -65,5 +76,9 @@ const styles = StyleSheet.create({
     subtitle: {
         fontSize: 14,
         lineHeight: 20,
+    },
+    action: {
+        marginTop: OFFSET.VERTICAL,
+        paddingHorizontal: OFFSET.HORIZONTAL * 2,
     },
 });
