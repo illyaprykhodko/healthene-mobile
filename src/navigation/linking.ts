@@ -24,6 +24,13 @@ export const linking: LinkingOptions<any> = {
                                     },
                                 },
                             },
+                            // NOTE Target the drawer-level `Shopping` screen rather than a
+                            // child route — the inner stack picks its `initialRouteName`
+                            // dynamically (list vs preferences) once the shopping status
+                            // query resolves, so child routes do not exist yet on arrival.
+                            [ROUTES.SHOPPING]: {
+                                path: 'public/app-redirect/shopping/list',
+                            },
                             [ROUTES.MESSENGER]: {
                                 screens: {
                                     [ROUTES.READ_MESSAGE]: {

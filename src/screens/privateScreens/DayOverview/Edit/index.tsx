@@ -10,7 +10,8 @@ import {
     useGetPhaseItemsQuery,
     useGetDayOverviewQuery,
     useUpdatePhaseMutation,
-    useAddPhaseItemMutation,
+    // useAddPhaseItemMutation,
+    useGetRescueVideosQuery,
     useUpdatePhaseItemMutation,
     useDeletePhaseItemMutation,
     useAddPhaseMealItemMutation,
@@ -107,16 +108,16 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         }
     }, [localItems]);
 
-    const allItemsDone = useMemo(
-        () =>
-            localItems.length > 0
-            && localItems.every(
-                listItem =>
-                    listItem.status === PHASE_ITEM_STATUS.DONE
-                    || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
-            ),
-        [localItems]
-    );
+    // const allItemsDone = useMemo(
+    //     () =>
+    //         localItems.length > 0
+    //         && localItems.every(
+    //             listItem =>
+    //                 listItem.status === PHASE_ITEM_STATUS.DONE
+    //                 || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
+    //         ),
+    //     [localItems]
+    // );
 
     const { currentData: dayOverviewData } = useGetDayOverviewQuery(targetDate, {
         skip: !targetDate,
@@ -152,11 +153,12 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
         skip: !targetPhaseId,
     });
     // mutations
-    const [addPhaseItem] = useAddPhaseItemMutation();
+    // const [addPhaseItem] = useAddPhaseItemMutation();
     const [deletePhaseItem] = useDeletePhaseItemMutation();
     // const [addPhaseRecipe] = useAddPhaseRecipeMutation();
     const [replacePhaseItem] = useReplacePhaseItemMutation();
     const [addPhaseMealItem] = useAddPhaseMealItemMutation();
+    const { data: rescueVideos } = useGetRescueVideosQuery();
     const [addPhaseCustomRecipe] = useAddPhaseCustomRecipeMutation();
     const [updateIncludeRescueFoods] = useUpdateIncludeRescueFoodsMutation();
     const [updatePatientGamblingPoints] = useUpdatePatientGamblingPointsMutation();
@@ -395,6 +397,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         order: items.length,
                         status: PHASE_ITEM_STATUS.PENDING,
                         amount: selectedItem.amount || 1,
+                        phase: { id: targetPhaseId },
                     };
 
                     if (itemEntityType === ENTITY_TYPE.MEASUREMENT) {
@@ -403,6 +406,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     } else if (itemEntityType === ENTITY_TYPE.MEDICATION) {
                         itemData.medication = { id: selectedItem?.id };
                         itemData.type = ENTITY_TYPE.MEDICATION;
+                        itemData.section = 'Added';
                     } else if (itemEntityType === ENTITY_TYPE.SUPPLEMENT) {
                         itemData.supplement = { id: selectedItem?.id };
                         itemData.type = ENTITY_TYPE.SUPPLEMENT;
@@ -411,13 +415,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                         itemData.type = ENTITY_TYPE.PHYSICAL_ACTIVITY;
                     }
 
-                    // await updatePhaseItem({
-                    //     id: selectedItem?.recipe?.id,
-                    //     phaseId: targetPhaseId,
-                    //     data: itemData,
-                    // });
-
-                    await addPhaseItem({
+                    await addPhaseMealItem({
                         phaseId: targetPhaseId,
                         data: itemData,
                     });
@@ -473,8 +471,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
         setLocalItems(prevItems => {
             const nextItems = prevItems.map(prevItem =>
-                (prevItem.id === item.id ? { ...item } : prevItem)
-            );
+                (prevItem.id === item.id ? { ...item } : prevItem));
             const allDoneNow = nextItems.every(
                 listItem => listItem.status === PHASE_ITEM_STATUS.DONE || listItem.status === PHASE_ITEM_STATUS.DID_NOT_EAT
             );
@@ -734,6 +731,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                           : convertTypeToTitle(currentPhase?.type || phaseIdentityRef.current?.type || '', true));
     const isPastDate = dayjs(targetDate).isBefore(dayjs(), 'day');
     const isFutureDate = dayjs(targetDate).isAfter(dayjs(), 'day');
+    const isMedicationPhase = currentPhase?.type === OVERVIEW_TYPE.MEDICATION;
 
     const today = dayjs().format('YYYY-MM-DD');
     const { currentData: todayDayOverviewData } = useGetDayOverviewQuery(today, {
@@ -853,7 +851,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 isPastDate={isPastDate}
                                 isFutureDate={isFutureDate}
                                 onDelete={handleDeleteItem}
+                                noDelete={isMedicationPhase}
                                 onReplace={handleReplaceItem}
+                                noReplace={isMedicationPhase}
                                 recipeReplacementEnable={true}
                                 type={currentPhase?.type || ''}
                                 noReplaceItem={handleNoReplaceItem}
@@ -862,7 +862,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 onSwipeValueChange={handleScrollDisabled}
                                 handleCheckboxStatus={handleCheckboxStatus}
                                 keyExtractor={({ id }) => String(id)}
-                                renderItem={({ item, index }, ...restProps) => {
+                                renderItem={({ item }, ...restProps) => {
                                     return <ListItem
                                         item={item}
                                         date={targetDate}
@@ -902,7 +902,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 // );
                                 }}
                                 ListHeaderComponent={() => (
-                                    (sectionItems[0]?.food || sectionItems[0]?.recipe) ? (
+                                    (sectionItems[0]?.food || sectionItems[0]?.recipe || section === 'Added') ? (
                                         <View style={[
                                             styles.separatorWrapper,
                                             { backgroundColor: theme.colors.surfaceSecond }
@@ -936,9 +936,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
               || currentPhase?.type === OVERVIEW_TYPE.ADDED_BY_PATIENT) ? ( */}
                 {Platform.OS === 'ios'
                     ? <GlassSurface
-                        intensity={10}
-                        style={styles.glassBar}
-                        tint={theme.dark ? 'dark' : 'light'}
+                          intensity={10}
+                          style={styles.glassBar}
+                          tint={theme.dark ? 'dark' : 'light'}
                     >
                         <View style={styles.buttonContainer}>
                             <Button
@@ -951,11 +951,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 style={{
                                     ...styles.button,
                                     ...styles.addButtonActive,
-                                    width: isFutureDate ? '100%' : '45%',
                                     backgroundColor: theme.colors.transparent,
+                                    width: (isFutureDate || isMedicationPhase) ? '100%' : '45%',
                                 }}
                             />
-                            {!isFutureDate && (
+                            {!isFutureDate && !isMedicationPhase && (
                                 <Button
                                     title="Meal Done"
                                     variant="secondary"
@@ -982,17 +982,15 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                             style={{
                                 ...styles.button,
                                 ...styles.addButtonActive,
-                                width: isFutureDate ? '100%' : '45%',
                                 backgroundColor: theme.colors.transparent,
+                                width: (isFutureDate || isMedicationPhase) ? '100%' : '45%',
                             }}
                         />
-                        {!isFutureDate && (
+                        {!isFutureDate && !isMedicationPhase && (
                             <Button
-                                // disabled={true}
                                 title="Meal Done"
                                 variant="secondary"
                                 onPress={handlePhaseDone}
-                                // disabled={!allItemsDone || isLoading}
                                 textStyle={styles.textMealDoneButton}
                                 style={{
                                     ...styles.button,
@@ -1025,6 +1023,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
 
             {/* Rescue Foods Modal */}
             <ReplaceItemModal
+                video={rescueVideos?.[0]}
                 visible={showRescueFoodsModal}
                 onClose={() => setShowRescueFoodsModal(false)}
                 onApply={async () => {
@@ -1046,11 +1045,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                 visible={showConfirmationModal}
                 prevItem={replacementData.prevItem}
                 nextItem={replacementData.nextItem}
+                onApply={handleConfirmationModalApply}
                 onClose={() => {
                     setShowConfirmationModal(false);
                     setReplacementData({ prevItem: null, nextItem: null });
                 }}
-                onApply={handleConfirmationModalApply}
             />
 
             <ConfirmationAlert

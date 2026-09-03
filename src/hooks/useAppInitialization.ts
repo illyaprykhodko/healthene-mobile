@@ -45,7 +45,18 @@ export const useAppInitialization = () => {
         const initializeApp = async () => {
             try {
                 // set health status
-                dispatch(setHealth(!!health && health.status === 'UP'));
+                // A 401 from the health endpoint means the gateway rejected the (expired) token —
+                // it does NOT mean the backend is down. Let the token-refresh flow in baseApi.ts
+                // handle navigation (it already dispatches clearSession → login on refresh failure).
+                // Only non-auth errors (5xx, network failure, etc.) indicate genuine downtime.
+                if (healthError) {
+                    const errStatus = (healthError as { status?: unknown })?.status;
+                    if (errStatus !== 401) {
+                        dispatch(setHealth(false));
+                    }
+                } else {
+                    dispatch(setHealth(!!health && health.status === 'UP'));
+                }
                 
                 // if user - session restored successfully
                 if (user) {

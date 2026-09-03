@@ -3,6 +3,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from './baseApi';
 import { MeasurementType } from 'types';
+import type { Attachment } from 'types/video';
 import { LoggedMeasurementRecord } from 'types/health';
 import { PaginatedResponse } from 'types/common/interfaces';
 import {
@@ -175,7 +176,7 @@ export const dayOverviewApi = createApi({
             query: date => `/patient-service/patient/me/disease-questions/${date}`,
             providesTags: ['Questions'],
         }),
-  
+
         getDayOverview: builder.query<DayOverviewResponse, string>({
             query: date => `/patient-service/patients/me/day-overview/${date}`,
             providesTags: (result, error, date) => [{ type: 'DayOverview', id: date }],
@@ -202,7 +203,7 @@ export const dayOverviewApi = createApi({
                 };
             },
         }),
-  
+
         getPhaseItems: builder.query<Record<string, any[]>, number | string>({
             query: id => `/patient-service/patients/day-overview/phase/${id}/items`,
             providesTags: (result, error, phaseId) => [
@@ -221,7 +222,7 @@ export const dayOverviewApi = createApi({
                 return grouped;
             },
         }),
-  
+
         getCategoryTreeNodes: builder.query<any, { filter: CategoryNodeFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
                 body: filter,
@@ -231,7 +232,7 @@ export const dayOverviewApi = createApi({
             }),
             providesTags: ['AvailableItems'],
         }),
-  
+
         getCatalogPrototypeTreeNodes: builder.query<any, { filter: RecipePrototypeCatalogFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
                 body: filter,
@@ -241,7 +242,7 @@ export const dayOverviewApi = createApi({
             }),
             providesTags: ['AvailableItems'],
         }),
-  
+
         getRecipePrototypes: builder.query<any, { filter: RecipePrototypeFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
                 url: '/patient-service/recipe-prototypes/filter',
@@ -251,14 +252,14 @@ export const dayOverviewApi = createApi({
             }),
             providesTags: ['AvailableItems'],
         }),
-  
+
         getRecipePrototype: builder.query<any, number | string>({
             query: id => ({
                 url: `/patient-service/recipe-prototypes/${id}`,
                 method: 'GET',
             }),
         }),
-  
+
         recalculateRecipeSteps: builder.mutation<any, { ingredients: any[]; steps: any[] }>({
             query: data => ({
                 url: '/patient-service/recipe-prototypes/steps',
@@ -274,7 +275,7 @@ export const dayOverviewApi = createApi({
                 url: `/patient-service/recipe-prototypes/ingredients-by-sibling/${id}`,
             }),
         }),
-  
+
         getFoods: builder.query<any, { filter: FoodFilter; page?: number; size?: number; sort?: string }>({
             query: ({ filter, page = 0, size = 10, sort = 'name,ASC' }) => ({
                 url: '/patient-service/foods/filter',
@@ -333,12 +334,12 @@ export const dayOverviewApi = createApi({
                 body,
             }),
         }),
-  
+
         getPhaseItem: builder.query<PhaseItem, number | string>({
             query: id => `/patient-service/patients/day-overview/phase/item/${id}`,
             providesTags: (result, error, id) => [{ type: 'PhaseItem', id }],
         }),
-  
+
         updatePhaseItem: builder.mutation<
         PhaseItem,
         { id: number | string; phaseId: number | string; data: Partial<PhaseItem>; date?: string }
@@ -610,7 +611,7 @@ export const dayOverviewApi = createApi({
                 }
             },
         }),
-  
+
         updatePhase: builder.mutation<Phase, { id: number | string; data: any }>({
             query: ({ id, data }) => ({
                 url: `/patient-service/patients/day-overview/phase/${id}`,
@@ -731,8 +732,13 @@ export const dayOverviewApi = createApi({
         }),
 
         // Get rescue shopping items videos
-        getRescueVideos: builder.query<any[], void>({
+        getRescueVideos: builder.query<Attachment[], void>({
             query: () => '/patient-service/patients/me/rescue-shopping-items-videos',
+            transformResponse: (response: Array<{ id: number; libraryItem: Omit<Attachment, 'status'> & { status: string }; alreadySeen: boolean }>) =>
+                response.map(item => ({
+                    ...item.libraryItem,
+                    status: item.libraryItem.status === 'COMPLETE' ? 'COMPLETED' : item.libraryItem.status,
+                } as Attachment)),
         }),
 
         // Get rescue catalog list (categories)
@@ -818,6 +824,20 @@ export const dayOverviewApi = createApi({
         // Menu badges - medication allergies for health profile
         getMedicationAllergies: builder.query<any[], void>({
             query: () => '/patient-service/patients/me/medication-allergies',
+        }),
+
+        filterMedications: builder.query<PaginatedResponse<any>, {
+            name?: string;
+            page?: number;
+            size?: number;
+            excludeIds?: string[];
+        }>({
+            query: ({ name, excludeIds, page = 0, size = 20 }) => ({
+                method: 'POST',
+                params: { page, size, sort: 'name,ASC' },
+                url: '/patient-service/medications/filter',
+                body: { name: name || null, excludeIds: excludeIds || [] },
+            }),
         }),
 
         // Walking / Step Counter activity tracking
@@ -999,7 +1019,7 @@ export const dayOverviewApi = createApi({
 //         //         treeTypeViewLabel
 //         //     }) => {
 //         //         const baseParams = { page, size, sort };
-            
+
 //         //         switch (entityType) {
 //         //             case 'MEDICATION':
 //         //                 return {
@@ -1223,4 +1243,6 @@ export const {
     // Walking
     useStartWalkingActivityMutation,
     useUpdateWalkingActivityMutation,
+    // Medication picker
+    useFilterMedicationsQuery,
 } = dayOverviewApi;

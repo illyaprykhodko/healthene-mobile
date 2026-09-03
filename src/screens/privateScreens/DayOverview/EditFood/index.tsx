@@ -4,7 +4,7 @@ import Icon from '@react-native-vector-icons/fontawesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { View, StyleSheet, TouchableOpacity, Image, FlatList, UIManager, LayoutAnimation, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, FlatList, UIManager, LayoutAnimation, Platform } from 'react-native';
 
 // local dependencies
 import Text from 'components/Text';
@@ -16,10 +16,10 @@ import { useTheme } from 'hooks/useTheme';
 import DefImage from 'components/DefImage';
 import { humanize } from 'services/filter';
 import Controls from 'components/Controls';
-import { CATALOG_TAG_TYPE } from 'constants/spec';
 import { AnytimeMenu } from 'components/AnytimeMenu';
 import ApproveButtons from 'components/ApproveButtons';
 import AnimatedDropdown from 'components/AnimatedDropdown';
+import { CATALOG_TAG_TYPE, ENTITY_TYPE } from 'constants/spec';
 import { selectDayOverview } from 'store/slices/dayOverviewSlice';
 import { prepareIngredientNameWithUnit } from 'utils/ingredientUtils';
 import { useGetRecipePrototypeQuery } from 'store/api/dayOverviewApi';
@@ -303,10 +303,16 @@ export const EditFood: React.FC = () => {
                 </Text>
             </View>
             <View style={styles.imageContainer}>
-                <DefImage
-                    style={styles.image}
-                    src={item?.coverImage?.url}
-                />
+                {entityType === ENTITY_TYPE.MEDICATION && !item?.coverImage?.url ? (
+                    <View style={[styles.image, styles.medicationIconContainer]}>
+                        <Icon iconStyle="solid" name="capsules" size={100} color={theme.colors.text} />
+                    </View>
+                ) : (
+                    <DefImage
+                        style={styles.image}
+                        src={item?.coverImage?.url}
+                    />
+                )}
             </View>
             <View style={styles.controlsWrapper}>
                 <Controls
@@ -649,6 +655,11 @@ const styles = StyleSheet.create({
     image: {
         width: 200,
         height: 200,
+    },
+    medicationIconContainer: {
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     controlsWrapper: {
         marginBottom: OFFSET.VERTICAL,

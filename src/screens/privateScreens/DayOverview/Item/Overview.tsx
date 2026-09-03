@@ -1,5 +1,6 @@
 // outsource dependencies
 import React from 'react';
+import Icon from '@react-native-vector-icons/fontawesome5';
 import { View, StyleSheet, ScrollView } from 'react-native';
 
 // local dependencies
@@ -167,10 +168,13 @@ const Overview: React.FC<OverviewProps> = ({
                             {medication?.description}
                         </Text>
                         <View style={[styles.center, { marginBottom: OFFSET.VERTICAL }]}>
-                            <DefImage
-                                src={medication?.coverImage?.url}
-                                style={styles.image}
-                            />
+                            {medication?.coverImage?.url ? (
+                                <DefImage src={medication.coverImage.url} style={styles.image} />
+                            ) : (
+                                <View style={[styles.image, styles.medicationIconContainer]}>
+                                    <Icon iconStyle="solid" name="capsules" size={100} color={theme.colors.text} />
+                                </View>
+                            )}
                         </View>
                     </View>
                 );
@@ -255,5 +259,10 @@ const styles = StyleSheet.create({
     },
     disabledOpacity: {
         opacity: 0.4,
+    },
+    medicationIconContainer: {
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });

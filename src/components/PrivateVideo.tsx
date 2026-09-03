@@ -1,4 +1,6 @@
 // outsource dependencies
+import Video from 'react-native-video';
+import Icon from '@react-native-vector-icons/ionicons';
 import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
 import {
     View,
@@ -7,8 +9,6 @@ import {
     TouchableOpacity,
     ActivityIndicator,
 } from 'react-native';
-import Video from 'react-native-video';
-import Icon from '@react-native-vector-icons/ionicons';
 
 // local dependencies
 import Text from './Text';
@@ -18,6 +18,7 @@ import { COLORS } from 'constants/colors';
 import { useTheme } from 'hooks/useTheme';
 import type { Attachment } from 'types/video';
 import { ATTACHMENT_STATUS } from 'constants/spec';
+import { sessionManager, TOKEN_KEYS } from 'store/api/baseApi';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const VIDEO_HEIGHT = (SCREEN_WIDTH * 9) / 16; // 16:9 aspect ratio
@@ -50,7 +51,17 @@ const PrivateVideo: React.FC<PrivateVideoProps> = memo(({
     paused: initialPaused = true,
 }) => {
     const theme = useTheme();
-    const accessToken = useAppSelector(state => state.app.accessToken);
+    const reduxToken = useAppSelector(state => state.app.accessToken);
+    const [sessionToken, setSessionToken] = useState<string | null>(null);
+
+    // On cold start setSession is not dispatched, so the Redux token is null
+    // while the real token lives only in AsyncStorage via sessionManager.
+    useEffect(() => {
+        if (reduxToken) { return; }
+        sessionManager.get().then(s => setSessionToken(s?.[TOKEN_KEYS.ACCESS] ?? null));
+    }, [reduxToken]);
+
+    const accessToken = reduxToken || sessionToken;
 
     const [state, setState] = useState({
         isLoading: true,

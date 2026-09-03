@@ -7,6 +7,8 @@ import React, { useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 
 import { Badge } from './Badge';
 import Text from 'components/Text';
 import { useTheme } from 'hooks/useTheme';
+import { OFFSET } from 'constants/offset';
+import { Button } from 'components/Button';
 import Checkbox from 'components/Checkbox';
 import { PHASE_ITEM_STATUS } from 'constants/spec';
 import { ActivityIcon, CloseIcon } from './AnytimeIcons';
@@ -44,14 +46,23 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
         navigation.setOptions({ onBackPress: visible ? onClose : undefined } as any);
     }, [visible, onClose, navigation]);
 
+    useEffect(() => {
+        if (!visible) { return; }
+        const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+            e.preventDefault();
+            onClose();
+        });
+        return unsubscribe;
+    }, [visible, onClose, navigation]);
+
     const { data: dayOverviewData, refetch } = useGetDayOverviewQuery(date || new Date().toISOString().split('T')[0]);
     const [updatePhase] = useUpdatePhaseMutation();
     const exerciseCategories = useMemo(() => {
         const anytimePhase = dayOverviewData?.phases?.find(phase => phase.type === 'ANYTIME');
         const anytimeItems = anytimePhase?.items || [];
-        
+
         if (!anytimeItems.length) { return []; }
-        
+
         const exerciseItems = anytimeItems.filter(isAnytimeExerciseItem);
 
         // Group exercises by type
@@ -65,7 +76,7 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
             return acc;
         }, {});
 
-        
+
         // Convert to category format
         return Object.keys(groups).filter(typeKey => typeKey !== 'PHYSICAL_ACTIVITY').map((typeKey, idx) => {
             const items = groups[typeKey];
@@ -75,9 +86,9 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                 .split('_')
                 .map(s => s.charAt(0).toUpperCase() + s.slice(1))
                 .join(' ');
-            
+
             const categoryStatus = getCategoryStatus(items);
-            
+
             return {
                 title,
                 id: idx + 1,
@@ -97,11 +108,13 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
             .filter(item => (item.status !== PHASE_ITEM_STATUS.DONE || item.status !== PHASE_ITEM_STATUS.DID_NOT_EAT)).length;
     }, [dayOverviewData]);
     const listIsDone = useMemo(() => areAllItemsFullyDone(exerciseCategories), [exerciseCategories]);
-    const isSingleExerciseCategoryDone = useMemo(
-        () => exerciseCategories.length === 1 && listIsDone,
-        [exerciseCategories.length, listIsDone]
+    const showKeepItUp = useMemo(
+        () => !listIsDone && exerciseCategories.some(
+            (item: any) => item.status === PHASE_ITEM_STATUS.DONE || item.status === PHASE_ITEM_STATUS.INCOMPLETE
+        ),
+        [listIsDone, exerciseCategories]
     );
-    
+
     // Check if today to determine status logic
     const isToday = useMemo(() => {
         const today = new Date().toISOString().split('T')[0];
@@ -240,21 +253,20 @@ export const AnytimeExercisesModal: React.FC<AnytimeExercisesModalProps> = ({
                 </ScrollView>
             )}
         </View>
-        {(listIsDone && exerciseCategories.length > 0)
-            && <View style={styles.completionContainer}>
-                <Text style={[styles.goodWorkText, { backgroundColor: theme.colors.surface, color: theme.colors.text }]}>
-                    Keep It Up!
-                </Text>
-                <TouchableOpacity
-                    style={[styles.nextActivityButton, { backgroundColor: theme.colors.successAlt }]}
-                    onPress={onClose}
-                >
-                    <Text style={[styles.nextActivityText, { color: theme.colors.white }]}>
-                        {isSingleExerciseCategoryDone ? 'DONE' : 'NEXT ACTIVITY'}
-                    </Text>
-                </TouchableOpacity>
-            </View>
-        }
+        {showKeepItUp && (
+            <Text style={[styles.goodWorkText, { backgroundColor: theme.colors.surface, color: theme.colors.text }]}>
+                Keep It Up!
+            </Text>
+        )}
+        {listIsDone && exerciseCategories.length > 0 && (
+            <Button
+                title="DONE"
+                variant="primary"
+                onPress={onClose}
+                style={styles.submitBtn}
+                textStyle={styles.submitBtnText}
+            />
+        )}
     </View>;
 };
 
@@ -270,6 +282,7 @@ const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
+        zIndex: 999,
         elevation: 7,
         shadowColor: '#000000',
         shadowOffset: {
@@ -346,30 +359,24 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
     },
-    completionContainer: {
-        alignItems: 'center',
-        paddingVertical: 20,
-        paddingHorizontal: 24,
-    },
     goodWorkText: {
         fontSize: 32,
         fontWeight: '500',
         borderRadius: 12,
         padding: 16,
-        elevation: 2,
-        marginBottom: 20,
+        marginHorizontal: 24,
+        marginVertical: 12,
+        textAlign: 'center',
     },
-    nextActivityButton: {
+    submitBtn: {
         width: '90%',
         borderRadius: 30,
         alignSelf: 'center',
-        borderColor: 'transparent',
-        paddingVertical: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
+        marginBottom: OFFSET.VERTICAL,
     },
-    nextActivityText: {
+    submitBtnText: {
         fontSize: 20,
         fontWeight: '500',
+        paddingVertical: 3,
     },
 });
