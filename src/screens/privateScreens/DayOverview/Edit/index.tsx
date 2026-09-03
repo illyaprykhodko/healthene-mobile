@@ -410,6 +410,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                     } else if (itemEntityType === ENTITY_TYPE.SUPPLEMENT) {
                         itemData.supplement = { id: selectedItem?.id };
                         itemData.type = ENTITY_TYPE.SUPPLEMENT;
+                        itemData.section = 'Added';
                     } else if (itemEntityType === ENTITY_TYPE.PHYSICAL_ACTIVITY) {
                         itemData.physicalActivity = { id: selectedItem?.id };
                         itemData.type = ENTITY_TYPE.PHYSICAL_ACTIVITY;
@@ -732,6 +733,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
     const isPastDate = dayjs(targetDate).isBefore(dayjs(), 'day');
     const isFutureDate = dayjs(targetDate).isAfter(dayjs(), 'day');
     const isMedicationPhase = currentPhase?.type === OVERVIEW_TYPE.MEDICATION;
+    const isSupplementPhase = currentPhase?.type === OVERVIEW_TYPE.SUPPLEMENT;
 
     const today = dayjs().format('YYYY-MM-DD');
     const { currentData: todayDayOverviewData } = useGetDayOverviewQuery(today, {
@@ -851,9 +853,7 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 isPastDate={isPastDate}
                                 isFutureDate={isFutureDate}
                                 onDelete={handleDeleteItem}
-                                noDelete={isMedicationPhase}
                                 onReplace={handleReplaceItem}
-                                noReplace={isMedicationPhase}
                                 recipeReplacementEnable={true}
                                 type={currentPhase?.type || ''}
                                 noReplaceItem={handleNoReplaceItem}
@@ -861,7 +861,9 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 directionalDistanceChangeThreshold={10}
                                 onSwipeValueChange={handleScrollDisabled}
                                 handleCheckboxStatus={handleCheckboxStatus}
+                                noDelete={isMedicationPhase || isSupplementPhase}
                                 keyExtractor={({ id }) => String(id)}
+                                noReplace={isMedicationPhase || isSupplementPhase}
                                 renderItem={({ item }, ...restProps) => {
                                     return <ListItem
                                         item={item}
@@ -952,10 +954,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                     ...styles.button,
                                     ...styles.addButtonActive,
                                     backgroundColor: theme.colors.transparent,
-                                    width: (isFutureDate || isMedicationPhase) ? '100%' : '45%',
+                                    width: (isFutureDate || isMedicationPhase || isSupplementPhase) ? '100%' : '45%',
                                 }}
                             />
-                            {!isFutureDate && !isMedicationPhase && (
+                            {!isFutureDate && !isMedicationPhase && !isSupplementPhase && (
                                 <Button
                                     title="Meal Done"
                                     variant="secondary"
@@ -983,10 +985,10 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 ...styles.button,
                                 ...styles.addButtonActive,
                                 backgroundColor: theme.colors.transparent,
-                                width: (isFutureDate || isMedicationPhase) ? '100%' : '45%',
+                                width: (isFutureDate || isMedicationPhase || isSupplementPhase) ? '100%' : '45%',
                             }}
                         />
-                        {!isFutureDate && !isMedicationPhase && (
+                        {!isFutureDate && !isMedicationPhase && !isSupplementPhase && (
                             <Button
                                 title="Meal Done"
                                 variant="secondary"
