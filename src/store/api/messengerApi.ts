@@ -4,7 +4,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 // local dependencies
 import { baseQuery } from 'store/api/baseApi.ts';
 import { PaginatedParams, PaginatedResponse, TransformData } from 'types/common/interfaces.ts';
-import { MessageChain, Message, MessageItem, MessageForm, Recipient } from 'types/messenger.ts';
+import { MessageChain, Message, MessageItem, MessageForm, Recipient, MessageFilter, UnreadCountResponse } from 'types/messenger.ts';
 
 // NOTE backend page size for both chains list and chain messages — keep in sync
 // between the request and any consumer that checks `hasNextPage` heuristics.
@@ -26,7 +26,7 @@ export interface FilterDoctorsArgs {
 export const messengerApi = createApi({
     baseQuery,
     reducerPath: 'messengerApi',
-    tagTypes: ['ChanMessages', 'ListOfChain'],
+    tagTypes: ['ChanMessages', 'ListOfChain', 'UnreadCount'],
     endpoints: builder => ({
         // NOTE Native infinite-query endpoint: RTK Query owns the `{ pages, pageParams }`
         // structure, the cache key is just the (empty) queryArg, and tag invalidation
@@ -83,13 +83,21 @@ export const messengerApi = createApi({
                 params: { page: pageParam, sort: 'id,DESC', size: MESSAGES_PAGE_SIZE },
             }),
         }),
+        getUnreadMessagesCount: builder.query<UnreadCountResponse, void>({
+            providesTags: ['UnreadCount'],
+            query: () => ({
+                method: 'POST',
+                body: { isRead: false } satisfies MessageFilter,
+                url: '/messenger-service/chain/messages/count/filter',
+            }),
+        }),
         replyToChain: builder.mutation<void, { chain: MessageItem } & MessageForm>({
             query: body => ({
                 body,
                 method: 'POST',
                 url: '/messenger-service/chain/message',
             }),
-            invalidatesTags: ['ChanMessages', 'ListOfChain'],
+            invalidatesTags: ['ChanMessages', 'ListOfChain', 'UnreadCount'],
         }),
         createChain: builder.mutation<void, MessageForm & {collocutor: {id: number}}>({
             query: body => ({
@@ -97,7 +105,7 @@ export const messengerApi = createApi({
                 method: 'POST',
                 url: '/messenger-service/chain',
             }),
-            invalidatesTags: ['ListOfChain', 'ChanMessages'],
+            invalidatesTags: ['ListOfChain', 'ChanMessages', 'UnreadCount'],
         }),
         getClinicRoles: builder.query<string[], void>({
             query: () => ({
@@ -150,6 +158,7 @@ export const {
     useGetClinicRolesQuery,
     useReplyToChainMutation,
     useDeleteChainsMutation,
+    useGetUnreadMessagesCountQuery,
     useGetChainMessagesInfiniteQuery,
     useGetMessagesChainInfiniteQuery,
 } = messengerApi;

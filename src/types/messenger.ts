@@ -68,6 +68,14 @@ export interface Attachment {
     fileName: string;
 }
 
+export interface MessageFilter {
+    isRead: boolean;
+}
+
+export interface UnreadCountResponse {
+    data: number;
+}
+
 /**
  * Recipient (doctor) returned by `POST patient-service/doctors/filter`.
  * Mirrors the v1 shape and is used by the SelectRecipient picker screen and

@@ -5,9 +5,7 @@ import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
-import {
-    View, StyleSheet, TouchableOpacity, Pressable, Alert
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Pressable, Alert } from 'react-native';
 
 // local dependencies
 import { RootState } from 'store';
@@ -19,6 +17,8 @@ import { OFFSET } from 'constants/offset';
 import { Button } from 'components/Button';
 import { navigate } from 'services/navigation';
 import ProfileImage from 'components/ProfileImage.tsx';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useGetUnreadMessagesCountQuery } from 'store/api/messengerApi';
 import {
     useGetMedicalProblemsQuery,
     useGetMedicationAllergiesQuery,
@@ -26,10 +26,8 @@ import {
     useGetUntrackedMeasurementsQuery,
     useGetIncompleteQuestionsVideosQuery,
 } from 'store/api/dayOverviewApi';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DESTINATIONS = {
-    MESSAGES: 'MESSAGES',
     DAILY_PLAN: 'DAILY_PLAN',
     ABOUT_PLAN: 'ABOUT_PLAN',
     SHOPPING_LIST: 'SHOPPING_LIST',
@@ -126,6 +124,7 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
     const { data: dailyPlanCounter } = useGetIncompleteQuestionsVideosQuery(currentDate);
     const { data: untrackedMeasurementsCounter } = useGetUntrackedMeasurementsQuery(currentDate);
     const { data: libraryItemsTree } = useGetLibraryItemsTotalTreeQuery();
+    const { data: unreadMessages } = useGetUnreadMessagesCountQuery();
     const { data: medicalProblems } = useGetMedicalProblemsQuery();
     const { data: medicationAllergies } = useGetMedicationAllergiesQuery();
 
@@ -151,12 +150,13 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
 
         return {
             dailyPlan: dailyPlanBadge > 0 ? dailyPlanBadge : null,
-            messages: getBadgeByDestination(DESTINATIONS.MESSAGES),
+            messages: unreadMessages?.data ?? null,
             aboutPlan: getBadgeByDestination(DESTINATIONS.ABOUT_PLAN),
             shoppingList: getBadgeByDestination(DESTINATIONS.SHOPPING_LIST),
             healthProfile: healthProfileBadge > 0 ? healthProfileBadge : null,
         };
     }, [
+        unreadMessages,
         medicalProblems,
         dailyPlanCounter,
         libraryItemsTree,
@@ -179,57 +179,6 @@ export const CustomDrawerContent: React.FC<CustomDrawerContentProps> = props => 
             ]
         );
     };
-    // const menuItems: {
-    //     title: string,
-    //     route: RouteName,
-    //     icon: DrawerIconName,
-    // }[] = [
-    //     {
-    //         icon: 'file',
-    //         title: 'My Daily Plan',
-    //         route: ROUTES.DAILY_PLAN,
-    //     },
-    //     {
-    //         icon: 'shopping-cart',
-    //         title: 'Shopping List',
-    //         route: ROUTES.SHOPPING,
-    //     },
-    //     {
-    //         icon: 'comments',
-    //         title: 'Messages',
-    //         route: ROUTES.MESSENGER,
-    //     },
-    //     {
-    //         icon: 'chart-bar',
-    //         title: 'My Results',
-    //         route: ROUTES.MY_RESULTS,
-    //     },
-    //     {
-    //         icon: 'clipboard',
-    //         title: 'About Plan',
-    //         route: ROUTES.ABOUT_PLAN,
-    //     },
-    //     {
-    //         icon: 'heartbeat',
-    //         title: 'My Health Profile',
-    //         route: ROUTES.HEALTH_PROFILE,
-    //     },
-    //     {
-    //         icon: 'book',
-    //         title: 'Library',
-    //         route: ROUTES.LIBRARY,
-    //     },
-    //     {
-    //         title: 'Info',
-    //         icon: 'info-circle',
-    //         route: ROUTES.INFO,
-    //     },
-    //     {
-    //         icon: 'award',
-    //         title: 'Cuisine Distribution',
-    //         route: ROUTES.CUISINE_DISTRIBUTION,
-    //     },
-    // ];
     const getFocusedRoute = () => {
         return props.state?.routes[props.state?.index]?.name;
     };
