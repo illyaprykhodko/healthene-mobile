@@ -858,11 +858,11 @@ export const Edit: React.FC<EditProps> = ({ phaseId, date }) => {
                                 type={currentPhase?.type || ''}
                                 noReplaceItem={handleNoReplaceItem}
                                 onRowDidClose={handleScrollEnabled}
+                                keyExtractor={({ id }) => String(id)}
                                 directionalDistanceChangeThreshold={10}
                                 onSwipeValueChange={handleScrollDisabled}
                                 handleCheckboxStatus={handleCheckboxStatus}
                                 noDelete={isMedicationPhase || isSupplementPhase}
-                                keyExtractor={({ id }) => String(id)}
                                 noReplace={isMedicationPhase || isSupplementPhase}
                                 renderItem={({ item }, ...restProps) => {
                                     return <ListItem
