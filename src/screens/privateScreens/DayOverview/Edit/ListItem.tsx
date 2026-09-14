@@ -47,6 +47,7 @@ export const ListItem: React.FC<ListItemProps> = ({
     const isDone = typeof item?.status === 'string'
         && item.status.toUpperCase() === PHASE_ITEM_STATUS.DONE;
     const isMedication = item.type === ENTITY_TYPE.MEDICATION;
+    const isSupplement = item.type === ENTITY_TYPE.SUPPLEMENT;
     const isIngredients = item.type === ENTITY_TYPE.INGREDIENTS;
     const isCustomRecipe = item.type === ENTITY_TYPE.CUSTOM_RECIPE;
     const isDidNotEat = item.status === PHASE_ITEM_STATUS.DID_NOT_EAT;
@@ -291,20 +292,25 @@ export const ListItem: React.FC<ListItemProps> = ({
             );
         }
 
-        if (isMedication) {
-            const coverUrl = item.medication?.coverImage?.url;
+        if (isMedication || isSupplement) {
+            const coverUrl = isMedication
+                ? item.medication?.coverImage?.url
+                : item.supplement?.coverImage?.url;
+            const label = isMedication
+                ? (item.medication?.name || item.title || 'Medication')
+                : (item.supplement?.name || item.title || 'Supplement');
             return (
                 <View style={styles.foodContainer}>
                     {coverUrl ? (
                         <Image source={{ uri: coverUrl }} style={[styles.image, isOpacity]} />
                     ) : (
                         <View style={[styles.image, styles.medicationIconContainer, isOpacity]}>
-                            <Icon iconStyle="solid" name="capsules" size={24} color={theme.colors.text} />
+                            <Icon iconStyle="solid" name="capsules" size={22} color={theme.colors.text} />
                         </View>
                     )}
                     <View style={styles.main}>
                         <Text style={[styles.title, { color: theme.colors.text }, isOpacity || {}]}>
-                            {item.medication?.name || item.title || 'Medication'}
+                            {label}
                         </Text>
                         {amount && (
                             <Text style={[styles.subtitle, { color: theme.colors.grey }, isOpacity || {}]}>
