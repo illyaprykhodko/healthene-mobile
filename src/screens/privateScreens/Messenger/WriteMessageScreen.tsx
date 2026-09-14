@@ -80,7 +80,10 @@ const WriteMessageScreen = () => {
     const recipient = useMemo<Recipient | null>(() => {
         if (pickedCollocutor) { return pickedCollocutor; }
         if (chain?.collocutor || chain?.owner) {
-            const source = chain.collocutor ?? chain.owner;
+            // collocutor is relative to the chain owner; when the current user IS
+            // the collocutor (doctor-initiated chain), the reply target is the owner.
+            const isCollocutorSelf = chain.collocutor?.id === user?.id;
+            const source = isCollocutorSelf ? chain.owner : (chain.collocutor ?? chain.owner);
             return {
                 id: source.id,
                 name: source.name,
