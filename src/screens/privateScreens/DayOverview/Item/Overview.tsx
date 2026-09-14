@@ -188,10 +188,13 @@ const Overview: React.FC<OverviewProps> = ({
                             {supplement?.description}
                         </Text>
                         <View style={[styles.center, { marginBottom: OFFSET.VERTICAL }]}>
-                            <DefImage
-                                src={supplement?.coverImage?.url}
-                                style={styles.image}
-                            />
+                            {supplement?.coverImage?.url ? (
+                                <DefImage src={supplement.coverImage.url} style={styles.image} />
+                            ) : (
+                                <View style={[styles.image, styles.medicationIconContainer]}>
+                                    <Icon iconStyle="solid" name="capsules" size={80} color={theme.colors.text} />
+                                </View>
+                            )}
                         </View>
                     </View>
                 );

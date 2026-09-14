@@ -18,6 +18,7 @@ import {
     AvailableItem,
     useGetFoodsQuery,
     useFilterMedicationsQuery,
+    useFilterSupplementsQuery,
     useGetRecipePrototypesQuery,
     useGetCatalogPrototypeTreeNodesQuery,
 } from 'store/api/dayOverviewApi';
@@ -45,6 +46,8 @@ export const AddReplaceItem: React.FC = () => {
     const excludeIds: string[] = route.params?.excludeIds || [];
 
     const isMedicationMode = entityType === ENTITY_TYPE.MEDICATION;
+    const isSupplementMode = entityType === ENTITY_TYPE.SUPPLEMENT;
+    const isNonFoodMode = isMedicationMode || isSupplementMode;
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -75,6 +78,20 @@ export const AddReplaceItem: React.FC = () => {
         [isMedicationMode, medicationsData]
     );
 
+    // Supplement search
+    const { data: supplementsData, isLoading: isSupplementsLoading } = useFilterSupplementsQuery({
+        name: debouncedSearchQuery || undefined,
+        size: 50,
+        page: 0,
+    }, {
+        skip: !isSupplementMode,
+    });
+
+    const supplementItems: any[] = useMemo(
+        () => (isSupplementMode ? supplementsData?.content || [] : []),
+        [isSupplementMode, supplementsData]
+    );
+
     // Food / recipe / restaurant queries
     const { data: catalogTreeData, isLoading: isCatalogTreeLoading } = useGetCatalogPrototypeTreeNodesQuery({
         filter: {
@@ -86,7 +103,7 @@ export const AddReplaceItem: React.FC = () => {
         size: 10,
         sort: 'name,ASC',
     }, {
-        skip: isMedicationMode || !(activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE),
+        skip: isNonFoodMode || !(activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE),
     });
 
     const { data: recipeData, isLoading: isRecipeLoading } = useGetRecipePrototypesQuery({
@@ -98,7 +115,7 @@ export const AddReplaceItem: React.FC = () => {
         size: 10,
         sort: 'name,ASC',
     }, {
-        skip: isMedicationMode || !(activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES
+        skip: isNonFoodMode || !(activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES
             && searchType === SEARCH_TYPE.ITEM
             && debouncedSearchQuery.trim().length > 0),
     });
@@ -114,7 +131,7 @@ export const AddReplaceItem: React.FC = () => {
         size: 10,
         sort: 'name,ASC',
     }, {
-        skip: isMedicationMode || !(activeTab === CATALOG_TAG_TYPE.PATIENT_FOOD
+        skip: isNonFoodMode || !(activeTab === CATALOG_TAG_TYPE.PATIENT_FOOD
             && searchType === SEARCH_TYPE.ITEM
             && debouncedSearchQuery.trim().length > 0),
     });
@@ -136,11 +153,12 @@ export const AddReplaceItem: React.FC = () => {
 
     const isLoading = useMemo(() => {
         if (isMedicationMode) { return isMedicationsLoading; }
+        if (isSupplementMode) { return isSupplementsLoading; }
         if (activeTab === CATALOG_TAG_TYPE.RESTAURANT && searchType === SEARCH_TYPE.TREE) { return !!isCatalogTreeLoading; }
         if (activeTab === CATALOG_TAG_TYPE.PATIENT_FOOD && searchType === SEARCH_TYPE.ITEM) { return !!isFoodsLoading; }
         if (activeTab === CATALOG_TAG_TYPE.PATIENT_RECIPES && searchType === SEARCH_TYPE.ITEM) { return !!isRecipeLoading; }
         return false;
-    }, [isMedicationMode, isMedicationsLoading, activeTab, searchType, isCatalogTreeLoading, isFoodsLoading, isRecipeLoading]);
+    }, [isMedicationMode, isMedicationsLoading, isSupplementMode, isSupplementsLoading, activeTab, searchType, isCatalogTreeLoading, isFoodsLoading, isRecipeLoading]);
 
     const contentKey = useMemo(() => (currentContent || []).map((i: any) => i.id).join('|'), [currentContent]);
     const allItemsKey = useMemo(() => allItems.map(i => i.id).join('|'), [allItems]);
@@ -166,6 +184,19 @@ export const AddReplaceItem: React.FC = () => {
             item,
             date,
             entityType: ENTITY_TYPE.MEDICATION,
+            onApply: (editedItem: any) => {
+                if (onApply) {
+                    onApply(editedItem);
+                }
+            },
+        });
+    };
+
+    const handleSupplementPress = (item: any) => {
+        navigation.navigate(ROUTES.EDIT_FOOD, {
+            item,
+            date,
+            entityType: ENTITY_TYPE.SUPPLEMENT,
             onApply: (editedItem: any) => {
                 if (onApply) {
                     onApply(editedItem);
@@ -267,26 +298,44 @@ export const AddReplaceItem: React.FC = () => {
         );
     };
 
-    const renderMedicationItem = ({ item }: { item: any }) => {
-        const imageUrl = item.coverImage?.url;
-        return (
-            <TouchableOpacity style={styles.listItem} onPress={() => handleMedicationPress(item)}>
-                <View style={styles.content}>
-                    <DefImage src={imageUrl} style={styles.image} />
-                    <View style={styles.listTitle}>
-                        <Text style={styles.itemName} numberOfLines={2}>
-                            {item.name}
-                        </Text>
-                        <Text style={styles.itemType}>MEDICATION</Text>
-                    </View>
+    const renderPillImage = (imageUrl: string | undefined) => (
+        imageUrl ? (
+            <DefImage src={imageUrl} style={styles.image} />
+        ) : (
+            <View style={[styles.image, styles.pillIconContainer]}>
+                <Icon iconStyle="solid" name="capsules" size={20} color={theme.colors.text} />
+            </View>
+        )
+    );
+
+    const renderMedicationItem = ({ item }: { item: any }) => (
+        <TouchableOpacity style={styles.listItem} onPress={() => handleMedicationPress(item)}>
+            <View style={styles.content}>
+                {renderPillImage(item.coverImage?.url)}
+                <View style={styles.listTitle}>
+                    <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+                    <Text style={styles.itemType}>MEDICATION</Text>
                 </View>
-                <Icon iconStyle="solid" name="chevron-right" size={16} color={theme.colors.text} />
-            </TouchableOpacity>
-        );
-    };
+            </View>
+            <Icon iconStyle="solid" name="chevron-right" size={16} color={theme.colors.text} />
+        </TouchableOpacity>
+    );
+
+    const renderSupplementItem = ({ item }: { item: any }) => (
+        <TouchableOpacity style={styles.listItem} onPress={() => handleSupplementPress(item)}>
+            <View style={styles.content}>
+                {renderPillImage(item.coverImage?.url)}
+                <View style={styles.listTitle}>
+                    <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+                    <Text style={styles.itemType}>SUPPLEMENT</Text>
+                </View>
+            </View>
+            <Icon iconStyle="solid" name="chevron-right" size={16} color={theme.colors.text} />
+        </TouchableOpacity>
+    );
 
     const renderSearchInput = () => (
-        <View style={[styles.searchContainer, isMedicationMode && styles.searchContainerMedication]}>
+        <View style={[styles.searchContainer, isNonFoodMode && styles.searchContainerMedication]}>
             <View style={[styles.searchInputWrapper, { backgroundColor: theme.colors.surfaceAlt, borderColor: theme.colors.border }]}>
                 <Icon iconStyle="solid" name="search" size={14} color={theme.colors.textSecondary} style={styles.searchIcon} />
                 <TextInput
@@ -314,7 +363,7 @@ export const AddReplaceItem: React.FC = () => {
                 <Text style={styles.headerTitle}>Add item</Text>
             </View>
 
-            {!isMedicationMode && renderTabs()}
+            {!isNonFoodMode && renderTabs()}
             {renderSearchInput()}
 
             {isMedicationMode ? (
@@ -330,6 +379,21 @@ export const AddReplaceItem: React.FC = () => {
                         keyboardShouldPersistTaps="handled"
                         keyExtractor={item => String(item.id)}
                         ListEmptyComponent={<Text style={styles.emptyScreen}>No medications found</Text>}
+                    />
+                )
+            ) : isSupplementMode ? (
+                isSupplementsLoading ? (
+                    <View style={styles.spinnerContainer}>
+                        <ActivityIndicator size="large" color={theme.colors.primary} />
+                    </View>
+                ) : (
+                    <FlatList
+                        style={styles.list}
+                        data={supplementItems}
+                        renderItem={renderSupplementItem}
+                        keyboardShouldPersistTaps="handled"
+                        keyExtractor={item => String(item.id)}
+                        ListEmptyComponent={<Text style={styles.emptyScreen}>No supplements found</Text>}
                     />
                 )
             ) : (
@@ -461,6 +525,10 @@ const styles = StyleSheet.create({
         height: 48,
         borderRadius: 4,
         marginRight: 12,
+    },
+    pillIconContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     imagePlaceholder: {
         backgroundColor: '#F3F3F3',

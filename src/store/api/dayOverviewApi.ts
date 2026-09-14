@@ -840,6 +840,19 @@ export const dayOverviewApi = createApi({
             }),
         }),
 
+        filterSupplements: builder.query<PaginatedResponse<any>, {
+            name?: string;
+            page?: number;
+            size?: number;
+        }>({
+            query: ({ name, page = 0, size = 20 }) => ({
+                method: 'POST',
+                body: { name: name || null },
+                params: { page, size, sort: 'name,ASC' },
+                url: '/patient-service/v2/supplements/filter',
+            }),
+        }),
+
         // Walking / Step Counter activity tracking
         startWalkingActivity: builder.mutation<any, {
             // EXERCISE_AEROBIC items have no physical_activity entity, so activity.id is null;
@@ -1245,4 +1258,5 @@ export const {
     useUpdateWalkingActivityMutation,
     // Medication picker
     useFilterMedicationsQuery,
+    useFilterSupplementsQuery,
 } = dayOverviewApi;

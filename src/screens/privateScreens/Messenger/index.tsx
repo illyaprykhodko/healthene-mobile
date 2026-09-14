@@ -1,12 +1,12 @@
 // outsource dependencies
 import { useDispatch } from 'react-redux';
 import Toast from 'react-native-toast-message';
-import { useNavigation } from '@react-navigation/native';
 import Icon from '@react-native-vector-icons/fontawesome5';
 import { SwipeListView } from 'react-native-swipe-list-view';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Pressable, StyleSheet, View, RefreshControl } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Animated, { FadeOut, LinearTransition, SlideInLeft } from 'react-native-reanimated';
 
 // local dependencies
@@ -22,7 +22,7 @@ import { EmptyState } from 'components/EmptyState.tsx';
 import { RootStackParamList } from 'services/navigation';
 import { clearReplyMessage, setReplyMessage } from 'store/slices/messengerSlice.ts';
 import { Message } from 'screens/privateScreens/Messenger/components/MessageItem.tsx';
-import { useDeleteChainsMutation, useGetChainMessagesInfiniteQuery } from 'store/api/messengerApi.ts';
+import { messengerApi, useDeleteChainsMutation, useGetChainMessagesInfiniteQuery } from 'store/api/messengerApi.ts';
 
 interface RowMap {
     [key: string]: { closeRow: () => void } | undefined;
@@ -53,6 +53,22 @@ const MessengerList = () => {
         hasNextPage,
         fetchNextPage,
     } = useGetChainMessagesInfiniteQuery();
+
+    // Refetch the list (and reset the unread counter) whenever the user returns
+    // from ReadMessageScreen — the backend marks messages as read on fetch, so
+    // the cache is stale by the time the list regains focus.
+    const hasMounted = useRef(false);
+    useFocusEffect(
+        useCallback(() => {
+            if (!hasMounted.current) {
+                hasMounted.current = true;
+                return;
+            }
+            void refetch();
+            dispatch(messengerApi.util.invalidateTags(['UnreadCount']));
+        }, [dispatch, refetch])
+    );
+
     const messages = useMemo(
         () => data?.pages.flatMap(p => p.content) ?? [],
         [data]

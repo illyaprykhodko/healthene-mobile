@@ -14,12 +14,12 @@ import {
     MedicationAllergy,
     MedicationFilterRequest,
 } from 'types/healthProfile';
-import { Habit, MedicalProblem, Supplement } from 'types';
+import { Habit, MedicalProblem } from 'types';
 
 export const healthProfileApi = createApi({
     reducerPath: 'healthProfileApi',
     baseQuery,
-    tagTypes: ['Profile', 'Medications', 'MedicalProblems', 'MedicationAllergies', 'Supplements', 'Habits'],
+    tagTypes: ['Profile', 'Medications', 'MedicalProblems', 'MedicationAllergies', 'Habits'],
     endpoints: builder => ({
         // Get patient's medications
         getPatientMedications: builder.query<PatientMedication[], void>({
@@ -46,15 +46,6 @@ export const healthProfileApi = createApi({
                 url: '/patient-service/patients/me/medication-allergies',
             }),
             providesTags: ['MedicationAllergies'],
-        }),
-
-        // Get patient's supplements
-        getPatientSupplements: builder.query<Supplement[], void>({
-            query: () => ({
-                method: 'GET',
-                url: '/patient-service/patients/me/supplements',
-            }),
-            providesTags: ['Supplements'],
         }),
 
         // Get all habits
@@ -199,7 +190,6 @@ export const {
     useFilterMedicationsQuery,
     useFilterMedicalTermsQuery,
     useGetPatientMedicationsQuery,
-    useGetPatientSupplementsQuery,
     useUpdatePatientStatsMutation,
     useUpdatePatientHabitsMutation,
     useAddPatientMedicationMutation,
