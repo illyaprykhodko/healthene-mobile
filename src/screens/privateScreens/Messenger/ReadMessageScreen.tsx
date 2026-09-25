@@ -3,9 +3,9 @@ import React, { useCallback } from 'react';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { useSelector, useDispatch } from 'react-redux';
 import Icon from '@react-native-vector-icons/fontawesome5';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { BackHandler, Pressable, StyleSheet, View } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { RouteProp, StackActions, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 
 // local dependencies
 import { RootState } from 'store';
@@ -34,6 +34,23 @@ const ReadMessageScreen = () => {
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const goToWriteMessage = useCallback(() => navigation.navigate(ROUTES.WRITE_MESSAGE), [dispatch, navigation]);
+
+    // NOTE mirrors the headerLeft logic in MessengerStack for the Android hardware back button.
+    // When READ_MESSAGE is the only screen in the stack (opened from a push notification),
+    // goBack() would bubble to the Drawer and land on DayOverview instead of MessengerList.
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => {
+                if (navigation.getState().index > 0) {
+                    return false;
+                }
+                navigation.dispatch(StackActions.replace(ROUTES.MESSAGE_LIST));
+                return true;
+            };
+            const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+            return () => subscription.remove();
+        }, [navigation])
+    );
     return <Screen initialized={!isLoading} style={styles.container}>
         <View style={styles.header}>
             {/* NOTE this row sits on the screen background, not the navigation header — using
