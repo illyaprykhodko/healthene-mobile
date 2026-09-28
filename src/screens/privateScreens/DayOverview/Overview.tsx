@@ -983,6 +983,7 @@ export const Overview: React.FC = () => {
                 id: phase.id,
                 phaseId: phaseId,
                 status: 'PENDING',
+                date: currentDate,
                 type: 'MEASUREMENT',
                 measurement: measurement,
             };
