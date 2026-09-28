@@ -54,13 +54,9 @@ const MessengerStack = () => {
                 component={ReadMessageScreen}
                 options={({ navigation }) => ({
                     title: 'Messages',
-                    // NOTE When READ_MESSAGE is opened directly from a push notification the
-                    // MessengerStack may have no history below it (no MessengerList screen).
-                    // In that case goBack() would bubble to the Drawer and land on DayOverview.
-                    // We detect this by checking the stack index and replace the current screen
-                    // with MessengerList so the user lands where they expect.
                     headerLeft: () => (
                         <BackBtn
+                            color={theme.colors.white}
                             onPress={() => {
                                 if (navigation.getState().index > 0) {
                                     navigation.goBack();
@@ -68,7 +64,6 @@ const MessengerStack = () => {
                                     navigation.dispatch(StackActions.replace(ROUTES.MESSAGE_LIST));
                                 }
                             }}
-                            color={theme.colors.white}
                         />
                     ),
                 })}
