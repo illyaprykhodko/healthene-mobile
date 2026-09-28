@@ -70,6 +70,7 @@ export interface AnytimeSupplementItem extends AnytimeBaseItem {
 }
 
 export interface AnytimeMeasurementItem extends AnytimeBaseItem {
+  date?: string;
   type: 'MEASUREMENT';
   measurement: {
     id: number;

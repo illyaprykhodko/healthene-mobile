@@ -1,7 +1,7 @@
 // outsource dependencies
 import React from 'react';
-import { useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { StackActions, useNavigation } from '@react-navigation/native';
 
 // local dependencies
 import BackBtn from 'components/BackBtn';
@@ -49,7 +49,25 @@ const MessengerStack = () => {
         >
             <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.MESSAGE_LIST} component={MessengerList} />
             <Stack.Screen options={{ title: 'Camera' }} name={ROUTES.MESSENGER_CAMERA} component={CameraScreen} />
-            <Stack.Screen options={{ title: 'Messages' }} name={ROUTES.READ_MESSAGE} component={ReadMessageScreen} />
+            <Stack.Screen
+                name={ROUTES.READ_MESSAGE}
+                component={ReadMessageScreen}
+                options={({ navigation }) => ({
+                    title: 'Messages',
+                    headerLeft: () => (
+                        <BackBtn
+                            color={theme.colors.white}
+                            onPress={() => {
+                                if (navigation.getState().index > 0) {
+                                    navigation.goBack();
+                                } else {
+                                    navigation.dispatch(StackActions.replace(ROUTES.MESSAGE_LIST));
+                                }
+                            }}
+                        />
+                    ),
+                })}
+            />
             <Stack.Screen options={{ title: 'Record Audio' }} name={ROUTES.MESSENGER_AUDIO} component={AudioScreen} />
             <Stack.Screen
                 name={ROUTES.WRITE_MESSAGE}
