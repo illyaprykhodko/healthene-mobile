@@ -28,6 +28,7 @@ export interface UseMeasurementSubmitReturn {
 export interface MeasurementItem {
     id: number | string;
     type: string;
+    date?: string;
     status: string;
     phaseId?: number | string;
     measurement: {
@@ -119,6 +120,7 @@ export const useMeasurementSubmit = (
                 }).unwrap();
                 await updatePhaseItem({
                     id: item.id,
+                    date: item.date,
                     phaseId: item.phaseId ?? 0,
                     data: {
                         ...item,

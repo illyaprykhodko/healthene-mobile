@@ -28,6 +28,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- Push notifications (Android 13+ / API 33+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <!-- Step counter and activity recognition -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 

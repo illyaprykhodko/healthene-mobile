@@ -21,13 +21,6 @@ import {
     type FirebaseMessagingTypes,
     registerDeviceForRemoteMessages,
 } from '@react-native-firebase/messaging';
-import {
-    check,
-    request,
-    RESULTS,
-    Permission,
-    PERMISSIONS,
-} from 'react-native-permissions';
 
 // local dependencies
 import { store } from 'store';
@@ -132,12 +125,12 @@ class NotificationService {
 
     private async ensureAndroidPermission (): Promise<boolean> {
         if (Platform.OS !== 'android') { return true; }
-        const permission = (PERMISSIONS.ANDROID as Record<string, Permission>).POST_NOTIFICATIONS;
-        if (!permission) { return true; }
-        const currentStatus = await check(permission);
-        if (currentStatus === RESULTS.GRANTED) { return true; }
-        const requestedStatus = await request(permission);
-        return requestedStatus === RESULTS.GRANTED;
+        // notifee.requestPermission() handles both cases:
+        //   Android < 13  — silent status check, no dialog (notifications implicitly granted)
+        //   Android 13+   — shows the POST_NOTIFICATIONS system dialog
+        const { authorizationStatus } = await notifee.requestPermission();
+        return authorizationStatus === AuthorizationStatus.AUTHORIZED
+            || authorizationStatus === AuthorizationStatus.PROVISIONAL;
     }
 
     private async ensureMessagingPermission (): Promise<boolean> {
