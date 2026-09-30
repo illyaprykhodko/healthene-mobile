@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     dateText: {
         fontSize: 14,
         marginTop: 4,
-        left: -30,
+        left: -25,
         top: 10,
     },
     valuesContainer: {

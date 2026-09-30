@@ -1,24 +1,29 @@
 // outsource dependencies
 import dayjs from 'services/date';
-import React, { useState, useCallback, useMemo } from 'react';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useState, useCallback, useMemo, useLayoutEffect } from 'react';
 import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
 // local dependencies
+import { useTheme } from 'hooks/useTheme';
+import { ROUTES } from 'constants/routes';
+import { MAX_FONT_SCALE } from 'constants/typography.ts';
+import { RootStackParamList } from 'services/navigation/types';
 import { MeasurementChart } from 'components/MeasurementChart';
-import { getMeasurementTabs, type MeasurementTab } from 'constants/measurement-chart';
-// import type { MeasurementTab } from '../../constants/measurement-chart';
+import { getMeasurementTabs, shiftPeriodN, type MeasurementTab } from 'constants/measurement-chart';
 import {
     useGetLastMeasurementQuery,
     useGetMeasurementTypesQuery,
     useGetAggregateMeasurementDataQuery,
 } from 'store/api/dayOverviewApi';
-import { useTheme } from 'hooks/useTheme';
-import { ROUTES } from 'constants/routes';
-import { MAX_FONT_SCALE } from 'constants/typography.ts';
-import { RootStackParamList } from 'services/navigation/types';
 
 type Navigation = StackNavigationProp<RootStackParamList>;
+
+// Virtualized window: how many periods are kept loaded around the centred one (anchor ± HALF).
+const WINDOW_HALF = 3;
+const WINDOW_SIZE = WINDOW_HALF * 2 + 1;
+// The latest reachable period index (origin = today → k=0 is today's period; k>0 is the future).
+const MAX_K = 0;
 
 const MeasurementChartScreen: React.FC = () => {
     const navigation = useNavigation<Navigation>();
@@ -26,60 +31,76 @@ const MeasurementChartScreen: React.FC = () => {
     const theme = useTheme();
     const measurementType = (route.params as any)?.measurementType || 'WEIGHT';
     const measurementName = (route.params as any)?.measurementName || measurementType;
-    
-    const [currentDate, setCurrentDate] = useState(() => dayjs().format('YYYY-MM-DD'));
+    const isBloodPressure = measurementType === 'BLOOD_PRESSURE';
+    const offset = dayjs().utcOffset() / 60;
+
+    // Disable the OS edge-swipe-back on this screen — it conflicts with the chart's horizontal scroll.
+    useLayoutEffect(() => {
+        navigation.setOptions({ gestureEnabled: false });
+    }, [navigation]);
+
+    // Fixed reference date; period k is `shiftPeriodN(originDate, period, k)`.
+    const [originDate] = useState(() => dayjs().format('YYYY-MM-DD'));
     const [selectedPeriod, setSelectedPeriod] = useState<MeasurementTab['name']>(() => {
-        const tabs = getMeasurementTabs();
-        return tabs[1]?.name ?? tabs[0].name;
+        const t = getMeasurementTabs();
+        return t[1]?.name ?? t[0].name;
     });
+    // Integer index of the currently centred period (0 = today's period, negative = past).
+    const [anchorK, setAnchorK] = useState(0);
 
-    const tabs = useMemo(
-        () => getMeasurementTabs(currentDate),
-        [currentDate]
+    // The window of WINDOW_SIZE period slots around the anchor.
+    const slots = useMemo(
+        () =>
+            Array.from({ length: WINDOW_SIZE }, (_, i) => {
+                const k = anchorK - WINDOW_HALF + i;
+                const date = shiftPeriodN(originDate, selectedPeriod, k);
+                const tab = getMeasurementTabs(date).find(t => t.name === selectedPeriod) ?? getMeasurementTabs(date)[0];
+                return { k, date, tab };
+            }),
+        [anchorK, selectedPeriod, originDate]
     );
+    const currentDate = slots[WINDOW_HALF].date;
+    const activeTab = slots[WINDOW_HALF].tab;
 
-    const activeTab = useMemo(
-        () => tabs.find(tab => tab.name === selectedPeriod) ?? tabs[0],
-        [tabs, selectedPeriod]
-    );
-
-    const { data: aggregateData, isLoading: isLoadingAggregate } = useGetAggregateMeasurementDataQuery({
-        date: currentDate,
+    // Fixed set of WINDOW_SIZE aggregate queries (rules of hooks); future slots (k > MAX_K) are skipped.
+    const argOf = (s: (typeof slots)[number]) => ({
+        date: s.date,
+        offset,
         type: measurementType,
-        period: activeTab.request,
-        offset: dayjs().utcOffset() / 60,
+        period: s.tab.request,
     });
+    const q0 = useGetAggregateMeasurementDataQuery(argOf(slots[0]), { skip: slots[0].k > MAX_K });
+    const q1 = useGetAggregateMeasurementDataQuery(argOf(slots[1]), { skip: slots[1].k > MAX_K });
+    const q2 = useGetAggregateMeasurementDataQuery(argOf(slots[2]), { skip: slots[2].k > MAX_K });
+    const q3 = useGetAggregateMeasurementDataQuery(argOf(slots[3]), { skip: slots[3].k > MAX_K });
+    const q4 = useGetAggregateMeasurementDataQuery(argOf(slots[4]), { skip: slots[4].k > MAX_K });
+    const q5 = useGetAggregateMeasurementDataQuery(argOf(slots[5]), { skip: slots[5].k > MAX_K });
+    const q6 = useGetAggregateMeasurementDataQuery(argOf(slots[6]), { skip: slots[6].k > MAX_K });
+    const queries = [q0, q1, q2, q3, q4, q5, q6];
 
     const { data: lastMeasurement } = useGetLastMeasurementQuery(measurementType);
+    const typesArgs = useMemo(() => ({ dateTime: dayjs().startOf('day').toISOString(), period: '1-year' }), []);
+    const { data: measurementTypes } = useGetMeasurementTypesQuery(typesArgs);
 
-    const queryArgs = React.useMemo(() => ({
-        dateTime: dayjs().startOf('day').toISOString(),
-        period: '1-year',
-    }), []);
-      
-    const { data: measurementTypes } = useGetMeasurementTypesQuery(queryArgs);
-    const offset = dayjs().utcOffset() / 60;
-    
-    // Separate blood pressure data into systolic and diastolic
+    // Split blood-pressure samples into systolic (content) and diastolic (rest). Keep ONLY records
+    // that carry BOTH channels, so `content` and `rest` stay index-aligned (the renderer pairs the two
+    // by position; a record missing one channel would otherwise shift every following pair).
     const prepareBloodPressureData = (data: any[]) => {
         const content: any[] = [];
         const rest: any[] = [];
-        
         data.forEach(item => {
-            content.push({
-                ...item,
-                units: [item.units?.find((u: any) => u.unitType === 'SYSTOLIC')],
-            });
-            rest.push({
-                ...item,
-                units: [item.units?.find((u: any) => u.unitType === 'DIASTOLIC')],
-            });
+            const systolic = item.units?.find((u: any) => u.unitType === 'SYSTOLIC');
+            const diastolic = item.units?.find((u: any) => u.unitType === 'DIASTOLIC');
+            if (!systolic || !diastolic) {
+                return;
+            }
+            content.push({ ...item, units: [systolic] });
+            rest.push({ ...item, units: [diastolic] });
         });
-        
         return { content, rest };
     };
-    
-    // Process data with averageDate (keep as Moment object!)
+
+    // Normalize aggregate points (dates + averageDate for coordinate mapping).
     const processData = (data: any[]) => {
         const processed = data
             .map(item => {
@@ -93,44 +114,44 @@ const MeasurementChartScreen: React.FC = () => {
                     ...item,
                     displayFromDate: fromDate.utcOffset(offset * 60).format('MMM DD, h:mm A'),
                     displayToDate: toDate.utcOffset(offset * 60).format('MMM DD, h:mm A'),
-                    // Keep averageDate as Moment object for calculateXCoordinate
                     averageDate: dayjs(fromDate).add(diff, 'ms'),
                     units: isBloodPressure ? [{ ...item?.units?.[0], name: 'mmHg' }] : item?.units,
                 };
             })
             .filter(Boolean) as any[];
-
-        const filtered = processed.filter(item => item.units?.[0]);
-
-        return filtered;
+        return processed.filter(item => item.units?.[0]);
     };
-    
-    const isBloodPressure = measurementType === 'BLOOD_PRESSURE';
-    const rawData = aggregateData?.data || [];
-    
-    let chartData: any[] = [];
-    let restData: any[] = [];
-    
-    if (isBloodPressure) {
-        const { content, rest } = prepareBloodPressureData(rawData);
-        chartData = processData(content);
-        restData = processData(rest);
-    } else {
-        chartData = processData(rawData);
-    }
+
+    // Raw aggregate response → chart-ready {chartData, restData} for one page.
+    const toPage = (raw: any[]) => {
+        if (isBloodPressure) {
+            const { content, rest } = prepareBloodPressureData(raw || []);
+            return { chartData: processData(content), restData: processData(rest) };
+        }
+        return { chartData: processData(raw || []), restData: [] as any[] };
+    };
+
+    const pages = useMemo(
+        () =>
+            slots.map((s, i) => {
+                const { chartData, restData } = toPage(queries[i].data?.data || []);
+                return { k: s.k, date: s.date, tab: s.tab, chartData, restData, isLoading: queries[i].isLoading };
+            }),
+        // eslint-disable-next-line
+        [slots, q0.data, q1.data, q2.data, q3.data, q4.data, q5.data, q6.data]
+    );
 
     const currentValue = useMemo(() => {
         if (!lastMeasurement?.values?.[0]) {
             return undefined;
         }
         if (isBloodPressure && lastMeasurement.values.length >= 2) {
-            const systolic = lastMeasurement.values.find((v: any) =>
-                v.measurementUnit?.unitType === 'SYSTOLIC' || v.measurementUnit?.id === 1
+            const systolic = lastMeasurement.values.find(
+                (v: any) => v.measurementUnit?.unitType === 'SYSTOLIC' || v.measurementUnit?.id === 1
             );
-            const diastolic = lastMeasurement.values.find((v: any) =>
-                v.measurementUnit?.unitType === 'DIASTOLIC' || v.measurementUnit?.id === 2
+            const diastolic = lastMeasurement.values.find(
+                (v: any) => v.measurementUnit?.unitType === 'DIASTOLIC' || v.measurementUnit?.id === 2
             );
-
             return {
                 unit: 'mmHg',
                 isBloodPressure: true,
@@ -139,75 +160,52 @@ const MeasurementChartScreen: React.FC = () => {
                 diastolic: diastolic?.value || 0,
             };
         }
-
-        // Single value measurements
-        const displayUnit = measurementType === 'BMI'
-            ? 'BMI'
-            : lastMeasurement.values[0].measurementUnit?.name || '';
-
-        return {
-            isBloodPressure: false,
-            value: lastMeasurement.values[0].value,
-            unit: displayUnit,
-        };
+        const displayUnit = measurementType === 'BMI' ? 'BMI' : lastMeasurement.values[0].measurementUnit?.name || '';
+        return { isBloodPressure: false, value: lastMeasurement.values[0].value, unit: displayUnit };
     }, [lastMeasurement, isBloodPressure, measurementType]);
 
-    // Calculate starting value and total change
-    const currentMeasurement = (measurementTypes || []).find(
-        (m: any) => m?.measurement?.type === measurementType
-    );
-    
-    // BP-specific: extract both systolic and diastolic starting values and calculate changes
+    const currentMeasurement = (measurementTypes || []).find((m: any) => m?.measurement?.type === measurementType);
+
     const bpValues = useMemo(() => {
         if (!isBloodPressure || !currentMeasurement?.initialValues) {
             return null;
         }
-        
         const systolicInitial = currentMeasurement.initialValues.find(
             (v: any) => v.measurementUnit?.unitType === 'SYSTOLIC' || v.measurementUnit?.id === 1
         );
         const diastolicInitial = currentMeasurement.initialValues.find(
             (v: any) => v.measurementUnit?.unitType === 'DIASTOLIC' || v.measurementUnit?.id === 2
         );
-        
         const startingSystolic = systolicInitial?.value || 0;
         const startingDiastolic = diastolicInitial?.value || 0;
-        const totalChangeSystolic = currentValue?.systolic ? currentValue.systolic - startingSystolic : 0;
-        const totalChangeDiastolic = currentValue?.diastolic ? currentValue.diastolic - startingDiastolic : 0;
-        
         return {
             startingSystolic,
             startingDiastolic,
-            totalChangeSystolic,
-            totalChangeDiastolic,
+            totalChangeSystolic: currentValue?.systolic ? currentValue.systolic - startingSystolic : 0,
+            totalChangeDiastolic: currentValue?.diastolic ? currentValue.diastolic - startingDiastolic : 0,
         };
     }, [isBloodPressure, currentMeasurement, currentValue]);
-    
+
     const startingValue = currentMeasurement?.initialValues?.[0]?.value || 0;
     const totalChange = currentValue ? currentValue.value - startingValue : 0;
 
     const handleTabChange = useCallback((tab: MeasurementTab) => {
         setSelectedPeriod(tab.name);
+        setAnchorK(0);
     }, []);
 
-    const handleDateChange = useCallback((newDate: string, period: MeasurementTab['name']) => {
-        setCurrentDate(newDate);
-        setSelectedPeriod(period);
-    }, []);
+    const handleAnchorChange = useCallback((k: number) => setAnchorK(k), []);
 
-    // Navigate to All Recorded Data
     const handleShowAllData = useCallback(() => {
-        navigation.navigate(ROUTES.ALL_RECORDED_DATA, {
-            measurementType,
-            title: measurementName,
-        });
+        navigation.navigate(ROUTES.ALL_RECORDED_DATA, { measurementType, title: measurementName });
     }, [navigation, measurementType, measurementName]);
 
-    const handleDone = useCallback(() => {
-        navigation.goBack();
-    }, [navigation]);
+    const handleDone = useCallback(() => navigation.goBack(), [navigation]);
 
-    if (isLoadingAggregate) {
+    // Only block the whole screen on the very first center-period load (no data yet anywhere).
+    const isInitialLoading = q3.isLoading && !pages.some(p => p.chartData.length > 0);
+
+    if (isInitialLoading) {
         return (
             <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
                 <ActivityIndicator size="large" color={theme.colors.info} />
@@ -219,31 +217,31 @@ const MeasurementChartScreen: React.FC = () => {
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={{ height: '90%' }}>
                 <MeasurementChart
-                    data={chartData}
+                    maxK={MAX_K}
+                    pages={pages}
+                    anchorK={anchorK}
                     showSummary={false}
-                    restData={restData}
                     activeTab={activeTab}
+                    period={selectedPeriod}
                     currentDate={currentDate}
                     totalChange={totalChange}
                     currentValue={currentValue}
                     onTabChange={handleTabChange}
                     startingValue={startingValue}
-                    onDateChange={handleDateChange}
                     measurementType={measurementType}
                     isBloodPressure={isBloodPressure}
                     onShowAllData={handleShowAllData}
-                    // BP-specific props
+                    onAnchorChange={handleAnchorChange}
                     startingSystolic={bpValues?.startingSystolic}
                     startingDiastolic={bpValues?.startingDiastolic}
                     totalChangeSystolic={bpValues?.totalChangeSystolic}
                     totalChangeDiastolic={bpValues?.totalChangeDiastolic}
                 />
             </View>
-            <TouchableOpacity
-                onPress={handleDone}
-                style={[styles.doneButton, { backgroundColor: theme.colors.successAlt }]}
-            >
-                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.doneButtonText, { color: theme.colors.successAltText }]}>DONE</Text>
+            <TouchableOpacity onPress={handleDone} style={[styles.doneButton, { backgroundColor: theme.colors.successAlt }]}>
+                <Text maxFontSizeMultiplier={MAX_FONT_SCALE} style={[styles.doneButtonText, { color: theme.colors.successAltText }]}>
+                    DONE
+                </Text>
             </TouchableOpacity>
         </View>
     );
@@ -257,16 +255,15 @@ const styles = StyleSheet.create({
     },
     loadingContainer: {
         flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
     },
     doneButton: {
         borderWidth: 0,
-        paddingVertical: 18,
-        marginHorizontal: 25,
-        marginBottom: 60,
-        // marginTop: 20,
         borderRadius: 25,
+        paddingVertical: 18,
+        marginBottom: 60,
+        marginHorizontal: 25,
         alignItems: 'center',
     },
     doneButtonText: {
